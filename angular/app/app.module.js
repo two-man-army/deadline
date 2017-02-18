@@ -3,7 +3,8 @@
 
     angular.module('app', [
         'ngRoute',
-        'ngMessages'
+        'ngMessages',
+        'app.layout',
         ])
         .config(config)
         .constant('BASE_URL', 'Add url here');

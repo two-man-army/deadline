@@ -163,6 +163,7 @@ body {
     text-decoration: none;
     color: #fff;
     font-size: 50px; }
+
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% {
     transform: translateY(0); }
@@ -170,5 +171,14 @@ body {
     transform: translateY(-30px); }
   60% {
     transform: translateY(-15px); } }
+/* hompage title */
+.title-container {
+  color: #fff;
+  position: absolute;
+  top: 30%;
+  text-align: center;
+  font-size: 30px;
+  width: 100%;
+  z-index: 100; }
 
 /*# sourceMappingURL=style.css.map */
