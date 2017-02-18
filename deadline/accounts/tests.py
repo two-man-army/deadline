@@ -17,7 +17,8 @@ class UserModelTest(TestCase):
     def test_serialization(self):
         """ Should convert a user object to a json """
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        expected_json = '{"username":"SomeGuy","email":"me@abv.bg","password":"123","score":123}'
+        # password should be hashed
+        expected_json = '{"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123}' % (us.password)
 
         content = JSONRenderer().render(UserSerializer(us).data)
         self.assertEqual(content.decode('utf-8'), expected_json)
@@ -34,5 +35,5 @@ class UserModelTest(TestCase):
         self.assertIsInstance(deser_user, User)
         self.assertEqual(deser_user.username, 'SomeGuy')
         self.assertEqual(deser_user.email, 'me@abv.bg')
-        self.assertEqual(deser_user.password, '123')
+        self.assertNotEqual(deser_user.password, '123')  # should be hashed!
         self.assertEqual(deser_user.score, 123)
