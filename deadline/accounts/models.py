@@ -19,6 +19,5 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=30)
     email = models.EmailField(max_length=30, unique=True)
     password = models.CharField(max_length=30)
-    confirm_email = models.CharField(max_length=100, blank=True)
     score = models.IntegerField()
 
