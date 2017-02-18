@@ -9,6 +9,7 @@ from rest_framework import status
 
 from accounts.serializers import UserSerializer
 from accounts.models import User
+from accounts.helpers import hash_password
 
 
 @api_view(['POST'])
@@ -25,6 +26,35 @@ def register(request: Request):
         return Response(data=response_data,
                         status=status.HTTP_201_CREATED)
     return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def login(request: Request):
+    data = request.data
+    error = None
+
+    if 'email' not in data or 'password' not in data:
+        error = 'E-mail or password fields were empty!'
+
+    given_email = data['email']
+    given_password = data['password']
+
+    user = User.objects.filter(email=given_email).first()
+    if user is None:
+        error = f'Invalid credentials!'
+        return Response(data={'error': error}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Try to validate the password
+    hashed_password = hash_password(given_password, user.salt)
+    if hashed_password != user.password:
+        error = f'Invalid credentials!'
+
+    if error:
+        return Response(data={'error': error}, status=status.HTTP_400_BAD_REQUEST)
+
+    response_data = {'user_token': user.auth_token.key}
+    response_data.update(UserSerializer(user).data)
+    return Response(data=response_data, status=status.HTTP_202_ACCEPTED)
 
 
 @ensure_csrf_cookie

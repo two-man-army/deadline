@@ -61,13 +61,25 @@ class RegisterViewTest(APITestCase):
         self.assertIn('email', response.data)
         self.assertIn('email already exists', ''.join(response.data['email']))
 
+
 class LoginViewTest(APITestCase):
-    def test_logging_in_the_system(self):
+    def test_logging_in_valid(self):
         # There is a user account
         User.objects.create(email='that_part@abv.bg', password='123')
         # And we try logging in to it
         response: HttpResponse = self.client.post('/accounts/login/', data={'email': 'that_part@abv.bg',
                                                                             'password': '123'})
-
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 202)
         self.assertTrue('user_token' in response.data)
+
+    def test_logging_in_invalid_email(self):
+        # There is a user account
+        User.objects.create(email='that_part@abv.bg', password='123')
+        # And we try logging in to it
+        response: HttpResponse = self.client.post('/accounts/login/', data={'email': 'INVALID_EMAIL',
+                                                                            'password': '123'})
+
+        self.assertEqual(response.status_code, 400)
+        # the response should return an error that the email is invalid
+        self.assertIn('error', response.data)
+        self.assertIn('Invalid credentials', ''.join(response.data['error']))
