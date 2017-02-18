@@ -9,6 +9,8 @@ from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
 
+from accounts.helpers import hash_password
+
 
 # This code is triggered whenever a new user has been created and saved to the database
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -27,6 +29,8 @@ class User(AbstractBaseUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Store a random salt and hash the password!
-        self.salt = uuid.uuid4().hex
-        self.password = hashlib.sha512((self.password + self.salt).encode('utf-8')).hexdigest()
+        # Put in an if, since django calls __init__ twice!
+        if not self.salt:
+            # Store a random salt and hash the password!
+            self.salt = uuid.uuid4().hex
+            self.password = hash_password(password=self.password, salt=self.salt)
