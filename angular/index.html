@@ -7,6 +7,7 @@
     <title>Hackaton</title>
     <!-- Replace all styles and scripts with the corresponding minified versions -->
     <link rel="stylesheet" href="assets/styles/style.css">
+    <link rel="stylesheet" href="assets/bower_components/font-awesome/css/font-awesome.min.css">
 
     <script src="assets/bower_components/jquery/dist/jquery.js"></script>
     <script src="assets/bower_components/angular/angular.js"></script>
@@ -28,7 +29,12 @@
                 </video>
             </div>
         </div>
-        <div class="form">
+        <div class="scroll-arrow">
+            <a href="#login-form">
+                <i class="fa fa-lg fa-angle-down"></i>
+            </a>
+        </div>
+        <div id="login-form" class="form">
             <ul class="tab-group">
                 <li class="tab active"><a href="#signup">Sign Up</a></li>
                 <li class="tab"><a href="#login">Log In</a></li>
@@ -82,10 +88,11 @@
                 </div>
             </div><!-- tab-content -->
         </div> <!-- /form -->
-        <script src="assets/monaco-editor/min/vs/loader.js"></script>
     </div>
+    <script src="assets/monaco-editor/min/vs/loader.js"></script>
     <script src="assets/js/login-register.js"></script>
     <script src="assets/js/video-background.js"></script>
+    <script src="assets/js/smooth-scroll.js"></script>
     <script src="assets/bower_components/angular-route/angular-route.js"></script>
     <script src="app/app.module.js"></script>
     <script src="app/core/main.module.js"></script>
