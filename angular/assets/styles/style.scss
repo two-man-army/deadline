@@ -30,6 +30,7 @@ body {
         padding: 40px;
         max-width: 600px;
         margin: 40px auto;
+        margin-bottom: 320px;
         border-radius: $br;
         box-shadow:0 4px 10px 4px rgba($form-bg, .3);
 
@@ -178,6 +179,7 @@ body {
     border-right: none;
     border-left: none;
     position: relative;
+    margin-bottom: 220px;
 }
 .no-video .video-container video,
 .touch .video-container video {
@@ -212,3 +214,32 @@ body {
     width: 100%;
 }
 
+/* scroll arrow */
+.scroll-arrow {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+
+    a {
+        padding: 10px;
+        text-decoration: none;
+        color: #fff;
+        font-size: 50px;
+    }
+
+    -moz-animation: bounce 2s infinite;
+    -webkit-animation: bounce 2s infinite;
+    animation: bounce 2s infinite;
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-30px);
+        }
+        60% {
+            transform: translateY(-15px);
+        }
+    }
+}

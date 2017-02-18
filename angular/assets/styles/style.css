@@ -8,6 +8,7 @@ body {
     padding: 40px;
     max-width: 600px;
     margin: 40px auto;
+    margin-bottom: 320px;
     border-radius: 4px;
     box-shadow: 0 4px 10px 4px rgba(19, 35, 47, 0.3); }
     body .form *, body .form *:before, body .form *:after {
@@ -115,7 +116,8 @@ body {
 .homepage-hero-module {
   border-right: none;
   border-left: none;
-  position: relative; }
+  position: relative;
+  margin-bottom: 220px; }
 
 .no-video .video-container video,
 .touch .video-container video {
@@ -147,5 +149,26 @@ body {
 
 .video-container video.fillWidth {
   width: 100%; }
+
+/* scroll arrow */
+.scroll-arrow {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  -moz-animation: bounce 2s infinite;
+  -webkit-animation: bounce 2s infinite;
+  animation: bounce 2s infinite; }
+  .scroll-arrow a {
+    padding: 10px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 50px; }
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0); }
+  40% {
+    transform: translateY(-30px); }
+  60% {
+    transform: translateY(-15px); } }
 
 /*# sourceMappingURL=style.css.map */
