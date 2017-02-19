@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.http import HttpRequest
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from rest_framework.parsers import JSONParser
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
@@ -13,6 +14,7 @@ from accounts.helpers import hash_password
 
 
 @api_view(['POST'])
+@permission_classes([])
 def register(request: Request):
     """ Register a User"""
     serializer = UserSerializer(data=request.data)
@@ -29,12 +31,14 @@ def register(request: Request):
 
 
 @api_view(['POST'])
+@permission_classes([])
 def login(request: Request):
     data = request.data
     error = None
 
     if 'email' not in data or 'password' not in data:
         error = 'E-mail or password fields were empty!'
+        return Response(data={'error': error}, status=status.HTTP_400_BAD_REQUEST)
 
     given_email = data['email']
     given_password = data['password']
@@ -58,6 +62,7 @@ def login(request: Request):
 
 
 @ensure_csrf_cookie
+@permission_classes([])
 @api_view(['GET'])
 def index(request: Request):
     return Response()

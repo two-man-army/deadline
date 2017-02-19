@@ -56,8 +56,8 @@ class RegisterViewTest(APITestCase):
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'Meredith',
                                                                                'password': 'mer19222',
                                                                                'email': 'that_part@abv.bg'})
-        # Should have successfully register the user and gave him a user token
         self.assertEqual(response.status_code, 400)
+        # Should have successfully register the user and gave him a user token
         self.assertIn('email', response.data)
         self.assertIn('email already exists', ''.join(response.data['email']))
 
