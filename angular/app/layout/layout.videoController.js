@@ -73,7 +73,7 @@
 
     function config($routeProvider) {
         $routeProvider.when('/', {
-            templateUrl: 'app/layout/templates/index.html',
+            templateUrl: 'app/layout/templates/layout.html',
             controllerAs: 'vm',
             controller: 'LayoutVideoController'
         });
