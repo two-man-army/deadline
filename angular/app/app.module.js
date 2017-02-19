@@ -5,9 +5,11 @@
         'ngRoute',
         'ngMessages',
         'app.layout',
+        'app.auth',
+        'app.dashboard'
         ])
         .config(config)
-        .constant('BASE_URL', 'Add url here');
+        .constant('BASE_URL', 'http://localhost:8090/');
 
     config.$inject = ['$routeProvider'];
 
