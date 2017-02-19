@@ -1,24 +1,61 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
+from django.utils.six import BytesIO
+from rest_framework.test import APITestCase
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+
 from challenges.models import Challenge
+from challenges.serializers import ChallengeSerializer
 
 
 # Create your tests here.
 class ChallengesModelTest(TestCase):
     def test_absolute_url(self):
-        c = Challenge(name='Hello', rating=5, score=10)
+        c = Challenge(name='Hello', rating=5, score=10, description='What up')
         expected_url = '/challenge/{}'.format(c.id)
         self.assertEqual(c.get_absolute_url(), expected_url)
 
     def test_cannot_save_duplicate_challenge(self):
-        c = Challenge(name='Hello', rating=5, score=10)
+        c = Challenge(name='Hello', rating=5, score=10, description='What up')
         c.save()
         with self.assertRaises(ValidationError):
-            c = Challenge(name='Hello', rating=5, score=10)
+            c = Challenge(name='Hello', rating=5, score=10, description='What up')
             c.full_clean()
 
     def test_cannot_save_blank_challenge(self):
         c = Challenge()
         with self.assertRaises(Exception):
             c.full_clean()
+
+    def test_serialization(self):
+        c = Challenge(name='Hello', rating=5, score=10, description='What up')
+        expected_json = '{"name":"Hello","rating":5,"score":10,"description":"What up"}'
+
+        content = JSONRenderer().render(ChallengeSerializer(c).data)
+        self.assertEqual(content.decode('utf-8'), expected_json)
+
+    def test_deserialization(self):
+        expected_json = b'{"name":"Hello","rating":5,"score":10,"description":"What up"}'
+        data = JSONParser().parse(BytesIO(expected_json))
+        serializer = ChallengeSerializer(data=data)
+        serializer.is_valid()
+
+        deser_challenge = serializer.save()
+        self.assertEqual(deser_challenge.name, "Hello")
+        self.assertEqual(deser_challenge.rating, 5)
+        self.assertEqual(deser_challenge.score, 10)
+        self.assertEqual(deser_challenge.description, "What up")
+
+    def test_invalid_deserialization(self):
+        # No name!
+        expected_json = b'{"rating":5, "score":10, "description":"What up"}'
+        data = JSONParser().parse(BytesIO(expected_json))
+        serializer = ChallengeSerializer(data=data)
+
+        self.assertFalse(serializer.is_valid())
+
+
+class ChallengesViewsTest(APITestCase):
+    pass
