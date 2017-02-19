@@ -6,8 +6,9 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-from challenges.models import Challenge
+from challenges.models import Challenge, Submission
 from challenges.serializers import ChallengeSerializer
+from accounts.models import User
 
 
 # Create your tests here.
@@ -59,7 +60,6 @@ class ChallengesModelTest(TestCase):
 
 class ChallengesViewsTest(APITestCase):
     def setUp(self):
-        from accounts.models import User
         auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
         auth_user.save()
         self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
@@ -82,3 +82,40 @@ class ChallengesViewsTest(APITestCase):
         response = self.client.get('/challenges/{}'.format(c.id))
 
         self.assertEqual(response.status_code, 401)
+
+
+class SubmissionModelTest(TestCase):
+    def setUp(self):
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge.save()
+        self.challenge_name = self.challenge.name
+
+        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
+my_purchase = {
+    'apple': 1,
+    'banana': 6}
+grocery_bill = sum(prices[fruit] * my_purchase[fruit]
+                   for fruit in my_purchase)
+print 'I owe the grocer $%.2f' % grocery_bill"""
+
+    def test_absolute_url(self):
+        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s.save()
+
+        self.assertEqual(s.get_absolute_url(), '/submissions/{}'.format(s.id))
+
+    def test_can_save_duplicate_submission(self):
+        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s.save()
+        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s.save()
+
+        self.assertEqual(Submission.objects.count(), 2)
+
+    def test_cannot_save_blank_submission(self):
+        s = Submission(challenge=self.challenge, author=self.auth_user, code='')
+        with self.assertRaises(Exception):
+            s.full_clean()
