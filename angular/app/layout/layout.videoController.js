@@ -71,7 +71,6 @@
 
     }
 
-    // probably should be removed
     function config($routeProvider) {
         $routeProvider.when('/', {
             templateUrl: 'app/layout/templates/index.html',

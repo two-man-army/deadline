@@ -7,6 +7,8 @@
     LayoutScrollController.$inject = ['$window']
 
     function LayoutScrollController($window) {
+        var vm = this;
+
         angular.element($window).bind('scroll', function() {
             //get scroll position
             var topWindow = $window.pageYOffset;
@@ -27,7 +29,6 @@
             $('.scroll-arrow').css('opacity', position);
 
         });
-
 
         $('a[href*="#login-form"]:not([href="#"])').click(function() {
             if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
