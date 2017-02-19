@@ -1,5 +1,5 @@
 <div ng-controller="LayoutScrollController as vm">
-    <div class="homepage-hero-module" ng-controller="LayoutVideoController as vm">
+    <div class="homepage-hero-module">
         <div class="video-container">
             <div class="title-container">
                 <h1>Welcome to deadline.</h1>
@@ -22,51 +22,51 @@
             <li class="tab active"><a href="#signup" ng-click="vm.switchForm($event)">Sign Up</a></li>
             <li class="tab"><a href="#login" ng-click="vm.switchForm($event)">Log In</a></li>
         </ul>
-        <div class="tab-content">
+        <div class="tab-content" ng-controller="AuthController as vm">
             <div id="signup">
                 <h1>Sign Up for Free</h1>
-                <form action="/" method="post">
+                <form action="/" name="registerForm" method="post">
                     <div class="top-row">
                         <div class="field-wrap">
                             <label>
                                 Username<span class="req">*</span>
                             </label>
-                            <input type="text"required autocomplete="off"/>
+                            <input type="text"required ng-model="registerUser.username" autocomplete="off"/>
                         </div>
                     </div>
                     <div class="field-wrap">
                         <label>
                             Email Address<span class="req">*</span>
                         </label>
-                        <input type="email"required autocomplete="off"/>
+                        <input type="email"required ng-model="registerUser.email" autocomplete="off"/>
                     </div>
                     <div class="field-wrap">
                         <label>
                             Set A Password<span class="req">*</span>
                         </label>
-                        <input type="password"required autocomplete="off"/>
+                        <input type="password"required ng-model="registerUser.password" autocomplete="off"/>
                     </div>
                     <button type="submit" class="button button-block">Get Started</button>
                 </form>
             </div>
             <div id="login">
-                <h1>Welcome Back!</h1>
-                <form action="/" method="post">
+                <h1 ng-click="vm.get_csrf_token()">Welcome Back!</h1>
+                <form action="/" name="loginForm" ng-submit="vm.login($event, loginUser)">
                     <div class="field-wrap">
                         <label>
                             Email Address<span class="req">*</span>
                         </label>
-                        <input type="email"required autocomplete="off"/>
+                        <input type="email"required ng-model="loginUser.email" autocomplete="off"/>
                     </div>
                     <div class="field-wrap">
                         <label>
                             Password<span class="req">*</span>
                         </label>
-                        <input type="password"required autocomplete="off"/>
+                        <input type="password"required ng-model="loginUser.password" autocomplete="off"/>
                     </div>
                     <p class="forgot"><a href="#">Forgot Password?</a></p>
 
-                    <button class="button button-block">Log In</button>
+                    <button type="submit" class="button button-block">Log In</button>
                 </form>
             </div>
         </div><!-- tab-content -->
