@@ -30,7 +30,7 @@
             return $http({
                 method: 'POST',
                 url: BASE_URL + 'accounts/login',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 'Content-Type': 'application/json' },
                 data: user
             });
         }
