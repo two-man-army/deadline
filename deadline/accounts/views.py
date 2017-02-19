@@ -38,6 +38,7 @@ def login(request: Request):
 
     if 'email' not in data or 'password' not in data:
         error = 'E-mail or password fields were empty!'
+        return Response(data={'error': error}, status=status.HTTP_400_BAD_REQUEST)
 
     given_email = data['email']
     given_password = data['password']
