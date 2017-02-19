@@ -3,6 +3,7 @@
 
     angular.module('app.auth')
         .controller('AuthController', AuthController)
+        .config(config)
         .run(run);
 
     AuthController.$inject = ['$http', 'authService', '$location']
@@ -46,6 +47,11 @@
                         console.log(error)
                     })
         }
+    }
+
+    function config($httpProvider) {
+        $httpProvider.defaults.headers.common['Access-Control-Allow-Headers'] = '*';
+        $httpProvider.defaults.headers.common['access-control-allow-origin'] = '*';
     }
 
     function run($http) {
