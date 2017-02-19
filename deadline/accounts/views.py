@@ -45,13 +45,13 @@ def login(request: Request):
 
     user = User.objects.filter(email=given_email).first()
     if user is None:
-        error = f'Invalid credentials!'
+        error = 'Invalid credentials!'
         return Response(data={'error': error}, status=status.HTTP_400_BAD_REQUEST)
 
     # Try to validate the password
     hashed_password = hash_password(given_password, user.salt)
     if hashed_password != user.password:
-        error = f'Invalid credentials!'
+        error = 'Invalid credentials!'
 
     if error:
         return Response(data={'error': error}, status=status.HTTP_400_BAD_REQUEST)
