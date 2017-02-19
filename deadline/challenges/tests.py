@@ -7,7 +7,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
 from challenges.models import Challenge, Submission
-from challenges.serializers import ChallengeSerializer
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer
 from accounts.models import User
 
 
@@ -119,3 +119,12 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         s = Submission(challenge=self.challenge, author=self.auth_user, code='')
         with self.assertRaises(Exception):
             s.full_clean()
+
+    def test_serialization(self):
+        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        serializer = SubmissionSerializer(s)
+        expected_json = ('{"challenge":' + str(self.challenge.id) + ',"author":' + str(self.auth_user.id)
+                         + ',"code":"' + self.sample_code + '"}')
+
+        content = JSONRenderer().render(serializer.data)
+        self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
