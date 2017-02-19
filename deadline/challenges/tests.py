@@ -58,4 +58,27 @@ class ChallengesModelTest(TestCase):
 
 
 class ChallengesViewsTest(APITestCase):
-    pass
+    def setUp(self):
+        from accounts.models import User
+        auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        auth_user.save()
+        self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
+
+    def test_view_challenge(self):
+        c = Challenge(name='Hello', rating=5, score=10, description='What up')
+        c.save()
+        response = self.client.get('/challenges/{}'.format(c.id), HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ChallengeSerializer(c).data, response.data)
+
+    def test_view_challenge_doesnt_exist(self):
+        response = self.client.get('/challenges/3', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+
+    def test_view_challenge_unauthorized_should_return_401(self):
+        c = Challenge(name='Hello', rating=5, score=10, description='What up')
+        c.save()
+        response = self.client.get('/challenges/{}'.format(c.id))
+
+        self.assertEqual(response.status_code, 401)
