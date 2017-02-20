@@ -9,12 +9,13 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     challenge = serializers.PrimaryKeyRelatedField(read_only=True)
     author = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Submission
-        fields = ('challenge', 'author', 'code')
+        fields = ('id', 'challenge', 'author', 'code')
 
 
 class TestCaseSerializer(serializers.ModelSerializer):

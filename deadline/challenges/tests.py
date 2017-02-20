@@ -257,8 +257,9 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
 
     def test_serialization(self):
         s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s.save()
         serializer = SubmissionSerializer(s)
-        expected_json = ('{"challenge":' + str(self.challenge.id) + ',"author":' + str(self.auth_user.id)
+        expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":' + str(self.auth_user.id)
                          + ',"code":"' + self.sample_code + '"}')
 
         content = JSONRenderer().render(serializer.data)

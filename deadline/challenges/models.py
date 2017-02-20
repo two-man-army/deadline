@@ -33,6 +33,9 @@ class TestCase(models.Model):
     success = models.BooleanField(default=False)
     pending = models.BooleanField(default=True)
 
+    class Meta:
+        ordering = ['id', ]
+
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}/test/{}'.format(
             self.submission.challenge_id, self.submission.id, self.id)
