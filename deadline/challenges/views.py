@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveAPIView, ListAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 
 from challenges.models import Challenge, Submission, TestCase
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer
@@ -16,6 +16,23 @@ class ChallengeDetailView(RetrieveAPIView):
 class SubmissionDetailView(RetrieveAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
+
+
+class SubmissionCreateView(CreateAPIView):
+    def create(self, request, *args, **kwargs):
+        challenge_pk = kwargs.get('challenge_pk')
+        try:
+            challenge = Challenge.objects.get(id=challenge_pk)
+            code_given = request.data.get('code')
+            if not code_given:
+                return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
+                                status=400)
+            submission: Submission = Submission(code=code_given, author=request.user, challenge=challenge)
+
+            return Response(data=SubmissionSerializer(submission).data, status=201)
+        except Challenge.DoesNotExist:
+            return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
+                            status=400)
 
 
 class TestCaseDetailView(RetrieveAPIView):

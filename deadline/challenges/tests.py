@@ -117,6 +117,21 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get(path=self.submission.get_absolute_url())
         self.assertEqual(response.status_code, 401)
 
+    def test_create_submission(self):
+        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+                                    data={'code': 'heyfriendheytherehowareyou'},
+                                    HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Submission.objects.count(), 1)
+
+    def test_create_submission_invalid_challenge_should_return_400(self):
+        response = self.client.post('/challenges/111/submissions/new',
+                                    data={'code': 'heyfriendheytherehowareyou'},
+                                    HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 400)
+
 
 class TestCaseViewTest(TestCase):
     def setUp(self):
