@@ -1,2 +1,4 @@
 Django==1.10.5
 djangorestframework==3.5.4
+grader==0.0.1
+PyJWT==1.4.2
