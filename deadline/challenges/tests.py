@@ -84,6 +84,40 @@ class ChallengesViewsTest(APITestCase):
         self.assertEqual(response.status_code, 401)
 
 
+class SubmissionViewsTest(APITestCase):
+    def setUp(self):
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge.save()
+        self.challenge_name = self.challenge.name
+
+        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
+        my_purchase = {
+            'apple': 1,
+            'banana': 6}
+        grocery_bill = sum(prices[fruit] * my_purchase[fruit]
+                           for fruit in my_purchase)
+        print 'I owe the grocer $%.2f' % grocery_bill"""
+        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        self.submission.save()
+
+    def test_view_submission(self):
+        response = self.client.get(path=self.submission.get_absolute_url(), HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SubmissionSerializer(self.submission).data, response.data)
+
+    def test_view_submission_doesnt_exist(self):
+        response = self.client.get('challenges/{}/submissions/15'.format(self.submission.challenge_id)
+                               , HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+
+    def test_view_challenge_unauthorized_should_return_401(self):
+        response = self.client.get(path=self.submission.get_absolute_url())
+        self.assertEqual(response.status_code, 401)
+
+
 class SubmissionModelTest(TestCase):
     def setUp(self):
         self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
