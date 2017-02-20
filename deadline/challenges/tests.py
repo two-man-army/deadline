@@ -15,7 +15,7 @@ from accounts.models import User
 class ChallengesModelTest(TestCase):
     def test_absolute_url(self):
         c = Challenge(name='Hello', rating=5, score=10, description='What up')
-        expected_url = '/challenge/{}'.format(c.id)
+        expected_url = '/challenges/{}'.format(c.id)
         self.assertEqual(c.get_absolute_url(), expected_url)
 
     def test_cannot_save_duplicate_challenge(self):
@@ -105,7 +105,7 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         s.save()
 
-        self.assertEqual(s.get_absolute_url(), '/submissions/{}'.format(s.id))
+        self.assertEqual(s.get_absolute_url(), '/challenges/{}/submissions/{}'.format(s.challenge_id, s.id))
 
     def test_can_save_duplicate_submission(self):
         s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
@@ -153,7 +153,8 @@ class TestCaseModelTest(TestCase):
         tc = TestCaseModel(submission=self.submission)
         tc.save()
 
-        self.assertEqual(tc.get_absolute_url(), '/submissions/{}/test/{}'.format(tc.submission.id, tc.id))
+        self.assertEqual(tc.get_absolute_url(), '/challenges/{}/submissions/{}/test/{}'.format(
+            tc.submission.challenge_id,tc.submission.id, tc.id))
 
     def test_can_have_multiple_testcases_per_submission(self):
         for _ in range(15):

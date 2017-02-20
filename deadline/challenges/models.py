@@ -12,7 +12,7 @@ class Challenge(models.Model):
     # TODO: Add category once ready
 
     def get_absolute_url(self):
-        return '/challenge/{}'.format(self.id)
+        return '/challenges/{}'.format(self.id)
 
 
 class Submission(models.Model):
@@ -21,7 +21,7 @@ class Submission(models.Model):
     code = models.CharField(max_length=4000, blank=False)
 
     def get_absolute_url(self):
-        return '/submissions/{}'.format(self.id)
+        return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)
 
 
 class TestCase(models.Model):
@@ -31,4 +31,5 @@ class TestCase(models.Model):
     pending = models.BooleanField(default=True)
 
     def get_absolute_url(self):
-        return '/submissions/{}/test/{}'.format(self.submission.id, self.id)
+        return '/challenges/{}/submissions/{}/test/{}'.format(
+            self.submission.challenge_id, self.submission.id, self.id)
