@@ -6,6 +6,7 @@
         .config(config)
         .run(run);
 
+    config.$inject = ['$httpProvider']
     AuthController.$inject = ['$http', 'authService', '$location']
 
     function AuthController($http, authService, $location) {
@@ -13,10 +14,19 @@
 
         vm.register = register
         vm.login = login
-        vm.get_csrf_token = get_csrf_token
 
-        function register(user) {
+        function register($event, user) {
+            $event.preventDefault()
+            console.log(user)
 
+            authService.register($event, user)
+                .then(
+                    function(res) {
+                        vm.login($event, user)
+                    },
+                    function(error) {
+                        console.log(error)
+                    })
         }
 
         function login($event, user) {
@@ -25,28 +35,14 @@
             authService.login(user)
                 .then(
                     function(res) {
-                        debugger;
-                        sessionStorage['authToken'] = response.data.user_tocken;
+                        sessionStorage['authToken'] = res.data.user_token;
                         $location.path('/dashboard');
                     },
 
                     function(error) {
-                        console.log($http.defaults.headers)
+                        console.log(error)
                     }
                 );
-        }
-
-        function get_csrf_token() {
-            authService.get_csrf_token()
-                .then(
-                    function(response) {
-                        console.log(response)
-                        
-                    },
-
-                    function(error) {
-                        console.log(error)
-                    })
         }
     }
 
