@@ -65,7 +65,7 @@ class ChallengesViewsTest(APITestCase):
         self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
 
     def test_view_challenge(self):
-        c = Challenge(name='Hello', rating=5, score=10, description='What up')
+        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_test.py')
         c.save()
         response = self.client.get('/challenges/{}'.format(c.id), HTTP_AUTHORIZATION=self.auth_token)
 
@@ -77,7 +77,7 @@ class ChallengesViewsTest(APITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_view_challenge_unauthorized_should_return_401(self):
-        c = Challenge(name='Hello', rating=5, score=10, description='What up')
+        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_test.py')
         c.save()
         response = self.client.get('/challenges/{}'.format(c.id))
 
@@ -86,7 +86,7 @@ class ChallengesViewsTest(APITestCase):
 
 class SubmissionViewsTest(APITestCase):
     def setUp(self):
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_tests')
         self.challenge.save()
         self.challenge_name = self.challenge.name
 
@@ -119,11 +119,14 @@ class SubmissionViewsTest(APITestCase):
 
     def test_create_submission(self):
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
-                                    data={'code': 'heyfriendheytherehowareyou'},
+                                    data={'code': 'print("Hello World")'},
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Submission.objects.count(), 1)
+        submission = Submission.objects.first()
+        # assert that the task_id has been populated
+        self.assertNotEqual(submission.task_id, '')
 
     def test_create_submission_invalid_challenge_should_return_400(self):
         response = self.client.post('/challenges/111/submissions/new',

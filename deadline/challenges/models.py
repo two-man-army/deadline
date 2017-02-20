@@ -9,6 +9,7 @@ class Challenge(models.Model):
     description = models.CharField(max_length=3000)
     rating = models.IntegerField()
     score = models.IntegerField()
+    test_file_name = models.CharField(max_length=50)
     # TODO: Add category once ready
 
     def get_absolute_url(self):
@@ -19,6 +20,7 @@ class Submission(models.Model):
     challenge = models.ForeignKey(Challenge)
     author = models.ForeignKey(User)
     code = models.CharField(max_length=4000, blank=False)
+    task_id = models.CharField(max_length=100, blank=False)
 
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)
