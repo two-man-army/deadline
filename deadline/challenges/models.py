@@ -10,6 +10,7 @@ class Challenge(models.Model):
     rating = models.IntegerField()
     score = models.IntegerField()
     test_file_name = models.CharField(max_length=50)
+    test_case_count = models.IntegerField(blank=False)
     # TODO: Add category once ready
 
     def get_absolute_url(self):

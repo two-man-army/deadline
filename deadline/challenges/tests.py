@@ -14,15 +14,15 @@ from accounts.models import User
 # Create your tests here.
 class ChallengesModelTest(TestCase):
     def test_absolute_url(self):
-        c = Challenge(name='Hello', rating=5, score=10, description='What up')
+        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=5)
         expected_url = '/challenges/{}'.format(c.id)
         self.assertEqual(c.get_absolute_url(), expected_url)
 
     def test_cannot_save_duplicate_challenge(self):
-        c = Challenge(name='Hello', rating=5, score=10, description='What up')
+        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=5)
         c.save()
         with self.assertRaises(ValidationError):
-            c = Challenge(name='Hello', rating=5, score=10, description='What up')
+            c = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=5)
             c.full_clean()
 
     def test_cannot_save_blank_challenge(self):
@@ -31,14 +31,14 @@ class ChallengesModelTest(TestCase):
             c.full_clean()
 
     def test_serialization(self):
-        c = Challenge(name='Hello', rating=5, score=10, description='What up')
-        expected_json = '{"name":"Hello","rating":5,"score":10,"description":"What up"}'
+        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=5)
+        expected_json = '{"name":"Hello","rating":5,"score":10,"description":"What up","test_case_count":5}'
 
         content = JSONRenderer().render(ChallengeSerializer(c).data)
         self.assertEqual(content.decode('utf-8'), expected_json)
 
     def test_deserialization(self):
-        expected_json = b'{"name":"Hello","rating":5,"score":10,"description":"What up"}'
+        expected_json = b'{"name":"Hello","rating":5,"score":10,"description":"What up","test_case_count":3}'
         data = JSONParser().parse(BytesIO(expected_json))
         serializer = ChallengeSerializer(data=data)
         serializer.is_valid()
@@ -65,7 +65,8 @@ class ChallengesViewsTest(APITestCase):
         self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
 
     def test_view_challenge(self):
-        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_test.py')
+        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_test.py',
+                      test_case_count=2)
         c.save()
         response = self.client.get('/challenges/{}'.format(c.id), HTTP_AUTHORIZATION=self.auth_token)
 
@@ -77,7 +78,8 @@ class ChallengesViewsTest(APITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_view_challenge_unauthorized_should_return_401(self):
-        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_test.py')
+        c = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_test.py',
+                      test_case_count=3)
         c.save()
         response = self.client.get('/challenges/{}'.format(c.id))
 
@@ -86,7 +88,8 @@ class ChallengesViewsTest(APITestCase):
 
 class SubmissionViewsTest(APITestCase):
     def setUp(self):
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_tests')
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_tests',
+                                   test_case_count=3)
         self.challenge.save()
         self.challenge_name = self.challenge.name
 
@@ -113,7 +116,7 @@ class SubmissionViewsTest(APITestCase):
                                , HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)
 
-    def test_view_challenge_unauthorized_should_return_401(self):
+    def test_view_submission_unauthorized_should_return_401(self):
         response = self.client.get(path=self.submission.get_absolute_url())
         self.assertEqual(response.status_code, 401)
 
@@ -123,8 +126,8 @@ class SubmissionViewsTest(APITestCase):
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Submission.objects.count(), 1)
-        submission = Submission.objects.first()
+        self.assertEqual(Submission.objects.count(), 2)
+        submission = Submission.objects.get(id=2)
         # assert that the task_id has been populated
         self.assertNotEqual(submission.task_id, '')
 
@@ -138,7 +141,7 @@ class SubmissionViewsTest(APITestCase):
 
 class TestCaseViewTest(TestCase):
     def setUp(self):
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=2)
         self.challenge.save()
         self.challenge_name = self.challenge.name
 
@@ -216,7 +219,7 @@ class TestCaseViewTest(TestCase):
 
 class SubmissionModelTest(TestCase):
     def setUp(self):
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=3)
         self.challenge.save()
         self.challenge_name = self.challenge.name
 
@@ -262,7 +265,7 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
 
 class TestCaseModelTest(TestCase):
     def setUp(self):
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=5)
         self.challenge.save()
         self.challenge_name = self.challenge.name
 
