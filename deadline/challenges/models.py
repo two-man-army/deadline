@@ -22,3 +22,13 @@ class Submission(models.Model):
 
     def get_absolute_url(self):
         return '/submissions/{}'.format(self.id)
+
+
+class TestCase(models.Model):
+    submission = models.ForeignKey(Submission)
+    time = models.CharField(default='0.00s', max_length=5)
+    success = models.BooleanField(default=False)
+    pending = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        return '/submissions/{}/test/{}'.format(self.submission.id, self.id)

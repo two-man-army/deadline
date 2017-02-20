@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-from challenges.models import Challenge, Submission
+from challenges.models import Challenge, Submission, TestCase as TestCaseModel
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer
 from accounts.models import User
 
@@ -128,3 +128,48 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
 
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
+
+
+class TestCaseModelTest(TestCase):
+    def setUp(self):
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge.save()
+        self.challenge_name = self.challenge.name
+
+        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
+            my_purchase = {
+                'apple': 1,
+                'banana': 6}
+            grocery_bill = sum(prices[fruit] * my_purchase[fruit]
+                               for fruit in my_purchase)
+            print 'I owe the grocer $%.2f' % grocery_bill"""
+        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        self.submission.save()
+
+    def test_absolute_url(self):
+        tc = TestCaseModel(submission=self.submission)
+        tc.save()
+
+        self.assertEqual(tc.get_absolute_url(), '/submissions/{}/test/{}'.format(tc.submission.id, tc.id))
+
+    def test_can_have_multiple_testcases_per_submission(self):
+        for _ in range(15):
+            tc = TestCaseModel(submission=self.submission)
+            tc.save()
+
+        self.assertEqual(TestCaseModel.objects.count(), 15)
+        # Assert they all point to the same submission
+        for tc in TestCaseModel.objects.all():
+            self.assertEqual(tc.submission.id, self.submission.id)
+
+    def test_field_defaults(self):
+        """ Should have it time set to 0, pending to True, success to False"""
+        tc = TestCaseModel(submission=self.submission)
+        tc.save()
+
+        self.assertEqual(tc.time, '0.00s')
+        self.assertTrue(tc.pending)
+        self.assertFalse(tc.success)
