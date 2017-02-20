@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -19,7 +21,7 @@ class ChallengeDetailView(RetrieveAPIView):
 class SubmissionDetailView(RetrieveAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
     def retrieve(self, request, *args, **kwargs):
         challenge_pk = kwargs.get('challenge_pk')
@@ -33,29 +35,27 @@ class SubmissionDetailView(RetrieveAPIView):
                                     .format(submission_pk, challenge_pk)},
                                     status=400)
 
-                # TODO: Query for the tests and populate if there is a result (AND they were not populated)
+                # Query for the tests and populate if there is a result (AND they were not populated)
                 if any(test_case.pending for test_case in submission.testcase_set.all()):
-                    import json
                     potential_result = run_grader.AsyncResult(submission.task_id)
-                    print(potential_result.ready())
-                    print(potential_result.ready())
-                    print(potential_result.ready())
-                    print(potential_result.ready())
-                    print(potential_result.ready())
-                    print(potential_result.get())
-                    print(potential_result.get())
-                    print(potential_result.get())
-                    print(type(potential_result.get()))
-                    print(json.loads(potential_result.get()))
-                    pass
+                    if potential_result.ready():
+                        results = json.loads(potential_result.get())
 
+                        for idx, test_case in enumerate(submission.testcase_set.all()):
+                            test_results = results['results'][idx]
+
+                            test_case.success = test_results['success']
+                            test_case.time = test_results['time'] + 's'
+                            test_case.pending = False
+                            test_case.save()  # TODO: Maybe save at once SOMEHOW, django transaction does not work
+                            # TODO: Add description and traceback to TestCase model
+                return super().retrieve(request, *args, **kwargs)
             except Submission.DoesNotExist:
                 return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},
                                 status=400)
         except Challenge.DoesNotExist:
             return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
                             status=400)
-        return Response(status=201)
 
 
 class SubmissionCreateView(CreateAPIView):
@@ -63,7 +63,7 @@ class SubmissionCreateView(CreateAPIView):
     Creates a submission, given code by the user.
     The test cases are also created and will be populated on next query to view the submission
     """
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
     def create(self, request, *args, **kwargs):
         challenge_pk = kwargs.get('challenge_pk')
@@ -74,7 +74,7 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
             celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
-            submission: Submission = Submission(code=code_given, author=User.objects.first(),
+            submission: Submission = Submission(code=code_given, author=User.objects.first(),  # TODO: REMOVE!!!
                                                 challenge=challenge, task_id=celery_grader_task.id)
             submission.save()
             # Create the test cases
