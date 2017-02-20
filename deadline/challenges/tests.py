@@ -7,7 +7,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
 from challenges.models import Challenge, Submission, TestCase as TestCaseModel
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer
 from accounts.models import User
 
 
@@ -173,3 +173,11 @@ class TestCaseModelTest(TestCase):
         self.assertEqual(tc.time, '0.00s')
         self.assertTrue(tc.pending)
         self.assertFalse(tc.success)
+
+    def test_serialize(self):
+        tc = TestCaseModel(submission=self.submission, pending=False, success=True, time='1.25s')
+        tc.save()
+        expected_json = '{"submission":' + str(tc.submission.id) + ',"pending":false,"success":true,"time":"1.25s"}'
+        serialized_test_case: bytes = JSONRenderer().render(data=TestCaseSerializer(tc).data)
+
+        self.assertEqual(serialized_test_case.decode('utf-8'), expected_json)
