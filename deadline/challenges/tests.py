@@ -130,6 +130,8 @@ class SubmissionViewsTest(APITestCase):
         submission = Submission.objects.get(id=2)
         # assert that the task_id has been populated
         self.assertNotEqual(submission.task_id, '')
+        # assert that the test cases have been created
+        self.assertEqual(submission.testcase_set.count(), submission.challenge.test_case_count)
 
     def test_create_submission_invalid_challenge_should_return_400(self):
         response = self.client.post('/challenges/111/submissions/new',

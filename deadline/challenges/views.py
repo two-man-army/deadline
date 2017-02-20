@@ -3,8 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
+
 from challenges.models import Challenge, Submission, TestCase
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer
+from challenges.tasks import run_grader
 
 
 # Create your views here.
@@ -21,6 +23,10 @@ class SubmissionDetailView(RetrieveAPIView):
 
 
 class SubmissionCreateView(CreateAPIView):
+    """
+    Creates a submission, given code by the user.
+    The test cases are also created and will be populated on next query to view the submission
+    """
     permission_classes = (IsAuthenticated, )
 
     def create(self, request, *args, **kwargs):
@@ -31,8 +37,13 @@ class SubmissionCreateView(CreateAPIView):
             if not code_given:
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
-            submission: Submission = Submission(code=code_given, author=request.user, challenge=challenge)
-            # TODO: Create test cases
+            celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
+            submission: Submission = Submission(code=code_given, author=request.user,
+                                                challenge=challenge, task_id=celery_grader_task.id)
+            submission.save()
+            # Create the test cases
+            TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])
+
             return Response(data=SubmissionSerializer(submission).data, status=201)
         except Challenge.DoesNotExist:
             return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
@@ -43,7 +54,6 @@ class TestCaseDetailView(RetrieveAPIView):
     queryset = TestCase.objects.all()
     serializer_class = TestCaseSerializer
     permission_classes = (IsAuthenticated, )
-
 
     def retrieve(self, request, *args, **kwargs):
         # Validate the challenge and submission id
