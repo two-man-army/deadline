@@ -27,9 +27,9 @@ class SubmissionDetailView(RetrieveAPIView):
         challenge_pk = kwargs.get('challenge_pk')
         submission_pk = kwargs.get('pk')
         try:
-            challenge: Challenge = Challenge.objects.get(id=challenge_pk)
+            challenge = Challenge.objects.get(id=challenge_pk)
             try:
-                submission: Submission = Submission.objects.get(id=submission_pk)
+                submission = Submission.objects.get(id=submission_pk)
                 if submission.challenge_id != challenge.id:
                     return Response(data={'error': 'Submission with ID {} does not belong to Challenge with ID {}'
                                     .format(submission_pk, challenge_pk)},
@@ -74,7 +74,7 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
             celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
-            submission: Submission = Submission(code=code_given, author=User.objects.first(),  # TODO: REMOVE!!!
+            submission = Submission(code=code_given, author=User.objects.first(),  # TODO: REMOVE!!!
                                                 challenge=challenge, task_id=celery_grader_task.id)
             submission.save()
             # Create the test cases
@@ -97,7 +97,7 @@ class TestCaseDetailView(RetrieveAPIView):
         submission_pk = kwargs.get('submission_pk')
         challenge_pk = kwargs.get('challenge_pk')
         try:
-            test_case: TestCase = TestCase.objects.get(id=test_case_pk)
+            test_case = TestCase.objects.get(id=test_case_pk)
             if test_case.submission_id != int(submission_pk):
                 return Response(data={'error': 'Invalid submission for the specific test case!'}, status=400)
             elif test_case.submission.challenge_id != int(challenge_pk):
