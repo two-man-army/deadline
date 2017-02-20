@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
-
+from rest_framework.permissions import IsAuthenticated
 from challenges.models import Challenge, Submission, TestCase
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer
 
@@ -11,14 +11,18 @@ from challenges.serializers import ChallengeSerializer, SubmissionSerializer, Te
 class ChallengeDetailView(RetrieveAPIView):
     queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
+    permission_classes = (IsAuthenticated, )
 
 
 class SubmissionDetailView(RetrieveAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
+    permission_classes = (IsAuthenticated, )
 
 
 class SubmissionCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated, )
+
     def create(self, request, *args, **kwargs):
         challenge_pk = kwargs.get('challenge_pk')
         try:
@@ -28,7 +32,7 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
             submission: Submission = Submission(code=code_given, author=request.user, challenge=challenge)
-
+            # TODO: Create test cases
             return Response(data=SubmissionSerializer(submission).data, status=201)
         except Challenge.DoesNotExist:
             return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
@@ -38,6 +42,8 @@ class SubmissionCreateView(CreateAPIView):
 class TestCaseDetailView(RetrieveAPIView):
     queryset = TestCase.objects.all()
     serializer_class = TestCaseSerializer
+    permission_classes = (IsAuthenticated, )
+
 
     def retrieve(self, request, *args, **kwargs):
         # Validate the challenge and submission id
@@ -58,6 +64,7 @@ class TestCaseDetailView(RetrieveAPIView):
 
 class TestCaseListView(ListAPIView):
     serializer_class = TestCaseSerializer
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         challenge_pk = self.kwargs.get('challenge_pk')

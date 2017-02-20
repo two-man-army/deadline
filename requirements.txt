@@ -1,4 +1,10 @@
+amqp==2.1.4
+billiard==3.5.0.2
+celery==4.0.2
 Django==1.10.5
 djangorestframework==3.5.4
 grader==0.0.1
+kombu==4.0.2
 PyJWT==1.4.2
+pytz==2016.10
+vine==1.1.3

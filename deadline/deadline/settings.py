@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
     'rest_framework',
     'rest_framework.authtoken',
     'accounts',
@@ -44,9 +45,9 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     )
@@ -82,7 +83,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'deadline.wsgi.application'
 
-
+CELERY_RESULT_BACKEND = 'django-db'
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
