@@ -118,6 +118,84 @@ class SubmissionViewsTest(APITestCase):
         self.assertEqual(response.status_code, 401)
 
 
+class TestCaseViewTest(TestCase):
+    def setUp(self):
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
+        self.challenge.save()
+        self.challenge_name = self.challenge.name
+
+        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
+            my_purchase = {
+                'apple': 1,
+                'banana': 6}
+            grocery_bill = sum(prices[fruit] * my_purchase[fruit]
+                               for fruit in my_purchase)
+            print 'I owe the grocer $%.2f' % grocery_bill"""
+        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        self.submission.save()
+        self.tc = TestCaseModel(submission=self.submission, pending=False, success=True, time='1.25s')
+        self.tc_2 = TestCaseModel(submission=self.submission)
+        self.tc_3 = TestCaseModel(submission=self.submission, pending=False, success=False, time='0.2s')
+        self.tc.save(); self.tc_2.save(); self.tc_3.save()
+
+    def test_load_all_test_cases(self):
+        response = self.client.get('/challenges/{}/submissions/{}/tests'.format(self.challenge.id, self.submission.id),
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        serializer = TestCaseSerializer(self.submission.testcase_set, many=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(serializer.data, response.data)
+
+    def test_load_all_test_cases_invalid_challenge_should_400(self):
+        response = self.client.get('/challenges/11/submissions/{}/tests'.format(self.submission.id),
+                                   HTTP_AUTHORIZATION=self.auth_token)
+
+        expected_error_msg = 'No testcases were found, the given challenge or submission ID is most likely invalid'
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], expected_error_msg)
+
+    def test_load_all_test_cases_invalid_submission_should_400(self):
+        response = self.client.get('/challenges/{}/submissions/15/tests'.format(self.challenge.id),
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        expected_error_msg = 'No testcases were found, the given challenge or submission ID is most likely invalid'
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], expected_error_msg)
+
+    def test_load_single_test_case(self):
+        response = self.client.get(self.tc.get_absolute_url(), HTTP_AUTHORIZATION=self.auth_token)
+        serializer = TestCaseSerializer(self.tc)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(serializer.data, response.data)
+
+    def test_load_invalid_test_case_should_return_404(self):
+        response = self.client.get('/challenges/{}/submissions/{}/test/44'.format(self.challenge.id, self.submission.id),
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+
+    def test_load_single_test_case_invalid_submission_id(self):
+        response = self.client.get(
+            '/challenges/{}/submissions/111/test/{}'.format(self.challenge.id, self.tc.id),
+            HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_load_single_test_case_invalid_challenge_id_should_400(self):
+        response = self.client.get(
+            '/challenges/111/submissions/{}/test/{}'.format(self.submission.id, self.tc.id),
+            HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_load_test_case_unauthorized_should_return_401(self):
+        response = self.client.get(self.tc.get_absolute_url())
+
+        self.assertEqual(response.status_code, 401)
+
+
 class SubmissionModelTest(TestCase):
     def setUp(self):
         self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up')
