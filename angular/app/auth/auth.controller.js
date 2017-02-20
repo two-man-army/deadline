@@ -41,6 +41,7 @@
                 .then(
                     function(response) {
                         console.log(response)
+                        
                     },
 
                     function(error) {
@@ -52,11 +53,13 @@
     function config($httpProvider) {
         $httpProvider.defaults.headers.common['Access-Control-Allow-Headers'] = '*';
         $httpProvider.defaults.headers.common['access-control-allow-origin'] = '*';
+        $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+        $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     }
 
     function run($http) {
-        $http.defaults.headers.post['X-CSRFToken'] = 'Ia57OLegUnsCqEie9kmmZuHfxNUqqunUYD5yLD3Ug2RSJNSEq8sUTQJcDcrcDvs6';
-        $http.defaults.headers.common.Authorization = 'Token Ia57OLegUnsCqEie9kmmZuHfxNUqqunUYD5yLD3Ug2RSJNSEq8sUTQJcDcrcDvs6';
+        // $http.defaults.headers.post['X-CSRFToken'] = '801hIqX6ohVMTgrve4q0utdOiWxlQhflrwDPG3J5yCQmc2MssMcAGEa66eKLYyXY';
+        // $http.defaults.headers.common.Authorization = 'Token Ia57OLegUnsCqEie9kmmZuHfxNUqqunUYD5yLD3Ug2RSJNSEq8sUTQJcDcrcDvs6';
     }
 
 }())

@@ -20,7 +20,7 @@
         function register(user) {
             return $http({
                 method: 'POST',
-                url: BASE_URL + 'accounts/register',
+                url: BASE_URL + 'accounts/register/',
                 headers: { 'Content-Type': 'application/json ' + sessionStorage.authToken },
                 data: user
             });
@@ -29,7 +29,7 @@
         function login(user) {
             return $http({
                 method: 'POST',
-                url: BASE_URL + 'accounts/login',
+                url: BASE_URL + 'accounts/login/',
                 headers: { 'Content-Type': 'application/json' },
                 data: user
             });
