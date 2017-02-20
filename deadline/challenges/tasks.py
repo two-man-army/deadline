@@ -24,7 +24,7 @@ def run_grader(test_file_name, code):
         os.fsync(temp_file.fileno())
 
     # run the grader
-    proc: subprocess.CompletedProcess = subprocess.Popen(
+    proc = subprocess.Popen(
         ['python3', '-m', 'grader', 'challenge_tests/' + test_file_name + '.py', temp_file_name],
         stdout=subprocess.PIPE)
 
