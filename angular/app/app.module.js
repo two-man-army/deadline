@@ -6,7 +6,8 @@
         'ngMessages',
         'app.layout',
         'app.auth',
-        'app.dashboard'
+        'app.dashboard',
+        'app.challenge'
     ])
         .config(config)
         .run(run)
