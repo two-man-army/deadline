@@ -20,14 +20,15 @@ def update_user_score(user: User, submission: Submission) -> bool:
         2. He has submitted for the given challenge before but with a lower score
     Returns a boolean whether the score was updated or not
     """
-    prev_submission = Submission.objects.filter(challenge=submission.challenge, author=user).all().aggregate(Max('result_score'))
-    if prev_submission is not None and prev_submission.result_score < submission.result_score:
+    max_prev_score = Submission.objects.filter(challenge=submission.challenge, author=user).exclude(id=submission.id)\
+        .all().aggregate(Max('result_score'))['result_score__max']
+    if max_prev_score is not None and max_prev_score < submission.result_score:
         # The user has submitted a better-scoring solution. Update his score
-        score_improvement = submission.result_score - prev_submission.result_score
+        score_improvement = submission.result_score - max_prev_score
         user.score += score_improvement
         user.save()
         return True
-    elif prev_submission is None:
+    elif max_prev_score is None:
         # The user does not have any previous submissions, so we update his score
         user.score += submission.result_score
         user.save()
