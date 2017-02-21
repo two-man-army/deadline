@@ -2,11 +2,7 @@
     'use strict'
 
     angular.module('app.layout')
-        .config(config)
         .controller('LayoutVideoController', LayoutVideoController);
-
-    config.$inject = ['$routeProvider']
-
 
     function LayoutVideoController() {
         angular.element(document).ready(function() {
@@ -69,13 +65,5 @@
             });
         }
 
-    }
-
-    function config($routeProvider) {
-        $routeProvider.when('/', {
-            templateUrl: 'app/layout/templates/layout.html',
-            controllerAs: 'vm',
-            controller: 'LayoutVideoController'
-        });
     }
 }())

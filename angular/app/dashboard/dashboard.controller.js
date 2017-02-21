@@ -2,23 +2,12 @@
     'use strict'
 
     angular.module('app.dashboard')
-        .controller('DashboardController', DashboardController)
-        .config(config);
+        .controller('DashboardController', DashboardController);
 
     DashboardController.$inject = ['$http', 'authService', '$location']
-    config.$inject = ['$routeProvider']
 
-    function DashboardController($http, $location) {
+    function DashboardController($http, $location, authService) {
         var vm = this;
 
     }
-
-    function config($routeProvider) {
-        $routeProvider.when('/dashboard', {
-            templateUrl: 'app/dashboard/templates/dashboard.html',
-            controllerAs: 'vm',
-            controller: 'DashboardController'
-        });
-    }
-
 }())
