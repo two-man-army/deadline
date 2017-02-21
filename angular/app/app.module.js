@@ -32,6 +32,13 @@
                 requireLogin: true
             })
 
+            .when('/challenge', {
+                templateUrl: 'app/challenge/templates/challenge.html',
+                controllerAs: 'vm',
+                controller: 'ChallengeController',
+                requireLogin: true
+            })
+
             .otherwise({
                 redirectTo: '/'
             });
