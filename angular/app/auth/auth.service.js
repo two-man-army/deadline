@@ -11,7 +11,8 @@
 
         var authService = {
             register: register,
-            login: login
+            login: login,
+            isAuthenticated: isAuthenticated
         };
 
         return authService;
@@ -32,6 +33,10 @@
                 headers: { 'Content-Type': 'application/json' },
                 data: user
             });
+        }
+
+        function isAuthenticated() {
+            return sessionStorage['authToken'] != undefined;
         }
     }
 }());
