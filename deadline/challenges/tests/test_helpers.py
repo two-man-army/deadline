@@ -1,6 +1,6 @@
 import random
 from django.test import TestCase
-from challenges.models import Challenge, Submission, TestCase
+from challenges.models import Challenge, Submission, TestCase as TestCaseModel
 from accounts.models import User
 from challenges.helper import grade_result, update_user_score
 
@@ -23,7 +23,7 @@ class GradeResultTests(TestCase):
         # create the test cases
         self.test_cases = []
         for _ in range(self.challenge.test_case_count):
-            tst_case = TestCase(submission=self.submission, pending=False, success=random.choice[True, False])
+            tst_case = TestCaseModel(submission=self.submission, pending=False, success=random.choice([True, False]))
             tst_case.save()
             self.test_cases.append(tst_case)
 
@@ -64,7 +64,7 @@ class UpdateUserScoreTests(TestCase):
         result = update_user_score(user=self.user, submission=lower_submission)
         self.assertFalse(result)
         self.user.refresh_from_db()
-        self.assertEqual(self.user, 20)  # should not have changed
+        self.assertEqual(self.user.score, 20)  # should not have changed
 
     def test_submission_with_higher_score_should_update(self):
         higher_submission = Submission(challenge=self.challenge, author=self.user,
@@ -74,7 +74,7 @@ class UpdateUserScoreTests(TestCase):
         result = update_user_score(user=self.user, submission=higher_submission)
         self.assertTrue(result)
         self.user.refresh_from_db()
-        self.assertEqual(self.user, 30)  # should have changed
+        self.assertEqual(self.user.score, 30)  # should have changed
 
     def test_submission_other_challenge_should_update(self):
         """ Since the user does not have a submission for this challenge, it should update his score """
@@ -83,10 +83,10 @@ class UpdateUserScoreTests(TestCase):
                                    test_case_count=3)
         new_challenge.save()
         new_submission = Submission(challenge=new_challenge, author=self.user,
-                                      code='hack you', task_id='123', result_score=100)
+                                    code='hack you', task_id='123', result_score=100)
         new_submission.save()
 
-        result = update_user_score(user=self.user, submission=new_challenge)
+        result = update_user_score(user=self.user, submission=new_submission)
         self.assertTrue(result)
         self.user.refresh_from_db()
-        self.assertEqual(self.user, 120)  # should have updated it
+        self.assertEqual(self.user.score, 120)  # should have updated it

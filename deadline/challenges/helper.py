@@ -2,6 +2,7 @@ from django.db.models import Max
 from challenges.models import Challenge, Submission, TestCase
 from accounts.models import User
 
+
 def grade_result(submission: Submission):
     """ Given a tested submission, update it's score in accordance to the number of test cases passed"""
     challenge = submission.challenge  # type: Challenge
