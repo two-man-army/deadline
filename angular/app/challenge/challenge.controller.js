@@ -4,44 +4,52 @@
     angular.module('app.challenge')
         .controller('ChallengeController', ChallengeController);
 
-    ChallengeController.$inject = ['$http', 'authService', '$location', 'BASE_URL']
+    ChallengeController.$inject = ['$http', '$location', 'challengeService']
 
-    function ChallengeController($http, challengeService, $location) {
+    function ChallengeController($http, $location, challengeService) {
         var vm = this;
         vm.getChallenge = getChallenge
+        vm.submitSolution = submitSolution
 
-        function getChallenge($event, challengeId) {
-            $event.preventDefault()
+        angular.element(document).ready(function() {
+            require.config({ paths: { 'vs': 'assets/monaco-editor/min/vs' }});
+            require(['vs/editor/editor.main'], function() {
+                var editor = monaco.editor.create(document.getElementById('challenge-editor'), {
+                    value: [
+                        'def foo() {',
+                        '\tprint("Hello world!")'
+                    ].join('\n'),
+                    language: "python",
+                    lineNumbers: true,
+                    roundedSelection: false,
+                    scrollBeyondLastLine: false,
+                    readOnly: false,
+                    theme: "vs-dark",
+                });
+            });
 
-            challengeService.getChallengeInfo(challengeId)
-                .then(
+        });
+
+        function getChallenge(challengeId) {
+            challengeService.getChallengeInfo(challengeId).
+                then(
                     function(res) {
-                        if (response.status != 200) {
-                            // ERROR - Display to the user
-                            return;
-                        }
-                        var challengeInfo = response.data
-                        // TODO: Display the challenge to the user!
-                        
+                        vm.challengeInfo = res.data
                     },
                     function(error) {
-                     console.log(error)   
-                    }
-                )
+                        console.log(error)
+                    })
         }
 
-        function submitSolution($event, challengeId, code) {
-            $event.preventDefault()
+        function submitSolution(challengeId) {
+            var code = window.monaco.editor.getModels()[0].getValue();
 
             challengeService.submitSolution(challengeId, code)
                 .then(
                     function(res) {
-                        if (response.status != 201) {
-                            // ERROR - Display to the user
-                            return;
-                        }
-                        var solutionInfo = response.data;
-                        var solutionId = solutionInfo.id;
+                        vm.solutionInfo = response.data;
+                        vm.solutionId = solutionInfo.id;
+
                         // TODO !!!
                         // TODO: Issue GET requests with challengeService.getChallengeSolution()
                         // until response.data.pending is True, then display the results!
