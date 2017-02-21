@@ -10,6 +10,7 @@ from accounts.models import User
 from challenges.models import Challenge, Submission, TestCase
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer
 from challenges.tasks import run_grader
+from challenges.helper import grade_result
 
 
 # Create your views here.
@@ -53,8 +54,9 @@ class SubmissionDetailView(RetrieveAPIView):
                             test_case.traceback = test_results['traceback']
                             test_case.error_message = test_results['error_message']
                             test_case.save()  # TODO: Maybe save at once SOMEHOW, django transaction does not work
-
-                        # TODO: Grade result
+                            
+                        grade_result(submission)  # update the submission's score
+                        # TODO: Add the grade to the user if applicable
                 return super().retrieve(request, *args, **kwargs)
             except Submission.DoesNotExist:
                 return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},

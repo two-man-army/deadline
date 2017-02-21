@@ -9,7 +9,7 @@ from challenges.serializers import TestCaseSerializer
 from accounts.models import User
 
 
-class TestCaseViewTest(TestCase):
+class TestCaseViewTest(APITestCase):
     def setUp(self):
         self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=2)
         self.challenge.save()
@@ -85,8 +85,6 @@ class TestCaseViewTest(TestCase):
         response = self.client.get(self.tc.get_absolute_url())
 
         self.assertEqual(response.status_code, 401)
-
-
 
 
 class TestCaseModelTest(TestCase):
