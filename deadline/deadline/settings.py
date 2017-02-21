@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,11 +47,8 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication',  # Need to use HTTPS otherwise not secure
     )
 }
 
@@ -89,6 +87,7 @@ CELERY_RESULT_BACKEND = 'django-db'
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
+# bad DB
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -96,8 +95,8 @@ DATABASES = {
     }
 }
 
+# Don't know where this stands security-wise
 CORS_ORIGIN_ALLOW_ALL = True
-from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = default_headers + ('access-control-allow-origin', 'Access-Control-Allow-Headers')
 
 # Password validation
