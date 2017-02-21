@@ -17,9 +17,8 @@
 
         function register($event, user) {
             $event.preventDefault()
-            console.log(user)
 
-            authService.register($event, user)
+            authService.register(user)
                 .then(
                     function(res) {
                         vm.login($event, user)
