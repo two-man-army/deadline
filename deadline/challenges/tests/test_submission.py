@@ -81,6 +81,14 @@ class SubmissionViewsTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(SubmissionSerializer(self.submission).data, response.data)
 
+    def test_view_all_submissions(self):
+        second_submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        second_submission.save()
+        response = self.client.get(path='/challenges/{}/submissions/all'.format(self.challenge.id), HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SubmissionSerializer([self.submission, second_submission], many=True).data, response.data)
+
     def test_view_submission_doesnt_exist(self):
         response = self.client.get('challenges/{}/submissions/15'.format(self.submission.challenge_id)
                                , HTTP_AUTHORIZATION=self.auth_token)

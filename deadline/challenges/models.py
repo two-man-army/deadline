@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from accounts.models import User
 
@@ -7,8 +8,8 @@ from accounts.models import User
 class Challenge(models.Model):
     name = models.CharField(unique=True, max_length=30)
     description = models.CharField(max_length=3000)
-    rating = models.IntegerField()
-    score = models.IntegerField()
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
+    score = models.IntegerField(validators=[MinValueValidator(1)])
     test_file_name = models.CharField(max_length=50)
     test_case_count = models.IntegerField(blank=False)
     # TODO: Add category once ready

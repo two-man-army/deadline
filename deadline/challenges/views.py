@@ -67,6 +67,18 @@ class SubmissionDetailView(RetrieveAPIView):
                             status=400)
 
 
+class SubmissionListView(ListAPIView):
+    serializer_class = SubmissionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        challenge_pk = kwargs.get('challenge_pk')
+        return Response(data=SubmissionSerializer(Submission.objects
+                                                  .filter(challenge=challenge_pk, author=request.user)
+                                                  .all(), many=True).data
+                        , status=200)
+
+
 class SubmissionCreateView(CreateAPIView):
     """
     Creates a submission, given code by the user.
@@ -83,7 +95,7 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
             celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
-            submission = Submission(code=code_given, author=request.user,
+            submission = Submission(code=code_given, author=User.objects.first(),
                                                 challenge=challenge, task_id=celery_grader_task.id)
             submission.save()
             # Create the test cases
@@ -126,7 +138,7 @@ class TestCaseListView(ListAPIView):
         submission_pk = self.kwargs.get('submission_pk')
 
         return TestCase.objects.filter(submission=
-                                       Submission.objects.filter(  # All submissions who belong to the given challenge
+                                       Submission.objects.filter(  # All test cases who belong to the given submission
                                            id=submission_pk,
                                            challenge=Challenge.objects.filter(id=challenge_pk).first())
                                        .first())
@@ -141,3 +153,6 @@ class TestCaseListView(ListAPIView):
                 status=400)
 
         return response
+
+
+
