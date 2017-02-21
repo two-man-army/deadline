@@ -9,8 +9,9 @@ def grade_result(submission: Submission):
 
     num_successful_tests = len([True for test_case in submission.testcase_set.all()
                                 if not test_case.pending and test_case.success])
+    result_per_test = challenge.score / challenge.test_case_count
 
-    submission.result_score = challenge.score / num_successful_tests
+    submission.result_score = num_successful_tests * result_per_test
     submission.save()
 
 
