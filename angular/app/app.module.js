@@ -14,7 +14,7 @@
         .constant('BASE_URL', 'http://localhost:8000/');
 
     config.$inject = ['$routeProvider'];
-    run.$inject = ['$rootScope', 'authService']
+    run.$inject = ['$rootScope', '$location', 'authService']
 
     function config($routeProvider) {
         $routeProvider
@@ -44,11 +44,14 @@
             });
     }
 
-    function run($rootScope, authService) {
+    function run($rootScope, $location, authService) {
         $rootScope.$on('$routeChangeStart', function($event, next, current) {
             if(next.requireLogin && !authService.isAuthenticated()) {
                 $event.preventDefault();
+            } else {
+                $location.path('/dashboard')
             }
+
         })
     }
 }());
