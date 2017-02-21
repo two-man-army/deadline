@@ -10,5 +10,17 @@
       "test_file_name": "hello_tests",
       "test_case_count": 1
     }
+  },
+  {
+    "model": "challenges.challenge",
+    "pk": 2,
+    "fields": {
+      "name": "Basic Numbers",
+      "description": "While studying for her university, FMI, Rositsa came up with the idea of a basic number.\n\nA basic number was the following: a positive number, which when represented in base **b** would have every prefix with **k** count digits(from 1 to the count of digits in the number to the given base) converted to base **b** be divisible by **k**.\n\nExample:\nUsing base 2\n1 is a basic number since its prefix of length 1 (prefix=1) is divisible by 1\n2 is a basic number. 2 in base 2 is 10, its prefix of length 1 is 1, which is divisible by 1 and its prefix of length 2 is 10, which is divisible by 2.\n3, on the other hand, is not a basic number. Converted to base 2, 3 is equal to 11. Its prefix of length 1(prefix=1) is divisible by 1, but its prefix of length 2(prefix=11) is not divisible by 2.\n\nRositsa wants you to find the count of basic numbers represented in the given base **b**, which are exactly **d** digits long (when converted to the base).\n\nInput\nFirst line of the input denotes the number of test cases.\nFor each test case there is a single line containing two integers, the base **b** and digits **d**, separated by a single space.\n\nContraints:\n1<=Test case count<=100\n2<=Base<=4\n1<=Digits<=10^7\n\nExample Input:\n1\n3 2\n\nExample Output:\n1\n\nThere are exactly 6 numbers that have 2 digits converted to base 3 and they are [3, 4, 5, 6, 7, 8](in base 3 [10, 11, 12, 20, 21, 22]) Only numbers 4(11), 6(20) and 8(22) are basic numbers. 4 is a basic number, because his prefix of length 1(prefix=1, converted to base 3=1) is divisible by 1 and its prefix of length 2(prefix=11, converted to base3=4) is divisible by 2.",
+      "rating": 35,
+      "score": 40,
+      "test_file_name": "basic_numbers_tests",
+      "test_case_count": 8
+    }
   }
 ]
