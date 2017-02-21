@@ -1,0 +1,14 @@
+[
+  {
+    "model": "challenges.challenge",
+    "pk": 1,
+    "fields": {
+      "name": "Say Hello World!",
+      "description": "Write a program that prints `Hello World` to the console!",
+      "rating": 1,
+      "score": 10,
+      "test_file_name": "hello_tests",
+      "test_case_count": 1
+    }
+  }
+]
