@@ -19,12 +19,21 @@
             });
         }
 
-        function getChallengeSubmissions(challengeId) {
+        function getAllChallengeSolutions(challengeId) {
             var allSubmissionsURL = BASE_URL + 'challenges/' + challengeId + '/submissions/all';
             
             return $http({
                 method: 'GET',
                 url: allSubmissionsURL
+            });
+        }
+
+        function getChallengeSolution(challengeId, solutionId) {
+            var solutionURL = BASE_URL + 'challenges/' + challengeId + '/submissions/' + solutionId;
+
+            return $http({
+                method: 'GET',
+                url:solutionURL
             });
         }
         

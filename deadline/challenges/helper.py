@@ -12,6 +12,7 @@ def grade_result(submission: Submission):
     result_per_test = challenge.score / challenge.test_case_count
 
     submission.result_score = num_successful_tests * result_per_test
+    submission.pending = False
     submission.save()
 
 

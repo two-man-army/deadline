@@ -41,10 +41,10 @@
                             return;
                         }
                         var solutionInfo = response.data;
-                        // Issue GET requests to this URL to update it's score !!!
-                        var solutionURL = BASE_URL + '/challenges/' + challengeId + '/submissions/' + solutionInfo.id
-                        // Issue GET requests to this URL to get the test cases for the given solution
-                        var solutionTestCasesURL = solutionURL + '/tests'
+                        var solutionId = solutionInfo.id;
+                        // TODO !!!
+                        // TODO: Issue GET requests with challengeService.getChallengeSolution()
+                        // until response.data.pending is True, then display the results!
                     },
                     function(error) {
                         console.log(error)
