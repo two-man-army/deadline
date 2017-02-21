@@ -1,29 +1,43 @@
 (function() {
     'use strict';
 
-    angular.module('app.challenge').factory('challengeService', challengeService);
+    angular
+        .module('app.challenge')
+        .factory('challengeService', challengeService);
 
     challengeService.$inject = ['$http', 'BASE_URL'];
 
-    function challenceService($http, BASE_URL) {
+    function challengeService($http, BASE_URL) {
+
         var challengeService = {
             getChallengeInfo: getChallengeInfo,
-            getChallengeSubmissions: getChallengeSubmissions
-        }
+            getChallengeSolution: getChallengeSolution,
+            getAllChallengeSolutions: getAllChallengeSolutions,
+            submitSolution: submitSolution
+        };
+
+        return challengeService;
+
         function getChallengeInfo(challengeId) {
             var challengeURL = BASE_URL + 'challenges/' + challengeId;
 
             return $http({
                 method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
                 url: challengeURL
             });
         }
 
         function getAllChallengeSolutions(challengeId) {
             var allSubmissionsURL = BASE_URL + 'challenges/' + challengeId + '/submissions/all';
-            
+
             return $http({
                 method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
                 url: allSubmissionsURL
             });
         }
@@ -33,10 +47,13 @@
 
             return $http({
                 method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
                 url:solutionURL
             });
         }
-        
+
         /**
          * Submits a solution for a given challenge.
          * Returns the serialized solution
@@ -48,9 +65,12 @@
             return $http({
                 method: 'POST',
                 url: submitSolutionURL,
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
                 data: {'code': code}
             })
         }
     }
-})
+}());
