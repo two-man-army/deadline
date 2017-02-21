@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
+
 from accounts.models import User
 from challenges.models import Challenge, Submission, TestCase
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer
@@ -52,6 +53,8 @@ class SubmissionDetailView(RetrieveAPIView):
                             test_case.traceback = test_results['traceback']
                             test_case.error_message = test_results['error_message']
                             test_case.save()  # TODO: Maybe save at once SOMEHOW, django transaction does not work
+
+                        # TODO: Grade result
                 return super().retrieve(request, *args, **kwargs)
             except Submission.DoesNotExist:
                 return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},

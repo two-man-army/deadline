@@ -22,6 +22,7 @@ class Submission(models.Model):
     author = models.ForeignKey(User)
     code = models.CharField(max_length=4000, blank=False)
     task_id = models.CharField(max_length=100, blank=False)
+    result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
 
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)
