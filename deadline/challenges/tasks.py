@@ -25,7 +25,7 @@ def run_grader(test_file_name, code):
 
     # run the grader
     proc = subprocess.Popen(
-        ['python3', '-m', 'grader', 'challenge_tests/' + test_file_name + '.py', temp_file_name],
+        ['python3', '-m', 'grader', '--sandbox', 'docker', 'challenge_tests/' + test_file_name + '.py', temp_file_name],
         stdout=subprocess.PIPE)
 
     # Remove the file after the max test time
