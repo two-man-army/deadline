@@ -23,7 +23,10 @@ class TestCaseSerializer(serializers.ModelSerializer):
     success = serializers.BooleanField(read_only=True)
     pending = serializers.BooleanField(read_only=True)
     time = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    traceback = serializers.CharField(read_only=True)
+    error_message = serializers.CharField(read_only=True)
 
     class Meta:
         model = TestCase
-        fields = ('submission', 'pending', 'success', 'time')
+        fields = ('submission', 'pending', 'success', 'time', 'description', 'traceback', 'error_message')

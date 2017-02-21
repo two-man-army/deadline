@@ -24,6 +24,7 @@ class SubmissionDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
 
     def retrieve(self, request, *args, **kwargs):
+        """ Get the submission and meanwhile check if its tests have been completed. If they have, save them """
         challenge_pk = kwargs.get('challenge_pk')
         submission_pk = kwargs.get('pk')
         try:
@@ -47,8 +48,10 @@ class SubmissionDetailView(RetrieveAPIView):
                             test_case.success = test_results['success']
                             test_case.time = test_results['time'] + 's'
                             test_case.pending = False
+                            test_case.description = test_results['description']
+                            test_case.traceback = test_results['traceback']
+                            test_case.error_message = test_results['error_message']
                             test_case.save()  # TODO: Maybe save at once SOMEHOW, django transaction does not work
-                            # TODO: Add description and traceback to TestCase model
                 return super().retrieve(request, *args, **kwargs)
             except Submission.DoesNotExist:
                 return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},
@@ -74,7 +77,7 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
             celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
-            submission = Submission(code=code_given, author=User.objects.first(),  # TODO: REMOVE!!!
+            submission = Submission(code=code_given, author=request.user,
                                                 challenge=challenge, task_id=celery_grader_task.id)
             submission.save()
             # Create the test cases

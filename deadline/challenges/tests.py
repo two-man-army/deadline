@@ -312,9 +312,9 @@ class TestCaseModelTest(TestCase):
         self.assertFalse(tc.success)
 
     def test_serialize(self):
-        tc = TestCaseModel(submission=self.submission, pending=False, success=True, time='1.25s')
+        tc = TestCaseModel(submission=self.submission, pending=False, success=True, time='1.25s', description='Testing', traceback='You suck at coding', error_message="whatup")
         tc.save()
-        expected_json = '{"submission":' + str(tc.submission.id) + ',"pending":false,"success":true,"time":"1.25s"}'
+        expected_json = '{"submission":' + str(tc.submission.id) + ',"pending":false,"success":true,"time":"1.25s","description":"Testing","traceback":"You suck at coding","error_message":"whatup"}'
         serialized_test_case: bytes = JSONRenderer().render(data=TestCaseSerializer(tc).data)
 
         self.assertEqual(serialized_test_case.decode('utf-8'), expected_json)

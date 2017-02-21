@@ -32,6 +32,9 @@ class TestCase(models.Model):
     time = models.CharField(default='0.00s', max_length=5)
     success = models.BooleanField(default=False)
     pending = models.BooleanField(default=True)
+    description = models.CharField(max_length=1000)
+    traceback = models.CharField(max_length=2000)
+    error_message = models.CharField(max_length=100)
 
     class Meta:
         ordering = ['id', ]
