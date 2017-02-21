@@ -4,9 +4,6 @@
     angular.module('app.layout')
         .controller('LayoutVideoController', LayoutVideoController);
 
-    config.$inject = ['$routeProvider']
-
-
     function LayoutVideoController() {
         angular.element(document).ready(function() {
             scaleVideoContainer();
