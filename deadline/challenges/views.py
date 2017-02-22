@@ -90,6 +90,20 @@ class SubmissionListView(ListAPIView):
                         , status=200)
 
 
+class TopSubmissionListView(ListAPIView):
+    serializer_class = SubmissionSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def list(self, request, *args, **kwargs):
+        challenge_pk = kwargs.get('challenge_pk')
+        top_submissions = Submission.objects.raw('SELECT id, author_id, max(result_score) as maxscore '
+                                                 'FROM challenges_submission '
+                                                 'WHERE challenge_id = %s '
+                                                 'GROUP BY author_id '
+                                                 'ORDER BY maxscore DESC;', params=[challenge_pk])
+        return Response(data=SubmissionSerializer(top_submissions, many=True).data)
+
+
 class SubmissionCreateView(CreateAPIView):
     """
     Creates a submission, given code by the user.

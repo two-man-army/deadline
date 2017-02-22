@@ -92,7 +92,7 @@ class SubmissionViewsTest(APITestCase):
         grocery_bill = sum(prices[fruit] * my_purchase[fruit]
                            for fruit in my_purchase)
         print 'I owe the grocer $%.2f' % grocery_bill"""
-        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code, result_score=40)
         self.submission.save()
 
     def test_view_submission(self):
@@ -136,3 +136,19 @@ class SubmissionViewsTest(APITestCase):
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 400)
+
+    def test_get_top_submissions(self):
+        better_submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code,
+                                     result_score=50)
+        better_submission.save()
+        # Second user with submissions
+        _s_user = User(username='Seocnd user', password='123', email='EC@abv.bg', score=123); _s_user.save()
+        _submission = Submission(challenge=self.challenge, author=_s_user, code=self.sample_code, result_score=50)
+        top_submission = Submission(challenge=self.challenge, author=_s_user, code=self.sample_code, result_score=51)
+        _submission.save();top_submission.save()
+
+        # Should return the two submissions, (both users' best submissions) ordered by score descending
+        response = self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, SubmissionSerializer([top_submission, better_submission], many=True).data)
