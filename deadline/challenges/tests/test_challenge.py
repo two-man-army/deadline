@@ -9,7 +9,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
 from challenges.models import Challenge, ChallengeCategory, SubCategory, ChallengeDescription
-from challenges.serializers import ChallengeSerializer
+from challenges.serializers import ChallengeSerializer, ChallengeDescriptionSerializer
 from accounts.models import User
 
 
@@ -35,6 +35,15 @@ class ChallengesModelTest(TestCase):
         c.save()
         with self.assertRaises(ValidationError):
             c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+            c.full_clean()
+
+    def test_cannot_have_duplicate_descriptions(self):
+        c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat,
+                      description=self.sample_desc)
+        c.save()
+        with self.assertRaises(ValidationError):
+            c = Challenge(name='Working', rating=5, score=10, test_case_count=1, category=self.sub_cat,
+                          description=self.sample_desc)
             c.full_clean()
 
     def test_cannot_save_blank_challenge(self):
@@ -76,6 +85,30 @@ class ChallengesModelTest(TestCase):
         serializer = ChallengeSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
+
+
+class ChallengesDescriptionModelTest(TestCase):
+    def setUp(self):
+        self.description = ChallengeDescription(
+            content='You need to print out Hello World!',
+            input_format='',
+            output_format='The word "Hello World!" in a single line',
+            constraints='Time: 10s',
+            sample_input='',
+            sample_output='Hello World!',
+            explanation='Just print it out!'
+        )
+        self.description.save()
+
+    def test_serialization(self):
+        expected_json = ('{"content":"You need to print out Hello World!",'
+                         + '"input_format":"","output_format":"The word "Hello World!" in a single line",'
+                         + '"constraints":"Time: 10s","sample_input":"","sample_output":"Hello World!",'
+                         + '"explanation":"Just print it out!"'
+                         + '}')
+        received_data = JSONRenderer().render(ChallengeDescriptionSerializer(self.description).data)
+
+        self.assertEqual(received_data.decode('utf-8').replace('\\', ''), expected_json)
 
 
 class ChallengesViewsTest(APITestCase):
