@@ -181,4 +181,18 @@ body {
   width: 100%;
   z-index: 100; }
 
+.header {
+  background: #eff0f1 !important; }
+
+.category {
+  color: #b2bfdc;
+  border-left: 3px solid #30426a; }
+  .category:hover {
+    color: #fff;
+    background: #2d3e63;
+    border-left: 3px solid #e99d1a; }
+
+.sub-category {
+  color: darkgray; }
+
 /*# sourceMappingURL=style.css.map */
