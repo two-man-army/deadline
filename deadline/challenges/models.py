@@ -53,4 +53,7 @@ class ChallengeCategory(models.Model):
 
 class SubCategory(models.Model):
     name = models.CharField(max_length=100, unique=True, primary_key=True)
-    meta_category = models.ForeignKey(to=ChallengeCategory)
+    meta_category = models.ForeignKey(to=ChallengeCategory, related_name='sub_categories')
+
+    def __str__(self):
+        return self.name
