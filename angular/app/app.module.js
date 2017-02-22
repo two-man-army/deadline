@@ -6,6 +6,7 @@
         'ngMessages',
         'ngCookies',
         'ui.bootstrap',
+        'ui.tree',
         'app.layout',
         'app.auth',
         'app.dashboard',
