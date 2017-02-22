@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from challenges.models import Challenge, Submission, TestCase, ChallengeCategory
+from challenges.models import Challenge, Submission, TestCase, ChallengeCategory, SubCategory
 
 
 class ChallengeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Challenge
         fields = ('name', 'rating', 'score', 'description', 'test_case_count', 'category')
+
+
+class LimitedChallengeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Challenge
+        fields = ('name', 'rating', 'score')
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
@@ -40,3 +46,11 @@ class ChallengeCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeCategory
         fields = ('name', 'sub_categories')
+
+
+class SubCategorySerializer(serializers.ModelSerializer):
+    challenges = LimitedChallengeSerializer(many=True)
+
+    class Meta:
+        model = SubCategory
+        fields = ('name', 'challenges')
