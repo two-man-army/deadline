@@ -1,6 +1,6 @@
 import random
 from django.test import TestCase
-from challenges.models import Challenge, Submission, TestCase as TestCaseModel
+from challenges.models import Challenge, Submission, TestCase as TestCaseModel, ChallengeCategory, SubCategory
 from accounts.models import User
 from challenges.helper import grade_result, update_user_score
 
@@ -11,11 +11,15 @@ class GradeResultTests(TestCase):
     """
 
     def setUp(self):
+        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat.save()
+        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
+        self.sub_cat.save()
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
         self.challenge = Challenge(name='Hello World!', description='Say hello',
                                    rating=10, score=100, test_file_name='smth',
-                                   test_case_count=5)
+                                   test_case_count=5, category=self.sub_cat)
         self.challenge.save()
         self.submission = Submission(challenge=self.challenge, author=self.user,
                                      code='hack you', task_id='123', result_score=0)
@@ -29,7 +33,7 @@ class GradeResultTests(TestCase):
 
     def test_grade_result(self):
         num_successful_tests = len([True for test_case in self.test_cases if not test_case.pending and test_case.success])
-        expected_score = self.challenge.score / num_successful_tests
+        expected_score =  num_successful_tests * (self.challenge.score / self.challenge.test_case_count)
 
         grade_result(submission=self.submission)
 
@@ -45,9 +49,13 @@ class UpdateUserScoreTests(TestCase):
     def setUp(self):
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
+        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat.save()
+        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
+        self.sub_cat.save()
         self.challenge = Challenge(name='Hello World!', description='Say hello',
                                    rating=10, score=100, test_file_name='smth',
-                                   test_case_count=3)
+                                   test_case_count=3, category=self.sub_cat)
         self.challenge.save()
         self.submission = Submission(challenge=self.challenge, author=self.user,
                                      code='hack you', task_id='123', result_score=20)
@@ -80,7 +88,7 @@ class UpdateUserScoreTests(TestCase):
         """ Since the user does not have a submission for this challenge, it should update his score """
         new_challenge = Challenge(name='NEW MAN', description='NEW',
                                    rating=10, score=100, test_file_name='smth',
-                                   test_case_count=3)
+                                   test_case_count=3, category=self.sub_cat)
         new_challenge.save()
         new_submission = Submission(challenge=new_challenge, author=self.user,
                                     code='hack you', task_id='123', result_score=100)

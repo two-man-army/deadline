@@ -4,14 +4,19 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import Challenge, Submission
+from challenges.models import Challenge, Submission, SubCategory, ChallengeCategory
 from challenges.serializers import SubmissionSerializer
 from accounts.models import User
 
 
 class SubmissionModelTest(TestCase):
     def setUp(self):
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=3)
+        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat.save()
+        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
+        self.sub_cat.save()
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=3,
+                                   category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name
 
@@ -58,8 +63,12 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
 
 class SubmissionViewsTest(APITestCase):
     def setUp(self):
+        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat.save()
+        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
+        self.sub_cat.save()
         self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_file_name='hello_tests',
-                                   test_case_count=3)
+                                   test_case_count=3, category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name
 

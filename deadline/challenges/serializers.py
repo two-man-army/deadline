@@ -5,7 +5,7 @@ from challenges.models import Challenge, Submission, TestCase
 class ChallengeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Challenge
-        fields = ('name', 'rating', 'score', 'description', 'test_case_count')
+        fields = ('name', 'rating', 'score', 'description', 'test_case_count', 'category')
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
