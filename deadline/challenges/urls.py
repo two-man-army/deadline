@@ -2,10 +2,11 @@ from django.conf.urls import url
 
 from challenges.views import (
     ChallengeDetailView, SubmissionDetailView, TestCaseDetailView, TestCaseListView,
-    SubmissionCreateView, SubmissionListView, ChallengeCategoryListView)
+    SubmissionCreateView, SubmissionListView, ChallengeCategoryListView, SubCategoryDetailView)
 
 urlpatterns = [
     url(r'^categories/all$', ChallengeCategoryListView.as_view(), name='category_list'),
+    url(r'^subcategories/(?P<pk>[^/]+)$', SubCategoryDetailView.as_view(), name='subcategory_detail'),
     url(r'^(?P<pk>\d+)$', ChallengeDetailView.as_view(), name='challenge_detail'),
     url(r'^(?P<challenge_pk>\d+)/submissions/(?P<pk>\d+)$', SubmissionDetailView.as_view(), name='submission_detail'),
     url(r'^(?P<challenge_pk>\d+)/submissions/new$', SubmissionCreateView.as_view(), name='submission_create'),

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import ChallengeCategory, SubCategory, Challenge
+from challenges.models import ChallengeCategory, SubCategory, Challenge, User
 from challenges.serializers import ChallengeCategorySerializer, SubCategorySerializer
 
 
@@ -54,6 +54,35 @@ class SubCategoryModelTest(TestCase):
         """ Ths Subcategory should show all its challenges"""
         c = Challenge(name='TestThis', rating=5, score=10, description='What up', test_case_count=5, category=self.sub1)
         c.save()
-        expected_json = '{"name":"Unit","challenges":[{"name":"TestThis","rating":5,"score":10}]}'
+        expected_json = '{"name":"Unit","challenges":[{"id":1,"name":"TestThis","rating":5,"score":10}]}'
         received_data = JSONRenderer().render(SubCategorySerializer(self.sub1).data)
         self.assertEqual(received_data.decode('utf-8'), expected_json)
+
+
+class SubCategoryViewTest(TestCase):
+    def setUp(self):
+        auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        auth_user.save()
+        self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
+        self.c1 = ChallengeCategory(name='Test')
+        self.sub1 = SubCategory(name='Unit Tests', meta_category=self.c1)
+        self.sub1.save()
+        c = Challenge(name='TestThis', rating=5, score=10, description='What up', test_case_count=5, category=self.sub1)
+        c.save()
+
+    def test_view_subcategory_detail_should_show(self):
+        response = self.client.get('/challenges/subcategories/{}'.format(self.sub1.name),
+                                   HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        # Should get the information about a specific subcategory
+        self.assertEqual(response.data, SubCategorySerializer(self.sub1).data)
+
+    def test_view_unauthorized_should_401(self):
+        response = self.client.get('/challenges/subcategories/{}'.format(self.sub1.name))
+        self.assertEqual(response.status_code, 401)
+
+    def test_view_invalid_challenge_should_404(self):
+        response = self.client.get('/challenges/subcategories/{}'.format('" OR 1=1;'),
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)

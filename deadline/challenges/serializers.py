@@ -11,7 +11,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
 class LimitedChallengeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Challenge
-        fields = ('name', 'rating', 'score')
+        fields = ('id', 'name', 'rating', 'score')
 
 
 class SubmissionSerializer(serializers.ModelSerializer):

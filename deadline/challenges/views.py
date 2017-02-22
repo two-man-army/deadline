@@ -7,8 +7,8 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
-from challenges.models import Challenge, Submission, TestCase, ChallengeCategory
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, ChallengeCategorySerializer
+from challenges.models import Challenge, Submission, TestCase, ChallengeCategory, SubCategory
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, ChallengeCategorySerializer, SubCategorySerializer
 from challenges.tasks import run_grader
 from challenges.helper import grade_result, update_user_score
 
@@ -23,6 +23,12 @@ class ChallengeDetailView(RetrieveAPIView):
 class ChallengeCategoryListView(ListAPIView):
     serializer_class = ChallengeCategorySerializer
     queryset = ChallengeCategory.objects.all()
+
+
+class SubCategoryDetailView(RetrieveAPIView):
+    queryset = SubCategory.objects.all()
+    serializer_class = SubCategorySerializer
+    permission_classes = (IsAuthenticated, )
 
 
 class SubmissionDetailView(RetrieveAPIView):
