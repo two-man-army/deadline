@@ -47,8 +47,8 @@
             challengeService.submitSolution(challengeId, code)
                 .then(
                     function(res) {
-                        vm.solutionInfo = response.data;
-                        vm.solutionId = solutionInfo.id;
+                        vm.solutionInfo = res.data;
+                        vm.solutionId = vm.solutionInfo.id;
 
                         // TODO !!!
                         // TODO: Issue GET requests with challengeService.getChallengeSolution()

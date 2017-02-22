@@ -46,12 +46,12 @@
 
     function run($rootScope, $location, authService) {
         $rootScope.$on('$routeChangeStart', function($event, next, current) {
+            // if the next view requires authentication and the user is not authenticated
             if(next.requireLogin && !authService.isAuthenticated()) {
                 $event.preventDefault();
             } else {
-                $location.path('/dashboard')
+                // $location.path('/dashboard')
             }
-
         })
     }
 }());
