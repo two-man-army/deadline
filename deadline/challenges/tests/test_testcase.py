@@ -4,18 +4,24 @@ from django.core.exceptions import ValidationError
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import Challenge, Submission, TestCase as TestCaseModel, ChallengeCategory, SubCategory
+from challenges.models import (
+    Challenge, ChallengeCategory, ChallengeDescription, Submission, TestCase as TestCaseModel, SubCategory)
 from challenges.serializers import TestCaseSerializer
 from accounts.models import User
 
 
 class TestCaseViewTest(APITestCase):
     def setUp(self):
+        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
+                                                output_format='something', constraints='some',
+                                                sample_input='input sample', sample_output='output sample',
+                                                explanation='gotta push it to the limit')
+        self.sample_desc.save()
         challenge_cat = ChallengeCategory('Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=2,
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description=self.sample_desc, test_case_count=2,
                                    category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name
@@ -94,11 +100,16 @@ class TestCaseViewTest(APITestCase):
 
 class TestCaseModelTest(TestCase):
     def setUp(self):
+        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
+                                                output_format='something', constraints='some',
+                                                sample_input='input sample', sample_output='output sample',
+                                                explanation='gotta push it to the limit')
+        self.sample_desc.save()
         challenge_cat = ChallengeCategory('Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description='What up', test_case_count=5,
+        self.challenge = Challenge(name='Hello', rating=5, score=10, description=self.sample_desc, test_case_count=5,
                                    category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name

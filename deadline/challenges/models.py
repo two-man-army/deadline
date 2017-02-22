@@ -7,7 +7,7 @@ from accounts.models import User
 # Create your models here.
 class Challenge(models.Model):
     name = models.CharField(unique=True, max_length=30)
-    description = models.CharField(max_length=3000)
+    description = models.OneToOneField('ChallengeDescription')
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
     score = models.IntegerField(validators=[MinValueValidator(1)])
     test_file_name = models.CharField(max_length=50)
@@ -57,3 +57,14 @@ class SubCategory(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ChallengeDescription(models.Model):
+    """ Holds the description for a specific challenge """
+    content = models.CharField(max_length=3000)
+    input_format = models.CharField(max_length=500)
+    output_format = models.CharField(max_length=1000)
+    constraints = models.CharField(max_length=1000)
+    sample_input = models.CharField(max_length=1000)
+    sample_output = models.CharField(max_length=1000)
+    explanation = models.CharField(max_length=1000)

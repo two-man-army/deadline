@@ -1,6 +1,7 @@
 import random
 from django.test import TestCase
-from challenges.models import Challenge, Submission, TestCase as TestCaseModel, ChallengeCategory, SubCategory
+from challenges.models import (
+    Challenge, Submission, TestCase as TestCaseModel, ChallengeCategory, SubCategory, ChallengeDescription)
 from accounts.models import User
 from challenges.helper import grade_result, update_user_score
 
@@ -11,13 +12,18 @@ class GradeResultTests(TestCase):
     """
 
     def setUp(self):
+        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
+                                                output_format='something', constraints='some',
+                                                sample_input='input sample', sample_output='output sample',
+                                                explanation='gotta push it to the limit')
+        self.sample_desc.save()
         challenge_cat = ChallengeCategory('Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
-        self.challenge = Challenge(name='Hello World!', description='Say hello',
+        self.challenge = Challenge(name='Hello World!', description=self.sample_desc,
                                    rating=10, score=100, test_file_name='smth',
                                    test_case_count=5, category=self.sub_cat)
         self.challenge.save()
@@ -47,13 +53,18 @@ class UpdateUserScoreTests(TestCase):
     Note: It should only update it if the user has a previous submission (or none at all) which has a lower score.
     """
     def setUp(self):
+        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
+                                                output_format='something', constraints='some',
+                                                sample_input='input sample', sample_output='output sample',
+                                                explanation='gotta push it to the limit')
+        self.sample_desc.save()
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
         challenge_cat = ChallengeCategory('Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-        self.challenge = Challenge(name='Hello World!', description='Say hello',
+        self.challenge = Challenge(name='Hello World!', description=self.sample_desc,
                                    rating=10, score=100, test_file_name='smth',
                                    test_case_count=3, category=self.sub_cat)
         self.challenge.save()
@@ -86,7 +97,9 @@ class UpdateUserScoreTests(TestCase):
 
     def test_submission_other_challenge_should_update(self):
         """ Since the user does not have a submission for this challenge, it should update his score """
-        new_challenge = Challenge(name='NEW MAN', description='NEW',
+        sample_desc2 = ChallengeDescription(2, 'What Up', 'Ws', 's', 'some', 'input sample', 'output sample', 'gg')
+        sample_desc2.save()
+        new_challenge = Challenge(name='NEW MAN', description=sample_desc2,
                                    rating=10, score=100, test_file_name='smth',
                                    test_case_count=3, category=self.sub_cat)
         new_challenge.save()

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import ChallengeCategory, SubCategory, Challenge, User
+from challenges.models import Challenge, ChallengeCategory, ChallengeDescription, SubCategory, User
 from challenges.serializers import ChallengeCategorySerializer, SubCategorySerializer
 
 
@@ -43,6 +43,11 @@ class CategoryViewTest(TestCase):
 
 class SubCategoryModelTest(TestCase):
     def setUp(self):
+        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
+                                                output_format='something', constraints='some',
+                                                sample_input='input sample', sample_output='output sample',
+                                                explanation='gotta push it to the limit')
+        self.sample_desc.save()
         self.c1 = ChallengeCategory(name='Test')
         self.sub1 = SubCategory(name='Unit', meta_category=self.c1)
         self.sub2 = SubCategory(name='Mock', meta_category=self.c1)
@@ -51,7 +56,8 @@ class SubCategoryModelTest(TestCase):
 
     def test_serialize(self):
         """ Ths Subcategory should show all its challenges"""
-        c = Challenge(name='TestThis', rating=5, score=10, description='What up', test_case_count=5, category=self.sub1)
+        c = Challenge(name='TestThis', rating=5, score=10, description=self.sample_desc,
+                      test_case_count=5, category=self.sub1)
         c.save()
         expected_json = '{"name":"Unit","challenges":[{"id":1,"name":"TestThis","rating":5,"score":10}]}'
         received_data = JSONRenderer().render(SubCategorySerializer(self.sub1).data)
@@ -60,13 +66,18 @@ class SubCategoryModelTest(TestCase):
 
 class SubCategoryViewTest(TestCase):
     def setUp(self):
+        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
+                                                output_format='something', constraints='some',
+                                                sample_input='input sample', sample_output='output sample',
+                                                explanation='gotta push it to the limit')
+        self.sample_desc.save()
         auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
         auth_user.save()
         self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
         self.c1 = ChallengeCategory(name='Test')
         self.sub1 = SubCategory(name='Unit Tests', meta_category=self.c1)
         self.sub1.save()
-        c = Challenge(name='TestThis', rating=5, score=10, description='What up', test_case_count=5, category=self.sub1)
+        c = Challenge(name='TestThis', rating=5, score=10, description=self.sample_desc, test_case_count=5, category=self.sub1)
         c.save()
 
     def test_view_subcategory_detail_should_show(self):
