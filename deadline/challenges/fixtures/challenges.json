@@ -6,6 +6,82 @@
   },
 
   {
+    "model": "challenges.challengecategory",
+    "pk": "Data Structures",
+    "fields": {}
+  },
+
+  {
+    "model": "challenges.challengecategory",
+    "pk": "Python Language",
+    "fields": {}
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Introduction",
+    "fields": {
+      "meta_category": "Python Language"
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Collections",
+    "fields": {
+      "meta_category": "Python Language"
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Closures and Decorators",
+    "fields": {
+      "meta_category": "Python Language"
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Itertools",
+    "fields": {
+      "meta_category": "Python Language"
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Array",
+    "fields": {
+      "meta_category": "Data Structures"
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Linked List",
+    "fields": {
+      "meta_category": "Data Structures"
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Trees",
+    "fields": {
+      "meta_category": "Data Structures"
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": "Disjoint Set",
+    "fields": {
+      "meta_category": "Data Structures"
+    }
+  },
+
+  {
     "model": "challenges.subcategory",
     "pk": "Recursion",
     "fields": {
