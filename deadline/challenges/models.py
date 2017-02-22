@@ -12,7 +12,7 @@ class Challenge(models.Model):
     score = models.IntegerField(validators=[MinValueValidator(1)])
     test_file_name = models.CharField(max_length=50)
     test_case_count = models.IntegerField(blank=False)
-    # TODO: Add category once ready
+    category = models.ForeignKey(to='SubCategory', to_field='name')
 
     def get_absolute_url(self):
         return '/challenges/{}'.format(self.id)
@@ -45,3 +45,12 @@ class TestCase(models.Model):
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}/test/{}'.format(
             self.submission.challenge_id, self.submission.id, self.id)
+
+
+class ChallengeCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True, primary_key=True)
+
+
+class SubCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True, primary_key=True)
+    meta_category = models.ForeignKey(to=ChallengeCategory)
