@@ -25,3 +25,17 @@ class CategoryModelTest(TestCase):
 
         self.assertEqual(received_data.decode('utf-8'), expected_json)
 
+
+class CategoryViewTest(TestCase):
+    def setUp(self):
+        self.c1 = ChallengeCategory(name='Test')
+        self.c2 = ChallengeCategory(name='Data')
+        self.c3 = ChallengeCategory(name='Structures')
+        self.c4 = ChallengeCategory(name='Rustlang')
+        self.c5 = ChallengeCategory(name='Others')
+        self.c1.save();self.c2.save();self.c3.save();self.c4.save();self.c5.save()
+
+    def test_view_all_should_return_all_categories(self):
+        response = self.client.get('/challenges/categories/all')
+        self.assertEqual(response.data, ChallengeCategorySerializer([self.c1, self.c2, self.c3, self.c4, self.c5],
+                                        many=True).data)

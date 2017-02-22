@@ -1,8 +1,11 @@
 from django.conf.urls import url
 
-from challenges.views import ChallengeDetailView, SubmissionDetailView, TestCaseDetailView, TestCaseListView, SubmissionCreateView, SubmissionListView
+from challenges.views import (
+    ChallengeDetailView, SubmissionDetailView, TestCaseDetailView, TestCaseListView,
+    SubmissionCreateView, SubmissionListView, ChallengeCategoryListView)
 
 urlpatterns = [
+    url(r'^categories/all$', ChallengeCategoryListView.as_view(), name='category_list'),
     url(r'^(?P<pk>\d+)$', ChallengeDetailView.as_view(), name='challenge_detail'),
     url(r'^(?P<challenge_pk>\d+)/submissions/(?P<pk>\d+)$', SubmissionDetailView.as_view(), name='submission_detail'),
     url(r'^(?P<challenge_pk>\d+)/submissions/new$', SubmissionCreateView.as_view(), name='submission_create'),
