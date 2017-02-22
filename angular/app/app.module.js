@@ -49,8 +49,9 @@
             // if the next view requires authentication and the user is not authenticated
             if(next.requireLogin && !authService.isAuthenticated()) {
                 $event.preventDefault();
-            } else {
-                // $location.path('/dashboard')
+            } else if (next.originalPath === '/' && authService.isAuthenticated()) {
+                // Redirect the user if he's trying to acces the register/login page and is logged in
+                $location.path('/dashboard')
             }
         })
     }
