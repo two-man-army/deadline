@@ -4,6 +4,8 @@
     angular.module('app', [
         'ngRoute',
         'ngMessages',
+        'ngCookies',
+        'ui.bootstrap',
         'app.layout',
         'app.auth',
         'app.dashboard',
