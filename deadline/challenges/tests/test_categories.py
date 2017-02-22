@@ -37,7 +37,6 @@ class CategoryViewTest(TestCase):
 
     def test_view_all_should_return_all_categories(self):
         response = self.client.get('/challenges/categories/all')
-        print(response.data)
         self.assertEqual(response.data, ChallengeCategorySerializer([self.c1, self.c2, self.c3, self.c4, self.c5],
                                         many=True).data)
 
