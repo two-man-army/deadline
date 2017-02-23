@@ -59,7 +59,7 @@ class SubCategoryModelTest(TestCase):
         c = Challenge(name='TestThis', rating=5, score=10, description=self.sample_desc,
                       test_case_count=5, category=self.sub1)
         c.save()
-        expected_json = '{"name":"Unit","challenges":[{"id":1,"name":"TestThis","rating":5,"score":10}]}'
+        expected_json = '{"name":"Unit","challenges":[{"id":1,"name":"TestThis","rating":5,"score":10,"category":"Unit"}]}'
         received_data = JSONRenderer().render(SubCategorySerializer(self.sub1).data)
         self.assertEqual(received_data.decode('utf-8'), expected_json)
 

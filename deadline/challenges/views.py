@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from challenges.models import Challenge, Submission, TestCase, ChallengeCategory, SubCategory
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, ChallengeCategorySerializer, SubCategorySerializer
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, ChallengeCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tasks import run_grader
 from challenges.helper import grade_result, update_user_score
 
@@ -106,13 +106,13 @@ class TopSubmissionListView(ListAPIView):
 
 class LatestAttemptedChallengesListView(ListAPIView):
     """ This view should return the challenges attempted by the user, with the newest coming first """
-    serializer_class = ChallengeSerializer
+    serializer_class = LimitedChallengeSerializer
     permission_classes = (IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
         latest_submissions = Submission.objects.raw('SELECT * FROM challenges_submission WHERE author_id = %s GROUP BY challenge_id ORDER BY created_at DESC LIMIT 10;', params=[request.user.id])
         latest_challenges = [submission.challenge for submission in latest_submissions]
-        return Response(data=ChallengeSerializer(latest_challenges, many=True).data)
+        return Response(data=LimitedChallengeSerializer(latest_challenges, many=True).data)
 
 
 class SubmissionCreateView(CreateAPIView):

@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.models import Challenge, Submission, SubCategory, ChallengeCategory, ChallengeDescription
-from challenges.serializers import SubmissionSerializer, ChallengeSerializer
+from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer
 from accounts.models import User
 
 
@@ -194,8 +194,7 @@ class LatestSubmissionsViewTest(TestCase):
 
         # Hack for serializing the category
         expected_data = []
-        for challenge in ChallengeSerializer([self.c2, self.c3, self.c1], many=True).data:
+        for challenge in LimitedChallengeSerializer([self.c2, self.c3, self.c1], many=True).data:
             challenge['category'] = challenge['category'].name
             expected_data.append(challenge)
-
         self.assertEqual(response.data, expected_data)
