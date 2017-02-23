@@ -9,120 +9,61 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
-from constants import MIN_SUBMISSION_INTERVAL_SECONDS
+from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tasks import run_grader
 from challenges.helper import grade_result, update_user_score
+from challenges.helper import update_test_cases
 
 
-# Create your views here.
+# /challenges/{challenge_id}
 class ChallengeDetailView(RetrieveAPIView):
+    """ Returns information about a specific Challenge """
     queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
     permission_classes = (IsAuthenticated, )
 
 
+# /challenges/latest_attempted
+class LatestAttemptedChallengesListView(ListAPIView):
+    """
+    This view returns the last 10 challenges attempted by the user, with the newest coming first
+    """
+    serializer_class = LimitedChallengeSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def list(self, request, *args, **kwargs):
+        latest_submissions = Submission.objects.raw('SELECT * '
+                                                    'FROM challenges_submission '
+                                                    'WHERE author_id = %s '
+                                                    'GROUP BY challenge_id '
+                                                    'ORDER BY created_at DESC '
+                                                    'LIMIT 10;', params=[request.user.id])
+        latest_challenges = [submission.challenge for submission in latest_submissions]
+        return Response(data=LimitedChallengeSerializer(latest_challenges, many=True).data)
+
+
+# /challenges/categories/all
 class MainCategoryListView(ListAPIView):
+    """ Returns information about all Categories """
     serializer_class = MainCategorySerializer
     queryset = MainCategory.objects.all()
 
 
+# /challenges/subcategories/{subcategory_id}
 class SubCategoryDetailView(RetrieveAPIView):
+    """ Returns information about a specific SubCategory, like challenges associated to it """
     queryset = SubCategory.objects.all()
     serializer_class = SubCategorySerializer
     permission_classes = (IsAuthenticated, )
 
 
-class SubmissionDetailView(RetrieveAPIView):
-    queryset = Submission.objects.all()
-    serializer_class = SubmissionSerializer
-    permission_classes = (IsAuthenticated, )
-
-    def retrieve(self, request, *args, **kwargs):
-        """ Get the submission and meanwhile check if its tests have been completed. If they have, save them """
-        challenge_pk = kwargs.get('challenge_pk')
-        submission_pk = kwargs.get('pk')
-        try:
-            challenge = Challenge.objects.get(id=challenge_pk)
-            try:
-                submission = Submission.objects.get(id=submission_pk)
-                if submission.challenge_id != challenge.id:
-                    return Response(data={'error': 'Submission with ID {} does not belong to Challenge with ID {}'
-                                    .format(submission_pk, challenge_pk)},
-                                    status=400)
-
-                # Query for the tests and populate if there is a result (AND they were not populated)
-                if any(test_case.pending for test_case in submission.testcase_set.all()):
-                    potential_result = run_grader.AsyncResult(submission.task_id)
-                    if potential_result.ready():
-                        results = json.loads(potential_result.get())
-
-                        for idx, test_case in enumerate(submission.testcase_set.all()):
-                            test_results = results['results'][idx]
-
-                            test_case.success = test_results['success']
-                            test_case.time = test_results['time'] + 's'
-                            test_case.pending = False
-                            test_case.description = test_results['description']
-                            test_case.traceback = test_results['traceback']
-                            test_case.error_message = test_results['error_message']
-                            test_case.save()  # TODO: Maybe save at once SOMEHOW, django transaction does not work
-
-                        grade_result(submission)  # update the submission's score
-
-                        update_user_score(user=submission.author, submission=submission)
-                return super().retrieve(request, *args, **kwargs)
-            except Submission.DoesNotExist:
-                return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},
-                                status=400)
-        except Challenge.DoesNotExist:
-            return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
-                            status=400)
-
-
-class SubmissionListView(ListAPIView):
-    serializer_class = SubmissionSerializer
-    permission_classes = (IsAuthenticated,)
-
-    def list(self, request, *args, **kwargs):
-        challenge_pk = kwargs.get('challenge_pk')
-        return Response(data=SubmissionSerializer(Submission.objects
-                                                  .filter(challenge=challenge_pk, author=request.user)
-                                                  .order_by('-created_at')
-                                                  .all(), many=True).data
-                        , status=200)
-
-
-class TopSubmissionListView(ListAPIView):
-    serializer_class = SubmissionSerializer
-    permission_classes = (IsAuthenticated, )
-
-    def list(self, request, *args, **kwargs):
-        challenge_pk = kwargs.get('challenge_pk')
-        top_submissions = Submission.objects.raw('SELECT id, author_id, max(result_score) as maxscore '
-                                                 'FROM challenges_submission '
-                                                 'WHERE challenge_id = %s '
-                                                 'GROUP BY author_id '
-                                                 'ORDER BY maxscore DESC;', params=[challenge_pk])
-        return Response(data=SubmissionSerializer(top_submissions, many=True).data)
-
-
-class LatestAttemptedChallengesListView(ListAPIView):
-    """ This view should return the challenges attempted by the user, with the newest coming first """
-    serializer_class = LimitedChallengeSerializer
-    permission_classes = (IsAuthenticated, )
-
-    def list(self, request, *args, **kwargs):
-        latest_submissions = Submission.objects.raw('SELECT * FROM challenges_submission WHERE author_id = %s GROUP BY challenge_id ORDER BY created_at DESC LIMIT 10;', params=[request.user.id])
-        latest_challenges = [submission.challenge for submission in latest_submissions]
-        return Response(data=LimitedChallengeSerializer(latest_challenges, many=True).data)
-
-
+# /challenges/{challenge_id}/submissions/new
 class SubmissionCreateView(CreateAPIView):
     """
-    Creates a submission, given code by the user.
-    The test cases are also created and will be populated on next query to view the submission
+    Creates a new Submission for a specific Challenge
+    The test cases are also created and will be populated on next query to view the Submission
     """
     permission_classes = (IsAuthenticated, )
 
@@ -158,7 +99,86 @@ class SubmissionCreateView(CreateAPIView):
                             status=400)
 
 
+# /challenges/{challenge_id}/submissions/{submission_id}
+class SubmissionDetailView(RetrieveAPIView):
+    """ Returns information about a specific Submission """
+    queryset = Submission.objects.all()
+    serializer_class = SubmissionSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def retrieve(self, request, *args, **kwargs):
+        """ Get the submission and meanwhile check if its tests have been completed. If they have, save them """
+        challenge_pk = kwargs.get('challenge_pk')
+        submission_pk = kwargs.get('pk')
+        try:
+            challenge = Challenge.objects.get(id=challenge_pk)
+            try:
+                submission = Submission.objects.get(id=submission_pk)
+                if submission.challenge_id != challenge.id:
+                    return Response(data={'error': 'Submission with ID {} does not belong to Challenge with ID {}'
+                                    .format(submission_pk, challenge_pk)},
+                                    status=400)
+
+                # Query for the tests and populate if there is a result (AND they were not populated)
+                submission_is_pending = any(test_case.pending for test_case in submission.testcase_set.all())
+                if submission_is_pending:
+                    potential_result = run_grader.AsyncResult(submission.task_id)
+                    if potential_result.ready():
+                        overall_results = json.loads(potential_result.get())
+
+                        # Update the Submission's TestCases
+                        update_test_cases(grader_results=overall_results[GRADER_TEST_RESULTS_RESULTS_KEY],
+                                          test_cases=submission.testcase_set.all())
+
+                        grade_result(submission)  # update the submission's score
+
+                        update_user_score(user=submission.author, submission=submission)
+                return super().retrieve(request, *args, **kwargs)
+            except Submission.DoesNotExist:
+                return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},
+                                status=400)
+        except Challenge.DoesNotExist:
+            return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
+                            status=400)
+
+
+# /challenges/{challenge_id}/submissions/all
+class SubmissionListView(ListAPIView):
+    """ Returns all the Submissions for a specific Challenge from the current user """
+    serializer_class = SubmissionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        challenge_pk = kwargs.get('challenge_pk')
+        return Response(data=SubmissionSerializer(Submission.objects
+                                                  .filter(challenge=challenge_pk, author=request.user)
+                                                  .order_by('-created_at')  # newest first
+                                                  .all(), many=True).data
+                        , status=200)
+
+
+# /challenges/{challenge_id}/submissions/top
+class TopSubmissionListView(ListAPIView):
+    """
+    Returns the top-rated Submissions for a specific Challenge, one for each User
+     Used for a Challenge's leaderboard
+    """
+    serializer_class = SubmissionSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def list(self, request, *args, **kwargs):
+        challenge_pk = kwargs.get('challenge_pk')
+        top_submissions = Submission.objects.raw('SELECT id, author_id, max(result_score) as maxscore '
+                                                 'FROM challenges_submission '
+                                                 'WHERE challenge_id = %s '
+                                                 'GROUP BY author_id '
+                                                 'ORDER BY maxscore DESC, created_at ASC;', params=[challenge_pk])
+        return Response(data=SubmissionSerializer(top_submissions, many=True).data)
+
+
+# /challenges/{challenge_id}/submissions/{submission_id}/test/{testcase_id}
 class TestCaseDetailView(RetrieveAPIView):
+    """ Returns information about a specific TestCase """
     queryset = TestCase.objects.all()
     serializer_class = TestCaseSerializer
     permission_classes = (IsAuthenticated, )
@@ -180,7 +200,9 @@ class TestCaseDetailView(RetrieveAPIView):
         return super().retrieve(request, *args, **kwargs)
 
 
+# /challenges/{challenge_id}/submissions/{submission_id}/tests
 class TestCaseListView(ListAPIView):
+    """ Returns all the TestCases for a specific Submission on a specific Challenge"""
     serializer_class = TestCaseSerializer
     permission_classes = (IsAuthenticated, )
 
@@ -204,6 +226,3 @@ class TestCaseListView(ListAPIView):
                 status=400)
 
         return response
-
-
-

@@ -49,10 +49,12 @@ class TestCase(models.Model):
 
 
 class MainCategory(models.Model):
+    """ A Main Category for Challenges. ie: Algorithms """
     name = models.CharField(max_length=100, unique=True, primary_key=True)
 
 
 class SubCategory(models.Model):
+    """ A more specific Category for Challenges, ie: Graph Theory """
     name = models.CharField(max_length=100, unique=True, primary_key=True)
     meta_category = models.ForeignKey(to=MainCategory, related_name='sub_categories')
 

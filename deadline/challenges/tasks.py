@@ -2,8 +2,11 @@ import subprocess
 import uuid
 import os
 import time
-from deadline.celery import app
+
 from challenges.models import Challenge, Submission
+from challenges.helper import convert_to_normal_text
+from constants import MAX_TEST_RUN_SECONDS
+from deadline.celery import app
 
 
 @app.task
@@ -11,13 +14,10 @@ def run_grader(test_file_name, code):
     """
     Runs a celery task for the grader, after which saves the result to the DB (by returning the value)
     """
-    def convert_to_normal_text(lines: list):
-        """ Given a list with byte strings with a new-line at the end, return a concatenated string """
-        return ''.join([st.decode('utf-8') for st in lines])
-
-    # create temp file, write the code to it
+    # create a temp file,
     temp_file_name = uuid.uuid4().hex + '.py'
 
+    # write the code to it
     with open(temp_file_name, 'w') as temp_file:
         temp_file.write(code)
         temp_file.flush()
@@ -29,7 +29,7 @@ def run_grader(test_file_name, code):
         stdout=subprocess.PIPE)
 
     # Remove the file after the max test time
-    time.sleep(5)
+    time.sleep(MAX_TEST_RUN_SECONDS)
     try:
         os.remove(temp_file_name)
     except OSError:

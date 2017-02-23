@@ -17,6 +17,10 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
 
 class LimitedChallengeSerializer(serializers.ModelSerializer):
+    """
+    Returns the main information about a Challenge.
+    Used, for example, when listing challenges.
+    """
     class Meta:
         model = Challenge
         fields = ('id', 'name', 'rating', 'score', 'category')
