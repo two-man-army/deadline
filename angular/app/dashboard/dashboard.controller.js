@@ -20,6 +20,8 @@
         //vm.getMainChallenges = getMainChallenges;
         vm.getSubCategoryChallenges = getSubCategoryChallenges;
         vm.showLatestAttepmts = true;
+        vm.showCategoryChallenges = false;
+        vm.showEditor = false;
         vm.goToChallenge = goToChallenge
         getMainCategories()
         getLatestAttemptedChallenges()
@@ -64,7 +66,9 @@
                         */
                     vm.subcategory = res.data;
                     vm.challenges = vm.subcategory.challenges;
+                    vm.showCategoryChallenges = true;
                     vm.showLatestAttepmts = false;
+                    vm.showEditor = false;
                     //$location.path('/challenges')
 
                 },
@@ -96,8 +100,58 @@
                 }
         }
 
+        function getChallengeInfo(id) {
+            challengeService.getChallengeInfo(id)
+                .then(
+                    function(res) {
+                        vm.challengeInfo = res.data;
+                        console.log(vm.challengeInfo)
+                    },
+
+                    function(err) {
+                        console.log(err)
+                    }
+                )
+        }
+
+        function submitSolution(id) {
+            challengeService.submitSolution(id)
+                .then(
+                    function(res) {
+                        console.log(res)
+                    },
+
+                    function(err) {
+                        console.log(err)
+                    })
+        }
+
         function goToChallenge(id) {
-            $location.path('/challenge');
+            vm.showEditor = true;
+            vm.showCategoryChallenges = false;
+            getChallengeInfo(id)
+
+            angular.element(document).ready(function() {
+                require.config({ paths: { 'vs': 'node_modules/monaco-editor/min/vs' }});
+                require(['vs/editor/editor.main'], function() {
+                    var editor = monaco.editor.create(document.getElementById('challenge-editor'), {
+                        value: [
+                            'def foo() {',
+                            '\tprint("Hello world!")'
+                        ].join('\n'),
+                        language: "python",
+                        lineNumbers: true,
+                        roundedSelection: false,
+                        scrollBeyondLastLine: false,
+                        readOnly: false,
+                        theme: "vs-dark",
+                    });
+                });
+
+            });
+
+
+            //$location.path('/challenge');
         }
 
         vm.getWidth = function() {
