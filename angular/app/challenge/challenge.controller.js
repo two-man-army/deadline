@@ -12,7 +12,7 @@
         vm.submitSolution = submitSolution
 
         angular.element(document).ready(function() {
-            require.config({ paths: { 'vs': 'assets/monaco-editor/min/vs' }});
+            require.config({ paths: { 'vs': 'node_modules/monaco-editor/min/vs' }});
             require(['vs/editor/editor.main'], function() {
                 var editor = monaco.editor.create(document.getElementById('challenge-editor'), {
                     value: [
