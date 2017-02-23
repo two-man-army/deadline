@@ -196,13 +196,21 @@ body {
   color: darkgray; }
 
 .sub-category:hover {
-    color: #fff;
-    background: #2d3e63;
-    border-left: 3px solid #e99d1a;
-}
+  color: #fff;
+  background: #2d3e63;
+  border-left: 3px solid #e99d1a; }
 
 .sub-categories-list.hidden {
-    max-height: 0;
-}
+  max-height: 0; }
+
+.challenge-panel {
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3) !important; }
+
+.challenge-panel-heading {
+  background-color: rgba(48, 66, 106, 0.7) !important;
+  color: #ffffff !important; }
+
+a.challenge-link:hover {
+  text-decoration: none; }
 
 /*# sourceMappingURL=style.css.map */
