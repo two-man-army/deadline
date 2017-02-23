@@ -1,18 +1,18 @@
 [
   {
-    "model": "challenges.challengecategory",
+    "model": "challenges.maincategory",
     "pk": "Algorithms",
     "fields": {}
   },
 
   {
-    "model": "challenges.challengecategory",
+    "model": "challenges.maincategory",
     "pk": "Data Structures",
     "fields": {}
   },
 
   {
-    "model": "challenges.challengecategory",
+    "model": "challenges.maincategory",
     "pk": "Python Language",
     "fields": {}
   },

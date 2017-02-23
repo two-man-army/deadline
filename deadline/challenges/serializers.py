@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from challenges.models import Challenge, Submission, TestCase, ChallengeCategory, SubCategory, ChallengeDescription
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription
 
 
 class ChallengeDescriptionSerializer(serializers.ModelSerializer):
@@ -17,6 +17,10 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
 
 class LimitedChallengeSerializer(serializers.ModelSerializer):
+    """
+    Returns the main information about a Challenge.
+    Used, for example, when listing challenges.
+    """
     class Meta:
         model = Challenge
         fields = ('id', 'name', 'rating', 'score', 'category')
@@ -48,11 +52,11 @@ class TestCaseSerializer(serializers.ModelSerializer):
         fields = ('submission', 'pending', 'success', 'time', 'description', 'traceback', 'error_message')
 
 
-class ChallengeCategorySerializer(serializers.ModelSerializer):
+class MainCategorySerializer(serializers.ModelSerializer):
     sub_categories = serializers.StringRelatedField(many=True)
 
     class Meta:
-        model = ChallengeCategory
+        model = MainCategory
         fields = ('name', 'sub_categories')
 
 
