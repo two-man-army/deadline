@@ -195,4 +195,14 @@ body {
 .sub-category {
   color: darkgray; }
 
+.sub-category:hover {
+    color: #fff;
+    background: #2d3e63;
+    border-left: 3px solid #e99d1a;
+}
+
+.sub-categories-list.hidden {
+    max-height: 0;
+}
+
 /*# sourceMappingURL=style.css.map */

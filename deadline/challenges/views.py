@@ -110,7 +110,7 @@ class LatestAttemptedChallengesListView(ListAPIView):
     permission_classes = (IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
-        latest_submissions = Submission.objects.raw('SELECT * FROM challenges_submission WHERE author_id = %s GROUP BY challenge_id ORDER BY created_at DESC LIMIT 3;', params=[request.user.id])
+        latest_submissions = Submission.objects.raw('SELECT * FROM challenges_submission WHERE author_id = %s GROUP BY challenge_id ORDER BY created_at DESC LIMIT 10;', params=[request.user.id])
         latest_challenges = [submission.challenge for submission in latest_submissions]
         return Response(data=ChallengeSerializer(latest_challenges, many=True).data)
 

@@ -86,8 +86,12 @@
             vm.toggle = !vm.toggle;
             $cookies.put('toggle', vm.toggle);
         };
+        vm.showSubCategories = function () {
+            vm.subCategoriesAreShown = !vm.subCategoriesAreShown
+            $cookies.put('subCategoriesAreShown', vm.subCategoriesAreShown);
+        }
         vm.toggle = false;
-
+        vm.subCategoriesAreShown = false;
         window.onresize = function() {
             $scope.$apply();
         };

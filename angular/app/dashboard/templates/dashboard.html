@@ -13,16 +13,18 @@
             <div ui-tree ng-cloak data-drag-enabled="false">
                 <ol ui-tree-nodes="" ng-model="vm.categories">
                     <li ng-repeat="category in vm.categories" ui-tree-node>
-                        <div class="category" ui-tree-handle>
+                        <div class="category" ui-tree-handle ng-click="vm.showSubCategories()">
                             {{category.name}}
                         </div>
-                        <ol ui-tree-nodes="" ng-model="category.sub_categories">
-                            <li ng-repeat="sub_category in category.sub_categories" ui-tree-node>
+                        <div ng-class="{'hidden': !vm.subCategoriesAreShown}" ng-cloak>
+                        <ol class="sub-categories-list" ui-tree-nodes="" ng-model="category.sub_categories">
+                            <li ng-repeat="sub_category in category.sub_categories" ui-tree-node >
                                 <div class="sub-category" ng-click="vm.getSubCategory(sub_category)" ui-tree-handle>
                                     {{sub_category}}
                                 </div>
                             </li>
                         </ol>
+                        </div>
                     </li>
                 </ol>
             </div>
