@@ -1,6 +1,8 @@
 """ Tests associated with the Submission model and views """
-from django.test import TestCase
+import time
+import datetime
 
+from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
@@ -81,8 +83,9 @@ class SubmissionViewsTest(APITestCase):
                                    test_case_count=3, category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name
-
         self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_user.last_submit_at = datetime.datetime.now()-datetime.timedelta(minutes=15)
         self.auth_user.save()
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
         self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
@@ -130,6 +133,38 @@ class SubmissionViewsTest(APITestCase):
         self.assertNotEqual(submission.task_id, '')
         # assert that the test cases have been created
         self.assertEqual(submission.testcase_set.count(), submission.challenge.test_case_count)
+
+    def test_create_two_submissions_in_10_seconds_second_should_not_work(self):
+        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+                                    data={'code': 'print("Hello World")'},
+                                    HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Submission.objects.count(), 2)
+
+        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+                                    data={'code': 'print("Hello World")'},
+                                    HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'You must wait 10 more seconds before submitting a solution.')
+        self.assertEqual(Submission.objects.count(), 2)
+
+    def test_create_two_submissions_10_seconds_apart_should_not_work(self):
+        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+                                    data={'code': 'print("Hello World")'},
+                                    HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Submission.objects.count(), 2)
+
+        time.sleep(11)
+
+        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+                                    data={'code': 'print("Hello World")'},
+                                    HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Submission.objects.count(), 3)
 
     def test_create_submission_invalid_challenge_should_return_400(self):
         response = self.client.post('/challenges/111/submissions/new',

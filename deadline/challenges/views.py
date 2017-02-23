@@ -1,5 +1,7 @@
 import json
+from datetime import datetime
 
+from django.utils import timezone
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,6 +9,7 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
+from constants import MIN_SUBMISSION_INTERVAL_SECONDS
 from challenges.models import Challenge, Submission, TestCase, ChallengeCategory, SubCategory
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, ChallengeCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tasks import run_grader
@@ -131,10 +134,21 @@ class SubmissionCreateView(CreateAPIView):
             if not code_given:
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
+
+            # Check for time between submissions
+            time_now = timezone.make_aware(datetime.now(), timezone.utc)
+            time_since_last_submission = time_now - request.user.last_submit_at
+            if time_since_last_submission.seconds < MIN_SUBMISSION_INTERVAL_SECONDS:
+                return Response(data={'error': 'You must wait 10 more seconds before submitting a solution.'},
+                                status=400)
+
             celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
             submission = Submission(code=code_given, author=request.user,
-                                                challenge=challenge, task_id=celery_grader_task.id)
+                                    challenge=challenge, task_id=celery_grader_task.id)
             submission.save()
+
+            request.user.last_submit_at = timezone.now()
+            request.user.save()
             # Create the test cases
             TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])
 
