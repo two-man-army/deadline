@@ -18,7 +18,7 @@
                         </div>
                         <ol ui-tree-nodes="" ng-model="category.sub_catecories">
                             <li ng-repeat="sub_category in category.sub_categories" ui-tree-node>
-                                <div class="sub-category" ui-tree-handle>
+                                <div class="sub-category" ng-click="vm.getSubCategory('Sorting')" ui-tree-handle>
                                     {{sub_category}}
                                 </div>
                             </li>
@@ -115,10 +115,75 @@
                 </div>
             </div>
             <!-- End Header Bar -->
-            <div>Body</div>
+            <div class="container">
+                <h3>Last solved challenges</h3>
+                <div class="row">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                            Binary search
+                        </div>
+                        <div class="panel-body">
+                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                            Binary search
+                        </div>
+                        <div class="panel-body">
+                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                            Binary search
+                        </div>
+                        <div class="panel-body">
+                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                            Binary search
+                        </div>
+                        <div class="panel-body">
+                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                            Binary search
+                        </div>
+                        <div class="panel-body">
+                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                            Binary search
+                        </div>
+                        <div class="panel-body">
+                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                            Binary search
+                        </div>
+                        <div class="panel-body">
+                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <!-- Main Content -->
-            <div ui-view></div>
         </div><!-- End Page Content -->
     </div><!-- End Content Wrapper -->
 </div><!-- End Page Wrapper -->
