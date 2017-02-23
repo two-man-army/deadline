@@ -60,7 +60,7 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         s.save()
         serializer = SubmissionSerializer(s)
         expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":' + str(self.auth_user.id)
-                         + ',"code":"' + self.sample_code + '","result_score":0,"pending":true}')
+                         + ',"code":"' + self.sample_code + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '"}')
 
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
@@ -106,7 +106,8 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get(path='/challenges/{}/submissions/all'.format(self.challenge.id), HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(SubmissionSerializer([self.submission, second_submission], many=True).data, response.data)
+        # Should order them by creation date descending
+        self.assertEqual(SubmissionSerializer([second_submission, self.submission], many=True).data, response.data)
 
     def test_view_submission_doesnt_exist(self):
         response = self.client.get('challenges/{}/submissions/15'.format(self.submission.challenge_id)
@@ -139,7 +140,7 @@ class SubmissionViewsTest(APITestCase):
 
     def test_get_top_submissions(self):
         better_submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code,
-                                     result_score=50)
+                                       result_score=50)
         better_submission.save()
         # Second user with submissions
         _s_user = User(username='Seocnd user', password='123', email='EC@abv.bg', score=123); _s_user.save()
@@ -151,6 +152,7 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
+        print(JSONRenderer().render(response.data))
         self.assertEqual(response.data, SubmissionSerializer([top_submission, better_submission], many=True).data)
 
 

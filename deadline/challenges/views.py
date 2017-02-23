@@ -86,6 +86,7 @@ class SubmissionListView(ListAPIView):
         challenge_pk = kwargs.get('challenge_pk')
         return Response(data=SubmissionSerializer(Submission.objects
                                                   .filter(challenge=challenge_pk, author=request.user)
+                                                  .order_by('-created_at')
                                                   .all(), many=True).data
                         , status=200)
 

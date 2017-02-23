@@ -13,7 +13,8 @@
             getChallengeInfo: getChallengeInfo,
             getChallengeSolution: getChallengeSolution,
             getAllChallengeSolutions: getAllChallengeSolutions,
-            submitSolution: submitSolution
+            submitSolution: submitSolution,
+            getUserSubmissions: getUserSubmissions
         };
 
         return challengeService;
@@ -52,6 +53,30 @@
                 },
                 url:solutionURL
             });
+        }
+
+        function getChallengeTopSubmissions(challengeId) {
+            var topSubmissionsURL = BASE_URL + 'challenges/' + challengeId + '/top'
+
+            return $http({
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
+                url: topSubmissionsURL
+            })
+        }
+
+        function getUserSubmissions(challengeId) {
+            var userSubmissionsURL = BASE_URL + 'challenges/' + challengeId + '/submissions/all'
+
+            return $http({
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
+                url: userSubmissionsURL
+            })
         }
 
         /**

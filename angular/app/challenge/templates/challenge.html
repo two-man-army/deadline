@@ -28,7 +28,17 @@ s challenge, you must save a line of input from stdin to a variable, print Hello
             </section>
             <div id="challenge-editor" style="height:501px;"></div>
         </div>
-        <div role="tabpanel" class="tab-pane fade" id="submissions">...</div>
+        <div role="tabpanel" class="tab-pane fade" id="submissions">
+        <table ng-init="vm.getUserSubmissions(1)" class="submissions-table">
+            <th>Submitted At</th>
+            <th>Score</th>
+            <tr ng-repeat="userSub in vm.userSubmissions">
+                <td>{{userSub.created_at  | date:"MM/dd/yyyy 'at' h:mma" }}</td>
+                <td>{{userSub.result_score}}</td>
+            </tr>
+        </table>    
+            
+        </div>
         <div role="tabpanel" class="tab-pane fade" id="leaderboard">...</div>
     </div>
     <button class="btn btn-primary" ng-click="vm.submitSolution(1)" type="submit">Button</button>

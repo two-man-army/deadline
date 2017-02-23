@@ -10,6 +10,8 @@
         var vm = this;
         vm.getChallenge = getChallenge
         vm.submitSolution = submitSolution
+        vm.getTopSubmissions = getChallengeTopSubmissions
+        vm.getUserSubmissions = getUserSubmissions
 
         angular.element(document).ready(function() {
             require.config({ paths: { 'vs': 'node_modules/monaco-editor/min/vs' }});
@@ -58,6 +60,29 @@
                         console.log(error)
                     }
                 )
+        }
+
+        function getUserSubmissions(challengeId) {
+            challengeService.getUserSubmissions(challengeId).then(
+                function (res) {
+                    console.log(res.data)
+                    vm.userSubmissions = res.data;
+                },
+                function(error) {
+                    console.log(error);
+                }
+            )
+        }
+
+        function getChallengeTopSubmissions(challengeId) {
+            challengeService.getChallengeTopSubmissions(challengeId).then(
+                function (res) {
+                    vm.leaderboardSubmissions = res.data;
+                },
+                function(error) {
+                    console.log(error);
+                }
+            )
         }
     }
 }())
