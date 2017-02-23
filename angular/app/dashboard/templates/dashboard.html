@@ -19,7 +19,7 @@
                         <div ng-class="{'hidden': !vm.subCategoriesAreShown}" ng-cloak>
                         <ol class="sub-categories-list" ui-tree-nodes="" ng-model="category.sub_categories">
                             <li ng-repeat="sub_category in category.sub_categories" ui-tree-node >
-                                <div class="sub-category" ng-click="vm.getSubCategory(sub_category)" ui-tree-handle>
+                                <div class="sub-category" data-name="{{sub_category}}" ng-click="vm.getSubCategoryChallenges(sub_category)" ui-tree-handle>
                                     {{sub_category}}
                                 </div>
                             </li>
@@ -117,7 +117,7 @@
                 </div>
             </div>
             <!-- End Header Bar -->
-            <div class="container">
+            <div class="container" ng-if="vm.showLatestAttepmts">
                 <h3>Latest attempted challenges</h3>
                 <div class="row">
                     <a class="challenge-link">
@@ -135,6 +135,24 @@
                             </div>
                         </div>
                     </a>
+                </div>
+            </div>
+            <div class="container" ng-if="!vm.showLatestAttepmts">
+                <h3>{{vm.subcategory.name}} / All challenges</h3>
+                <div class="row">
+                    <div ng-repeat="challenge in vm.challenges">
+                        <div ng-click="vm.goToChallenge(challenge.id)" class="panel panel-default challenge-panel" >
+                            <div class="panel-heading challenge-panel-heading">
+                                <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                                {{challenge.name}}
+                                <p style="display: inline;float:right;">Category: {{challenge.category}}</p>
+                            </div>
+                            <div class="panel-body">
+                                <p>Max Score: {{challenge.score}}</p>
+                                <p>Rating: {{challenge.rating}}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
