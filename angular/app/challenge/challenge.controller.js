@@ -4,9 +4,9 @@
     angular.module('app.challenge')
         .controller('ChallengeController', ChallengeController);
 
-    ChallengeController.$inject = ['$http', '$location', 'challengeService']
+    ChallengeController.$inject = ['$http', '$location', '$controller', 'challengeService']
 
-    function ChallengeController($http, $location, challengeService) {
+    function ChallengeController($http, $location, $controller, challengeService) {
         var vm = this;
         vm.getChallenge = getChallenge
         vm.submitSolution = submitSolution
@@ -65,7 +65,6 @@
         function getUserSubmissions(challengeId) {
             challengeService.getUserSubmissions(challengeId).then(
                 function (res) {
-                    console.log(res.data)
                     vm.userSubmissions = res.data;
                 },
                 function(error) {

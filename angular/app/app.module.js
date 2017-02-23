@@ -10,7 +10,7 @@
         'app.layout',
         'app.auth',
         'app.dashboard',
-        'app.challenge'
+        'app.challenge',
     ])
         .config(config)
         .run(run)
@@ -30,6 +30,13 @@
 
             .when('/dashboard', {
                 templateUrl: 'app/dashboard/templates/dashboard.html',
+                controllerAs: 'vm',
+                controller: 'DashboardController',
+                requireLogin: true
+            })
+
+            .when('/challenges', {
+                templateUrl: 'app/dashboard/templates/category_challenges.html',
                 controllerAs: 'vm',
                 controller: 'DashboardController',
                 requireLogin: true
