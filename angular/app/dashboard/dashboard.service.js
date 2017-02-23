@@ -31,7 +31,7 @@
                 headers: {
                     'Authorization': 'Token ' + sessionStorage['authToken']
                 },
-                url: BASE_URL + '/challenges/subcategories/' + subCategoryName
+                url: BASE_URL + 'challenges/subcategories/' + subCategoryName
             })
         }
     }
