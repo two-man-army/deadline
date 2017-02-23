@@ -187,5 +187,33 @@
       "test_case_count": 8,
       "category": "Dynamic Programming"
     }
+  },
+
+    {
+    "model": "challenges.challengedescription",
+    "pk": 3,
+    "fields": {
+      "content": "Given an a list of *N* numbers, find their sum",
+      "input_format": "One line, containing the numbers, separated by a comma and whitespace",
+      "output_format": "A number on a single line, the sum of the numbers",
+      "constraints": "1<=Number<=100000\n1<=N<=1000",
+      "sample_input": "1, 2, 3",
+      "sample_output": "6",
+      "explanation": "1 + 2 + 3 = 6"
+    }
+  },
+
+  {
+    "model": "challenges.challenge",
+    "pk": 3,
+    "fields": {
+      "name": "Array Sum",
+      "description": 3,
+      "rating": 5,
+      "score": 10,
+      "test_file_name": "array_sum_tests",
+      "test_case_count": 7,
+      "category": "Miscellaneous"
+    }
   }
 ]
