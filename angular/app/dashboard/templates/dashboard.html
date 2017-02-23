@@ -17,13 +17,13 @@
                             {{category.name}}
                         </div>
                         <div ng-class="{'hidden': !vm.subCategoriesAreShown}" ng-cloak>
-                        <ol class="sub-categories-list" ui-tree-nodes="" ng-model="category.sub_categories">
-                            <li ng-repeat="sub_category in category.sub_categories" ui-tree-node >
-                                <div class="sub-category" data-name="{{sub_category}}" ng-click="vm.getSubCategoryChallenges(sub_category)" ui-tree-handle>
-                                    {{sub_category}}
-                                </div>
-                            </li>
-                        </ol>
+                            <ol class="sub-categories-list" ui-tree-nodes="" ng-model="category.sub_categories">
+                                <li ng-repeat="sub_category in category.sub_categories" ui-tree-node >
+                                    <div class="sub-category" data-name="{{sub_category}}" ng-click="vm.getSubCategoryChallenges(sub_category)" ui-tree-handle>
+                                        {{sub_category}}
+                                    </div>
+                                </li>
+                            </ol>
                         </div>
                     </li>
                 </ol>
@@ -137,7 +137,7 @@
                     </a>
                 </div>
             </div>
-            <div class="container" ng-if="!vm.showLatestAttepmts">
+            <div class="container" ng-if="vm.showCategoryChallenges">
                 <h3>{{vm.subcategory.name}} / All challenges</h3>
                 <div class="row">
                     <div ng-repeat="challenge in vm.challenges">
@@ -155,6 +155,66 @@
                     </div>
                 </div>
             </div>
+            <!-- Editor -->
+            <div class="container" ng-if="vm.showEditor">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#challenge" aria-controls="home" role="tab" data-toggle="tab">Challenge</a></li>
+                    <li role="presentation"><a href="#submissions" aria-controls="profile" role="tab" data-toggle="tab">Submissions</a></li>
+                    <li role="presentation"><a href="#leaderboard" aria-controls="messages" role="tab" data-toggle="tab">Leaderboard</a></li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane fade in active" id="challenge">
+
+                        <div class="container">
+                            <div class="row">
+                                <div>
+                                    <div ng-click="vm.goToChallenge(challenge.id)" class="panel panel-default challenge-panel" >
+                                        <div class="panel-heading challenge-panel-heading">
+                                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                                            {{vm.challengeInfo.name}}
+                                            <p style="display: inline;float:right;">Category: {{vm.challengeInfo.category}}</p>
+                                        </div>
+                                        <div class="panel-body">
+                                            <p>Max Score: {{vm.challengeInfo.score}}</p>
+                                            <p>Rating: {{vm.challengeInfo.rating}}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <section>
+                            <h3>Description:</h3>
+                            <blockquote ng-repeat="item in vm.challengeInfo.description">
+                                <p>{{item}}</p>
+                            </blockquote>
+                        </section>
+                        <div id="challenge-editor" style="height:501px;"></div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="submissions">
+                        <table ng-init="vm.getUserSubmissions(1)" class="submissions-table">
+                            <th>Submitted At</th>
+                            <th>Score</th>
+                            <tr ng-repeat="userSub in vm.userSubmissions">
+                                <td>{{userSub.created_at  | date:"MM/dd/yyyy 'at' h:mma" }}</td>
+                                <td>{{userSub.result_score}}</td>
+                            </tr>
+                        </table>    
+
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="leaderboard">...</div>
+                </div>
+                <button class="btn btn-primary" ng-click="vm.submitSolution(challenge)" type="submit">Button</button>
+            </div>
+
+            <script>
+                $('.nav-tabs a').click(function (e) {
+                    e.preventDefault()
+                        $(this).tab('show')
+                })
+            </script>
 
         </div><!-- End Page Content -->
     </div><!-- End Content Wrapper -->
