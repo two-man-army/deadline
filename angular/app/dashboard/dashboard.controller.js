@@ -38,6 +38,7 @@
             // Used to list the challenges from a specific category
             dashboardService.getSubCategory(subCategoryName).then(
                 function(res) {
+                    console.log(res)
                     /*
                         A SubCategory object is the following:
                         {
@@ -53,9 +54,8 @@
                         }
                         Holds a name and challenges - a list of challenge objects with some meta information
                         */
-                    var subcategory = res.data;
-                    vm.subcategory = subcategory;
-                    vm.challenges = subcategory.challenges;
+                    vm.subcategory = res.data;
+                    vm.challenges = vm.subcategory.challenges;
 
                     // TODO: Display all challenges in the page
                 },
