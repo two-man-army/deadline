@@ -10,8 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS
-from challenges.models import Challenge, Submission, TestCase, ChallengeCategory, SubCategory
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, ChallengeCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tasks import run_grader
 from challenges.helper import grade_result, update_user_score
 
@@ -23,9 +23,9 @@ class ChallengeDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
 
 
-class ChallengeCategoryListView(ListAPIView):
-    serializer_class = ChallengeCategorySerializer
-    queryset = ChallengeCategory.objects.all()
+class MainCategoryListView(ListAPIView):
+    serializer_class = MainCategorySerializer
+    queryset = MainCategory.objects.all()
 
 
 class SubCategoryDetailView(RetrieveAPIView):

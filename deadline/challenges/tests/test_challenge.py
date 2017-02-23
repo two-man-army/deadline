@@ -8,14 +8,14 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-from challenges.models import Challenge, ChallengeCategory, SubCategory, ChallengeDescription
+from challenges.models import Challenge, MainCategory, SubCategory, ChallengeDescription
 from challenges.serializers import ChallengeSerializer, ChallengeDescriptionSerializer
 from accounts.models import User
 
 
 class ChallengesModelTest(TestCase):
     def setUp(self):
-        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat = MainCategory('Tests')
         challenge_cat.save()
         self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
                                                 output_format='something', constraints='some',
@@ -122,7 +122,7 @@ class ChallengesViewsTest(APITestCase):
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
         self.sample_desc.save()
-        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat = MainCategory('Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()

@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.models import (
-    Challenge, ChallengeCategory, ChallengeDescription, Submission, TestCase as TestCaseModel, SubCategory)
+    Challenge, MainCategory, ChallengeDescription, Submission, TestCase as TestCaseModel, SubCategory)
 from challenges.serializers import TestCaseSerializer
 from accounts.models import User
 
@@ -17,7 +17,7 @@ class TestCaseViewTest(APITestCase):
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
         self.sample_desc.save()
-        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat = MainCategory('Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
@@ -105,7 +105,7 @@ class TestCaseModelTest(TestCase):
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
         self.sample_desc.save()
-        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat = MainCategory('Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()

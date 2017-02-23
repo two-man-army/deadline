@@ -48,13 +48,13 @@ class TestCase(models.Model):
             self.submission.challenge_id, self.submission.id, self.id)
 
 
-class ChallengeCategory(models.Model):
+class MainCategory(models.Model):
     name = models.CharField(max_length=100, unique=True, primary_key=True)
 
 
 class SubCategory(models.Model):
     name = models.CharField(max_length=100, unique=True, primary_key=True)
-    meta_category = models.ForeignKey(to=ChallengeCategory, related_name='sub_categories')
+    meta_category = models.ForeignKey(to=MainCategory, related_name='sub_categories')
 
     def __str__(self):
         return self.name
