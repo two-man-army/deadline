@@ -131,7 +131,7 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
                                 status=400)
             celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
-            submission = Submission(code=code_given, author=User.objects.first(),
+            submission = Submission(code=code_given, author=request.user,
                                                 challenge=challenge, task_id=celery_grader_task.id)
             submission.save()
             # Create the test cases
