@@ -107,39 +107,54 @@ class SubmissionDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
 
     def retrieve(self, request, *args, **kwargs):
-        """ Get the submission and meanwhile check if its tests have been completed. If they have, save them """
-        challenge_pk = kwargs.get('challenge_pk')
-        submission_pk = kwargs.get('pk')
+        """
+        Get the submission,
+            validate and
+            check if its tests have been completed. If they have, save them
+        """
+        result = self.validate_data(challenge_pk=kwargs.get('challenge_pk'),
+                                    submission_pk=kwargs.get('pk'))
+        if isinstance(result, Response):
+            return result  # There has been a validation error
+
+        challenge, submission = result
+
+        # Query for the tests and populate if there is a result (AND they were not populated)
+        submission_is_pending = any(test_case.pending for test_case in submission.testcase_set.all())
+        if submission_is_pending:
+            potential_result = run_grader.AsyncResult(submission.task_id)
+            if potential_result.ready():
+                overall_results = json.loads(potential_result.get())
+
+                # Update the Submission's TestCases
+                update_test_cases(grader_results=overall_results[GRADER_TEST_RESULTS_RESULTS_KEY],
+                                  test_cases=submission.testcase_set.all())
+
+                grade_result(submission)  # update the submission's score
+
+                update_user_score(user=submission.author, submission=submission)
+
+        return super().retrieve(request, *args, **kwargs)
+
+    def validate_data(self, challenge_pk, submission_pk) -> Response or tuple():
+        """ Validate the given challenge_id, submission_id and their association """
         try:
             challenge = Challenge.objects.get(id=challenge_pk)
-            try:
-                submission = Submission.objects.get(id=submission_pk)
-                if submission.challenge_id != challenge.id:
-                    return Response(data={'error': 'Submission with ID {} does not belong to Challenge with ID {}'
-                                    .format(submission_pk, challenge_pk)},
-                                    status=400)
-
-                # Query for the tests and populate if there is a result (AND they were not populated)
-                submission_is_pending = any(test_case.pending for test_case in submission.testcase_set.all())
-                if submission_is_pending:
-                    potential_result = run_grader.AsyncResult(submission.task_id)
-                    if potential_result.ready():
-                        overall_results = json.loads(potential_result.get())
-
-                        # Update the Submission's TestCases
-                        update_test_cases(grader_results=overall_results[GRADER_TEST_RESULTS_RESULTS_KEY],
-                                          test_cases=submission.testcase_set.all())
-
-                        grade_result(submission)  # update the submission's score
-
-                        update_user_score(user=submission.author, submission=submission)
-                return super().retrieve(request, *args, **kwargs)
-            except Submission.DoesNotExist:
-                return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},
-                                status=400)
         except Challenge.DoesNotExist:
             return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
                             status=400)
+        try:
+            submission = Submission.objects.get(id=submission_pk)
+        except Submission.DoesNotExist:
+            return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},
+                            status=400)
+
+        if submission.challenge_id != challenge.id:
+            return Response(data={'error': 'Submission with ID {} does not belong to Challenge with ID {}'
+                            .format(submission_pk, challenge_pk)},
+                            status=400)
+
+        return challenge, submission
 
 
 # /challenges/{challenge_id}/submissions/all
