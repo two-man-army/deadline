@@ -2,19 +2,28 @@
     'use strict'
 
     angular.module('app.dashboard')
-        .controller('DashboardController', DashboardController);
+        .controller('DashboardController', DashboardController)
+        .directive('ngChallenge', [function(){
+            return {
+                restrict: 'A',
+                templateUrl: 'app/challenge/templates/challenge.html'
+            }
+        }]);
 
-    DashboardController.$inject = ['$scope', '$http', '$location', '$cookies', 'dashboardService']
+    DashboardController.$inject = ['$scope', '$http', '$location', '$cookies', 'dashboardService', 'challengeService']
 
-    function DashboardController($scope, $http, $location, $cookies, dashboardService) {
+    function DashboardController($scope, $http, $location, $cookies, dashboardService, challengeService) {
         var mobileView = 992,
             vm = this;
 
 
         //vm.getMainChallenges = getMainChallenges;
-        vm.getSubCategory = getSubCategory;
+        vm.getSubCategoryChallenges = getSubCategoryChallenges;
+        vm.showLatestAttepmts = true;
+        vm.goToChallenge = goToChallenge
         getMainCategories()
         getLatestAttemptedChallenges()
+
         function getMainCategories() {
             dashboardService.getMainCategories().then(
                 function(res) {
@@ -34,11 +43,10 @@
             )
         }
 
-        function getSubCategory(subCategoryName) {
+        function getSubCategoryChallenges(subCategoryName) {
             // Used to list the challenges from a specific category
             dashboardService.getSubCategory(subCategoryName).then(
                 function(res) {
-                    console.log(res)
                     /*
                         A SubCategory object is the following:
                         {
@@ -56,8 +64,9 @@
                         */
                     vm.subcategory = res.data;
                     vm.challenges = vm.subcategory.challenges;
+                    vm.showLatestAttepmts = false;
+                    //$location.path('/challenges')
 
-                    // TODO: Display all challenges in the page
                 },
                 function(error) {
                     console.log(error)
@@ -78,13 +87,17 @@
                             score: 10 // the score it gives
                             category: "Miscellaneous"
                         }
-                    */
+                        */
                     vm.latestAttemptedChallenges = res.data;
                 }
             ),
-            function(error) {
-                console.log(error)
-            }
+                function(error) {
+                    console.log(error)
+                }
+        }
+
+        function goToChallenge(id) {
+            $location.path('/challenge');
         }
 
         vm.getWidth = function() {
