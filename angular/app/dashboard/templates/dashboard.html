@@ -18,7 +18,7 @@
                         </div>
                         <ol ui-tree-nodes="" ng-model="category.sub_catecories">
                             <li ng-repeat="sub_category in category.sub_categories" ui-tree-node>
-                                <div class="sub-category" ng-click="vm.getSubCategory('Sorting')" ui-tree-handle>
+                                <div class="sub-category" ng-click="vm.getSubCategory(sub_category)" ui-tree-handle>
                                     {{sub_category}}
                                 </div>
                             </li>
