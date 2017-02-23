@@ -16,7 +16,7 @@
                         <div class="category" ui-tree-handle>
                             {{category.name}}
                         </div>
-                        <ol ui-tree-nodes="" ng-model="category.sub_catecories">
+                        <ol ui-tree-nodes="" ng-model="category.sub_categories">
                             <li ng-repeat="sub_category in category.sub_categories" ui-tree-node>
                                 <div class="sub-category" ng-click="vm.getSubCategory(sub_category)" ui-tree-handle>
                                     {{sub_category}}
