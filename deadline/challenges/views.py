@@ -104,6 +104,17 @@ class TopSubmissionListView(ListAPIView):
         return Response(data=SubmissionSerializer(top_submissions, many=True).data)
 
 
+class LatestAttemptedChallengesListView(ListAPIView):
+    """ This view should return the challenges attempted by the user, with the newest coming first """
+    serializer_class = ChallengeSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def list(self, request, *args, **kwargs):
+        latest_submissions = Submission.objects.raw('SELECT * FROM challenges_submission WHERE author_id = %s GROUP BY challenge_id ORDER BY created_at DESC LIMIT 3;', params=[request.user.id])
+        latest_challenges = [submission.challenge for submission in latest_submissions]
+        return Response(data=ChallengeSerializer(latest_challenges, many=True).data)
+
+
 class SubmissionCreateView(CreateAPIView):
     """
     Creates a submission, given code by the user.

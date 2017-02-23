@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.models import Challenge, Submission, SubCategory, ChallengeCategory, ChallengeDescription
-from challenges.serializers import SubmissionSerializer
+from challenges.serializers import SubmissionSerializer, ChallengeSerializer
 from accounts.models import User
 
 
@@ -152,3 +152,50 @@ class SubmissionViewsTest(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, SubmissionSerializer([top_submission, better_submission], many=True).data)
+
+
+class LatestSubmissionsViewTest(TestCase):
+    def setUp(self):
+        challenge_cat = ChallengeCategory('Tests')
+        challenge_cat.save()
+        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
+        self.sub_cat.save()
+
+        self.d1 = ChallengeDescription(1, 'What Up', 'Smt', 'smt', 'some', 'is', 'os', 'gotta push it to the limit')
+        self.c1 = Challenge(1, 'Hello', self.d1.id, 5, 10, 'h', 3, self.sub_cat)
+
+        self.d2 = ChallengeDescription(2, 'What Up', 'Smt', 'smt', 'some', 'is', 'os', 'gotta push it to the limit')
+        self.c2 = Challenge(2, 'Second', self.d2.id, 5, 10, 'h', 3, self.sub_cat)
+
+        self.d3 = ChallengeDescription(3, 'What Up', 'Smt', 'smt', 'some', 'is', 'os', 'gotta push it to the limit')
+        self.c3 = Challenge(3, 'Third', self.d3.id, 5, 10, 'h', 3, self.sub_cat)
+
+        self.d1.save(); self.c1.save(); self.d2.save(); self.c2.save(); self.d3.save(); self.c3.save()
+        self.auth_user = User(username='123', password='123', email='123Sm2@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.sample_code = "print(hello)"
+
+    def test_get_latest_challenge_submissions_from_user(self):
+        """ The get_latest_submissions view should return all the latest submissions by the user distinct by their challenges"""
+        s1 = Submission(challenge=self.c1, author=self.auth_user, code=self.sample_code, result_score=10)
+        s1.save()
+        s2 = Submission(challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
+        s2.save()
+        s3 = Submission(challenge=self.c3, author=self.auth_user, code=self.sample_code, result_score=10)
+        s3.save()
+        s4 = Submission(challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
+        s4.save()
+
+        """ This should return a list with c2, c3, c1 ordered like that. """
+        response = self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+
+        # Hack for serializing the category
+        expected_data = []
+        for challenge in ChallengeSerializer([self.c2, self.c3, self.c1], many=True).data:
+            challenge['category'] = challenge['category'].name
+            expected_data.append(challenge)
+
+        self.assertEqual(response.data, expected_data)

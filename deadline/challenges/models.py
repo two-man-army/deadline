@@ -25,6 +25,7 @@ class Submission(models.Model):
     task_id = models.CharField(max_length=100, blank=False)
     result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
     pending = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)
