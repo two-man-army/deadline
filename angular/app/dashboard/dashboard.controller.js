@@ -14,7 +14,7 @@
         //vm.getMainChallenges = getMainChallenges;
         vm.getSubCategory = getSubCategory;
         getMainCategories()
-
+        getLatestAttemptedChallenges()
         function getMainCategories() {
             dashboardService.getMainCategories().then(
                 function(res) {
@@ -63,6 +63,28 @@
                     console.log(error)
                 }
             )
+        }
+
+        function getLatestAttemptedChallenges() {
+            // Used to list the latest attempted challenges by the user
+            dashboardService.getLatestAttemptedChallenges().then(
+                function (res) {
+                    /*
+                        Returns a list of LimitedChallenge objects.
+                        A LimitedChallenge object is the following:
+                        {
+                            name: "Say Hello World!",
+                            rating: 5  // the difficulty of the challenge
+                            score: 10 // the score it gives
+                            category: "Miscellaneous"
+                        }
+                    */
+                    vm.latestAttemptedChallenges = res.data;
+                }
+            ),
+            function(error) {
+                console.log(error)
+            }
         }
 
         vm.getWidth = function() {

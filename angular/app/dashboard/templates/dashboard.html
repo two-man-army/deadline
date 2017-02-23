@@ -118,69 +118,19 @@
             </div>
             <!-- End Header Bar -->
             <div class="container">
-                <h3>Last solved challenges</h3>
+                <h3>Latest attempted challenges</h3>
                 <div class="row">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
-                            Binary search
-                        </div>
-                        <div class="panel-body">
-                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
-                        </div>
-                    </div>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
-                            Binary search
-                        </div>
-                        <div class="panel-body">
-                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
-                        </div>
-                    </div>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
-                            Binary search
-                        </div>
-                        <div class="panel-body">
-                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
-                        </div>
-                    </div>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
-                            Binary search
-                        </div>
-                        <div class="panel-body">
-                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
-                        </div>
-                    </div>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
-                            Binary search
-                        </div>
-                        <div class="panel-body">
-                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
-                        </div>
-                    </div>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
-                            Binary search
-                        </div>
-                        <div class="panel-body">
-                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
-                        </div>
-                    </div>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-check-circle" aria-hidden="true"></i> 
-                            Binary search
-                        </div>
-                        <div class="panel-body">
-                            Success Rate: 97.57% Max Score: 1 Difficulty: Easy
+                    <div ng-repeat="challengeAttempt in vm.latestAttemptedChallenges">
+                        <div class="panel panel-default" >
+                            <div class="panel-heading">
+                                <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                                {{challengeAttempt.name}}
+                                <p style="display: inline;float:right;">Category: {{challengeAttempt.category}}</p>
+                            </div>
+                            <div class="panel-body">
+                                <p>Max Score: {{challengeAttempt.score}}</p>
+                                <p>Rating: {{challengeAttempt.rating}}</p>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -10,7 +10,8 @@
     function dashboardService($http, BASE_URL) {
         var dashboardService = {
             getMainCategories: getMainCategories,
-            getSubCategory: getSubCategory
+            getSubCategory: getSubCategory,
+            getLatestAttemptedChallenges: getLatestAttemptedChallenges
         };
 
         return dashboardService;
@@ -32,6 +33,16 @@
                     'Authorization': 'Token ' + sessionStorage['authToken']
                 },
                 url: BASE_URL + 'challenges/subcategories/' + subCategoryName
+            })
+        }
+
+        function getLatestAttemptedChallenges() {
+            return $http({
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
+                url: BASE_URL + 'challenges/latest_attempted'
             })
         }
     }
