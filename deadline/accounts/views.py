@@ -5,12 +5,19 @@ from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.request import Request
 from rest_framework import status
 
 from accounts.serializers import UserSerializer
 from accounts.models import User
 from accounts.helpers import hash_password
+
+
+class UserDetailView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
 
 
 @api_view(['POST'])

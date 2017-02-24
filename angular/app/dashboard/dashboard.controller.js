@@ -21,6 +21,7 @@
         vm.getSubCategoryChallenges = getSubCategoryChallenges;
         vm.showLatestAttepmts = true;
         vm.showCategoryChallenges = false;
+        vm.userScore = sessionStorage['user_score'] || '0'
         vm.showEditor = false;
         vm.goToChallenge = goToChallenge;
         vm.submitSolution = submitSolution;
@@ -167,6 +168,13 @@
                         vm.solutionInfo = res.data;
                         vm.solutionId = res.data.id;
                         getChallengeSolution(id, vm.solutionId)
+                        challengeService.getUserInfo(sessionStorage['user_id'])
+                        .then(
+                            function(res) {
+                                console.log('GOT USER INFO')
+                                console.log(res.data)
+                            }
+                        )
                     },
 
                     function(err) {
@@ -183,6 +191,14 @@
                         .then(
                             function(res) {
                                 vm.testData = res.data
+                                challengeService.getUserInfo(sessionStorage['user_id'])
+                        .then(
+                                function(res) {
+                                    vm.userScore = res.data.score
+                                    console.log(res.data.score)
+                                    sessionStorage['user_score'] = res.data.score
+                                }
+                            )
                             }
                         )
                     },

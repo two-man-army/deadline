@@ -15,7 +15,8 @@
             getAllChallengeSolutions: getAllChallengeSolutions,
             submitSolution: submitSolution,
             getUserSubmissions: getUserSubmissions,
-            getUserTestCases: getUserTestCases
+            getUserTestCases: getUserTestCases,
+            getUserInfo: getUserInfo
         };
 
         return challengeService;
@@ -30,6 +31,18 @@
                 },
                 url: challengeURL
             });
+        }
+
+        function getUserInfo(userId) {
+            var userURL = BASE_URL + 'accounts/user/' + userId
+
+            return $http({
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
+                url: userURL
+            })
         }
 
         function getAllChallengeSolutions(challengeId) {

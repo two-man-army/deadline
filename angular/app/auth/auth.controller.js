@@ -36,6 +36,10 @@
                     function(res) {
                         sessionStorage['authToken'] = res.data.user_token;
                         sessionStorage['username'] = user.email
+                        sessionStorage['user_score'] = res.data.score
+                        console.log('user')
+                        console.log(res.data)
+                        sessionStorage['user_id'] = res.data.id
                         $location.path('/dashboard');
                     },
 

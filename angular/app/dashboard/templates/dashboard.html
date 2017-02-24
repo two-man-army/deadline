@@ -59,6 +59,9 @@
             <div class="row header">
                 <div class="col-xs-12">
                     <div class="user pull-right">
+                            <p class="dropdown-toggle" uib-dropdown-toggle style="margin-right:30px; display:inline-block; margin-top: 16px;">
+                                Score: {{vm.userScore}}
+                            </p>
                         <div class="item dropdown" uib-dropdown>
                             <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
                                 <img src="assets/img/avatar.jpg">
@@ -94,10 +97,13 @@
                         <div class="item dropdown" uib-dropdown>
                             <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
                                 <i class="fa fa-bell-o"></i>
+                                
                             </a>
+                            
                             <ul class="dropdown-menu dropdown-menu-right">
                                 <li class="dropdown-header">
                                     Notifications
+
                                 </li>
                                 <li class="divider"></li>
                                 <li>

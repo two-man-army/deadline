@@ -19,13 +19,13 @@ class UserModelTest(TestCase):
         """ Should convert a user object to a json """
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
         # password should be hashed
-        expected_json = '{"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123}' % (us.password)
+        expected_json = '{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123}' % (us.password)
 
         content = JSONRenderer().render(UserSerializer(us).data)
         self.assertEqual(content.decode('utf-8'), expected_json)
 
     def test_deserialization(self):
-        expected_json = b'{"username":"SomeGuy","email":"me@abv.bg","password":"123","score":123}'
+        expected_json = b'{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"123","score":123}'
 
         data = JSONParser().parse(BytesIO(expected_json))
         serializer = UserSerializer(data=data)
