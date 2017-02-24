@@ -28,6 +28,7 @@
         vm.submitSolution = submitSolution;
         vm.showLoading = false;
         vm.getUserSubmissions = getUserSubmissions
+        vm.getChallengeTopSubmissions = getChallengeTopSubmissions
         vm.logout = logout;
         getMainCategories();
         getLatestAttemptedChallenges();
@@ -161,6 +162,18 @@
                         console.log(err)
                     }
                 )
+        }
+
+        function getChallengeTopSubmissions(challengeId) {
+            challengeService.getChallengeTopSubmissions(challengeId).then(
+                function (res) {
+                    vm.leaderboardSubmissions = res.data;
+                    debugger;
+                },
+                function(error) {
+                    console.log(error);
+                }
+            )
         }
 
         function submitSolution(id) {
