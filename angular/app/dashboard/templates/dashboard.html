@@ -10,6 +10,9 @@
                 </a>
             </li>
             <li class="sidebar-title"><span>CATEGORIES</span></li>
+            <li class="sidebar-list">
+                <a href="#">Dashboard <span class="menu-icon fa fa-tachometer"></span></a>
+            </li>
             <div ui-tree ng-cloak data-drag-enabled="false">
                 <ol ui-tree-nodes="" ng-model="vm.categories">
                     <li ng-repeat="category in vm.categories" ui-tree-node>
@@ -28,9 +31,6 @@
                     </li>
                 </ol>
             </div>
-            <li class="sidebar-list">
-                <a href="#">Dashboard <span class="menu-icon fa fa-tachometer"></span></a>
-            </li>
         </ul>
         <div class="sidebar-footer">
             <div class="col-xs-4">
