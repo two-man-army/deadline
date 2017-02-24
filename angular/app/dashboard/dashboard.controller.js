@@ -16,7 +16,7 @@
         var mobileView = 992,
             vm = this;
 
-
+        var NEWLINE_PLACEHOLDER_TOKEN = '{{NPL}}'
         //vm.getMainChallenges = getMainChallenges;
         vm.getSubCategoryChallenges = getSubCategoryChallenges;
         vm.showLatestAttepmts = true;
@@ -102,6 +102,16 @@
                     console.log(error)
                 }
         }
+        // Will remove all falsy values: undefined, null, 0, false, NaN and "" (empty string)
+        function cleanArray(actual) {
+        var newArray = new Array();
+        for (var i = 0; i < actual.length; i++) {
+            if (actual[i]) {
+            newArray.push(actual[i]);
+            }
+        }
+        return newArray;
+        }
 
         function convertBold(str) {
             var splitContent = str.split(/\s/)
@@ -120,9 +130,14 @@
                     }
                 }
             }
-            return '<p>' + splitContent.join(' ')
-                                .split('{{NPL}}').join('<br>')  // format new line placeholders
-                                + '</p>'
+            var result = cleanArray(splitContent.join(' ')
+            .split(NEWLINE_PLACEHOLDER_TOKEN)).join('<br>')  // format new line placeholders
+            console.log(result.length)
+            if (result.length === 0) {
+                return ''
+            } else {
+                return '<p>' + result + '</p>'
+            }
         }
 
         function getChallengeInfo(id) {
@@ -137,7 +152,6 @@
                         vm.challengeInfo.description.sample_output = convertBold(vm.challengeInfo.description.sample_output)
                         vm.challengeInfo.description.constraints = convertBold(vm.challengeInfo.description.constraints)
                         vm.challengeInfo.description.explanation = convertBold(vm.challengeInfo.description.explanation)
-                        
                     },
 
                     function(err) {
@@ -170,8 +184,6 @@
                         challengeService.getUserTestCases(challengeId, solutionId)
                         .then(
                             function(res) {
-                                console.log('TESTS!')
-                                console.log(res.data)
                                 vm.testData = res.data
                             }
                         )
@@ -197,6 +209,8 @@
         function goToChallenge(id) {
             vm.showEditor = true;
             vm.showCategoryChallenges = false;
+            vm.showLatestAttepmts = false;
+            vm.testData = undefined;
             getChallengeInfo(id)
             console.log('WENT TO CHALLENGE!')
             angular.element(document).ready(function() {
