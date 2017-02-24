@@ -53,11 +53,12 @@ class ChallengesModelTest(TestCase):
 
     def test_serialization(self):
         c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+        c.save()
         expected_description_json = '{"content":"What Up","input_format":"Something",' \
                                     '"output_format":"something","constraints":"some",' \
                                     '"sample_input":"input sample","sample_output":"output sample",' \
                                     '"explanation":"gotta push it to the limit"}'
-        expected_json = ('{"name":"Hello","rating":5,"score":10,"description":'
+        expected_json = ('{"id":1,"name":"Hello","rating":5,"score":10,"description":'
                          + expected_description_json
                          + ',"test_case_count":5,"category":"tests"}')
 

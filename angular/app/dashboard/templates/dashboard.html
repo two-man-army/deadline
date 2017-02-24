@@ -120,8 +120,8 @@
             <div class="container" ng-if="vm.showLatestAttepmts">
                 <h3>Latest attempted challenges</h3>
                 <div class="row">
-                    <a class="challenge-link">
                         <div ng-repeat="challengeAttempt in vm.latestAttemptedChallenges">
+                            <div ng-click="vm.goToChallenge(challengeAttempt.id)" class="panel panel-default challenge-panel" >
                             <div class="panel panel-default challenge-panel" >
                                 <div class="panel-heading challenge-panel-heading">
                                     <i class="fa fa-check-circle" aria-hidden="true"></i> 
@@ -132,6 +132,7 @@
                                     <p>Max Score: {{challengeAttempt.score}}</p>
                                     <p>Rating: {{challengeAttempt.rating}}</p>
                                 </div>
+                            </div>
                             </div>
                         </div>
                     </a>

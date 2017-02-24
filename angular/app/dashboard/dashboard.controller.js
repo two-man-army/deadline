@@ -195,6 +195,8 @@
         function goToChallenge(id) {
             vm.showEditor = true;
             vm.showCategoryChallenges = false;
+            vm.showLatestAttepmts = false;
+            vm.testData = undefined;
             getChallengeInfo(id)
             console.log('WENT TO CHALLENGE!')
             angular.element(document).ready(function() {
