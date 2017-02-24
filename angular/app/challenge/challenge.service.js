@@ -5,9 +5,9 @@
         .module('app.challenge')
         .factory('challengeService', challengeService);
 
-    challengeService.$inject = ['$http', 'BASE_URL'];
+    challengeService.$inject = ['$interval', '$http', 'BASE_URL'];
 
-    function challengeService($http, BASE_URL) {
+    function challengeService($interval, $http, BASE_URL) {
 
         var challengeService = {
             getChallengeInfo: getChallengeInfo,
@@ -52,7 +52,16 @@
                     'Authorization': 'Token ' + sessionStorage['authToken']
                 },
                 url:solutionURL
-            });
+            })
+                .then(function(data, status, headers, config) {
+                    if (data.pending === false) {
+                        console.log(data.pending)
+                        $interval.cancel(interval);
+                    } else {
+                        console.log('loop')
+                        $interval(getChallengeSolution, 2000)
+                    }
+                })
         }
 
         function getChallengeTopSubmissions(challengeId) {
