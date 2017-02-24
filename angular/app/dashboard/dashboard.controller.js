@@ -122,7 +122,7 @@
                 .then(
                     function(res) {
                         vm.solutionInfo = res.data;
-                        vm.solutionId = vm.solutionInfo.id;
+                        vm.solutionId = res.data.id;
                         getChallengeSolution(id, vm.solutionId)
                     },
 

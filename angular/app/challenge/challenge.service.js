@@ -59,7 +59,7 @@
                         $interval.cancel(interval);
                     } else {
                         console.log('loop')
-                        $interval(getChallengeSolution, 2000)
+                        $interval(getChallengeSolution(challengeId, solutionId), 2000)
                     }
                 })
         }
