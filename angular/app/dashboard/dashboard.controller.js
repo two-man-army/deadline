@@ -117,18 +117,10 @@
 
         function submitSolution(id) {
             var code = window.monaco.editor.getModels()[0].getValue();
+            vm.testData = [{"submission":1,"pending":false,"success":false,"time":"1.25s","description":"Testing","traceback":"Shte Uspeem","error_message":"whatup"},{"submission":1,"pending":false,"success":true,"time":"1.25s","description":"Testing","traceback":"Shte Uspeem","error_message":"whatup"},{"submission":1,"pending":false,"success":true,"time":"1.25s","description":"Testing","traceback":"Shte Uspeem","error_message":"whatup"},{"submission":1,"pending":false,"success":true,"time":"1.25s","description":"Testing","traceback":"Shte Uspeem","error_message":"whatup"}];
 
-            challengeService.submitSolution(id, code)
-                .then(
-                    function(res) {
-                        vm.solutionInfo = res.data;
-                        vm.solutionId = res.data.id;
-                        getChallengeSolution(id, vm.solutionId)
-                    },
-
-                    function(err) {
-                        console.log(err)
-                    })
+            console.log(vm.successfullTests)
+            console.log(vm.errorTests)
         }
 
         function getChallengeSolution(challengeId, solutionId) {
