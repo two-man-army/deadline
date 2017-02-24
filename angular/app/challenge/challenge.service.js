@@ -14,7 +14,8 @@
             getChallengeSolution: getChallengeSolution,
             getAllChallengeSolutions: getAllChallengeSolutions,
             submitSolution: submitSolution,
-            getUserSubmissions: getUserSubmissions
+            getUserSubmissions: getUserSubmissions,
+            getUserTestCases: getUserTestCases
         };
 
         return challengeService;
@@ -58,6 +59,7 @@
                     if (data.data.pending === false) {
                         console.log(data.pending)
                         console.log(data)
+                        return data.data
                     } else {
                         console.log('loop')
                         var n = 1000000000;
@@ -88,6 +90,17 @@
                     'Authorization': 'Token ' + sessionStorage['authToken']
                 },
                 url: userSubmissionsURL
+            })
+        }
+
+        function getUserTestCases(challengeId, solutionId) {
+            var userTestCasesURL = BASE_URL + 'challenges/' + challengeId + '/submissions/' + solutionId + '/tests'
+             return $http({
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + sessionStorage['authToken']
+                },
+                url: userTestCasesURL
             })
         }
 

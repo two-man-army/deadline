@@ -164,20 +164,15 @@
             challengeService.getChallengeSolution(challengeId, solutionId)
                 .then(
                     function(res) {
-                                    console.log('CALL')
-                        
-                        while (true) {
-                            toBreak = false;
-                            challengeService.getChallengeSolution(challengeId, res.data.id).then(
-                                function(res) {
-                                    console.log('BROKE')
-                                    console.log(toBreak)
-                                    console.log(toBreak)
-                                    console.log(toBreak)
-                                    
-                                }
-                            )
-                        }
+                        console.log(res)
+                        challengeService.getUserTestCases(challengeId, solutionId)
+                        .then(
+                            function(res) {
+                                console.log('TESTS!')
+                                console.log(res.data)
+                                vm.testData = res.data
+                            }
+                        )
                     },
 
                     function(err) {
