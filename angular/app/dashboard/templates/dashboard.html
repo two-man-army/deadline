@@ -218,9 +218,15 @@
                 <button class="btn btn-primary" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Button</button>
                 <h4>Test cases:</h4>
                 <div class="table-responsive">
-                    <table class="table">
-                        <tr class="active"><td>Hello</td></tr>
-                        <tr class="success"><td>Foo</td></tr>
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time/Error</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tr class="success" ng-if="item.success" ng-repeat="item in vm.testData"><td>Time: {{item.time}}</td><td>success</td></tr>
+                        <tr class="danger" ng-if="!item.success" ng-repeat="item in vm.testData"><td>Fail: {{item.error_message}}<td>Traceback: {{item.traceback}}</td></tr>
                     </table>
                 </div>
             </div>
