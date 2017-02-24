@@ -187,9 +187,34 @@
                         </div>
                         <section>
                             <h3>Description:</h3>
-                            <blockquote ng-repeat="item in vm.challengeInfo.description">
-                                <p>{{item}}</p>
-                            </blockquote>
+                            <div ng-bind-html="vm.challengeInfo.description.content"></div>
+
+                            <div ng-if="vm.challengeInfo.description.input_format.length > 0">
+                                <h4>Input Format: </h4>
+                                <div ng-bind-html="vm.challengeInfo.description.input_format"></div>
+                            </div>
+                            <div ng-if="vm.challengeInfo.description.output_format.length > 0">
+                                <h4>Output Format: </h4>
+                                <div ng-bind-html="vm.challengeInfo.description.output_format"></div>
+                            </div>
+                            <div ng-if="vm.challengeInfo.description.constraints.length > 0">
+                                <h4>Constraints: </h4>
+                                <div ng-bind-html="vm.challengeInfo.description.constraints">
+                                </div>
+                            </div>
+                            <div ng-if="vm.challengeInfo.description.sample_input.length > 0">
+                                <h4>Sample Input: </h4>
+                                <div ng-bind-html="vm.challengeInfo.description.sample_input" class="code-format">
+                                </div>
+                            <div ng-if="vm.challengeInfo.description.sample_output.length > 0">
+                                <h4>Sample Output: </h4>
+                                <div ng-bind-html="vm.challengeInfo.description.sample_output" class="code-format">
+                                </div>
+                            </div>
+                             <div ng-if="vm.challengeInfo.description.explanation.length > 0">
+                                <h4>Explanation: </h4>
+                                <div ng-bind-html="vm.challengeInfo.description.explanation">
+                            </div>
                         </section>
                         <div id="challenge-editor" style="height:501px;"></div>
                     </div>
@@ -207,6 +232,7 @@
                     <div role="tabpanel" class="tab-pane fade" id="leaderboard">...</div>
                 </div>
                 <button class="btn btn-primary" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Button</button>
+                
             </div>
 
             <script>

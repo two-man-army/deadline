@@ -166,11 +166,11 @@
     "model": "challenges.challengedescription",
     "pk": 2,
     "fields": {
-      "content": "While studying for her university, FMI, Rositsa came up with the idea of a basic number.\n\nA basic number was the following: a positive number, which when represented in base **b** would have every prefix with **k** count digits(from 1 to the count of digits in the number to the given base) converted to base **b** be divisible by **k**.\n\nExample:\nUsing base 2\n1 is a basic number since its prefix of length 1 (prefix=1) is divisible by 1\n2 is a basic number. 2 in base 2 is 10, its prefix of length 1 is 1, which is divisible by 1 and its prefix of length 2 is 10, which is divisible by 2.\n3, on the other hand, is not a basic number. Converted to base 2, 3 is equal to 11. Its prefix of length 1(prefix=1) is divisible by 1, but its prefix of length 2(prefix=11) is not divisible by 2.\n\nRositsa wants you to find the count of basic numbers represented in the given base **b**, which are exactly **d** digits long (when converted to the base).",
-      "input_format": "First line of the input denotes the number of test cases.\nFor each test case there is a single line containing two integers, the base **b** and digits **d**, separated by a single space.",
+      "content": "While studying for her university, FMI, Rositsa came up with the idea of a basic number.{{NPL}} {{NPL}}A basic number was the following: a positive number, which when represented in base **b** would have every prefix with **k** count digits(from 1 to the count of digits in the number to the given base) converted to base **b** be divisible by **k**.{{NPL}}{{NPL}}Example:{{NPL}}Using base 2{{NPL}}1 is a basic number since its prefix of length 1 (prefix=1) is divisible by 1{{NPL}}2 is a basic number. 2 in base 2 is 10, its prefix of length 1 is 1, which is divisible by 1 and its prefix of length 2 is 10, which is divisible by 2.{{NPL}}3, on the other hand, is not a basic number. Converted to base 2, 3 is equal to 11. Its prefix of length 1(prefix=1) is divisible by 1, but its prefix of length 2(prefix=11) is not divisible by 2.{{NPL}}{{NPL}}Rositsa wants you to find the count of basic numbers represented in the given base **b**, which are exactly **d** digits long (when converted to the base).",
+      "input_format": "First line of the input denotes the number of test cases.{{NPL}}For each test case there is a single line containing two integers, the base **b** and digits **d**, separated by a single space.",
       "output_format": "A number on a single line",
-      "constraints": "1<=Test case count<=100\n2<=Base<=4\n1<=Digits<=10^7",
-      "sample_input": "\n1\n3 2",
+      "constraints": "1<=Test case count<=100{{NPL}}2<=Base<=4{{NPL}}1<=Digits<=10^7",
+      "sample_input": "{{NPL}}1{{NPL}}3 2",
       "sample_output": "1",
       "explanation": "There are exactly 6 numbers that have 2 digits converted to base 3 and they are [3, 4, 5, 6, 7, 8](in base 3 [10, 11, 12, 20, 21, 22]) Only numbers 4(11), 6(20) and 8(22) are basic numbers. 4 is a basic number, because his prefix of length 1(prefix=1, converted to base 3=1) is divisible by 1 and its prefix of length 2(prefix=11, converted to base3=4) is divisible by 2."
     }
@@ -196,7 +196,7 @@
       "content": "Given an a list of *N* numbers, find their sum",
       "input_format": "One line, containing the numbers, separated by a comma and whitespace",
       "output_format": "A number on a single line, the sum of the numbers",
-      "constraints": "1<=Number<=100000\n1<=N<=1000",
+      "constraints": "1<=Number<=100000{{NPL}}1<=N<=1000",
       "sample_input": "1, 2, 3",
       "sample_output": "6",
       "explanation": "1 + 2 + 3 = 6"
@@ -224,7 +224,7 @@
       "content": "Given a sequence of numbers, find the smallest and biggest number in said sequence.",
       "input_format": "One line, containing the numbers, separated by a comma and whitespace",
       "output_format": "The smallest and biggest number printed on a single line, separated by a comma",
-      "constraints": "1<=Number<=100000\n1<=N<=1000",
+      "constraints": "1<=Number<=100000{{NPL}}1<=N<=1000",
       "sample_input": "10, 12, -1",
       "sample_output": "-1, 12",
       "explanation": ""

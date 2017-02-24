@@ -101,12 +101,41 @@
                 }
         }
 
+        function convertBold(str) {
+            var splitContent = str.split(/\s/)
+            for (var i=0; i<splitContent.length; i++) {
+                if (splitContent[i].startsWith('**')) {
+                    if (splitContent[i].endsWith('**.')) {
+                        var wantedStr = splitContent[i].substring(2,splitContent[i].length - 3);
+                        splitContent[i] = '<strong>' + wantedStr + '</strong>' + '.'
+                    } else if (splitContent[i].endsWith('**,')) {
+                        var wantedStr = splitContent[i].substring(2,splitContent[i].length - 3);
+                        splitContent[i] = '<strong>' + wantedStr + '</strong>' + ','
+                    }
+                    else if (splitContent[i].endsWith('**')) {
+                        var wantedStr = splitContent[i].substring(2,splitContent[i].length - 2);
+                        splitContent[i] = '<strong>' + wantedStr + '</strong>'
+                    }
+                }
+            }
+            return '<p>' + splitContent.join(' ')
+                                .split('{{NPL}}').join('<br>')  // format new line placeholders
+                                + '</p>'
+        }
+
         function getChallengeInfo(id) {
             challengeService.getChallengeInfo(id)
                 .then(
                     function(res) {
                         vm.challengeInfo = res.data;
-                        console.log(vm.challengeInfo)
+                        vm.challengeInfo.description.content = convertBold(vm.challengeInfo.description.content)
+                        vm.challengeInfo.description.input_format = convertBold(vm.challengeInfo.description.input_format)
+                        vm.challengeInfo.description.output_format = convertBold(vm.challengeInfo.description.output_format)
+                        vm.challengeInfo.description.sample_input = convertBold(vm.challengeInfo.description.sample_input)
+                        vm.challengeInfo.description.sample_output = convertBold(vm.challengeInfo.description.sample_output)
+                        vm.challengeInfo.description.constraints = convertBold(vm.challengeInfo.description.constraints)
+                        vm.challengeInfo.description.explanation = convertBold(vm.challengeInfo.description.explanation)
+                        
                     },
 
                     function(err) {
@@ -135,7 +164,20 @@
             challengeService.getChallengeSolution(challengeId, solutionId)
                 .then(
                     function(res) {
-                        console.log(res)
+                                    console.log('CALL')
+                        
+                        while (true) {
+                            toBreak = false;
+                            challengeService.getChallengeSolution(challengeId, res.data.id).then(
+                                function(res) {
+                                    console.log('BROKE')
+                                    console.log(toBreak)
+                                    console.log(toBreak)
+                                    console.log(toBreak)
+                                    
+                                }
+                            )
+                        }
                     },
 
                     function(err) {
@@ -147,7 +189,7 @@
             vm.showEditor = true;
             vm.showCategoryChallenges = false;
             getChallengeInfo(id)
-
+            console.log('WENT TO CHALLENGE!')
             angular.element(document).ready(function() {
                 require.config({ paths: { 'vs': 'node_modules/monaco-editor/min/vs' }});
                 require(['vs/editor/editor.main'], function() {

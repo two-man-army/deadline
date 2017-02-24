@@ -6,6 +6,7 @@
         'ngMessages',
         'ngCookies',
         'ui.bootstrap',
+        'ngSanitize',
         'ui.tree',
         'app.layout',
         'app.auth',

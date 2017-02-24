@@ -312,3 +312,12 @@ table.submissions-table td, th {
 table.submissions-table tr:nth-child(even) {
     background-color: #dddddd;
 }
+
+.code-format {
+    padding: 16px;
+    overflow: auto;
+    font-size: 85%;
+    line-height: 1.45;
+    background-color: #f7f7f7;
+    border-radius: 3px; font-size: 1.2em; width: 30%
+}
