@@ -325,3 +325,10 @@ table.submissions-table tr:nth-child(even) {
 .editor {
  margin: 10px 0;
 }
+
+button.submit-button {
+margin: 5px auto;
+    display: block;
+    padding: 10px;
+    font-weight: bold
+}
