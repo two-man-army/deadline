@@ -14,6 +14,7 @@
             getChallengeSolution: getChallengeSolution,
             getAllChallengeSolutions: getAllChallengeSolutions,
             submitSolution: submitSolution,
+            getChallengeTopSubmissions: getChallengeTopSubmissions,
             getUserSubmissions: getUserSubmissions,
             getUserTestCases: getUserTestCases,
             getUserInfo: getUserInfo
