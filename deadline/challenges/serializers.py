@@ -29,7 +29,7 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
 class SubmissionSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     challenge = serializers.PrimaryKeyRelatedField(read_only=True)
-    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = serializers.StringRelatedField(read_only=True)
     result_score = serializers.IntegerField(read_only=True)
     pending = serializers.BooleanField(read_only=True)
 

@@ -35,3 +35,6 @@ class User(AbstractBaseUser):
             # Store a random salt and hash the password!
             self.salt = uuid.uuid4().hex
             self.password = hash_password(password=self.password, salt=self.salt)
+
+    def __str__(self):
+        return self.username

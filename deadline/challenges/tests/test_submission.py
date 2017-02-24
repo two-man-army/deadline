@@ -61,10 +61,11 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         s.save()
         serializer = SubmissionSerializer(s)
-        expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":' + str(self.auth_user.id)
-                         + ',"code":"' + self.sample_code + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '"}')
+        expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":"' + str(self.auth_user.username)
+                         + '","code":"' + self.sample_code + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '"}')
 
         content = JSONRenderer().render(serializer.data)
+        print(content)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
 
 
