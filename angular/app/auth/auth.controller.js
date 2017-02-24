@@ -35,6 +35,7 @@
                 .then(
                     function(res) {
                         sessionStorage['authToken'] = res.data.user_token;
+                        sessionStorage['username'] = user.email
                         $location.path('/dashboard');
                     },
 

@@ -204,8 +204,16 @@
                 require(['vs/editor/editor.main'], function() {
                     var editor = monaco.editor.create(document.getElementById('challenge-editor'), {
                         value: [
-                            'def foo() {',
-                            '\tprint("Hello world!")'
+                            "__author__ = '" + sessionStorage['username'] + "'",
+                            "",
+                            "",
+                            "def main():",
+                            "    # Write your code here!",
+                            "    pass",
+                            "",
+                            "",
+                            "if __name__ == '__main__':",
+                                "    main()"
                         ].join('\n'),
                         language: "python",
                         lineNumbers: true,
