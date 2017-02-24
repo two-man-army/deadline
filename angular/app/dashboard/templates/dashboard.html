@@ -262,14 +262,14 @@
                                 </div>
                                 <div role="tabpanel" class="tab-pane fade" id="leaderboard">
                                     <div class="table-responsive">
-                                        <table ng-init="vm.getUserSubmissions(vm.challengeInfo.id)" class="table submissions-table">
+                                        <table ng-init="vm.getChallengeTopSubmissions(vm.challengeInfo.id)" class="table submissions-table">
                                             <thead>
                                                 <tr>
                                                     <th>Submitted At</th>
                                                     <th>Score</th>
                                                 </tr>
                                             </thead>
-                                            <tr ng-repeat="userSub in vm.userSubmissions">
+                                            <tr ng-repeat="userSub in vm.leaderboardSubmissions">
                                                 <td>{{userSub.created_at  | date:"MM/dd/yyyy 'at' h:mma" }}</td>
                                                 <td>{{userSub.result_score}}</td>
                                             </tr>
