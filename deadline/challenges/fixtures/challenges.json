@@ -193,7 +193,7 @@
     "model": "challenges.challengedescription",
     "pk": 3,
     "fields": {
-      "content": "Given an a list of *N* numbers, find their sum",
+      "content": "Given an a list of **N** numbers, find their sum",
       "input_format": "One line, containing the numbers, separated by a comma and whitespace",
       "output_format": "A number on a single line, the sum of the numbers",
       "constraints": "1<=Number<=100000{{NPL}}1<=N<=1000",
