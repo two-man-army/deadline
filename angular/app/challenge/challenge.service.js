@@ -56,6 +56,16 @@
                 url: allSubmissionsURL
             });
         }
+        var i = 1;
+        function myLoop () {           //  create a loop function
+        setTimeout(function () {    //  call a 3s setTimeout when the loop is called
+                      //  your code here
+            i++;                     //  increment the counter
+            if (i < 10) {            //  if the counter < 10, call the loop function
+                myLoop();             //  ..  again which will trigger another 
+            }                        //  ..  setTimeout()
+        }, 300)
+        }
 
         function getChallengeSolution(challengeId, solutionId) {
             var solutionURL = BASE_URL + 'challenges/' + challengeId + '/submissions/' + solutionId;
@@ -75,8 +85,9 @@
                         return data.data
                     } else {
                         console.log('loop')
-                        var n = 1000000000;
-                        while (n > 0) {n--}  // stupid sleep
+                        myLoop();
+                        // var n = 1000000000;
+                        // while (n > 0) {n--}  // stupid sleep
                         return getChallengeSolution(challengeId, solutionId)
                     }
                 })

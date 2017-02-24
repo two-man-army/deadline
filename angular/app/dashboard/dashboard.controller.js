@@ -26,6 +26,7 @@
         vm.showResults = false;
         vm.goToChallenge = goToChallenge;
         vm.submitSolution = submitSolution;
+        vm.showLoading = false;
         vm.getUserSubmissions = getUserSubmissions
         vm.logout = logout;
         getMainCategories();
@@ -170,7 +171,11 @@
                     function(res) {
                         vm.solutionInfo = res.data;
                         vm.solutionId = res.data.id;
+<<<<<<< HEAD
                         vm.showResults = true;
+=======
+                        vm.showLoading = true;
+>>>>>>> 9550e4c0c23133522c951824271d0a067af58735
                         getChallengeSolution(id, vm.solutionId)
                         challengeService.getUserInfo(sessionStorage['user_id'])
                         .then(
@@ -195,6 +200,7 @@
                         .then(
                             function(res) {
                                 vm.testData = res.data
+                                vm.showLoading = false;
                                 challengeService.getUserInfo(sessionStorage['user_id'])
                         .then(
                                 function(res) {
@@ -230,6 +236,8 @@
             vm.showCategoryChallenges = false;
             vm.showLatestAttepmts = false;
             vm.testData = undefined;
+            vm.showLoading = false;
+            
             getChallengeInfo(id)
             console.log('WENT TO CHALLENGE!')
             angular.element(document).ready(function() {

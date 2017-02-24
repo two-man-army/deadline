@@ -248,6 +248,7 @@
 
                 </div>
                 <button class="btn btn-primary" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Button</button>
+<<<<<<< HEAD
                 <div class="results" ng-show="vm.showResults">
                     <h4>Test cases:</h4>
                     <div class="table-responsive">
@@ -262,6 +263,21 @@
                             <tr class="danger" ng-if="!item.success" ng-repeat="item in vm.testData"><td>Fail: {{item.error_message}}<td>Traceback: {{item.traceback}}</td></tr>
                         </table>
                     </div>
+=======
+                <img src="assets/img/hourglass.svg" style="display: block; margin: 0 auto;" ng-show="vm.showLoading">
+                <h4>Test cases:</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time/Error</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tr class="success" ng-if="item.success" ng-repeat="item in vm.testData"><td>Time: {{item.time}}</td><td>success</td></tr>
+                        <tr class="danger" ng-if="!item.success" ng-repeat="item in vm.testData"><td>Fail: {{item.error_message}}<td>Traceback: {{item.traceback}}</td></tr>
+                    </table>
+>>>>>>> 9550e4c0c23133522c951824271d0a067af58735
                 </div>
             </div>
 
