@@ -59,9 +59,9 @@
             <div class="row header">
                 <div class="col-xs-12">
                     <div class="user pull-right">
-                            <p class="dropdown-toggle" uib-dropdown-toggle style="margin-right:30px; display:inline-block; margin-top: 16px;">
-                                Score: {{vm.userScore}}
-                            </p>
+                        <p class="dropdown-toggle" uib-dropdown-toggle style="margin-right:30px; display:inline-block; margin-top: 16px;">
+                            Score: {{vm.userScore}}
+                        </p>
                         <div class="item dropdown" uib-dropdown>
                             <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
                                 <img ng-click="vm.logout()" src="assets/img/avatar.jpg">
@@ -97,9 +97,9 @@
                         <div class="item dropdown" uib-dropdown>
                             <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
                                 <i class="fa fa-bell-o"></i>
-                                
+
                             </a>
-                            
+
                             <ul class="dropdown-menu dropdown-menu-right">
                                 <li class="dropdown-header">
                                     Notifications
@@ -126,8 +126,8 @@
             <div class="container" ng-if="vm.showLatestAttepmts">
                 <h3>Latest attempted challenges</h3>
                 <div class="row">
-                        <div ng-repeat="challengeAttempt in vm.latestAttemptedChallenges">
-                            <div ng-click="vm.goToChallenge(challengeAttempt.id)">
+                    <div ng-repeat="challengeAttempt in vm.latestAttemptedChallenges">
+                        <div ng-click="vm.goToChallenge(challengeAttempt.id)">
                             <div class="panel panel-default challenge-panel" >
                                 <div class="panel-heading challenge-panel-heading">
                                     <i class="fa fa-check-circle" aria-hidden="true"></i> 
@@ -139,8 +139,8 @@
                                     <p>Rating: {{challengeAttempt.rating}}</p>
                                 </div>
                             </div>
-                            </div>
                         </div>
+                    </div>
                     </a>
                 </div>
             </div>
@@ -213,58 +213,79 @@
                                 <h4>Sample Input: </h4>
                                 <div ng-bind-html="vm.challengeInfo.description.sample_input" class="code-format">
                                 </div>
-                            <div ng-if="vm.challengeInfo.description.sample_output.length > 0">
-                                <h4>Sample Output: </h4>
-                                <div ng-bind-html="vm.challengeInfo.description.sample_output" class="code-format">
+                                <div ng-if="vm.challengeInfo.description.sample_output.length > 0">
+                                    <h4>Sample Output: </h4>
+                                    <div ng-bind-html="vm.challengeInfo.description.sample_output" class="code-format">
+                                    </div>
                                 </div>
-                            </div>
-                             <div ng-if="vm.challengeInfo.description.explanation.length > 0">
-                                <h4>Explanation: </h4>
-                                <div ng-bind-html="vm.challengeInfo.description.explanation">
-                            </div>
+                                <div ng-if="vm.challengeInfo.description.explanation.length > 0">
+                                    <h4>Explanation: </h4>
+                                    <div ng-bind-html="vm.challengeInfo.description.explanation">
+                                    </div>
                         </section>
                         <div id="challenge-editor" class="editor", style="height:501px;"></div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane fade" id="submissions">
-                        <table ng-init="vm.getUserSubmissions(vm.challengeInfo.id)" class="submissions-table">
-                            <th>Submitted At</th>
-                            <th>Score</th>
-                            <tr ng-repeat="userSub in vm.userSubmissions">
-                                <td>{{userSub.created_at  | date:"MM/dd/yyyy 'at' h:mma" }}</td>
-                                <td>{{userSub.result_score}}</td>
-                            </tr>
-                        </table>    
+                                </div>
+                                <div role="tabpanel" class="tab-pane fade" id="submissions">
+                                    <div class="table-responsive">
+                                        <table ng-init="vm.getUserSubmissions(vm.challengeInfo.id)" class="table submissions-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Submitted At</th>
+                                                    <th>Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tr ng-repeat="userSub in vm.userSubmissions">
+                                                <td>{{userSub.created_at  | date:"MM/dd/yyyy 'at' h:mma" }}</td>
+                                                <td>{{userSub.result_score}}</td>
+                                            </tr>
+                                        </table>    
+                                    </div>
 
-                    </div>
-                    <div role="tabpanel" class="tab-pane fade" id="leaderboard">...</div>
-                    <script>
-                        $(document).ready(function() {
-                            $('.nav-tabs a').click(function (e) {
-                                e.preventDefault()
-                                    $(this).tab('show')
-                            })
-                        });
-                    </script>
+                                </div>
+                                <div role="tabpanel" class="tab-pane fade" id="leaderboard">
+                                    <div class="table-responsive">
+                                        <table ng-init="vm.getUserSubmissions(vm.challengeInfo.id)" class="table submissions-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Submitted At</th>
+                                                    <th>Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tr ng-repeat="userSub in vm.userSubmissions">
+                                                <td>{{userSub.created_at  | date:"MM/dd/yyyy 'at' h:mma" }}</td>
+                                                <td>{{userSub.result_score}}</td>
+                                            </tr>
+                                        </table>    
+                                    </div>
+                                </div>
+                                <script>
+                                    $(document).ready(function() {
+                                        $('.nav-tabs a').click(function (e) {
+                                            e.preventDefault()
+                                                $(this).tab('show')
+                                        })
+                                    });
+                                </script>
 
-                </div>
-                <button class="btn btn-primary submit-button" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Submit Solution</button>
-                <div class="results" ng-show="vm.showResults">
-                <img src="assets/img/hourglass.svg" style="display: block; margin: 0 auto;" ng-show="vm.showLoading">
-                <h4>Test cases:</h4>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th>Time/Error</th>
-                                <th>Description</th>
-                            </tr>
-                        </thead>
-                        <tr class="success" ng-if="item.success" ng-repeat="item in vm.testData"><td>Time: {{item.time}}</td><td>success</td></tr>
-                        <tr class="danger" ng-if="!item.success" ng-repeat="item in vm.testData"><td>Fail: {{item.error_message}}<td>Traceback: {{item.traceback}}</td></tr>
-                    </table>
-                </div>
-            </div>
+                            </div>
+                            <button class="btn btn-primary submit-button" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Submit Solution</button>
+                            <div class="results" ng-show="vm.showResults">
+                                <img src="assets/img/hourglass.svg" style="display: block; margin: 0 auto;" ng-show="vm.showLoading">
+                                <h4>Test cases:</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Time/Error</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tr class="success" ng-if="item.success" ng-repeat="item in vm.testData"><td>Time: {{item.time}}</td><td>success</td></tr>
+                                        <tr class="danger" ng-if="!item.success" ng-repeat="item in vm.testData"><td>Fail: {{item.error_message}}<td>Traceback: {{item.traceback}}</td></tr>
+                                    </table>
+                                </div>
+                            </div>
 
-        </div><!-- End Page Content -->
-    </div><!-- End Content Wrapper -->
-</div><!-- End Page Wrapper -->
+                    </div><!-- End Page Content -->
+                </div><!-- End Content Wrapper -->
+            </div><!-- End Page Wrapper -->
