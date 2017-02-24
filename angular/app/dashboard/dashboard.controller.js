@@ -23,6 +23,7 @@
         vm.showCategoryChallenges = false;
         vm.userScore = sessionStorage['user_score'] || '0'
         vm.showEditor = false;
+        vm.showResults = false;
         vm.goToChallenge = goToChallenge;
         vm.submitSolution = submitSolution;
         vm.getUserSubmissions = getUserSubmissions
@@ -169,6 +170,7 @@
                     function(res) {
                         vm.solutionInfo = res.data;
                         vm.solutionId = res.data.id;
+                        vm.showResults = true;
                         getChallengeSolution(id, vm.solutionId)
                         challengeService.getUserInfo(sessionStorage['user_id'])
                         .then(
@@ -213,6 +215,7 @@
         function getUserSubmissions(challengeId) {
             challengeService.getUserSubmissions(challengeId).then(
                 function (res) {
+                    vm.showResults = false;
                     vm.userSubmissions = res.data;
                 },
                 function(error) {
