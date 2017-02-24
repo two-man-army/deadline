@@ -205,16 +205,25 @@
 
                     </div>
                     <div role="tabpanel" class="tab-pane fade" id="leaderboard">...</div>
+                    <script>
+                        $(document).ready(function() {
+                            $('.nav-tabs a').click(function (e) {
+                                e.preventDefault()
+                                    $(this).tab('show')
+                            })
+                        });
+                    </script>
+
                 </div>
                 <button class="btn btn-primary" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Button</button>
+                <h4>Test cases:</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <tr class="active"><td>Hello</td></tr>
+                        <tr class="success"><td>Foo</td></tr>
+                    </table>
+                </div>
             </div>
-
-            <script>
-                $('.nav-tabs a').click(function (e) {
-                    e.preventDefault()
-                        $(this).tab('show')
-                })
-            </script>
 
         </div><!-- End Page Content -->
     </div><!-- End Content Wrapper -->
