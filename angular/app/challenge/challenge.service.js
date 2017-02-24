@@ -95,7 +95,7 @@
         }
 
         function getChallengeTopSubmissions(challengeId) {
-            var topSubmissionsURL = BASE_URL + 'challenges/' + challengeId + '/top'
+            var topSubmissionsURL = BASE_URL + 'challenges/' + challengeId + '/submissions/top'
 
             return $http({
                 method: 'GET',
