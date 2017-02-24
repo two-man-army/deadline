@@ -1,4 +1,4 @@
-(function() {
+(function () {
     'use strict';
 
     angular
@@ -58,14 +58,13 @@
             });
         }
         var i = 1;
-        function myLoop () {           //  create a loop function
-        setTimeout(function () {    //  call a 3s setTimeout when the loop is called
-                      //  your code here
-            i++;                     //  increment the counter
-            if (i < 10) {            //  if the counter < 10, call the loop function
-                myLoop();             //  ..  again which will trigger another 
-            }                        //  ..  setTimeout()
-        }, 300)
+        function sleepLoop() {
+            setTimeout(function () {
+                i++;
+                if (i < 10) {
+                    sleepLoop();
+                }
+            }, 300)
         }
 
         function getChallengeSolution(challengeId, solutionId) {
@@ -76,19 +75,13 @@
                 headers: {
                     'Authorization': 'Token ' + sessionStorage['authToken']
                 },
-                url:solutionURL
+                url: solutionURL
             })
-                .then(function(data, status, headers, config) {
-                    console.log(data.data.pending)
+                .then(function (data, status, headers, config) {
                     if (data.data.pending === false) {
-                        console.log(data.pending)
-                        console.log(data)
                         return data.data
                     } else {
-                        console.log('loop')
-                        myLoop();
-                        // var n = 1000000000;
-                        // while (n > 0) {n--}  // stupid sleep
+                        sleepLoop();
                         return getChallengeSolution(challengeId, solutionId)
                     }
                 })
@@ -120,7 +113,7 @@
 
         function getUserTestCases(challengeId, solutionId) {
             var userTestCasesURL = BASE_URL + 'challenges/' + challengeId + '/submissions/' + solutionId + '/tests'
-             return $http({
+            return $http({
                 method: 'GET',
                 headers: {
                     'Authorization': 'Token ' + sessionStorage['authToken']
@@ -144,8 +137,8 @@
                     'Content-Type': 'application/json',
                     'Authorization': 'Token ' + sessionStorage['authToken']
                 },
-                data: {'code': code}
+                data: { 'code': code }
             })
         }
     }
-}());
+} ());
