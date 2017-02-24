@@ -171,11 +171,8 @@
                     function(res) {
                         vm.solutionInfo = res.data;
                         vm.solutionId = res.data.id;
-<<<<<<< HEAD
                         vm.showResults = true;
-=======
                         vm.showLoading = true;
->>>>>>> 9550e4c0c23133522c951824271d0a067af58735
                         getChallengeSolution(id, vm.solutionId)
                         challengeService.getUserInfo(sessionStorage['user_id'])
                         .then(
