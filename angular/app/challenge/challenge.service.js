@@ -54,12 +54,15 @@
                 url:solutionURL
             })
                 .then(function(data, status, headers, config) {
-                    if (data.pending === false) {
+                    console.log(data.data.pending)
+                    if (data.data.pending === false) {
                         console.log(data.pending)
-                        $interval.cancel(interval);
+                        console.log(data)
                     } else {
                         console.log('loop')
-                        $interval(getChallengeSolution(challengeId, solutionId), 2000)
+                        var n = 1000000000;
+                        while (n > 0) {n--}  // stupid sleep
+                        return getChallengeSolution(challengeId, solutionId)
                     }
                 })
         }
