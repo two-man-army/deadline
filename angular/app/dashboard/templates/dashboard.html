@@ -60,7 +60,7 @@
                 <div class="col-xs-12">
                     <div class="user pull-right">
                             <p class="dropdown-toggle" uib-dropdown-toggle style="margin-right:30px; display:inline-block; margin-top: 16px;">
-                                Score: {{vm.userScore}}
+                                Score: <strong>{{vm.userScore}}</strong>
                             </p>
                         <div class="item dropdown" uib-dropdown>
                             <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
@@ -132,11 +132,11 @@
                                 <div class="panel-heading challenge-panel-heading">
                                     <i class="fa fa-check-circle" aria-hidden="true"></i> 
                                     {{challengeAttempt.name}}
-                                    <p style="display: inline;float:right;">Category: {{challengeAttempt.category}}</p>
+                                    <p style="display: inline;float:right;">Category: <em>{{challengeAttempt.category}}</em></p>
                                 </div>
                                 <div class="panel-body">
-                                    <p>Max Score: {{challengeAttempt.score}}</p>
-                                    <p>Rating: {{challengeAttempt.rating}}</p>
+                                    <p>Max Score: <strong>{{challengeAttempt.score}}</strong></p>
+                                    <p>Rating: <strong>{{challengeAttempt.rating}}</strong></p>
                                 </div>
                             </div>
                             </div>
@@ -152,11 +152,11 @@
                             <div class="panel-heading challenge-panel-heading">
                                 <i class="fa fa-check-circle" aria-hidden="true"></i> 
                                 {{challenge.name}}
-                                <p style="display: inline;float:right;">Category: {{challenge.category}}</p>
+                                <p style="display: inline;float:right;">Category: <em>{{challenge.category}}</em></p>
                             </div>
                             <div class="panel-body">
-                                <p>Max Score: {{challenge.score}}</p>
-                                <p>Rating: {{challenge.rating}}</p>
+                                <p>Max Score: <strong>{{challenge.score}}</strong></p>
+                                <p>Rating: <strong>{{challenge.rating}}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -182,11 +182,11 @@
                                         <div class="panel-heading challenge-panel-heading">
                                             <i class="fa fa-check-circle" aria-hidden="true"></i> 
                                             {{vm.challengeInfo.name}}
-                                            <p style="display: inline;float:right;">Category: {{vm.challengeInfo.category}}</p>
+                                            <p style="display: inline;float:right;">Category: <em>{{vm.challengeInfo.category}}</em></p>
                                         </div>
                                         <div class="panel-body">
-                                            <p>Max Score: {{vm.challengeInfo.score}}</p>
-                                            <p>Rating: {{vm.challengeInfo.rating}}</p>
+                                            <p>Max Score: <strong>{{vm.challengeInfo.score}}</strong></p>
+                                            <p>Rating: <strong>{{vm.challengeInfo.rating}}</strong></p>
                                         </div>
                                     </div>
                                 </div>
@@ -206,7 +206,7 @@
                             </div>
                             <div ng-if="vm.challengeInfo.description.constraints.length > 0">
                                 <h4>Constraints: </h4>
-                                <div ng-bind-html="vm.challengeInfo.description.constraints">
+                                <div ng-bind-html="vm.challengeInfo.description.constraints" class="desc-constraints">
                                 </div>
                             </div>
                             <div ng-if="vm.challengeInfo.description.sample_input.length > 0">
