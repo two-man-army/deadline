@@ -178,7 +178,7 @@
         }
 
         function submitSolution(id) {
-            var code = window.monaco.editor.getModels()[0].getValue();
+            var code = window.monaco.editor.getModels()[window.monaco.editor.getModels().length].getValue();
 
             challengeService.submitSolution(id, code)
                 .then(
