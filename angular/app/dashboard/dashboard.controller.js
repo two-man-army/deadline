@@ -25,6 +25,8 @@
         vm.showEditor = false;
         vm.goToChallenge = goToChallenge;
         vm.submitSolution = submitSolution;
+        vm.getUserSubmissions = getUserSubmissions
+        vm.logout = logout;
         getMainCategories();
         getLatestAttemptedChallenges();
 
@@ -208,6 +210,18 @@
                     })
         }
 
+        function getUserSubmissions(challengeId) {
+            challengeService.getUserSubmissions(challengeId).then(
+                function (res) {
+                    vm.userSubmissions = res.data;
+                },
+                function(error) {
+                    console.log(error);
+                }
+            )
+        }
+
+
         function goToChallenge(id) {
             vm.showEditor = true;
             vm.showCategoryChallenges = false;
@@ -244,6 +258,10 @@
 
 
             //$location.path('/challenge');
+        }
+
+        function logout() {
+            sessionStorage.clear();
         }
 
         vm.getWidth = function() {

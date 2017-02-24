@@ -64,7 +64,7 @@
                             </p>
                         <div class="item dropdown" uib-dropdown>
                             <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
-                                <img src="assets/img/avatar.jpg">
+                                <img ng-click="vm.logout()" src="assets/img/avatar.jpg">
                             </a>
                             <ul class="dropdown-menu dropdown-menu-right">
                                 <li class="dropdown-header">
@@ -167,7 +167,7 @@
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active"><a href="#challenge" aria-controls="home" role="tab" data-toggle="tab">Challenge</a></li>
-                    <li role="presentation"><a href="#submissions" aria-controls="profile" role="tab" data-toggle="tab">Submissions</a></li>
+                    <li role="presentation"><a href="#submissions" ng-click="vm.getUserSubmissions(vm.challengeInfo.id)" aria-controls="profile" role="tab" data-toggle="tab">Submissions</a></li>
                     <li role="presentation"><a href="#leaderboard" aria-controls="messages" role="tab" data-toggle="tab">Leaderboard</a></li>
                 </ul>
 
@@ -175,7 +175,7 @@
                 <div class="tab-content">
                     <div role="tabpanel" class="tab-pane fade in active" id="challenge">
 
-                        <div class="container">
+                        <div>
                             <div class="row">
                                 <div>
                                     <div ng-click="vm.goToChallenge(challenge.id)" class="panel panel-default challenge-panel" >
@@ -226,7 +226,7 @@
                         <div id="challenge-editor" class="editor", style="height:501px;"></div>
                     </div>
                     <div role="tabpanel" class="tab-pane fade" id="submissions">
-                        <table ng-init="vm.getUserSubmissions(1)" class="submissions-table">
+                        <table ng-init="vm.getUserSubmissions(vm.challengeInfo.id)" class="submissions-table">
                             <th>Submitted At</th>
                             <th>Score</th>
                             <tr ng-repeat="userSub in vm.userSubmissions">
