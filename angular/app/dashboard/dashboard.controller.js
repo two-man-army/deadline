@@ -28,6 +28,7 @@
         vm.submitSolution = submitSolution;
         vm.showLoading = false;
         vm.getUserSubmissions = getUserSubmissions
+        vm.getLatestAttemptedChallenges = getLatestAttemptedChallenges
         vm.getChallengeTopSubmissions = getChallengeTopSubmissions
         vm.logout = logout;
         getMainCategories();
@@ -100,6 +101,7 @@
                         }
                         */
                     vm.latestAttemptedChallenges = res.data;
+                    vm.showLatestAttepmts = true;
                 }
             ),
                 function(error) {
@@ -168,7 +170,6 @@
             challengeService.getChallengeTopSubmissions(challengeId).then(
                 function (res) {
                     vm.leaderboardSubmissions = res.data;
-                    debugger;
                 },
                 function(error) {
                     console.log(error);
