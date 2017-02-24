@@ -22,9 +22,10 @@
         vm.showLatestAttepmts = true;
         vm.showCategoryChallenges = false;
         vm.showEditor = false;
-        vm.goToChallenge = goToChallenge
-        getMainCategories()
-        getLatestAttemptedChallenges()
+        vm.goToChallenge = goToChallenge;
+        vm.submitSolution = submitSolution;
+        getMainCategories();
+        getLatestAttemptedChallenges();
 
         function getMainCategories() {
             dashboardService.getMainCategories().then(
@@ -115,7 +116,23 @@
         }
 
         function submitSolution(id) {
-            challengeService.submitSolution(id)
+            var code = window.monaco.editor.getModels()[0].getValue();
+
+            challengeService.submitSolution(id, code)
+                .then(
+                    function(res) {
+                        vm.solutionInfo = res.data;
+                        vm.solutionId = vm.solutionInfo.id;
+                        getChallengeSolution(id, vm.solutionId)
+                    },
+
+                    function(err) {
+                        console.log(err)
+                    })
+        }
+
+        function getChallengeSolution(challengeId, solutionId) {
+            challengeService.getChallengeSolution(challengeId, solutionId)
                 .then(
                     function(res) {
                         console.log(res)
