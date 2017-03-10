@@ -4,7 +4,10 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from accounts.models import User
 
 
-# Create your models here.
+class Language(models.Model):
+    name = models.CharField(unique=True, max_length=30, primary_key=True)
+
+
 class Challenge(models.Model):
     name = models.CharField(unique=True, max_length=30)
     description = models.OneToOneField('ChallengeDescription')

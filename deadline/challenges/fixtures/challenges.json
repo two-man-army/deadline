@@ -1,5 +1,15 @@
 [
   {
+    "model": "challenges.language",
+    "pk": "Python",
+    "fields": {}
+  },
+  {
+    "model": "challenges.language",
+    "pk": "Rust",
+    "fields": {}
+  },
+  {
     "model": "challenges.maincategory",
     "pk": "Algorithms",
     "fields": {}
