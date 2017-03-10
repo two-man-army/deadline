@@ -5,7 +5,8 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.models import (
-    Challenge, MainCategory, ChallengeDescription, Submission, TestCase as TestCaseModel, SubCategory)
+    Challenge, MainCategory, ChallengeDescription, Submission, TestCase as TestCaseModel, SubCategory,
+    Language)
 from challenges.serializers import TestCaseSerializer
 from accounts.models import User
 
@@ -16,6 +17,7 @@ class TestCaseViewTest(APITestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
+        self.python_language = Language(name="Python"); self.python_language.save()
         self.sample_desc.save()
         challenge_cat = MainCategory('Tests')
         challenge_cat.save()
@@ -36,7 +38,7 @@ class TestCaseViewTest(APITestCase):
             grocery_bill = sum(prices[fruit] * my_purchase[fruit]
                                for fruit in my_purchase)
             print 'I owe the grocer $%.2f' % grocery_bill"""
-        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         self.submission.save()
         self.tc = TestCaseModel(submission=self.submission, pending=False, success=True, time='1.25s')
         self.tc_2 = TestCaseModel(submission=self.submission)
@@ -104,6 +106,7 @@ class TestCaseModelTest(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
+        self.python_language = Language(name="Python"); self.python_language.save()
         self.sample_desc.save()
         challenge_cat = MainCategory('Tests')
         challenge_cat.save()
@@ -124,7 +127,7 @@ class TestCaseModelTest(TestCase):
             grocery_bill = sum(prices[fruit] * my_purchase[fruit]
                                for fruit in my_purchase)
             print 'I owe the grocer $%.2f' % grocery_bill"""
-        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         self.submission.save()
 
     def test_absolute_url(self):

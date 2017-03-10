@@ -28,6 +28,9 @@ class Submission(models.Model):
     task_id = models.CharField(max_length=100, blank=False)
     result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
     pending = models.BooleanField(default=True)
+    compiled = models.BooleanField(default=True)
+    compile_error_message = models.CharField(max_length=1000, blank=False)
+    language = models.ForeignKey(Language, to_field='name', blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_absolute_url(self):

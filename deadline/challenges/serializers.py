@@ -35,7 +35,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Submission
-        fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at')
+        fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at',
+                  'compiled', 'compile_error_message', 'language')
 
 
 class TestCaseSerializer(serializers.ModelSerializer):

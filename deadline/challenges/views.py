@@ -72,8 +72,18 @@ class SubmissionCreateView(CreateAPIView):
         try:
             challenge = Challenge.objects.get(id=challenge_pk)
             code_given = request.data.get('code')
+            language_given = request.data.get('language')
             if not code_given:
-                return Response(data={'error': 'The code given cannot be empty.'.format(challenge_pk)},
+                return Response(data={'error': 'The code given cannot be empty.'},
+                                status=400)
+            elif not language_given:
+                return Response(data={'error': 'The language given cannot be empty.'},
+                                status=400)
+            from challenges.models import Language
+            try:
+                language = Language.objects.get(name=language_given)
+            except Language.DoesNotExist:
+                return Response(data={'error': f'The language {language_given} is not supported!'},
                                 status=400)
 
             # Check for time between submissions
@@ -85,7 +95,8 @@ class SubmissionCreateView(CreateAPIView):
 
             celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
             submission = Submission(code=code_given, author=request.user,
-                                    challenge=challenge, task_id=celery_grader_task.id)
+                                    challenge=challenge, task_id=celery_grader_task.id,
+                                    language=language)
             submission.save()
 
             request.user.last_submit_at = timezone.now()

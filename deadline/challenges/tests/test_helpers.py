@@ -1,7 +1,8 @@
 import random
 from django.test import TestCase
 from challenges.models import (
-    Challenge, Submission, TestCase as TestCaseModel, MainCategory, SubCategory, ChallengeDescription)
+    Challenge, Submission, TestCase as TestCaseModel, MainCategory, SubCategory, ChallengeDescription,
+    Language)
 from accounts.models import User
 from challenges.helper import grade_result, update_user_score
 
@@ -16,6 +17,7 @@ class GradeResultTests(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
+        self.python_language = Language(name="Python")
         self.sample_desc.save()
         challenge_cat = MainCategory('Tests')
         challenge_cat.save()
@@ -27,7 +29,7 @@ class GradeResultTests(TestCase):
                                    rating=10, score=100, test_file_name='smth',
                                    test_case_count=5, category=self.sub_cat)
         self.challenge.save()
-        self.submission = Submission(challenge=self.challenge, author=self.user,
+        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
                                      code='hack you', task_id='123', result_score=0)
         self.submission.save()
         # create the test cases
@@ -57,6 +59,7 @@ class UpdateUserScoreTests(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
+        self.python_language = Language(name="Python")
         self.sample_desc.save()
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
@@ -68,7 +71,7 @@ class UpdateUserScoreTests(TestCase):
                                    rating=10, score=100, test_file_name='smth',
                                    test_case_count=3, category=self.sub_cat)
         self.challenge.save()
-        self.submission = Submission(challenge=self.challenge, author=self.user,
+        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
                                      code='hack you', task_id='123', result_score=20)
         self.submission.save()
         # add this submisssions score to him
@@ -76,7 +79,7 @@ class UpdateUserScoreTests(TestCase):
         self.user.save()
 
     def test_submission_with_lower_score_should_not_update(self):
-        lower_submission = Submission(challenge=self.challenge, author=self.user,
+        lower_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
                                      code='hack you', task_id='123', result_score=10)
         lower_submission.save()
 
@@ -86,7 +89,7 @@ class UpdateUserScoreTests(TestCase):
         self.assertEqual(self.user.score, 20)  # should not have changed
 
     def test_submission_with_higher_score_should_update(self):
-        higher_submission = Submission(challenge=self.challenge, author=self.user,
+        higher_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
                                        code='hack you', task_id='123', result_score=30)
         higher_submission.save()
 
@@ -103,7 +106,7 @@ class UpdateUserScoreTests(TestCase):
                                    rating=10, score=100, test_file_name='smth',
                                    test_case_count=3, category=self.sub_cat)
         new_challenge.save()
-        new_submission = Submission(challenge=new_challenge, author=self.user,
+        new_submission = Submission(language=self.python_language, challenge=new_challenge, author=self.user,
                                     code='hack you', task_id='123', result_score=100)
         new_submission.save()
 

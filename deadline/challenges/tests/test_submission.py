@@ -6,7 +6,7 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription
+from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer
 from accounts.models import User
 
@@ -17,6 +17,7 @@ class SubmissionModelTest(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
+        self.python_language = Language(name="Python");  self.python_language.save()
         self.sample_desc.save()
         challenge_cat = MainCategory('Tests')
         challenge_cat.save()
@@ -39,33 +40,32 @@ grocery_bill = sum(prices[fruit] * my_purchase[fruit]
 print 'I owe the grocer $%.2f' % grocery_bill"""
 
     def test_absolute_url(self):
-        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         s.save()
 
         self.assertEqual(s.get_absolute_url(), '/challenges/{}/submissions/{}'.format(s.challenge_id, s.id))
 
     def test_can_save_duplicate_submission(self):
-        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         s.save()
-        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         s.save()
 
         self.assertEqual(Submission.objects.count(), 2)
 
     def test_cannot_save_blank_submission(self):
-        s = Submission(challenge=self.challenge, author=self.auth_user, code='')
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code='')
         with self.assertRaises(Exception):
             s.full_clean()
 
     def test_serialization(self):
-        s = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         s.save()
         serializer = SubmissionSerializer(s)
         expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":"' + str(self.auth_user.username)
-                         + '","code":"' + self.sample_code + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '"}')
-
+                         + '","code":"' + self.sample_code + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '",'
+                         + '"compiled":true,"compile_error_message":"","language":"Python"}')
         content = JSONRenderer().render(serializer.data)
-        print(content)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
 
 
@@ -75,6 +75,8 @@ class SubmissionViewsTest(APITestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
+        self.python_language = Language(name="Python")
+        self.python_language.save()
         self.sample_desc.save()
         challenge_cat = MainCategory('Tests')
         challenge_cat.save()
@@ -96,7 +98,7 @@ class SubmissionViewsTest(APITestCase):
         grocery_bill = sum(prices[fruit] * my_purchase[fruit]
                            for fruit in my_purchase)
         print 'I owe the grocer $%.2f' % grocery_bill"""
-        self.submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code, result_score=40)
+        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code, result_score=40)
         self.submission.save()
 
     def test_view_submission(self):
@@ -105,7 +107,7 @@ class SubmissionViewsTest(APITestCase):
         self.assertEqual(SubmissionSerializer(self.submission).data, response.data)
 
     def test_view_all_submissions(self):
-        second_submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        second_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         second_submission.save()
         response = self.client.get(path='/challenges/{}/submissions/all'.format(self.challenge.id), HTTP_AUTHORIZATION=self.auth_token)
 
@@ -124,7 +126,7 @@ class SubmissionViewsTest(APITestCase):
 
     def test_create_submission(self):
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
-                                    data={'code': 'print("Hello World")'},
+                                    data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 201)
@@ -135,16 +137,25 @@ class SubmissionViewsTest(APITestCase):
         # assert that the test cases have been created
         self.assertEqual(submission.testcase_set.count(), submission.challenge.test_case_count)
 
+    def test_create_submission_invalid_language_should_return_400(self):
+        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+                                    data={'code': 'print("Hello World")', 'language': 'Elixir'},
+                                    HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 400)
+        # If this test ever fails, this app must be going places
+        self.assertEqual(response.data['error'], "The language Elixir is not supported!")
+
     def test_create_two_submissions_in_10_seconds_second_should_not_work(self):
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
-                                    data={'code': 'print("Hello World")'},
+                                    data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Submission.objects.count(), 2)
 
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
-                                    data={'code': 'print("Hello World")'},
+                                    data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['error'], 'You must wait 10 more seconds before submitting a solution.')
@@ -152,7 +163,7 @@ class SubmissionViewsTest(APITestCase):
 
     def test_create_two_submissions_10_seconds_apart_should_not_work(self):
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
-                                    data={'code': 'print("Hello World")'},
+                                    data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 201)
@@ -161,7 +172,7 @@ class SubmissionViewsTest(APITestCase):
         time.sleep(11)
 
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
-                                    data={'code': 'print("Hello World")'},
+                                    data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 201)
@@ -169,19 +180,19 @@ class SubmissionViewsTest(APITestCase):
 
     def test_create_submission_invalid_challenge_should_return_400(self):
         response = self.client.post('/challenges/111/submissions/new',
-                                    data={'code': 'heyfriendheytherehowareyou'},
+                                    data={'code': 'heyfriendheytherehowareyou', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 400)
 
     def test_get_top_submissions(self):
-        better_submission = Submission(challenge=self.challenge, author=self.auth_user, code=self.sample_code,
+        better_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code,
                                        result_score=50)
         better_submission.save()
         # Second user with submissions
         _s_user = User(username='Seocnd user', password='123', email='EC@abv.bg', score=123); _s_user.save()
-        _submission = Submission(challenge=self.challenge, author=_s_user, code=self.sample_code, result_score=50)
-        top_submission = Submission(challenge=self.challenge, author=_s_user, code=self.sample_code, result_score=51)
+        _submission = Submission(language=self.python_language, challenge=self.challenge, author=_s_user, code=self.sample_code, result_score=50)
+        top_submission = Submission(language=self.python_language, challenge=self.challenge, author=_s_user, code=self.sample_code, result_score=51)
         _submission.save();top_submission.save()
 
         # Should return the two submissions, (both users' best submissions) ordered by score descending
@@ -196,6 +207,8 @@ class LatestSubmissionsViewTest(TestCase):
     def setUp(self):
         challenge_cat = MainCategory('Tests')
         challenge_cat.save()
+        self.python_language = Language(name="Python"); self.python_language.save()
+
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
 
@@ -216,13 +229,13 @@ class LatestSubmissionsViewTest(TestCase):
 
     def test_get_latest_challenge_submissions_from_user(self):
         """ The get_latest_submissions view should return all the latest submissions by the user distinct by their challenges"""
-        s1 = Submission(challenge=self.c1, author=self.auth_user, code=self.sample_code, result_score=10)
+        s1 = Submission(language=self.python_language, challenge=self.c1, author=self.auth_user, code=self.sample_code, result_score=10)
         s1.save()
-        s2 = Submission(challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
+        s2 = Submission(language=self.python_language, challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
         s2.save()
-        s3 = Submission(challenge=self.c3, author=self.auth_user, code=self.sample_code, result_score=10)
+        s3 = Submission(language=self.python_language, challenge=self.c3, author=self.auth_user, code=self.sample_code, result_score=10)
         s3.save()
-        s4 = Submission(challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
+        s4 = Submission(language=self.python_language, challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
         s4.save()
 
         """ This should return a list with c2, c3, c1 ordered like that. """
