@@ -60,7 +60,14 @@ class RustGrader:
 
     def grade_solution(self):
         """ This function goes through every input/output and runs an instance of the code for each."""
-        raise NotImplementedError()
+        # TODO: Turn to .json
+        import json
+        overall_dict = {"results": []}
+
+        for test_case in self.test_cases:
+            test_case_result: dict = self.test_solution(test_case)
+            overall_dict['results'].append(test_case_result)
+        return json.dumps(overall_dict)
 
     def test_solution(self, test_case: RustTestCase) -> dict:
         # TODO: Docker

@@ -40,3 +40,14 @@ class RustGraderTest(TestCase):
         results_dict = rg.test_solution(rg.test_cases[0])
         self.assertTrue(results_dict['success'])
 
+    def test_grader_grade_all_solutions(self):
+        challenge = MagicMock(test_case_count=1, test_file_name='three-six-eight.rs')
+        challenge.name = 'three-six-eight'
+        expected_json = '{"results": [{"error_message": "", "success": true, "time": "0s"}]}'
+        sol = MagicMock()
+        sol.code = 'fn main() {println!("{}", "hello");}'
+        rg = RustGrader(challenge, sol)
+        json_result = rg.grade_solution()
+
+        self.assertEqual(json_result, expected_json)
+
