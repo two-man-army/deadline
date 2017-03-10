@@ -6,6 +6,12 @@ from challenges.models import Submission, Challenge
 TESTS_LOCATION = 'challenge_tests/rust/'
 
 
+class RustTestCase:
+    def __init__(self, input_lines: [str], expected_output_lines: [str]):
+        self.input_lines = input_lines
+        self.expected_output_lines = expected_output_lines
+
+
 class RustGrader:
     """
     Takes a Challenge and Solution object
@@ -23,13 +29,15 @@ class RustGrader:
         self.read_input = False
         self.compiled = False
 
+        # TODO: Should move this logic
         self.create_solution_file()
         sorted_files = self.find_tests()
         self.read_tests(sorted_files)
         self.compile()
         self.delete_solution_file()
-        if self.compiled:
-            pass
+        # if self.compiled:
+            # self.grade_solution()
+            # TODO: Should return a json
 
     def compile(self):
         # TODO: Docker?
@@ -38,6 +46,7 @@ class RustGrader:
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
+        compiler_proc.kill()
         error_message = compile_result[1].decode()
         if error_message:
             # There is an error while compiling
@@ -53,6 +62,28 @@ class RustGrader:
         """ This function goes through every input/output and runs an instance of the code for each."""
         raise NotImplementedError()
 
+    def test_solution(self, test_case: RustTestCase) -> dict:
+        # TODO: Docker
+        # TODO: Timer
+        program_run = subprocess.Popen(['/home/netherblood/PycharmProjects/two-man-army/deadline/deadline/' + self.temp_file_name[:-3]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        results = program_run.communicate(input='\n'.join(test_case.input_lines))
+        result_dict = {
+            "error_message": "",
+            "success": False,
+            "time": "0s",
+        }
+        error_message = results[1].decode()
+        if error_message:
+            result_dict["error_message"] = error_message
+        else:
+            given_output = results[0].decode().strip()
+            expected_output = '\n'.join(test_case.expected_output_lines)
+            if given_output == expected_output:
+                result_dict['success'] = True
+            else:
+                result_dict['error_message'] = f"{given_output} is not equal to the expected {expected_output}"
+
+        return result_dict
 
     def find_tests(self) -> [os.DirEntry]:
         """
@@ -114,7 +145,4 @@ class RustGrader:
             pass
 
 
-class RustTestCase:
-    def __init__(self, input_lines: [str], expected_output_lines: [str]):
-        self.input_lines = input_lines
-        self.expected_output_lines = expected_output_lines
+

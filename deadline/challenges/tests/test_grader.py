@@ -30,3 +30,13 @@ class RustGraderTest(TestCase):
         self.assertNotEqual(len(rg.test_cases), 0)
         self.assertIsInstance(rg.test_cases[0], RustTestCase)
         self.assertTrue(rg.compiled)
+
+    def test_grader_solution_should_pass(self):
+        challenge = MagicMock(test_case_count=1, test_file_name='three-six-eight.rs')
+        challenge.name = 'three-six-eight'
+        sol = MagicMock()
+        sol.code = 'fn main() {println!("{}", "hello");}'
+        rg = RustGrader(challenge, sol)
+        results_dict = rg.test_solution(rg.test_cases[0])
+        self.assertTrue(results_dict['success'])
+
