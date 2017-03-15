@@ -85,6 +85,7 @@ class SubmissionViewsTest(APITestCase):
         self.challenge = Challenge(name='Hello', rating=5, score=10, description=self.sample_desc, test_file_name='hello_tests',
                                    test_case_count=3, category=self.sub_cat)
         self.challenge.save()
+        self.challenge.supported_languages.add(self.python_language)
         self.challenge_name = self.challenge.name
         self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
         self.auth_user.save()

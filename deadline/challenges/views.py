@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tasks import run_grader
 from challenges.helper import grade_result, update_user_score
@@ -79,9 +79,9 @@ class SubmissionCreateView(CreateAPIView):
             elif not language_given:
                 return Response(data={'error': 'The language given cannot be empty.'},
                                 status=400)
-            from challenges.models import Language
+
             try:
-                language = Language.objects.get(name=language_given)
+                language = challenge.supported_languages.get(name=language_given)
             except Language.DoesNotExist:
                 return Response(data={'error': f'The language {language_given} is not supported!'},
                                 status=400)
