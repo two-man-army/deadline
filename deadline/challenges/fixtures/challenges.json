@@ -169,7 +169,8 @@
       "score": 10,
       "test_file_name": "hello_tests",
       "test_case_count": 1,
-      "category": "Miscellaneous"
+      "category": "Miscellaneous",
+      "supported_languages": ["Python"]
     }
   },
   {
@@ -195,7 +196,8 @@
       "score": 40,
       "test_file_name": "basic_numbers_tests",
       "test_case_count": 7,
-      "category": "Dynamic Programming"
+      "category": "Dynamic Programming",
+      "supported_languages": ["Python"]
     }
   },
 
@@ -223,7 +225,8 @@
       "score": 10,
       "test_file_name": "array_sum_tests",
       "test_case_count": 7,
-      "category": "Miscellaneous"
+      "category": "Miscellaneous",
+      "supported_languages": ["Python", "Rust"]
     }
   },
 
@@ -251,7 +254,8 @@
       "score": 10,
       "test_file_name": "array_amplitude_tests",
       "test_case_count": 7,
-      "category": "Miscellaneous"
+      "category": "Miscellaneous",
+      "supported_languages": ["Python"]
     }
   }
 ]

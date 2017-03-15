@@ -16,6 +16,7 @@ class Challenge(models.Model):
     test_file_name = models.CharField(max_length=50)
     test_case_count = models.IntegerField(blank=False)
     category = models.ForeignKey(to='SubCategory', to_field='name', related_name='challenges')
+    supported_languages = models.ManyToManyField(Language)
 
     def get_absolute_url(self):
         return '/challenges/{}'.format(self.id)
