@@ -12,6 +12,7 @@ class RustGraderTest(TestCase):
         sol.code = 'Run It, keep it one hunnid!'
         expected_error_message_part = "error: expected one of `!` or `::`, found `It`"
         rg = RustGrader(challenge, sol)
+        rg.run_solution()
         self.assertTrue(rg.read_input)
         self.assertNotEqual(len(rg.test_cases), 0)
         self.assertIsInstance(rg.test_cases[0], RustTestCase)
@@ -26,6 +27,8 @@ class RustGraderTest(TestCase):
         sol = MagicMock()
         sol.code = 'fn main() {println!("{:?}", "go post");}'
         rg = RustGrader(challenge, sol)
+        rg.run_solution()
+
         self.assertTrue(rg.read_input)
         self.assertNotEqual(len(rg.test_cases), 0)
         self.assertIsInstance(rg.test_cases[0], RustTestCase)
@@ -36,9 +39,11 @@ class RustGraderTest(TestCase):
         challenge.name = 'three-six-eight'
         sol = MagicMock()
         sol.code = 'fn main() {println!("{}", "hello");}'
+
         rg = RustGrader(challenge, sol)
-        results_dict = rg.test_solution(rg.test_cases[0])
-        self.assertTrue(results_dict['success'])
+
+        json_result = rg.run_solution()
+        self.assertIn('success', json_result)
 
     def test_grader_grade_all_solutions(self):
         challenge = MagicMock(test_case_count=1, test_file_name='three-six-eight.rs')
@@ -47,7 +52,7 @@ class RustGraderTest(TestCase):
         sol = MagicMock()
         sol.code = 'fn main() {println!("{}", "hello");}'
         rg = RustGrader(challenge, sol)
-        json_result = rg.grade_solution()
+        json_result = rg.run_solution()
 
         self.assertEqual(json_result, expected_json)
 

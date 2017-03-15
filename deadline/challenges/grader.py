@@ -1,6 +1,7 @@
 import os
 import uuid
 import subprocess
+import json
 
 from challenges.models import Submission, Challenge
 TESTS_LOCATION = 'challenge_tests/rust/'
@@ -26,18 +27,26 @@ class RustGrader:
         self.test_cases = []
         self.tests_folder = None
         self.temp_file_name = None
+        self.temp_exe_file_name = None
         self.read_input = False
         self.compiled = False
 
         # TODO: Should move this logic
+
+            # TODO: Should return a json
+
+    def run_solution(self):
         self.create_solution_file()
         sorted_files = self.find_tests()
+
         self.read_tests(sorted_files)
         self.compile()
-        self.delete_solution_file()
-        # if self.compiled:
-            # self.grade_solution()
-            # TODO: Should return a json
+        self.delete_solution_file(self.temp_file_name)
+
+        if self.compiled:
+            result = self.grade_solution()
+            self.delete_solution_file(self.temp_exe_file_name)
+            return result
 
     def compile(self):
         # TODO: Docker?
@@ -60,8 +69,6 @@ class RustGrader:
 
     def grade_solution(self):
         """ This function goes through every input/output and runs an instance of the code for each."""
-        # TODO: Turn to .json
-        import json
         overall_dict = {"results": []}
 
         for test_case in self.test_cases:
@@ -72,22 +79,30 @@ class RustGrader:
     def test_solution(self, test_case: RustTestCase) -> dict:
         # TODO: Docker
         # TODO: Timer
-        program_run = subprocess.Popen(['/home/netherblood/PycharmProjects/two-man-army/deadline/deadline/' + self.temp_file_name[:-3]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        results = program_run.communicate(input='\n'.join(test_case.input_lines))
+        program_process = subprocess.Popen(['/home/netherblood/PycharmProjects/two-man-army/deadline/deadline/'
+                                            + self.temp_exe_file_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Enter the input
+        results = program_process.communicate(input='\n'.join(test_case.input_lines))
+
         result_dict = {
             "error_message": "",
             "success": False,
             "time": "0s",
         }
+
         error_message = results[1].decode()
         if error_message:
+            # There is some error in the code
             result_dict["error_message"] = error_message
         else:
+            # Program has run successfully
             given_output = results[0].decode().strip()
             expected_output = '\n'.join(test_case.expected_output_lines)
+
             if given_output == expected_output:
                 result_dict['success'] = True
             else:
+                print(f'{given_output} is not equal to {expected_output}')
                 result_dict['error_message'] = f"{given_output} is not equal to the expected {expected_output}"
 
         return result_dict
@@ -117,7 +132,8 @@ class RustGrader:
         idx = 0
 
         while idx < len(sorted_files):
-            # Since the files are sorted by name, an input file should be followed by an output file
+            """ Since the files are sorted by name, an input file should be followed by an output file
+                i.e  input-01.txt output-01.txt input-02.txt output-02.txt """
             input_lines, output_lines = [], []
             input_file = sorted_files[idx]
             output_file = sorted_files[idx + 1]
@@ -129,6 +145,7 @@ class RustGrader:
                 input_lines = [line.strip() for line in f.readlines()]
             with open(os.path.abspath(output_file.path)) as f:
                 output_lines = [line.strip() for line in f.readlines()]
+
             idx += 2
 
             self.test_cases.append(RustTestCase(input_lines=input_lines, expected_output_lines=output_lines))
@@ -137,17 +154,17 @@ class RustGrader:
 
     def create_solution_file(self):
         """ Creates a temporary file which will represent the code """
-        self.temp_file_name = uuid.uuid4().hex + '.rs'
-
+        self.temp_exe_file_name = uuid.uuid4().hex
+        self.temp_file_name = self.temp_exe_file_name + '.rs'
         # write the code to it
         with open(self.temp_file_name, 'w') as  temp_file:
             temp_file.write(self.solution.code)
             temp_file.flush()
             os.fsync(temp_file.fileno())
 
-    def delete_solution_file(self):
+    def delete_solution_file(self, file_name):
         try:
-            os.remove(self.temp_file_name)
+            os.remove(file_name)
         except OSError:
             pass
 
