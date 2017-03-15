@@ -21,9 +21,10 @@ class RustGrader:
      Runs it for each tests
      Returns the grades
     """
-    def __init__(self, challenge: Challenge, solution: Submission):
-        self.challenge = challenge
-        self.solution = solution
+    def __init__(self, test_case_count, test_file_name, code: str):
+        self.test_case_count = test_case_count
+        self.test_file_name = test_file_name
+        self.code = code
         self.test_cases = []
         self.tests_folder = None
         self.temp_file_name = None
@@ -33,13 +34,15 @@ class RustGrader:
 
         # TODO: Should move this logic
 
-            # TODO: Should return a json
+        # TODO: Should return a json
 
     def run_solution(self):
+        print('Running solution')
         self.create_solution_file()
         sorted_input_files, sorted_output_files = self.find_tests()
-
+        print(f'Found tests at {sorted_input_files} {sorted_output_files}')
         self.read_tests(sorted_input_files, sorted_output_files)
+        print('Compiling')
         self.compile()
         self.delete_solution_file(self.temp_file_name)
 
@@ -47,6 +50,9 @@ class RustGrader:
             result = self.grade_solution()
             self.delete_solution_file(self.temp_exe_file_name)
             return result
+        else:
+            print('COULD NOT COMPILE')
+            print(self.compile_error_message)
 
     def compile(self):
         # TODO: Docker?
@@ -61,9 +67,9 @@ class RustGrader:
             # There is an error while compiling
             self.compiled = False
             # update the solution
-            self.solution.compiled = False
-            self.solution.compile_error_message = error_message
-            self.solution.save()
+            # self.solution.compiled = False
+            self.compile_error_message = error_message
+            # self.solution.save()
         else:
             self.compiled = True
 
@@ -112,7 +118,7 @@ class RustGrader:
         Find the tests and return all of them in a list sorted by their name
         :return:
         """
-        self.tests_folder: str = os.path.join(TESTS_LOCATION, self.challenge.test_file_name)
+        self.tests_folder: str = os.path.join(TESTS_LOCATION, self.test_file_name)
         if not os.path.isdir(self.tests_folder):
             raise Exception(f'The path {self.tests_folder} is invalid!')
 
@@ -126,7 +132,7 @@ class RustGrader:
 
         # There must be two files for every test case
         files_len = len(input_files) + len(output_files)
-        if files_len != (2*self.challenge.test_case_count) or files_len % 2 != 0:
+        if files_len != (2*self.test_case_count) or files_len % 2 != 0:
             raise Exception('Invalid input/output file count!')
 
         return list(sorted(input_files, key=lambda file: file.name)), list(sorted(output_files, key=lambda file: file.name))
@@ -161,7 +167,7 @@ class RustGrader:
         self.temp_file_name = self.temp_exe_file_name + '.rs'
         # write the code to it
         with open(self.temp_file_name, 'w') as  temp_file:
-            temp_file.write(self.solution.code)
+            temp_file.write(self.code)
             temp_file.flush()
             os.fsync(temp_file.fileno())
 

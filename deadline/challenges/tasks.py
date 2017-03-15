@@ -8,6 +8,8 @@ from challenges.helper import convert_to_normal_text
 from constants import MAX_TEST_RUN_SECONDS
 from deadline.celery import app
 
+from challenges.grader import RustGrader
+
 
 @app.task
 def run_grader(test_file_name, code):
@@ -37,3 +39,9 @@ def run_grader(test_file_name, code):
 
     output = proc.stdout.readlines()
     return convert_to_normal_text(output)
+
+@app.task
+def run_rust_grader(test_case_count, test_file_name, code):
+    rg = RustGrader(test_case_count, test_file_name, code)
+    return rg.run_solution()
+

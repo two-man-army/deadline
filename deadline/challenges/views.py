@@ -12,7 +12,7 @@ from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
-from challenges.tasks import run_grader
+from challenges.tasks import run_grader, run_rust_grader
 from challenges.helper import grade_result, update_user_score
 from challenges.helper import update_test_cases
 
@@ -81,11 +81,13 @@ class SubmissionCreateView(CreateAPIView):
                                 status=400)
 
             try:
+                print(language_given)
                 language = challenge.supported_languages.get(name=language_given)
+                print("language")
             except Language.DoesNotExist:
+                print("FAILED")
                 return Response(data={'error': f'The language {language_given} is not supported!'},
                                 status=400)
-
             # Check for time between submissions
             time_now = timezone.make_aware(datetime.now(), timezone.utc)
             time_since_last_submission = time_now - request.user.last_submit_at
@@ -93,7 +95,14 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'You must wait 10 more seconds before submitting a solution.'},
                                 status=400)
 
-            celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
+            if language.name == 'Rust':
+                print('Adding to the grader bitch')
+                # TODO: Obvious refactor
+
+                # TODO: helper.py/update_test_cases needs to be updated to accompany the rust grader results
+                celery_grader_task = run_rust_grader.delay(challenge.test_case_count, challenge.test_file_name, code_given)
+            else:
+                celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
             submission = Submission(code=code_given, author=request.user,
                                     challenge=challenge, task_id=celery_grader_task.id,
                                     language=language)
