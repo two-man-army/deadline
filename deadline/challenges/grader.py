@@ -112,7 +112,7 @@ class RustGrader:
         Find the tests and return all of them in a list sorted by their name
         :return:
         """
-        self.tests_folder: str = os.path.join(TESTS_LOCATION, self.challenge.name)
+        self.tests_folder: str = os.path.join(TESTS_LOCATION, self.challenge.test_file_name)
         if not os.path.isdir(self.tests_folder):
             raise Exception(f'The path {self.tests_folder} is invalid!')
         files = []
