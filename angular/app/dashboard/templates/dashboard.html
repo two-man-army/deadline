@@ -223,6 +223,8 @@
                                     <div ng-bind-html="vm.challengeInfo.description.explanation">
                                     </div>
                         </section>
+                        <select ng-model="vm.challengeInfo.selected_language" ng-options="lang for lang in vm.challengeInfo.supported_languages"></select>
+                        {{lang}}
                         <div id="challenge-editor" class="editor", style="height:501px;"></div>
 
                          <button class="btn btn-primary submit-button" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Submit Solution</button>

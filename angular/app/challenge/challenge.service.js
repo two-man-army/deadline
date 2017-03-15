@@ -126,7 +126,7 @@
          * Submits a solution for a given challenge.
          * Returns the serialized solution
          */
-        function submitSolution(challengeId, code) {
+        function submitSolution(challengeId, code, selectedCode) {
             /* */
             var submitSolutionURL = BASE_URL + 'challenges/' + challengeId + '/submissions/new';
 
@@ -137,7 +137,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': 'Token ' + sessionStorage['authToken']
                 },
-                data: { 'code': code }
+                data: { 'code': code , 'language': selectedCode}
             })
         }
     }
