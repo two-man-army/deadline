@@ -6,7 +6,7 @@ import json
 from constants import (
     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
     GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE)
-
+from challenges.helper import cleanup_rust_error_message
 from challenges.models import Submission, Challenge
 TESTS_LOCATION = 'challenge_tests/rust/'
 
@@ -100,13 +100,13 @@ class RustGrader:
             "success": False,
             "time": "0",
             GRADER_TEST_RESULT_DESCRIPTION_KEY: f'Testing with {input_str}',
-            'traceback': "TODO"
+            'traceback': ""
         }
 
         error_message = results[1].decode()
         if error_message:
             # There is some error in the code
-            result_dict["error_message"] = error_message
+            result_dict["traceback"] = cleanup_rust_error_message(error_message)
         else:
             # Program has run successfully
             given_output = results[0].decode().strip()

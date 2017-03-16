@@ -68,3 +68,14 @@ def update_test_cases(grader_results: dict, test_cases: [TestCase]):
 def convert_to_normal_text(lines: list) -> str:
     """ Given a list with byte strings with a new-line at the end, return a concatenated string """
     return ''.join([st.decode('utf-8') for st in lines])
+
+
+def cleanup_rust_error_message(error_message: str) -> str:
+    """ Removes unecessary information from a Rust error message, making it more user friendly"""
+    unfriendly_emsg = "note: Run with `RUST_BACKTRACE=1`"  # it is always at the end
+
+    if unfriendly_emsg in error_message:
+        emsg_idx = error_message.index(unfriendly_emsg)
+        error_message = error_message[:emsg_idx]
+
+    return error_message
