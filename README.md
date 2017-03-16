@@ -4,10 +4,10 @@ Web App for solving programming challenges
 
 Supported languages:
 - Python
-![Rust Logo](https://www.rust-lang.org/logos/rust-logo-512x512.png)
 - Rust
-![Python Logo](https://www.python.org/static/opengraph-icon-200x200.png)
-
+<br>
+<img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="https://www.python.org/static/opengraph-icon-200x200.png">
+<img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="https://www.rust-lang.org/logos/rust-logo-512x512.png">
 
 Created using the Django REST Framework and AngularJS
 
