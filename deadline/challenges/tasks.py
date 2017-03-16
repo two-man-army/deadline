@@ -43,5 +43,5 @@ def run_grader(test_file_name, code):
 @app.task
 def run_rust_grader(test_case_count, test_file_name, code):
     rg = RustGrader(test_case_count, test_file_name, code)
-    return rg.run_solution()
+    return rg.grade_solution()
 

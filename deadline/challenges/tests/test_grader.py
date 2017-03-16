@@ -1,5 +1,5 @@
 from django.test import TestCase
-from challenges.grader import RustGrader, RustTestCase
+from challenges.grader import RustGrader, GraderTestCase
 from unittest.mock import MagicMock
 
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
@@ -16,7 +16,7 @@ class RustGraderTest(TestCase):
         rg.run_solution()
         self.assertTrue(rg.read_input)
         self.assertNotEqual(len(rg.test_cases), 0)
-        self.assertIsInstance(rg.test_cases[0], RustTestCase)
+        self.assertIsInstance(rg.test_cases[0], GraderTestCase)
         self.assertFalse(rg.compiled)
         self.assertFalse(sol.compiled)
         self.assertIn(expected_error_message_part, sol.compile_error_message)
@@ -32,7 +32,7 @@ class RustGraderTest(TestCase):
 
         self.assertTrue(rg.read_input)
         self.assertNotEqual(len(rg.test_cases), 0)
-        self.assertIsInstance(rg.test_cases[0], RustTestCase)
+        self.assertIsInstance(rg.test_cases[0], GraderTestCase)
         self.assertTrue(rg.compiled)
 
     def test_grader_solution_should_pass(self):

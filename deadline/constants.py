@@ -3,6 +3,7 @@ import os.path
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait between submissions
 MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
+TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds tests for challenges
 
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
@@ -15,3 +16,4 @@ GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
 
 RUSTLANG_TIMEOUT_SECONDS = 5
 RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
+RUSTLANG_FILE_EXTENSION = '.rs'

@@ -9,7 +9,7 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
-from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY
+from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tasks import run_grader, run_rust_grader
@@ -63,7 +63,7 @@ class SubCategoryDetailView(RetrieveAPIView):
 class SubmissionCreateView(CreateAPIView):
     """
     Creates a new Submission for a specific Challenge
-    The test cases are also created and will be populated on next query to view the Submission
+    The test cases are also created and will be populated on next query to VIEW the Submission (once graded)
     """
     permission_classes = (IsAuthenticated, )
 
@@ -73,6 +73,7 @@ class SubmissionCreateView(CreateAPIView):
             challenge = Challenge.objects.get(id=challenge_pk)
             code_given = request.data.get('code')
             language_given = request.data.get('language')
+
             if not code_given:
                 return Response(data={'error': 'The code given cannot be empty.'},
                                 status=400)
@@ -81,13 +82,11 @@ class SubmissionCreateView(CreateAPIView):
                                 status=400)
 
             try:
-                print(language_given)
                 language = challenge.supported_languages.get(name=language_given)
-                print("language")
             except Language.DoesNotExist:
-                print("FAILED")
                 return Response(data={'error': f'The language {language_given} is not supported!'},
                                 status=400)
+
             # Check for time between submissions
             time_now = timezone.make_aware(datetime.now(), timezone.utc)
             time_since_last_submission = time_now - request.user.last_submit_at
@@ -96,10 +95,7 @@ class SubmissionCreateView(CreateAPIView):
                                 status=400)
 
             if language.name == 'Rust':
-                print('Adding to the grader bitch')
                 # TODO: Obvious refactor
-
-                # TODO: helper.py/update_test_cases needs to be updated to accompany the rust grader results
                 celery_grader_task = run_rust_grader.delay(challenge.test_case_count, challenge.test_file_name, code_given)
             else:
                 celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
@@ -144,7 +140,6 @@ class SubmissionDetailView(RetrieveAPIView):
         if submission_is_pending:
             potential_result = run_grader.AsyncResult(submission.task_id)
             if potential_result.ready():
-                from constants import GRADER_COMPILE_FAILURE
                 result = potential_result.get()
                 print(result)
                 if GRADER_COMPILE_FAILURE in result:
