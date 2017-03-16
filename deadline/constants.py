@@ -5,6 +5,10 @@ MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait betwee
 MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
 TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds tests for challenges
 
+
+RUSTLANG_NAME = 'Rust'
+PYTHONLANG_NAME = 'Python'
+
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
 GRADER_TEST_RESULT_SUCCESS_KEY = 'success'

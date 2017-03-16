@@ -12,7 +12,7 @@ from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
-from challenges.tasks import run_grader, run_rust_grader
+from challenges.tasks import run_grader
 from challenges.helper import grade_result, update_user_score
 from challenges.helper import update_test_cases
 
@@ -94,11 +94,9 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'You must wait 10 more seconds before submitting a solution.'},
                                 status=400)
 
-            if language.name == 'Rust':
-                # TODO: Obvious refactor
-                celery_grader_task = run_rust_grader.delay(challenge.test_case_count, challenge.test_file_name, code_given)
-            else:
-                celery_grader_task = run_grader.delay(challenge.test_file_name, code_given)
+            celery_grader_task = run_grader.delay(test_case_count=challenge.test_case_count,
+                                            test_folder_name=challenge.test_file_name,
+                                            code=code_given, lang=language.name)
             submission = Submission(code=code_given, author=request.user,
                                     challenge=challenge, task_id=celery_grader_task.id,
                                     language=language)
