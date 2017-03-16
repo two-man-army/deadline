@@ -6,7 +6,7 @@ import json
 from constants import (
     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
     GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE,
-    SITE_ROOT)
+    SITE_ROOT, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_ERROR_MESSAGE_SNIPPET)
 from challenges.helper import delete_file
 from challenges.helper import cleanup_rust_error_message
 from challenges.models import Submission, Challenge
@@ -72,13 +72,10 @@ class RustGrader:
         compile_result = compiler_proc.communicate()
         compiler_proc.kill()
         error_message = compile_result[1].decode()
-        if error_message and 'error: aborting due to previous error' in error_message:
+        if error_message and RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message:
             # There is an error while compiling
             self.compiled = False
-            # update the solution
-            # self.solution.compiled = False
             self.compile_error_message = error_message
-            # self.solution.save()
         else:
             self.compiled = True
 
@@ -92,13 +89,7 @@ class RustGrader:
         return json.dumps(overall_dict)
 
     def test_solution(self, test_case: RustTestCase) -> dict:
-        # TODO: Docker
-        # TODO: Timer
-        program_process = subprocess.Popen([self.temp_exe_abs_path],
-                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # Enter the input
         input_str = '\n'.join(test_case.input_lines)
-        results = program_process.communicate(input=input_str.encode())
 
         result_dict = {
             "error_message": "",
@@ -108,12 +99,22 @@ class RustGrader:
             'traceback': ""
         }
 
-        error_message = results[1].decode()
-        if error_message:
-            # There is some error in the code
+        # TODO: Docker
+        # Run the program
+        program_process = subprocess.Popen([self.temp_exe_abs_path],
+                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        try:
+            # Enter the input and wait for the response
+            results = program_process.communicate(input=input_str.encode(), timeout=RUSTLANG_TIMEOUT_SECONDS)
+            error_message = results[1].decode()
+        except subprocess.TimeoutExpired:
+            error_message = f'Timed out after {RUSTLANG_TIMEOUT_SECONDS} seconds'
+            program_process.kill()
+
+        if error_message:  # There is some error in the code
             result_dict["traceback"] = cleanup_rust_error_message(error_message)
-        else:
-            # Program has run successfully
+        else:  # Program has run successfully
             given_output = results[0].decode().strip()
             expected_output = '\n'.join(test_case.expected_output_lines)
 
@@ -152,7 +153,8 @@ class RustGrader:
     def read_tests(self, sorted_input_files, sorted_output_files):
         inp_file_count, out_file_count = len(sorted_input_files), len(sorted_output_files)
         if inp_file_count != out_file_count:
-            raise Exception(f'Input/Output files have different lengths! \nInput:{inp_file_count}\nOutput:{out_file_count}')
+            raise Exception(f'Input/Output files have different lengths! '
+                            f'\nInput:{inp_file_count}\nOutput:{out_file_count}')
 
         for idx in range(inp_file_count):
             """ Since the files are sorted by name, an input file should be followed by an output file
