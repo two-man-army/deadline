@@ -56,7 +56,6 @@ def update_test_cases(grader_results: dict, test_cases: [TestCase]):
     """
     for idx, test_case in enumerate(test_cases):
         test_results = grader_results[idx]
-
         test_case.success = test_results[GRADER_TEST_RESULT_SUCCESS_KEY]
         test_case.time = test_results[GRADER_TEST_RESULT_TIME_KEY] + 's'
         test_case.pending = False

@@ -251,4 +251,10 @@ button.submit-button {
   font-style: italic;
   font-family: 'Times New Roman', sans-serif; }
 
+.compile-failure {
+    background-color: #f7f7f7;
+    font-family: 'Consolas';
+    font-size: 1.7rem;
+    padding: 30px;
+    }
 /*# sourceMappingURL=style.css.map */

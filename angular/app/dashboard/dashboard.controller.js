@@ -206,7 +206,17 @@
             challengeService.getChallengeSolution(challengeId, solutionId)
                 .then(
                     function(res) {
-                        console.log(res)
+                        vm.solutionInfo = res.data
+                        if (!vm.solutionInfo.compiled) {
+                            // Prepare the Compile Error Message for display
+                            vm.solutionInfo.compile_error_message = vm.solutionInfo.compile_error_message.split("\n");
+                            for (var i = 0; i < vm.solutionInfo.compile_error_message.length; i++) {
+                                /* Replace the whitespaces with the html &nbsp to show the message as is to the user,
+                                otherwise, it gets trimmed */
+                                vm.solutionInfo.compile_error_message[i] = vm.solutionInfo.compile_error_message[i].replace(/ /g, '&nbsp;')
+                            }
+                        }
+                        
                         challengeService.getUserTestCases(challengeId, solutionId)
                         .then(
                             function(res) {

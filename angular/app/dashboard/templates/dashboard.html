@@ -230,19 +230,30 @@
                          <button class="btn btn-primary submit-button" ng-click="vm.submitSolution(vm.challengeInfo.id)" type="submit">Submit Solution</button>
                             <div class="results" ng-show="vm.showResults">
                                 <img src="assets/img/hourglass.svg" style="display: block; margin: 0 auto;" ng-show="vm.showLoading">
-                                <h4>Test cases:</h4>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Time/Error</th>
-                                                <th>Description</th>
-                                            </tr>
-                                        </thead>
-                                        <tr class="success" ng-if="item.success" ng-repeat="item in vm.testData"><td>Time: {{item.time}}</td><td>success</td></tr>
-                                        <tr class="danger" ng-if="!item.success" ng-repeat="item in vm.testData"><td>Fail: {{item.error_message}}<td>Traceback: {{item.traceback}}</td></tr>
-                                    </table>
+                             <!-- Show only if the data has compiled -->
+                             <div ng-if="vm.solutionInfo.compiled">
+                                    <h4>Test cases:</h4>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Time/Error</th>
+                                                    <th>Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tr class="success" ng-if="item.success" ng-repeat="item in vm.testData"><td>Time: {{item.time}}</td><td>success</td></tr>
+                                            <tr class="danger" ng-if="!item.success" ng-repeat="item in vm.testData"><td>Fail: {{item.error_message}}<td>Traceback: {{item.traceback}}</td></tr>
+                                        </table>
+                                    </div>
                                 </div>
+                                <div ng-if="!vm.solutionInfo.compiled">
+                                <h4>Compilation Failure</h4>
+                                <div class="compile-failure">
+                                    <div></div>
+                                    <p ng-trim="false" ng-bind-html="line" ng-repeat="line in vm.solutionInfo.compile_error_message track by $index">{{line}} &nbsp;&nbsp;&nbsp;</p>
+                                </div>
+                            </div>
+                            
                             </div>
                                 </div>
                                 <div role="tabpanel" class="tab-pane fade" id="submissions">

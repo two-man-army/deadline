@@ -5,7 +5,7 @@ import json
 
 from constants import (
     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
-    GRADER_TEST_RESULT_ERROR_MESSAGE_KEY)
+    GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE)
 
 from challenges.models import Submission, Challenge
 TESTS_LOCATION = 'challenge_tests/rust/'
@@ -57,6 +57,7 @@ class RustGrader:
         else:
             print('COULD NOT COMPILE')
             print(self.compile_error_message)
+            return {GRADER_COMPILE_FAILURE: self.compile_error_message}
 
     def compile(self):
         # TODO: Docker?

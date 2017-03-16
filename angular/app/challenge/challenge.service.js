@@ -79,8 +79,9 @@
             })
                 .then(function (data, status, headers, config) {
                     if (data.data.pending === false) {
-                        return data.data
+                        return data
                     } else {
+                        // Constantly query the server until the solution is graded
                         sleepLoop();
                         return getChallengeSolution(challengeId, solutionId)
                     }
