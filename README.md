@@ -1,6 +1,6 @@
 # deadline
 Web App for solving programming challenges
- ![Deadline Logo](http://imgur.com/4htmJCt)
+ ![Deadline Logo](https://i.imgur.com/4htmJCt.png)
 
 Supported languages:
 - Python
