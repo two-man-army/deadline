@@ -3,6 +3,10 @@ import uuid
 import subprocess
 import json
 
+from constants import (
+    GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
+    GRADER_TEST_RESULT_ERROR_MESSAGE_KEY)
+
 from challenges.models import Submission, Challenge
 TESTS_LOCATION = 'challenge_tests/rust/'
 
@@ -88,12 +92,14 @@ class RustGrader:
         program_process = subprocess.Popen(['/home/netherblood/PycharmProjects/two-man-army/deadline/deadline/'
                                             + self.temp_exe_file_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Enter the input
-        results = program_process.communicate(input='\n'.join(test_case.input_lines).encode())
-
+        input_str = '\n'.join(test_case.input_lines)
+        results = program_process.communicate(input=input_str.encode())
         result_dict = {
             "error_message": "",
             "success": False,
-            "time": "0s",
+            "time": "0",
+            GRADER_TEST_RESULT_DESCRIPTION_KEY: f'Testing with {input_str}',
+            'traceback': "TODO"
         }
 
         error_message = results[1].decode()
