@@ -1,3 +1,6 @@
+import os.path
+
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait between submissions
 MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
 

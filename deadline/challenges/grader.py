@@ -5,12 +5,15 @@ import json
 
 from constants import (
     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
-    GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE)
+    GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE,
+    SITE_ROOT)
+from challenges.helper import delete_file
 from challenges.helper import cleanup_rust_error_message
 from challenges.models import Submission, Challenge
 TESTS_LOCATION = 'challenge_tests/rust/'
 
 
+# TODO: Improve class architecture!
 class RustTestCase:
     def __init__(self, input_lines: [str], expected_output_lines: [str]):
         self.input_lines = input_lines
@@ -32,13 +35,11 @@ class RustGrader:
         self.test_cases = []
         self.tests_folder = None
         self.temp_file_name = None
+        self.temp_file_abs_path = None
         self.temp_exe_file_name = None
+        self.temp_exe_abs_path = None
         self.read_input = False
         self.compiled = False
-
-        # TODO: Should move this logic
-
-        # TODO: Should return a json
 
     def run_solution(self):
         print('Running solution')
@@ -48,11 +49,14 @@ class RustGrader:
         self.read_tests(sorted_input_files, sorted_output_files)
         print('Compiling')
         self.compile()
-        self.delete_solution_file(self.temp_file_name)
+        delete_file(self.temp_file_abs_path)
+        # self.delete_solution_file(self.temp_file_name)
 
         if self.compiled:
             result = self.grade_solution()
-            self.delete_solution_file(self.temp_exe_file_name)
+            # self.delete_solution_file(self.temp_exe_file_name)
+            delete_file(self.temp_exe_abs_path)
+
             return result
         else:
             print('COULD NOT COMPILE')
@@ -90,11 +94,12 @@ class RustGrader:
     def test_solution(self, test_case: RustTestCase) -> dict:
         # TODO: Docker
         # TODO: Timer
-        program_process = subprocess.Popen(['/home/netherblood/PycharmProjects/two-man-army/deadline/deadline/'
-                                            + self.temp_exe_file_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        program_process = subprocess.Popen([self.temp_exe_abs_path],
+                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Enter the input
         input_str = '\n'.join(test_case.input_lines)
         results = program_process.communicate(input=input_str.encode())
+
         result_dict = {
             "error_message": "",
             "success": False,
@@ -145,12 +150,13 @@ class RustGrader:
         return list(sorted(input_files, key=lambda file: file.name)), list(sorted(output_files, key=lambda file: file.name))
 
     def read_tests(self, sorted_input_files, sorted_output_files):
-        idx = 0
+        inp_file_count, out_file_count = len(sorted_input_files), len(sorted_output_files)
+        if inp_file_count != out_file_count:
+            raise Exception(f'Input/Output files have different lengths! \nInput:{inp_file_count}\nOutput:{out_file_count}')
 
-        while idx < len(sorted_input_files):
+        for idx in range(inp_file_count):
             """ Since the files are sorted by name, an input file should be followed by an output file
                 i.e  input-01.txt output-01.txt input-02.txt output-02.txt """
-            input_lines, output_lines = [], []
             input_file = sorted_input_files[idx]
             output_file = sorted_output_files[idx]
 
@@ -162,27 +168,24 @@ class RustGrader:
             with open(os.path.abspath(output_file.path)) as f:
                 output_lines = [line.strip() for line in f.readlines()]
 
-            idx += 1
-
             self.test_cases.append(RustTestCase(input_lines=input_lines, expected_output_lines=output_lines))
 
         self.read_input = True
 
     def create_solution_file(self):
         """ Creates a temporary file which will represent the code """
+        # Create a unique file name and their paths for later deletion
         self.temp_exe_file_name = uuid.uuid4().hex
+        self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
         self.temp_file_name = self.temp_exe_file_name + '.rs'
+        self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
+
         # write the code to it
-        with open(self.temp_file_name, 'w') as  temp_file:
+        with open(self.temp_file_name, 'w') as temp_file:
             temp_file.write(self.code)
             temp_file.flush()
             os.fsync(temp_file.fileno())
 
-    def delete_solution_file(self, file_name):
-        try:
-            os.remove(file_name)
-        except OSError:
-            pass
 
 
 

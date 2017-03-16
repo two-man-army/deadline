@@ -1,3 +1,5 @@
+import os
+
 from django.db.models import Max
 
 from constants import (
@@ -79,3 +81,10 @@ def cleanup_rust_error_message(error_message: str) -> str:
         error_message = error_message[:emsg_idx]
 
     return error_message
+
+
+def delete_file(file_name):
+    try:
+        os.remove(file_name)
+    except OSError:
+        pass
