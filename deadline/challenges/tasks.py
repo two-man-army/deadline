@@ -19,7 +19,7 @@ def run_grader(test_case_count, test_folder_name, code, lang):
     result = None
 
     if lang == PYTHONLANG_NAME:
-        result = PythonGrader(0, test_folder_name, code).grade_solution()
+        result = PythonGrader(test_case_count, test_folder_name, code).grade_solution()
     elif lang == RUSTLANG_NAME:
         result = RustGrader(test_case_count, test_folder_name, code).grade_solution()
     else:

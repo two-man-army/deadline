@@ -170,7 +170,7 @@
       "test_file_name": "hello_tests",
       "test_case_count": 1,
       "category": "Miscellaneous",
-      "supported_languages": ["Python"]
+      "supported_languages": []
     }
   },
   {
@@ -197,7 +197,7 @@
       "test_file_name": "basic_numbers_tests",
       "test_case_count": 7,
       "category": "Dynamic Programming",
-      "supported_languages": ["Python"]
+      "supported_languages": []
     }
   },
 
@@ -255,7 +255,7 @@
       "test_file_name": "array_amplitude_tests",
       "test_case_count": 7,
       "category": "Miscellaneous",
-      "supported_languages": ["Python"]
+      "supported_languages": []
     }
   },
 

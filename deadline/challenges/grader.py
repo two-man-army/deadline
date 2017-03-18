@@ -273,7 +273,7 @@ class InterpretableLangGrader(BaseGrader):
         return result
 
     def run_program_process(self):
-        return subprocess.Popen(self.RUN_ARGS, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        return subprocess.Popen([self.RUN_COMMAND, self.temp_file_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
 
 
@@ -293,22 +293,6 @@ class PythonGrader(InterpretableLangGrader):
     """
     This is a sort of special class, since the
     """
+    TIMEOUT_SECONDS = 5
     FILE_EXTENSION = '.py'
-    def __init__(self, test_case_count, test_folder_name, code: str):
-        super().__init__(test_case_count, test_folder_name, code)
-        self.test_file_name = self.test_folder_name + '.py'
-
-    def grade_solution(self):
-        self.create_solution_file()
-        test_file_path = os.path.join(TESTS_FOLDER_NAME, self.test_file_name)
-
-        proc = subprocess.Popen(
-            ['python3', '-m', 'grader', '--sandbox', 'docker', test_file_path,
-             self.temp_file_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        output = proc.communicate()
-        result = output[0].decode('utf-8').strip()
-
-        delete_file(self.temp_file_abs_path)
-
-        return result
+    RUN_COMMAND = 'python3'
