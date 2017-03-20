@@ -170,7 +170,7 @@
       "test_file_name": "hello_tests",
       "test_case_count": 1,
       "category": "Miscellaneous",
-      "supported_languages": []
+      "supported_languages": ["Python", "Rust"]
     }
   },
   {
@@ -195,9 +195,9 @@
       "rating": 35,
       "score": 40,
       "test_file_name": "basic_numbers_tests",
-      "test_case_count": 7,
+      "test_case_count": 8,
       "category": "Dynamic Programming",
-      "supported_languages": []
+      "supported_languages": ["Python", "Rust"]
     }
   },
 
@@ -253,9 +253,9 @@
       "rating": 7,
       "score": 10,
       "test_file_name": "array_amplitude_tests",
-      "test_case_count": 7,
+      "test_case_count": 10,
       "category": "Miscellaneous",
-      "supported_languages": []
+      "supported_languages": ["Python", "Rust"]
     }
   },
 
@@ -264,7 +264,7 @@
     "pk": 5,
     "fields": {
       "content": "Mark and Emily are the only people that managed to survive the apocalypse that 2048 brought with it. Unfortunately for them, the apocalypse split the Earth into islands separated by lava. {{NPL}}Given the Earth's map in a Cartesian coordinate system and the coordinates of each island, your job is to say whether Mark and Emily will ever be able to meet through land.",
-      "input_format": "On the first input line you will be given the number of islands **N** and the number of queries **M** as 2 space-separated integers.{{NPL}}On the next **N** lines you will be given the coordinates of each log in the format \"**Ax** **Ay** **Bx** **By**\".{{NPL}}On the next **M** lines you will be given queries in the format \"A B\" where A and B correspond to the island Mark and Emily are on respectively, in the order they were given in the input (starting from 1).",
+      "input_format": "On the first input line you will be given the number of islands **N** and the number of queries **M** as 2 space-separated integers.{{NPL}}On the next **N** lines you will be given the coordinates of each log in the format \" **Ax** **Ay** **Bx** **By** \".{{NPL}}On the next **M** lines you will be given queries in the format \"A B\" where A and B correspond to the island Mark and Emily are on respectively, in the order they were given in the input (starting from 1).",
       "output_format": "For each query print \"**YES**\" if the their islands are connected. Otherwise, print \"**NO**\".",
       "constraints": "2<=N<=1000{{NPL}}1<=M<=10000{{NPL}}All island coordinates will be valid integer numbers in the range [-100..100].",
       "sample_input": "4 3{{NPL}}-35 60 -20 15{{NPL}}-50 20 -30 -20{{NPL}}-10 30 60 10{{NPL}}-40 -10 50 -30{{NPL}}2 4{{NPL}}4 3{{NPL}}4 1",
