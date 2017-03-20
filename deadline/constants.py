@@ -8,6 +8,7 @@ TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds test
 
 RUSTLANG_NAME = 'Rust'
 PYTHONLANG_NAME = 'Python'
+CPPLANG_NAME = 'C++'
 
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
@@ -21,3 +22,7 @@ GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
 RUSTLANG_TIMEOUT_SECONDS = 5
 RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
 RUSTLANG_FILE_EXTENSION = '.rs'
+
+CPP_TIMEOUT_SECONDS = 4
+CPP_FILE_EXTENSION = '.cpp'
+

@@ -6,7 +6,8 @@ import json
 from constants import (
     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
     GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE,
-    SITE_ROOT, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_ERROR_MESSAGE_SNIPPET, TESTS_FOLDER_NAME, RUSTLANG_FILE_EXTENSION)
+    SITE_ROOT, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_ERROR_MESSAGE_SNIPPET, TESTS_FOLDER_NAME, RUSTLANG_FILE_EXTENSION,
+    CPP_FILE_EXTENSION, CPP_TIMEOUT_SECONDS)
 from challenges.helper import delete_file
 from challenges.helper import cleanup_rust_error_message
 from challenges.models import Submission, Challenge
@@ -226,7 +227,7 @@ class CompilableLangGrader(BaseGrader):
         Compiles the program
         """
         compiler_proc = subprocess.Popen(
-            [self.COMPILE_COMMAND, self.temp_file_name],
+            self.COMPILE_ARGS + [self.temp_file_name],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
@@ -280,13 +281,39 @@ class InterpretableLangGrader(BaseGrader):
 class RustGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = RUSTLANG_TIMEOUT_SECONDS
     FILE_EXTENSION = RUSTLANG_FILE_EXTENSION
-    COMPILE_COMMAND = 'rustc'
+    COMPILE_ARGS = ['rustc']
 
     def has_compiled(self, error_message) -> bool:
         """
         Return a boolean indicating whether compilation was successful
         """
         return not (bool(error_message) and RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message)
+
+
+class CppGrader(CompilableLangGrader):
+    TIMEOUT_SECONDS = CPP_TIMEOUT_SECONDS
+    COMPILE_ARGS = ['g++', '-std=c++11', '-o', ]
+    FILE_EXTENSION = CPP_FILE_EXTENSION
+    def compile(self):
+        """
+        Compiles the program
+        """
+        compiler_proc = subprocess.Popen(
+            # need to specially tell it to compile to the same name
+            self.COMPILE_ARGS + [self.unique_name, self.temp_file_name],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        compile_result = compiler_proc.communicate()
+        compiler_proc.kill()
+        error_message = compile_result[1].decode()
+
+        if not self.has_compiled(error_message):  # There is an error while compiling
+            self.compiled = False
+            self.compile_error_message = error_message
+        else:
+            self.compiled = True
+            self.temp_exe_file_name = self.unique_name
+            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
 
 
 class PythonGrader(InterpretableLangGrader):
