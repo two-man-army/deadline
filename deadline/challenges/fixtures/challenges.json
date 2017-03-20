@@ -10,6 +10,11 @@
     "fields": {}
   },
   {
+    "model": "challenges.language",
+    "pk": "C++",
+    "fields": {}
+  },
+  {
     "model": "challenges.maincategory",
     "pk": "Algorithms",
     "fields": {}
@@ -170,7 +175,7 @@
       "test_file_name": "hello_tests",
       "test_case_count": 1,
       "category": "Miscellaneous",
-      "supported_languages": ["Python", "Rust"]
+      "supported_languages": ["Python", "Rust", "C++"]
     }
   },
   {
@@ -197,7 +202,7 @@
       "test_file_name": "basic_numbers_tests",
       "test_case_count": 8,
       "category": "Dynamic Programming",
-      "supported_languages": ["Python", "Rust"]
+      "supported_languages": ["Python", "Rust", "C++"]
     }
   },
 
@@ -226,7 +231,7 @@
       "test_file_name": "array_sum_tests",
       "test_case_count": 7,
       "category": "Miscellaneous",
-      "supported_languages": ["Python", "Rust"]
+      "supported_languages": ["Python", "Rust", "C++"]
     }
   },
 
@@ -255,7 +260,7 @@
       "test_file_name": "array_amplitude_tests",
       "test_case_count": 10,
       "category": "Miscellaneous",
-      "supported_languages": ["Python", "Rust"]
+      "supported_languages": ["Python", "Rust", "C++"]
     }
   },
 
@@ -285,7 +290,7 @@
       "test_file_name": "lava_world_tests",
       "test_case_count": 6,
       "category": "Graphs",
-      "supported_languages": ["Python", "Rust"]
+      "supported_languages": ["Python", "Rust", "C++"]
     }
   }
 ]
