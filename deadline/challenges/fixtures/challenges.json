@@ -292,5 +292,34 @@
       "category": "Graphs",
       "supported_languages": ["Python", "Rust", "C++"]
     }
-  }
+  },
+
+  {
+    "model": "challenges.challengedescription",
+    "pk": 6,
+    "fields": {
+      "content": "Solomon is out on an adventure in a labyrinth. The purpose of a labyrinth is to find the way out, but Solomon is rather strange and enjoys his time in the labyrinth. Only being able to move left, right, up and down, he wants you to find the longest path in the labyrinth for him, so that he can walk the maximum distance before exiting. {{NPL}}The labyrinth will be represented by non-distinct integers in a matrix. A valid path through the labyrinth is defined as a path where the number Solomon steps on is increased by 1 exactly.{{NPL}}Example: 1->2->3 is a valid path, but 1->3->4 is not.",
+      "input_format": "On the first input line you will be given the number of rows **N** and the number of columns **M** as 2 space-separated integers.{{NPL}}On the next **N** lines you will be given all the numbers on that row, separated by a single space.",
+      "output_format": "On the first line, print the number of steps that Solomon will walk on the longest path.{{NPL}}On the second line, print the numbers that Solomon has stepped on his path in consecutive order.{{NPL}}Prioritize going in the following directions all the time: LEFT, RIGHT, DOWN, UP.",
+      "constraints": "2<=N<=1000{{NPL}}1<=M<=1000",
+      "sample_input": "3 4{{NPL}}1 2 3 14{{NPL}}2 1 2 3{{NPL}}3 4 5 4",
+      "sample_output": "5{{NPL}}1->2->3->4->5",
+      "explanation": "There are two identical best paths.{{NPL}}The first one start at 0,0, goes all the way down and right until it reaches 5.{{NPL}}The second one starts at 1,2, goes all the way right, down once and left to reach the 5."
+    }
+  },
+
+   {
+    "model": "challenges.challenge",
+    "pk": 6,
+    "fields": {
+      "name": "Labyrinth Adventure",
+      "description": 6,
+      "rating": 35,
+      "score": 40,
+      "test_file_name": "labyrinth_adventure_tests",
+      "test_case_count": 9,
+      "category": "Dynamic Programming",
+      "supported_languages": ["Python", "Rust", "C++"]
+    }
+    }
 ]
