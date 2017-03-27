@@ -139,8 +139,8 @@ class BaseGrader:
             elif file.name.startswith('output'):
                 output_files.append(file)
         # There must be two files for every test case
-        print(input_files)
-        print(output_files)
+        print("#", input_files)
+        print("#", output_files)
         files_len = len(input_files) + len(output_files)
         if files_len != (2*self.test_case_count) or files_len % 2 != 0:
             raise Exception('Invalid input/output file count!')
@@ -247,12 +247,12 @@ class CompilableLangGrader(BaseGrader):
         """
         This function does the whole process of grading a submission
         """
-        print('Running solution')
+        print('# Running solution')
         self.create_solution_file()
         sorted_input_files, sorted_output_files = self.find_tests()
-        print(f'Found tests at {sorted_input_files} {sorted_output_files}')
+        print(f'# Found tests at {sorted_input_files} {sorted_output_files}')
         self.read_tests(sorted_input_files, sorted_output_files)
-        print('Compiling')
+        print('# Compiling')
         self.compile()
         # delete_file(self.temp_file_abs_path)
 
@@ -262,7 +262,7 @@ class CompilableLangGrader(BaseGrader):
 
             return result
         else:
-            print('COULD NOT COMPILE')
+            print('# COULD NOT COMPILE')
             print(self.compile_error_message)
             return {GRADER_COMPILE_FAILURE: self.compile_error_message}
 
@@ -306,10 +306,10 @@ class InterpretableLangGrader(BaseGrader):
         """
         This function does the whole process of grading a submission
         """
-        print('Running solution')
+        print('# Running solution')
         # self.create_solution_file()
         sorted_input_files, sorted_output_files = self.find_tests()
-        print(f'Found tests at {sorted_input_files} {sorted_output_files}')
+        print(f'# Found tests at {sorted_input_files} {sorted_output_files}')
         self.read_tests(sorted_input_files, sorted_output_files)
 
         result = self.grade_all_tests()
