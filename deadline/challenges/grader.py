@@ -133,7 +133,7 @@ class BaseGrader:
 
         # Read  the files in the directory
         input_files, output_files = [], []
-        for file in os.scandir('./tests'):
+        for file in os.scandir('./files'):
             if file.name.startswith('input'):
                 input_files.append(file)
             elif file.name.startswith('output'):

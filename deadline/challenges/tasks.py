@@ -43,10 +43,10 @@ def run_grader(test_case_count, test_folder_name, code, lang):
         raise Exception(f'{lang} is not a supported language!')
 
     grader: BaseGrader = LANGUAGE_GRADERS[lang]
-    docker_command = "docker run -d -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenge_tests/" + test_folder_name + "/:/tests" \
-                    " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenges/grader.py:/tests/grader.py" \
-                    " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/" + temp_file_name + ":/tests/sol" + grader.FILE_EXTENSION + " " \
-                    "python:latest python /tests/grader.py sol" + grader.FILE_EXTENSION + " " + str(test_case_count) + " " + lang
+    docker_command = "docker run -d -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenge_tests/" + test_folder_name + "/:/files:ro" \
+                    " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenges/grader.py:/grader.py" \
+                    " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/" + temp_file_name + ":/sol" + grader.FILE_EXTENSION + " " \
+                    "python:latest python /grader.py sol" + grader.FILE_EXTENSION + " " + str(test_case_count) + " " + lang
     print(docker_command)
     import subprocess
 
