@@ -236,8 +236,10 @@ class CompilableLangGrader(BaseGrader):
         executable file created - name and absolute path
         whether compilation was successful
     """
-    def __init__(self, test_case_count, test_folder_name, code: str):
-        super().__init__(test_case_count, test_folder_name, code)
+    def __init__(self, test_case_count, test_folder_name):
+        super().__init__(test_case_count, test_folder_name)
+        self.unique_name = test_folder_name
+        self.temp_file_name = test_folder_name
         self.temp_exe_file_name = None
         self.temp_exe_abs_path = None
         self.compiled = False
@@ -248,7 +250,7 @@ class CompilableLangGrader(BaseGrader):
         This function does the whole process of grading a submission
         """
         print('# Running solution')
-        self.create_solution_file()
+        # self.create_solution_file()
         sorted_input_files, sorted_output_files = self.find_tests()
         print(f'# Found tests at {sorted_input_files} {sorted_output_files}')
         self.read_tests(sorted_input_files, sorted_output_files)
@@ -259,19 +261,18 @@ class CompilableLangGrader(BaseGrader):
         if self.compiled:
             result = self.grade_all_tests()
             # delete_file(self.temp_exe_abs_path)
-
             return result
         else:
             print('# COULD NOT COMPILE')
             print(self.compile_error_message)
-            return {GRADER_COMPILE_FAILURE: self.compile_error_message}
+            return json.dumps({GRADER_COMPILE_FAILURE: self.compile_error_message})
 
     def compile(self):
         """
         Compiles the program
         """
         compiler_proc = subprocess.Popen(
-            self.COMPILE_ARGS + [self.temp_file_name],
+            self.COMPILE_ARGS + [os.path.join(SITE_ROOT, self.temp_file_name)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
@@ -288,7 +289,9 @@ class CompilableLangGrader(BaseGrader):
             self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
 
     def run_program_process(self):
-        return subprocess.Popen([self.temp_exe_abs_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(['/'+self.unique_name[:-4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print("RAN PROCESS")
+        return process
 
     def has_compiled(self, error_message) -> bool:
         """
@@ -342,9 +345,11 @@ class CppGrader(CompilableLangGrader):
         """
         Compiles the program
         """
+
+        print(self.COMPILE_ARGS + [self.unique_name[:-4], os.path.join(SITE_ROOT, self.temp_file_name)])
         compiler_proc = subprocess.Popen(
             # need to specially tell it to compile to the same name
-            self.COMPILE_ARGS + [self.unique_name, self.temp_file_name],
+            self.COMPILE_ARGS + [self.unique_name[:-4], os.path.join(SITE_ROOT, self.temp_file_name)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
@@ -357,7 +362,7 @@ class CppGrader(CompilableLangGrader):
         else:
             self.compiled = True
             self.temp_exe_file_name = self.unique_name
-            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
+            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name[:-4])
 
 
 class PythonGrader(InterpretableLangGrader):
@@ -370,8 +375,16 @@ class PythonGrader(InterpretableLangGrader):
 
 
 if __name__ == '__main__':
+    LANGUAGE_GRADERS = {
+        PYTHONLANG_NAME: PythonGrader,
+        RUSTLANG_NAME: RustGrader,
+        CPPLANG_NAME: CppGrader
+    }
+    print(SITE_ROOT)
     import sys
     solution_file = sys.argv[1]
     test_count = int(sys.argv[2])
-    p = PythonGrader(test_count, solution_file)
+    language = sys.argv[3]
+    p = LANGUAGE_GRADERS[language](test_count, solution_file)
+    # p = PythonGrader(test_count, solution_file)
     print(p.grade_solution())
