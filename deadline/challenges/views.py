@@ -94,19 +94,50 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'You must wait 10 more seconds before submitting a solution.'},
                                 status=400)
 
-            celery_grader_task = run_grader.delay(test_case_count=challenge.test_case_count,
-                                            test_folder_name=challenge.test_file_name,
-                                            code=code_given, lang=language.name)
+            import subprocess
+            import os
+
+            # TODO:
+            # Build container
+            # Copy input files in it
+            # Go kill yourself
+            # celery_grader_task = run_grader.delay(test_case_count=challenge.test_case_count,
+            #                                       test_folder_name=challenge.test_file_name,
+            #                                       code=code_given, lang=language.name)
+
+            """ Creates a temporary file which will represent the code """
+                # Create a unique file name and their paths for later deletion
+            import uuid
+            unique_name = uuid.uuid4().hex
+            temp_file_name = unique_name
+
+            with open(temp_file_name, 'w') as temp_file:
+                temp_file.write(code_given)
+                print(code_given)
+                temp_file.flush()
+                os.fsync(temp_file.fileno())
+            print(temp_file)
+            docker_command = "docker run -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenge_tests/" + challenge.test_file_name + "/:/tests" \
+                             " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenges/grader.py:/tests/grader.py" \
+                             " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/" + temp_file_name + ":/tests/sol.py " \
+                            "python:latest python /tests/grader.py sol.py " + str(challenge.test_case_count)
+            print(docker_command)
+            import subprocess
+
+            ps = subprocess.Popen(docker_command.split())
+            # ps = subprocess.Popen([docker_command], stdout=subprocess.PIPE)
+            print(ps)
+            print(ps.communicate(''))
             submission = Submission(code=code_given, author=request.user,
-                                    challenge=challenge, task_id=celery_grader_task.id,
+                                    challenge=challenge, task_id=1,
                                     language=language)
             submission.save()
 
             request.user.last_submit_at = timezone.now()
             request.user.save()
             # Create the test cases
-            TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])
-
+            # TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])
+            #
             return Response(data=SubmissionSerializer(submission).data, status=201)
         except Challenge.DoesNotExist:
             return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},

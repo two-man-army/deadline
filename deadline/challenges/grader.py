@@ -3,14 +3,57 @@ import uuid
 import subprocess
 import json
 
-from constants import (
-    GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
-    GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE,
-    SITE_ROOT, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_ERROR_MESSAGE_SNIPPET, TESTS_FOLDER_NAME, RUSTLANG_FILE_EXTENSION,
-    CPP_FILE_EXTENSION, CPP_TIMEOUT_SECONDS)
-from challenges.helper import delete_file
-from challenges.helper import cleanup_rust_error_message
-from challenges.models import Submission, Challenge
+# from constants import (
+#     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
+#     GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE,
+#     SITE_ROOT, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_ERROR_MESSAGE_SNIPPET, TESTS_FOLDER_NAME, RUSTLANG_FILE_EXTENSION,
+#     CPP_FILE_EXTENSION, CPP_TIMEOUT_SECONDS)
+import os.path
+
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait between submissions
+MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
+TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds tests for challenges
+
+
+RUSTLANG_NAME = 'Rust'
+PYTHONLANG_NAME = 'Python'
+CPPLANG_NAME = 'C++'
+
+# Keys for the object returned by the grader's AsyncResult function
+GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
+GRADER_TEST_RESULT_SUCCESS_KEY = 'success'
+GRADER_TEST_RESULT_TIME_KEY = 'time'
+GRADER_TEST_RESULT_DESCRIPTION_KEY = 'description'
+GRADER_TEST_RESULT_TRACEBACK_KEY = 'traceback'
+GRADER_TEST_RESULT_ERROR_MESSAGE_KEY = 'error_message'
+GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
+
+RUSTLANG_TIMEOUT_SECONDS = 5
+RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
+RUSTLANG_FILE_EXTENSION = '.rs'
+
+CPP_TIMEOUT_SECONDS = 4
+CPP_FILE_EXTENSION = '.cpp'
+
+
+
+def cleanup_rust_error_message(error_message: str) -> str:
+    """ Removes unecessary information from a Rust error message, making it more user friendly"""
+    unfriendly_emsg = "note: Run with `RUST_BACKTRACE=1`"  # it is always at the end
+
+    if unfriendly_emsg in error_message:
+        emsg_idx = error_message.index(unfriendly_emsg)
+        error_message = error_message[:emsg_idx]
+
+    return error_message
+
+
+def delete_file(file_name):
+    try:
+        os.remove(file_name)
+    except OSError:
+        pass
 
 
 class GraderTestCase:
@@ -30,11 +73,11 @@ class BaseGrader:
         create the solution file with the code in it
         finds the tests for the given challenge
     """
-    def __init__(self, test_case_count, test_folder_name, code: str):
+    def __init__(self, test_case_count, temp_file_name):
         self.test_case_count = test_case_count
-        self.test_folder_name = test_folder_name
-        self.code = code
-        self.temp_file_name = None
+        # self.test_folder_name = test_folder_name
+        # self.code = code
+        self.temp_file_name = temp_file_name
         self.temp_file_abs_path = None
         self.read_input = None
         self.unique_name = None
@@ -66,37 +109,38 @@ class BaseGrader:
 
         return json.dumps(overall_dict)
 
-    def create_solution_file(self):
-        """ Creates a temporary file which will represent the code """
-        # Create a unique file name and their paths for later deletion
-        self.unique_name = uuid.uuid4().hex
-        self.temp_file_name = self.unique_name + self.FILE_EXTENSION
-        self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
-
+    # def create_solution_file(self):
+    #     """ Creates a temporary file which will represent the code """
+    #     Create a unique file name and their paths for later deletion
+        # self.unique_name = uuid.uuid4().hex
+        # self.temp_file_name = self.unique_name + self.FILE_EXTENSION
+        # self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
+        #
         # write the code to it
-        with open(self.temp_file_name, 'w') as temp_file:
-            temp_file.write(self.code)
-            temp_file.flush()
-            os.fsync(temp_file.fileno())
+        # with open(self.temp_file_name, 'w') as temp_file:
+        #     temp_file.write(self.code)
+        #     temp_file.flush()
+        #     os.fsync(temp_file.fileno())
 
     def find_tests(self) -> [os.DirEntry]:
         """
         Find the tests and return two lists, one with the input files and the other with the output files,
             sorted by name
         """
-        challenge_tests_folder: str = os.path.join(TESTS_FOLDER_NAME, self.test_folder_name)
-        if not os.path.isdir(challenge_tests_folder):
-            raise Exception(f'The path {challenge_tests_folder} is invalid!')
+        # challenge_tests_folder: str = os.path.join(TESTS_FOLDER_NAME, self.test_folder_name)
+        # if not os.path.isdir(challenge_tests_folder):
+        #     raise Exception(f'The path {challenge_tests_folder} is invalid!')
 
         # Read  the files in the directory
         input_files, output_files = [], []
-        for file in os.scandir(challenge_tests_folder):
+        for file in os.scandir('./tests'):
             if file.name.startswith('input'):
                 input_files.append(file)
             elif file.name.startswith('output'):
                 output_files.append(file)
-
         # There must be two files for every test case
+        print(input_files)
+        print(output_files)
         files_len = len(input_files) + len(output_files)
         if files_len != (2*self.test_case_count) or files_len % 2 != 0:
             raise Exception('Invalid input/output file count!')
@@ -210,11 +254,11 @@ class CompilableLangGrader(BaseGrader):
         self.read_tests(sorted_input_files, sorted_output_files)
         print('Compiling')
         self.compile()
-        delete_file(self.temp_file_abs_path)
+        # delete_file(self.temp_file_abs_path)
 
         if self.compiled:
             result = self.grade_all_tests()
-            delete_file(self.temp_exe_abs_path)
+            # delete_file(self.temp_exe_abs_path)
 
             return result
         else:
@@ -263,18 +307,18 @@ class InterpretableLangGrader(BaseGrader):
         This function does the whole process of grading a submission
         """
         print('Running solution')
-        self.create_solution_file()
+        # self.create_solution_file()
         sorted_input_files, sorted_output_files = self.find_tests()
         print(f'Found tests at {sorted_input_files} {sorted_output_files}')
         self.read_tests(sorted_input_files, sorted_output_files)
 
         result = self.grade_all_tests()
 
-        delete_file(self.temp_file_abs_path)
+        # delete_file(self.temp_file_abs_path)
         return result
 
     def run_program_process(self):
-        return subprocess.Popen([self.RUN_COMMAND, self.temp_file_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        return subprocess.Popen([self.RUN_COMMAND, '/tests/' + self.temp_file_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
 
 
@@ -323,3 +367,11 @@ class PythonGrader(InterpretableLangGrader):
     TIMEOUT_SECONDS = 5
     FILE_EXTENSION = '.py'
     RUN_COMMAND = 'python3'
+
+
+if __name__ == '__main__':
+    import sys
+    solution_file = sys.argv[1]
+    test_count = int(sys.argv[2])
+    p = PythonGrader(test_count, solution_file)
+    print(p.grade_solution())
