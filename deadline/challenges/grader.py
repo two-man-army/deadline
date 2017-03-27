@@ -75,12 +75,11 @@ class BaseGrader:
     """
     def __init__(self, test_case_count, temp_file_name):
         self.test_case_count = test_case_count
-        # self.test_folder_name = test_folder_name
+        self.test_folder_name = temp_file_name
         # self.code = code
-        self.temp_file_name = temp_file_name
-        self.temp_file_abs_path = None
+        self.unique_name = temp_file_name
+        self.temp_file_name = temp_file_name + self.FILE_EXTENSION
         self.read_input = None
-        self.unique_name = None
         self.test_cases = []
 
     def grade_solution(self):
@@ -238,10 +237,6 @@ class CompilableLangGrader(BaseGrader):
     """
     def __init__(self, test_case_count, test_folder_name):
         super().__init__(test_case_count, test_folder_name)
-        self.unique_name = test_folder_name
-        self.temp_file_name = test_folder_name
-        self.temp_exe_file_name = None
-        self.temp_exe_abs_path = None
         self.compiled = False
         self.compile_error_message = None
 
@@ -289,7 +284,8 @@ class CompilableLangGrader(BaseGrader):
             self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
 
     def run_program_process(self):
-        process = subprocess.Popen(['/'+self.unique_name[:-4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(self.unique_name)
+        process = subprocess.Popen(['/'+self.unique_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print("RAN PROCESS")
         return process
 
@@ -321,7 +317,7 @@ class InterpretableLangGrader(BaseGrader):
         return result
 
     def run_program_process(self):
-        return subprocess.Popen([self.RUN_COMMAND, '/tests/' + self.temp_file_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        return subprocess.Popen([self.RUN_COMMAND, self.temp_file_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
 
 
@@ -341,15 +337,16 @@ class CppGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = CPP_TIMEOUT_SECONDS
     COMPILE_ARGS = ['g++', '-std=c++11', '-o', ]
     FILE_EXTENSION = CPP_FILE_EXTENSION
+
     def compile(self):
         """
         Compiles the program
         """
 
-        print(self.COMPILE_ARGS + [self.unique_name[:-4], os.path.join(SITE_ROOT, self.temp_file_name)])
+        print(self.COMPILE_ARGS + [self.unique_name, os.path.join(SITE_ROOT, self.temp_file_name)])
         compiler_proc = subprocess.Popen(
             # need to specially tell it to compile to the same name
-            self.COMPILE_ARGS + [self.unique_name[:-4], os.path.join(SITE_ROOT, self.temp_file_name)],
+            self.COMPILE_ARGS + [self.unique_name, os.path.join(SITE_ROOT, self.temp_file_name)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
@@ -362,7 +359,7 @@ class CppGrader(CompilableLangGrader):
         else:
             self.compiled = True
             self.temp_exe_file_name = self.unique_name
-            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name[:-4])
+            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
 
 
 class PythonGrader(InterpretableLangGrader):

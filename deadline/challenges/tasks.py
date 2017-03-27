@@ -36,6 +36,12 @@ def run_grader(test_case_count, test_folder_name, code, lang):
     """
     Runs a celery task for the grader, after which saves the result to the DB (by returning the value)
     """
+    from constants import DOCKER_CLIENT
+    docker_image = DOCKER_CLIENT.images.build(path='/home/netherblood/PycharmProjects/two-man-army/deadline/deadline')
+    print(DOCKER_CLIENT.images)
+    print(docker_image.id)
+    print(docker_image.id)
+    print(docker_image.id)
     result = None
     temp_file_name = create_temp_file(code)
 
@@ -46,9 +52,9 @@ def run_grader(test_case_count, test_folder_name, code, lang):
     docker_command = "docker run -d -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenge_tests/" + test_folder_name + "/:/files:ro" \
                     " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/challenges/grader.py:/grader.py" \
                     " -v /home/netherblood/PycharmProjects/two-man-army/deadline/deadline/" + temp_file_name + ":/sol" + grader.FILE_EXTENSION + " " \
-                    "python:latest python /grader.py sol" + grader.FILE_EXTENSION + " " + str(test_case_count) + " " + lang
-    print(docker_command)
+                    + docker_image.id + " python /grader.py sol " + str(test_case_count) + " " + lang
     import subprocess
+    print(docker_command)
 
     ps = subprocess.Popen(docker_command.split(), stdout=subprocess.PIPE)
     docker_id = ps.communicate('')[0].decode()
