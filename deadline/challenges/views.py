@@ -146,7 +146,7 @@ class SubmissionDetailView(RetrieveAPIView):
             potential_result = run_grader.AsyncResult(submission.task_id)
             if potential_result.ready():
                 result = potential_result.get()
-                print(result)
+
                 if GRADER_COMPILE_FAILURE in result:
                     # Compiling the code has failed
                     submission.compiled = False
@@ -154,8 +154,7 @@ class SubmissionDetailView(RetrieveAPIView):
                     submission.compile_error_message = result[GRADER_COMPILE_FAILURE]
                     submission.save()
                     return super().retrieve(request, *args, **kwargs)
-                print(type(result))
-                # overall_results = json.loads(result)
+
                 overall_results = result
 
                 # Update the Submission's TestCases

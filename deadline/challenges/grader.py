@@ -49,12 +49,6 @@ def cleanup_rust_error_message(error_message: str) -> str:
     return error_message
 
 
-def delete_file(file_name):
-    try:
-        os.remove(file_name)
-    except OSError:
-        pass
-
 
 class GraderTestCase:
     def __init__(self, input_lines: [str], expected_output_lines: [str]):
@@ -65,20 +59,21 @@ class GraderTestCase:
 class BaseGrader:
     """
      Base Grader class which has information about
-        code
-        the code file name: ex: "solution.py", "solution.cpp" etc
-        the code file's absolute path
-        the folder in which the tests for the challenge are stored
+        the temp_file_name: ex: "solution.py", "solution.cpp" etc
+
     It has implemented methods that
-        create the solution file with the code in it
         finds the tests for the given challenge
+        reads the tests
+        grades all the tests
     """
     def __init__(self, test_case_count, temp_file_name):
         self.test_case_count = test_case_count
+
         self.test_folder_name = temp_file_name
-        # self.code = code
         self.unique_name = temp_file_name
+
         self.temp_file_name = temp_file_name + self.FILE_EXTENSION
+        self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
         self.read_input = None
         self.test_cases = []
 
@@ -108,19 +103,6 @@ class BaseGrader:
 
         return json.dumps(overall_dict)
 
-    # def create_solution_file(self):
-    #     """ Creates a temporary file which will represent the code """
-    #     Create a unique file name and their paths for later deletion
-        # self.unique_name = uuid.uuid4().hex
-        # self.temp_file_name = self.unique_name + self.FILE_EXTENSION
-        # self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
-        #
-        # write the code to it
-        # with open(self.temp_file_name, 'w') as temp_file:
-        #     temp_file.write(self.code)
-        #     temp_file.flush()
-        #     os.fsync(temp_file.fileno())
-
     def find_tests(self) -> [os.DirEntry]:
         """
         Find the tests and return two lists, one with the input files and the other with the output files,
@@ -132,7 +114,7 @@ class BaseGrader:
 
         # Read  the files in the directory
         input_files, output_files = [], []
-        for file in os.scandir('./files'):
+        for file in os.scandir(TESTS_FOLDER_NAME):
             if file.name.startswith('input'):
                 input_files.append(file)
             elif file.name.startswith('output'):
@@ -199,11 +181,8 @@ class BaseGrader:
             'traceback': ""
         }
 
-        # TODO: Docker
         # Run the program
         program_process = self.run_program_process()
-        # program_process = subprocess.Popen([self.temp_exe_abs_path],
-        #                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
             # Enter the input and wait for the response
@@ -237,6 +216,8 @@ class CompilableLangGrader(BaseGrader):
     """
     def __init__(self, test_case_count, test_folder_name):
         super().__init__(test_case_count, test_folder_name)
+        self.temp_exe_file_name = None
+        self.temp_exe_abs_path = None
         self.compiled = False
         self.compile_error_message = None
 
@@ -251,11 +232,9 @@ class CompilableLangGrader(BaseGrader):
         self.read_tests(sorted_input_files, sorted_output_files)
         print('# Compiling')
         self.compile()
-        # delete_file(self.temp_file_abs_path)
 
         if self.compiled:
             result = self.grade_all_tests()
-            # delete_file(self.temp_exe_abs_path)
             return result
         else:
             print('# COULD NOT COMPILE')
@@ -267,27 +246,24 @@ class CompilableLangGrader(BaseGrader):
         Compiles the program
         """
         compiler_proc = subprocess.Popen(
-            self.COMPILE_ARGS + [os.path.join(SITE_ROOT, self.temp_file_name)],
+            self.COMPILE_ARGS + [self.temp_file_abs_path],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
         compiler_proc.kill()
         error_message = compile_result[1].decode()
-        # if error_message and RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message:
 
         if not self.has_compiled(error_message):  # There is an error while compiling
             self.compiled = False
             self.compile_error_message = error_message
         else:
             self.compiled = True
-            self.temp_exe_file_name = self.unique_name
-            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
+            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
 
     def run_program_process(self):
-        print(self.unique_name)
-        process = subprocess.Popen(['/'+self.unique_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("RAN PROCESS")
-        return process
+        """ Start the program and return the process object. """
+        return subprocess.Popen([self.temp_exe_abs_path],
+                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def has_compiled(self, error_message) -> bool:
         """
@@ -306,14 +282,13 @@ class InterpretableLangGrader(BaseGrader):
         This function does the whole process of grading a submission
         """
         print('# Running solution')
-        # self.create_solution_file()
+
         sorted_input_files, sorted_output_files = self.find_tests()
         print(f'# Found tests at {sorted_input_files} {sorted_output_files}')
-        self.read_tests(sorted_input_files, sorted_output_files)
+        self.read_tests(sorted_input_files, sorted_output_files)  # fills variables with the input/expected output
 
         result = self.grade_all_tests()
 
-        # delete_file(self.temp_file_abs_path)
         return result
 
     def run_program_process(self):
@@ -342,8 +317,6 @@ class CppGrader(CompilableLangGrader):
         """
         Compiles the program
         """
-
-        print(self.COMPILE_ARGS + [self.unique_name, os.path.join(SITE_ROOT, self.temp_file_name)])
         compiler_proc = subprocess.Popen(
             # need to specially tell it to compile to the same name
             self.COMPILE_ARGS + [self.unique_name, os.path.join(SITE_ROOT, self.temp_file_name)],
@@ -358,7 +331,6 @@ class CppGrader(CompilableLangGrader):
             self.compile_error_message = error_message
         else:
             self.compiled = True
-            self.temp_exe_file_name = self.unique_name
             self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
 
 
