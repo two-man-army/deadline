@@ -12,7 +12,7 @@ from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
-from challenges.tasks import run_grader
+from challenges.tasks import run_grader_task
 from challenges.helper import grade_result, update_user_score
 from challenges.helper import update_test_cases
 
@@ -97,7 +97,7 @@ class SubmissionCreateView(CreateAPIView):
             import subprocess
             import os
 
-            celery_grader_task = run_grader.delay(test_case_count=challenge.test_case_count,
+            celery_grader_task = run_grader_task.delay(test_case_count=challenge.test_case_count,
                                                   test_folder_name=challenge.test_file_name,
                                                   code=code_given, lang=language.name)
 
@@ -143,7 +143,7 @@ class SubmissionDetailView(RetrieveAPIView):
         # Query for the tests and populate if there is a result (AND they were not populated)
         submission_is_pending = any(test_case.pending for test_case in submission.testcase_set.all())
         if submission_is_pending:
-            potential_result = run_grader.AsyncResult(submission.task_id)
+            potential_result = run_grader_task.AsyncResult(submission.task_id)
             if potential_result.ready():
                 result = potential_result.get()
 

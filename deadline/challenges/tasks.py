@@ -38,12 +38,17 @@ def create_temp_file(code: str) -> (str, str):
     return temp_file_name, os.path.join(SITE_ROOT, temp_file_name)
 
 
-@app.task
-def run_grader(test_case_count, test_folder_name, code, lang):
+def run_grader(test_case_count, test_folder_name, code, lang) -> dict:
     """
-    Runs a celery task for the grader, after which saves the result to the DB (by returning the value)
+    Given
+        :param test_case_count: The number of test cases for the challenge
+        :param test_folder_name: The folder where said test cases reside
+        :param code: The solution's code
+        :param lang: The language the solution's code is in
+    builds a Docker image, copies over relevant information so that the image can run grader.py and
+    actually grade the solution and returns the results
+    :return:
     """
-    # maybe wrap the logic here in another function that is not a Celery task and therefore testable
     if lang not in LANGUAGE_GRADERS:
         raise Exception(f'{lang} is not a supported language!')
 
@@ -59,22 +64,41 @@ def run_grader(test_case_count, test_folder_name, code, lang):
 
     destination_grader_abs_path = os.path.join('/', GRADER_FILE_NAME)
     destination_temp_file_abs_path = os.path.join('/', 'sol' + grader.FILE_EXTENSION)
-    print(destination_temp_file_abs_path)
-    docker_command = (f"docker run -d"  # run docker and get the ID of the container
-                      f" -v {challenge_tests_folder_abs_path}:{destination_tests_folder}:ro"
-                      f" -v {grader_file_abs_path}:{destination_grader_abs_path}"
-                      f" -v {temp_file_abs_path}:{destination_temp_file_abs_path}"
-                      f" {docker_image.id} python {destination_grader_abs_path} sol {test_case_count} {lang}")
 
-    ps = subprocess.Popen(docker_command.split(), stdout=subprocess.PIPE)
-    docker_id = ps.communicate()[0].decode()
-    ps = subprocess.Popen(f'docker attach --sig-proxy=false {docker_id}'.split(), stdout=subprocess.PIPE)
-    all_results = ps.communicate()
-    results: str = all_results[0].decode().split('\n')[-2]
-    # remove the docker container
+    docker_command = (
+        f"docker run -d"  # run docker and get the ID of the container
+        f" -v {challenge_tests_folder_abs_path}:{destination_tests_folder}:ro"  # copy the test .txt files over
+        f" -v {grader_file_abs_path}:{destination_grader_abs_path}"  # copy grader.py over
+        f" -v {temp_file_abs_path}:{destination_temp_file_abs_path}"  # copy the file with the code in it over
+        # select the image and run grader.py in it with the arguments {solution path} {test case count} {language}
+        f" {docker_image.id} python {destination_grader_abs_path} sol {test_case_count} {lang}")
+
+    docker_id_ps_res: tuple = subprocess.Popen(docker_command.split(),
+                                               stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+    if docker_id_ps_res[1] != b'':
+        raise Exception(f'Error while running the container: {docker_id_ps_res[1]}')
+
+    docker_id = docker_id_ps_res[0].decode()
+
+    process_results: tuple = subprocess.Popen(  # attach to the container and read the results
+        f'docker attach --sig-proxy=false {docker_id}'.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    if process_results[1] != b'':
+        raise Exception(f'Error while attaching to docker container {docker_id}.\n{process_results[1].decode()}')
+
+    results: str = process_results[0].decode().split('\n')[-2]
+
+    # remove the docker container and the file with code
     subprocess.Popen(f'docker rm -f {docker_id}'.split()).communicate()
     delete_file(temp_file_name)
 
-    results = json.loads(results)
-    return results
+    return json.loads(results)
 
+@app.task
+def run_grader_task(test_case_count, test_folder_name, code, lang) -> dict:
+    """
+    Runs a celery task for the grader, after which saves the result to the DB (by returning the value)
+    Note: The Grader runs in Docker and prints out the results in a JSON format at the end.
+          That is why we get them by accessing [-2] from the stdout output
+    """
+    return run_grader(test_case_count, test_folder_name, code, lang)

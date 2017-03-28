@@ -1,4 +1,10 @@
+"""
+The logic which grades input files is here. This file is intended to be ran solely from a Docker container,
+where the input/output.txt files are in the same folder as the solution file with the code in it
+"""
+
 import os
+import sys
 import uuid
 import subprocess
 import json
@@ -34,22 +40,30 @@ RUSTLANG_TIMEOUT_SECONDS = 5
 RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
 RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
 RUSTLANG_FILE_EXTENSION = '.rs'
-
+RUSTLANG_UNFRIENDLY_ERROR_MESSAGE = "note: Run with `RUST_BACKTRACE=1`"  # error message that is of no interest to the user
 CPP_TIMEOUT_SECONDS = 4
 CPP_FILE_EXTENSION = '.cpp'
 
 
+def main():
+    """
+    This main method is called exclusively while in the Docker container.
+    Sample program usage - python3 grader.py {solution_file} {test_count} {language}
+                        ex: python3 grader.py /home/solution.rs 5 Rust
+    """
+    LANGUAGE_GRADERS = {
+        PYTHONLANG_NAME: PythonGrader,
+        RUSTLANG_NAME: RustGrader,
+        CPPLANG_NAME: CppGrader
+    }
+    solution_file = sys.argv[1]
+    test_count = int(sys.argv[2])
+    language = sys.argv[3]
 
-def cleanup_rust_error_message(error_message: str) -> str:
-    """ Removes unecessary information from a Rust error message, making it more user friendly"""
-    unfriendly_emsg = "note: Run with `RUST_BACKTRACE=1`"  # it is always at the end
+    grader = LANGUAGE_GRADERS[language](test_count, solution_file)
 
-    if unfriendly_emsg in error_message:
-        emsg_idx = error_message.index(unfriendly_emsg)
-        error_message = error_message[:emsg_idx]
-
-    return error_message
-
+    # Print out the results so that the main program running docker can get the information
+    print(grader.grade_solution())
 
 
 class GraderTestCase:
@@ -64,9 +78,9 @@ class BaseGrader:
         the temp_file_name: ex: "solution.py", "solution.cpp" etc
 
     It has implemented methods that
-        finds the tests for the given challenge
-        reads the tests
-        grades all the tests
+        finds the tests for the given challenge (expected to be in the same folder and named by convention)
+        reads the tests (and saves their contents in a input/output string lists)
+        grades all the tests (by running the code and comparing the output to the expected output)
     """
     def __init__(self, test_case_count, temp_file_name):
         self.test_case_count = test_case_count
@@ -110,9 +124,8 @@ class BaseGrader:
         Find the tests and return two lists, one with the input files and the other with the output files,
             sorted by name
         """
-        # challenge_tests_folder: str = os.path.join(TESTS_FOLDER_NAME, self.test_folder_name)
-        # if not os.path.isdir(challenge_tests_folder):
-        #     raise Exception(f'The path {challenge_tests_folder} is invalid!')
+        if not os.path.isdir(TESTS_FOLDER_NAME):
+            raise Exception(f'The path {challenge_tests_folder} is invalid!')
 
         # Read  the files in the directory
         input_files, output_files = [], []
@@ -121,10 +134,10 @@ class BaseGrader:
                 input_files.append(file)
             elif file.name.startswith('output'):
                 output_files.append(file)
-        # There must be two files for every test case
         print("#", input_files)
         print("#", output_files)
         files_len = len(input_files) + len(output_files)
+        # There must be two files for every test case
         if files_len != (2*self.test_case_count) or files_len % 2 != 0:
             raise Exception('Invalid input/output file count!')
 
@@ -142,7 +155,7 @@ class BaseGrader:
         self.test_cases = []
         inp_file_count, out_file_count = len(sorted_input_files), len(sorted_output_files)
         if inp_file_count != out_file_count:
-            raise Exception(f'Input/Output files have different lengths! '
+            raise Exception(f'Input/Output files are not in pairs! '
                             f'\nInput:{inp_file_count}\nOutput:{out_file_count}')
 
         for idx in range(inp_file_count):
@@ -335,6 +348,14 @@ class CppGrader(CompilableLangGrader):
             self.compiled = True
             self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
 
+    def cleanup_error_message(self, error_msg) -> str:
+        """ Removes unecessary information from a Rust error message, making it more user friendly"""
+        if RUSTLANG_UNFRIENDLY_ERROR_MESSAGE in error_msg:
+            emsg_idx = error_msg.index(unfriendly_emsg)
+            error_msg = error_msg[:emsg_idx]  # it is always at the end
+
+        return error_msg
+
 
 class PythonGrader(InterpretableLangGrader):
     """
@@ -346,16 +367,4 @@ class PythonGrader(InterpretableLangGrader):
 
 
 if __name__ == '__main__':
-    LANGUAGE_GRADERS = {
-        PYTHONLANG_NAME: PythonGrader,
-        RUSTLANG_NAME: RustGrader,
-        CPPLANG_NAME: CppGrader
-    }
-    print(SITE_ROOT)
-    import sys
-    solution_file = sys.argv[1]
-    test_count = int(sys.argv[2])
-    language = sys.argv[3]
-    p = LANGUAGE_GRADERS[language](test_count, solution_file)
-    # p = PythonGrader(test_count, solution_file)
-    print(p.grade_solution())
+    main()
