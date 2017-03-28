@@ -30,7 +30,9 @@ GRADER_TEST_RESULT_ERROR_MESSAGE_KEY = 'error_message'
 GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
 
 RUSTLANG_TIMEOUT_SECONDS = 5
+# TODO: Maybe think of a smarter way to go on about this or at least limit user input
 RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
+RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
 RUSTLANG_FILE_EXTENSION = '.rs'
 
 CPP_TIMEOUT_SECONDS = 4
@@ -305,7 +307,7 @@ class RustGrader(CompilableLangGrader):
         """
         Return a boolean indicating whether compilation was successful
         """
-        return not (bool(error_message) or RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message)
+        return not (bool(error_message) and (RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message or RUSTLANG_ERROR_MESSAGE_SNIPPET_2 in error_message))
 
 
 class CppGrader(CompilableLangGrader):
