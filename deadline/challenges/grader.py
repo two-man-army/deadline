@@ -305,7 +305,7 @@ class RustGrader(CompilableLangGrader):
         """
         Return a boolean indicating whether compilation was successful
         """
-        return not (bool(error_message) and RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message)
+        return not (bool(error_message) or RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message)
 
 
 class CppGrader(CompilableLangGrader):
