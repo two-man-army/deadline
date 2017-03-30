@@ -1,16 +1,69 @@
+"""
+The logic which grades input files is here. This file is intended to be ran solely from a Docker container,
+where the input/output.txt files are in the same folder as the solution file with the code in it
+"""
+
 import os
+import sys
 import uuid
 import subprocess
 import json
 
-from constants import (
-    GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
-    GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE,
-    SITE_ROOT, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_ERROR_MESSAGE_SNIPPET, TESTS_FOLDER_NAME, RUSTLANG_FILE_EXTENSION,
-    CPP_FILE_EXTENSION, CPP_TIMEOUT_SECONDS)
-from challenges.helper import delete_file
-from challenges.helper import cleanup_rust_error_message
-from challenges.models import Submission, Challenge
+# from constants import (
+#     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
+#     GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_COMPILE_FAILURE,
+#     SITE_ROOT, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_ERROR_MESSAGE_SNIPPET, TESTS_FOLDER_NAME, RUSTLANG_FILE_EXTENSION,
+#     CPP_FILE_EXTENSION, CPP_TIMEOUT_SECONDS)
+import os.path
+
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait between submissions
+MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
+TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds tests for challenges
+
+
+RUSTLANG_NAME = 'Rust'
+PYTHONLANG_NAME = 'Python'
+CPPLANG_NAME = 'C++'
+
+# Keys for the object returned by the grader's AsyncResult function
+GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
+GRADER_TEST_RESULT_SUCCESS_KEY = 'success'
+GRADER_TEST_RESULT_TIME_KEY = 'time'
+GRADER_TEST_RESULT_DESCRIPTION_KEY = 'description'
+GRADER_TEST_RESULT_TRACEBACK_KEY = 'traceback'
+GRADER_TEST_RESULT_ERROR_MESSAGE_KEY = 'error_message'
+GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
+
+RUSTLANG_TIMEOUT_SECONDS = 5
+# TODO: Maybe think of a smarter way to go on about this or at least limit user input
+RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
+RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
+RUSTLANG_FILE_EXTENSION = '.rs'
+RUSTLANG_UNFRIENDLY_ERROR_MESSAGE = "note: Run with `RUST_BACKTRACE=1`"  # error message that is of no interest to the user
+CPP_TIMEOUT_SECONDS = 4
+CPP_FILE_EXTENSION = '.cpp'
+
+
+def main():
+    """
+    This main method is called exclusively while in the Docker container.
+    Sample program usage - python3 grader.py {solution_file} {test_count} {language}
+                        ex: python3 grader.py /home/solution.rs 5 Rust
+    """
+    LANGUAGE_GRADERS = {
+        PYTHONLANG_NAME: PythonGrader,
+        RUSTLANG_NAME: RustGrader,
+        CPPLANG_NAME: CppGrader
+    }
+    solution_file = sys.argv[1]
+    test_count = int(sys.argv[2])
+    language = sys.argv[3]
+
+    grader = LANGUAGE_GRADERS[language](test_count, solution_file)
+
+    # Print out the results so that the main program running docker can get the information
+    print(grader.grade_solution())
 
 
 class GraderTestCase:
@@ -21,23 +74,25 @@ class GraderTestCase:
 
 class BaseGrader:
     """
+    Note: This is not functional on its own!
+
      Base Grader class which has information about
-        code
-        the code file name: ex: "solution.py", "solution.cpp" etc
-        the code file's absolute path
-        the folder in which the tests for the challenge are stored
+        the temp_file_name: ex: "solution.py", "solution.cpp" etc
+
     It has implemented methods that
-        create the solution file with the code in it
-        finds the tests for the given challenge
+        finds the tests for the given challenge (expected to be in the same folder and named by convention)
+        reads the tests (and saves their contents in a input/output string lists)
+        grades all the tests (by running the code and comparing the output to the expected output)
     """
-    def __init__(self, test_case_count, test_folder_name, code: str):
+    def __init__(self, test_case_count, temp_file_name):
         self.test_case_count = test_case_count
-        self.test_folder_name = test_folder_name
-        self.code = code
-        self.temp_file_name = None
-        self.temp_file_abs_path = None
+
+        self.test_folder_name = temp_file_name
+        self.unique_name = temp_file_name
+
+        self.temp_file_name = temp_file_name + self.FILE_EXTENSION
+        self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
         self.read_input = None
-        self.unique_name = None
         self.test_cases = []
 
     def grade_solution(self):
@@ -66,38 +121,25 @@ class BaseGrader:
 
         return json.dumps(overall_dict)
 
-    def create_solution_file(self):
-        """ Creates a temporary file which will represent the code """
-        # Create a unique file name and their paths for later deletion
-        self.unique_name = uuid.uuid4().hex
-        self.temp_file_name = self.unique_name + self.FILE_EXTENSION
-        self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
-
-        # write the code to it
-        with open(self.temp_file_name, 'w') as temp_file:
-            temp_file.write(self.code)
-            temp_file.flush()
-            os.fsync(temp_file.fileno())
-
     def find_tests(self) -> [os.DirEntry]:
         """
         Find the tests and return two lists, one with the input files and the other with the output files,
             sorted by name
         """
-        challenge_tests_folder: str = os.path.join(TESTS_FOLDER_NAME, self.test_folder_name)
-        if not os.path.isdir(challenge_tests_folder):
-            raise Exception(f'The path {challenge_tests_folder} is invalid!')
+        if not os.path.isdir(TESTS_FOLDER_NAME):
+            raise Exception(f'The path {TESTS_FOLDER_NAME} is invalid!')
 
         # Read  the files in the directory
         input_files, output_files = [], []
-        for file in os.scandir(challenge_tests_folder):
+        for file in os.scandir(TESTS_FOLDER_NAME):
             if file.name.startswith('input'):
                 input_files.append(file)
             elif file.name.startswith('output'):
                 output_files.append(file)
-
-        # There must be two files for every test case
+        print("#", input_files)
+        print("#", output_files)
         files_len = len(input_files) + len(output_files)
+        # There must be two files for every test case
         if files_len != (2*self.test_case_count) or files_len % 2 != 0:
             raise Exception('Invalid input/output file count!')
 
@@ -115,16 +157,12 @@ class BaseGrader:
         self.test_cases = []
         inp_file_count, out_file_count = len(sorted_input_files), len(sorted_output_files)
         if inp_file_count != out_file_count:
-            raise Exception(f'Input/Output files have different lengths! '
+            raise Exception(f'Input/Output files are not in pairs! '
                             f'\nInput:{inp_file_count}\nOutput:{out_file_count}')
-
-        for idx in range(inp_file_count):
+        for input_file, output_file in zip(sorted_input_files, sorted_output_files):
             """ Since the files are sorted by name, an input file should be followed by an output file
                 i.e  input-01.txt output-01.txt input-02.txt output-02.txt """
-            input_file = sorted_input_files[idx]
-            output_file = sorted_output_files[idx]
-
-            if 'input' not in input_file.name or 'output' not in output_file.name:
+            if not input_file.name.startswith('input') or not output_file.name.startswith('output'):
                 raise Exception('Invalid input/output file names when reading them.')
 
             with open(os.path.abspath(input_file.path)) as f:
@@ -142,7 +180,7 @@ class BaseGrader:
 
     def test_solution(self, test_case: GraderTestCase) -> dict:
         """
-        Runs a single process to test a solutio
+        Runs a single process to test a solution
         :param test_case:
         :return:
         """
@@ -156,17 +194,15 @@ class BaseGrader:
             'traceback': ""
         }
 
-        # TODO: Docker
         # Run the program
         program_process = self.run_program_process()
-        # program_process = subprocess.Popen([self.temp_exe_abs_path],
-        #                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
             # Enter the input and wait for the response
             results = program_process.communicate(input=input_str.encode(), timeout=self.TIMEOUT_SECONDS)
             error_message = results[1].decode()
         except subprocess.TimeoutExpired:
+            # TODO: Add timed_out bool and maybe attach it to error_message instead of traceback
             error_message = f'Timed out after {self.TIMEOUT_SECONDS} seconds'
             program_process.kill()
 
@@ -192,8 +228,8 @@ class CompilableLangGrader(BaseGrader):
         executable file created - name and absolute path
         whether compilation was successful
     """
-    def __init__(self, test_case_count, test_folder_name, code: str):
-        super().__init__(test_case_count, test_folder_name, code)
+    def __init__(self, test_case_count, test_folder_name):
+        super().__init__(test_case_count, test_folder_name)
         self.temp_exe_file_name = None
         self.temp_exe_abs_path = None
         self.compiled = False
@@ -203,48 +239,45 @@ class CompilableLangGrader(BaseGrader):
         """
         This function does the whole process of grading a submission
         """
-        print('Running solution')
-        self.create_solution_file()
+        print('# Running solution')
+        # self.create_solution_file()
         sorted_input_files, sorted_output_files = self.find_tests()
-        print(f'Found tests at {sorted_input_files} {sorted_output_files}')
+        print(f'# Found tests at {sorted_input_files} {sorted_output_files}')
         self.read_tests(sorted_input_files, sorted_output_files)
-        print('Compiling')
+        print('# Compiling')
         self.compile()
-        delete_file(self.temp_file_abs_path)
 
         if self.compiled:
             result = self.grade_all_tests()
-            delete_file(self.temp_exe_abs_path)
-
             return result
         else:
-            print('COULD NOT COMPILE')
+            print('# COULD NOT COMPILE')
             print(self.compile_error_message)
-            return {GRADER_COMPILE_FAILURE: self.compile_error_message}
+            return json.dumps({GRADER_COMPILE_FAILURE: self.compile_error_message})
 
     def compile(self):
         """
         Compiles the program
         """
         compiler_proc = subprocess.Popen(
-            self.COMPILE_ARGS + [self.temp_file_name],
+            self.COMPILE_ARGS + [self.temp_file_abs_path],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
         compiler_proc.kill()
         error_message = compile_result[1].decode()
-        # if error_message and RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message:
 
         if not self.has_compiled(error_message):  # There is an error while compiling
             self.compiled = False
             self.compile_error_message = error_message
         else:
             self.compiled = True
-            self.temp_exe_file_name = self.unique_name
-            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
+            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
 
     def run_program_process(self):
-        return subprocess.Popen([self.temp_exe_abs_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        """ Start the program and return the process object. """
+        return subprocess.Popen([self.temp_exe_abs_path],
+                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def has_compiled(self, error_message) -> bool:
         """
@@ -262,15 +295,14 @@ class InterpretableLangGrader(BaseGrader):
         """
         This function does the whole process of grading a submission
         """
-        print('Running solution')
-        self.create_solution_file()
+        print('# Running solution')
+
         sorted_input_files, sorted_output_files = self.find_tests()
-        print(f'Found tests at {sorted_input_files} {sorted_output_files}')
-        self.read_tests(sorted_input_files, sorted_output_files)
+        print(f'# Found tests at {sorted_input_files} {sorted_output_files}')
+        self.read_tests(sorted_input_files, sorted_output_files)  # fills variables with the input/expected output
 
         result = self.grade_all_tests()
 
-        delete_file(self.temp_file_abs_path)
         return result
 
     def run_program_process(self):
@@ -287,20 +319,21 @@ class RustGrader(CompilableLangGrader):
         """
         Return a boolean indicating whether compilation was successful
         """
-        return not (bool(error_message) and RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message)
+        return not (bool(error_message) and (RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message or RUSTLANG_ERROR_MESSAGE_SNIPPET_2 in error_message))
 
 
 class CppGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = CPP_TIMEOUT_SECONDS
     COMPILE_ARGS = ['g++', '-std=c++11', '-o', ]
     FILE_EXTENSION = CPP_FILE_EXTENSION
+
     def compile(self):
         """
         Compiles the program
         """
         compiler_proc = subprocess.Popen(
             # need to specially tell it to compile to the same name
-            self.COMPILE_ARGS + [self.unique_name, self.temp_file_name],
+            self.COMPILE_ARGS + [self.unique_name, os.path.join(SITE_ROOT, self.temp_file_name)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         compile_result = compiler_proc.communicate()
@@ -312,8 +345,15 @@ class CppGrader(CompilableLangGrader):
             self.compile_error_message = error_message
         else:
             self.compiled = True
-            self.temp_exe_file_name = self.unique_name
-            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.temp_exe_file_name)
+            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
+
+    def cleanup_error_message(self, error_msg) -> str:
+        """ Removes unecessary information from a Rust error message, making it more user friendly"""
+        if RUSTLANG_UNFRIENDLY_ERROR_MESSAGE in error_msg:
+            emsg_idx = error_msg.index(unfriendly_emsg)
+            error_msg = error_msg[:emsg_idx]  # it is always at the end
+
+        return error_msg
 
 
 class PythonGrader(InterpretableLangGrader):
@@ -323,3 +363,7 @@ class PythonGrader(InterpretableLangGrader):
     TIMEOUT_SECONDS = 5
     FILE_EXTENSION = '.py'
     RUN_COMMAND = 'python3'
+
+
+if __name__ == '__main__':
+    main()

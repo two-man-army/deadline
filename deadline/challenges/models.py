@@ -2,6 +2,9 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from accounts.models import User
+from sql_queries import (
+    SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE,
+    SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR)
 
 
 class Language(models.Model):
@@ -36,6 +39,19 @@ class Submission(models.Model):
 
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)
+
+    @staticmethod
+    def fetch_top_submissions_for_challenge(challenge_id):
+        """
+        Returns the top-rated Submissions for a specific Challenge, one for each User
+        """
+        return Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE, params=[challenge_id])
+
+    @staticmethod
+    def fetch_last_10_submissions_for_unique_challenges_by_user(user_id):
+        """ Queries the DB for the last 10 submissions issued by the given user, grouped by the challenge """
+        return Submission.objects.raw(SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR,
+                                      params=[user_id])
 
 
 class TestCase(models.Model):

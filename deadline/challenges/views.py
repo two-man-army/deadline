@@ -12,7 +12,7 @@ from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
-from challenges.tasks import run_grader
+from challenges.tasks import run_grader_task
 from challenges.helper import grade_result, update_user_score
 from challenges.helper import update_test_cases
 
@@ -34,13 +34,11 @@ class LatestAttemptedChallengesListView(ListAPIView):
     permission_classes = (IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
-        latest_submissions = Submission.objects.raw('SELECT * '
-                                                    'FROM challenges_submission '
-                                                    'WHERE author_id = %s '
-                                                    'GROUP BY challenge_id '
-                                                    'ORDER BY created_at DESC '
-                                                    'LIMIT 10;', params=[request.user.id])
+        latest_submissions = Submission.fetch_last_10_submissions_for_unique_challenges_by_user(
+            user_id=request.user.id)
+
         latest_challenges = [submission.challenge for submission in latest_submissions]
+
         return Response(data=LimitedChallengeSerializer(latest_challenges, many=True).data)
 
 
@@ -94,16 +92,21 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'You must wait 10 more seconds before submitting a solution.'},
                                 status=400)
 
-            celery_grader_task = run_grader.delay(test_case_count=challenge.test_case_count,
-                                            test_folder_name=challenge.test_file_name,
-                                            code=code_given, lang=language.name)
+            import subprocess
+            import os
+
+            celery_grader_task = run_grader_task.delay(test_case_count=challenge.test_case_count,
+                                                  test_folder_name=challenge.test_file_name,
+                                                  code=code_given, lang=language.name)
+
             submission = Submission(code=code_given, author=request.user,
-                                    challenge=challenge, task_id=celery_grader_task.id,
+                                    challenge=challenge, task_id=celery_grader_task,
                                     language=language)
             submission.save()
 
             request.user.last_submit_at = timezone.now()
             request.user.save()
+
             # Create the test cases
             TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])
 
@@ -136,10 +139,10 @@ class SubmissionDetailView(RetrieveAPIView):
         # Query for the tests and populate if there is a result (AND they were not populated)
         submission_is_pending = any(test_case.pending for test_case in submission.testcase_set.all())
         if submission_is_pending:
-            potential_result = run_grader.AsyncResult(submission.task_id)
+            potential_result = run_grader_task.AsyncResult(submission.task_id)
             if potential_result.ready():
                 result = potential_result.get()
-                print(result)
+
                 if GRADER_COMPILE_FAILURE in result:
                     # Compiling the code has failed
                     submission.compiled = False
@@ -147,7 +150,8 @@ class SubmissionDetailView(RetrieveAPIView):
                     submission.compile_error_message = result[GRADER_COMPILE_FAILURE]
                     submission.save()
                     return super().retrieve(request, *args, **kwargs)
-                overall_results = json.loads(result)
+
+                overall_results = result
 
                 # Update the Submission's TestCases
                 update_test_cases(grader_results=overall_results[GRADER_TEST_RESULTS_RESULTS_KEY],
@@ -205,12 +209,14 @@ class TopSubmissionListView(ListAPIView):
     permission_classes = (IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
-        challenge_pk = kwargs.get('challenge_pk')
-        top_submissions = Submission.objects.raw('SELECT id, author_id, max(result_score) as maxscore '
-                                                 'FROM challenges_submission '
-                                                 'WHERE challenge_id = %s '
-                                                 'GROUP BY author_id '
-                                                 'ORDER BY maxscore DESC, created_at ASC;', params=[challenge_pk])
+        challenge_pk = kwargs.get('challenge_pk', '')
+        try:
+            Challenge.objects.get(pk=challenge_pk)
+        except Challenge.DoesNotExist:
+            return Response(data={'error': f'Invalid challenge id {challenge_pk}!'}, status=400)
+
+        top_submissions = Submission.fetch_top_submissions_for_challenge(challenge_id=challenge_pk)
+
         return Response(data=SubmissionSerializer(top_submissions, many=True).data)
 
 
