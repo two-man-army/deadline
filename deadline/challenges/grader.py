@@ -74,6 +74,8 @@ class GraderTestCase:
 
 class BaseGrader:
     """
+    Note: This is not functional on its own!
+
      Base Grader class which has information about
         the temp_file_name: ex: "solution.py", "solution.cpp" etc
 
@@ -125,7 +127,7 @@ class BaseGrader:
             sorted by name
         """
         if not os.path.isdir(TESTS_FOLDER_NAME):
-            raise Exception(f'The path {challenge_tests_folder} is invalid!')
+            raise Exception(f'The path {TESTS_FOLDER_NAME} is invalid!')
 
         # Read  the files in the directory
         input_files, output_files = [], []
@@ -182,7 +184,7 @@ class BaseGrader:
 
     def test_solution(self, test_case: GraderTestCase) -> dict:
         """
-        Runs a single process to test a solutio
+        Runs a single process to test a solution
         :param test_case:
         :return:
         """
