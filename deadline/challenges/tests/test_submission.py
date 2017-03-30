@@ -8,6 +8,7 @@ from rest_framework.renderers import JSONRenderer
 
 from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer
+from challenges.tests.factories import ChallengeFactory, SubmissionFactory
 from accounts.models import User
 from unittest.mock import patch
 
@@ -98,6 +99,24 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
     def test_fetch_top_submissions_no_submissions_should_be_empty(self):
         received_submissions = list(Submission.fetch_top_submissions_for_challenge(self.challenge.id))
         self.assertEqual([], received_submissions)
+
+    def test_fetch_last_10_submissions_for_unique_challenges_by_author(self):
+        """ The method should return the last 10 submissions for unique challenges by the author """
+        for _ in range(20):
+            # Create 20 submissions
+            SubmissionFactory(author=self.auth_user)
+        for _ in range(10):
+            # Create last 10 submissions for one challenge
+            SubmissionFactory(author=self.auth_user, challenge=self.challenge)
+
+        latest_unique_submissions = Submission.fetch_last_10_submissions_for_unique_challenges_by_user(user_id=self.auth_user.id)
+
+        # the first one should be for self.challenge, since we made it last
+        self.assertEqual(latest_unique_submissions[0].challenge, self.challenge)
+
+        # they should all be for unique challenges
+        unique_challenge_ids = set([s.challenge.id for s in latest_unique_submissions])
+        self.assertEqual(10, len(unique_challenge_ids))
 
 
 class SubmissionViewsTest(APITestCase):
