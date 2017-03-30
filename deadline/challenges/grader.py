@@ -159,14 +159,10 @@ class BaseGrader:
         if inp_file_count != out_file_count:
             raise Exception(f'Input/Output files are not in pairs! '
                             f'\nInput:{inp_file_count}\nOutput:{out_file_count}')
-
-        for idx in range(inp_file_count):
+        for input_file, output_file in zip(sorted_input_files, sorted_output_files):
             """ Since the files are sorted by name, an input file should be followed by an output file
                 i.e  input-01.txt output-01.txt input-02.txt output-02.txt """
-            input_file = sorted_input_files[idx]
-            output_file = sorted_output_files[idx]
-
-            if 'input' not in input_file.name or 'output' not in output_file.name:
+            if not input_file.name.startswith('input') or not output_file.name.startswith('output'):
                 raise Exception('Invalid input/output file names when reading them.')
 
             with open(os.path.abspath(input_file.path)) as f:
