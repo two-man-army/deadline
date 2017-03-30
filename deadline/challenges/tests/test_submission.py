@@ -9,6 +9,7 @@ from rest_framework.renderers import JSONRenderer
 from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer
 from accounts.models import User
+from unittest.mock import patch
 
 
 class SubmissionModelTest(TestCase):
@@ -18,6 +19,7 @@ class SubmissionModelTest(TestCase):
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
         self.python_language = Language(name="Python");  self.python_language.save()
+        self.rust_language = Language(name="Rust"); self.rust_language.save()
         self.sample_desc.save()
         challenge_cat = MainCategory('Tests')
         challenge_cat.save()
@@ -67,6 +69,35 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
                          + '"compiled":true,"compile_error_message":"","language":"Python"}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
+
+    def test_fetch_top_submissions(self):
+        """
+        The method should return the top submissions for a given challenge,
+            selecting the top submission for each user
+        """
+        """ Arrange """
+        better_submission = Submission(language=self.rust_language, challenge=self.challenge, author=self.auth_user,
+                                       code=self.sample_code, result_score=50); better_submission.save()
+        # Second user with submissions
+        _s_user = User(username='Seocnd user', password='123', email='EC@abv.bg', score=123); _s_user.save()
+        _submission = Submission(language=self.python_language, challenge=self.challenge, author=_s_user,
+                                 code=self.sample_code, result_score=50); _submission.save();
+        top_submission = Submission(language=self.python_language, challenge=self.challenge, author=_s_user,
+                                    code=self.sample_code, result_score=51); top_submission.save()
+        # Third user with equal to first submission
+        _t_user = User(username='ThirdGuy', password='123', email='TR@abv.bg', score=123); _t_user.save()
+        tr_sub = Submission(language=self.python_language, challenge=self.challenge, author=_t_user,
+                            code=self.sample_code, result_score=50); tr_sub.save()
+
+        expected_submissions = [top_submission, better_submission, tr_sub]  # ordered by score, then by date (oldest first)
+        """ Act """
+        received_submissions = list(Submission.fetch_top_submissions_for_challenge(self.challenge.id))
+        """ Assert """
+        self.assertEqual(expected_submissions, received_submissions)
+
+    def test_fetch_top_submissions_no_submissions_should_be_empty(self):
+        received_submissions = list(Submission.fetch_top_submissions_for_challenge(self.challenge.id))
+        self.assertEqual([], received_submissions)
 
 
 class SubmissionViewsTest(APITestCase):
@@ -200,8 +231,19 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
-        print(JSONRenderer().render(response.data))
         self.assertEqual(response.data, SubmissionSerializer([top_submission, better_submission], many=True).data)
+
+    def test_get_top_submissions_invalid_id(self):
+        response = self.client.get('/challenges/33/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], f'Invalid challenge id 33!')
+
+    @patch('challenges.models.Submission.fetch_top_submissions_for_challenge')
+    def test_get_top_submissions_calls_Submission_method(self, mock_top_submissions):
+        """ Should call the submissions method for fetching the top challenges """
+        self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
+        mock_top_submissions.assert_called_once_with(challenge_id=str(self.challenge.id))
 
 
 class LatestSubmissionsViewTest(TestCase):

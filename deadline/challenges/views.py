@@ -101,8 +101,6 @@ class SubmissionCreateView(CreateAPIView):
                                                   test_folder_name=challenge.test_file_name,
                                                   code=code_given, lang=language.name)
 
-
-
             submission = Submission(code=code_given, author=request.user,
                                     challenge=challenge, task_id=celery_grader_task,
                                     language=language)
@@ -213,12 +211,14 @@ class TopSubmissionListView(ListAPIView):
     permission_classes = (IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
-        challenge_pk = kwargs.get('challenge_pk')
-        top_submissions = Submission.objects.raw('SELECT id, author_id, max(result_score) as maxscore '
-                                                 'FROM challenges_submission '
-                                                 'WHERE challenge_id = %s '
-                                                 'GROUP BY author_id '
-                                                 'ORDER BY maxscore DESC, created_at ASC;', params=[challenge_pk])
+        challenge_pk = kwargs.get('challenge_pk', '')
+        try:
+            Challenge.objects.get(pk=challenge_pk)
+        except Challenge.DoesNotExist:
+            return Response(data={'error': f'Invalid challenge id {challenge_pk}!'}, status=400)
+
+        top_submissions = Submission.fetch_top_submissions_for_challenge(challenge_id=challenge_pk)
+
         return Response(data=SubmissionSerializer(top_submissions, many=True).data)
 
 
