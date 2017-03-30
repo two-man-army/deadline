@@ -1,5 +1,5 @@
 import json
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch, mock_open
 
 from django.test import TestCase
 
@@ -7,15 +7,18 @@ from constants import TESTS_FOLDER_NAME
 from challenges.grader import RustGrader, GraderTestCase, BaseGrader
 
 
+class DirEntryMock(Mock):
+    def __init__(self, name, path=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = name
+        self.path = path
+
+    def __lt__(self, other):
+        return self.name < other.name
+
+
 class BaseGraderTests(TestCase):
     def setUp(self):
-        class DirEntryMock(Mock):
-            def __init__(self, name, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self.name = name
-            def __lt__(self, other):
-                return self.name < other.name
-
         BaseGrader.FILE_EXTENSION = '.test'
         self.test_case_count = 2
         self.temp_file_name = 'testfile.txt'
@@ -49,10 +52,8 @@ class BaseGraderTests(TestCase):
         scandir_mock.assert_called_once_with(TESTS_FOLDER_NAME)
         isdir_mock.assert_called_once_with(TESTS_FOLDER_NAME)
 
+    @patch('challenges.grader.TESTS_FOLDER_NAME', 'InvA4$LiDaN$m')
     def test_find_tests_invalid_path_should_raise(self):
-        # Patch an invalid test folder name
-        import challenges.grader
-        challenges.grader.TESTS_FOLDER_NAME = 'InvA4$LiDaN$m'
         expected_message = 'The path InvA4$LiDaN$m is invalid!'
 
         try:
@@ -74,6 +75,45 @@ class BaseGraderTests(TestCase):
         except Exception as e:
             self.assertEqual(str(e), expected_error_message)
 
+    def test_read_tests_invalid_file_count_should_raise(self):
+        # It expects 2 input files and 2 output files, entering 3 and 2 should raise an error
+        try:
+            self.grader.read_tests(sorted_input_files=[MagicMock()] * 3, sorted_output_files=[MagicMock()] * 2)
+            self.fail('Should have raised an exception')
+        except Exception as e:
+            self.assertEqual(str(e), (f'Input/Output files are not in pairs! \nInput:3\nOutput:2'))
+
+    @patch('challenges.grader.open')
+    @patch('os.path.abspath')
+    def test_read_tests_invalid_file_name_should_raise(self, abspath_mock, open_mock):
+        expected_error_message = 'Invalid input/output file names when reading them.'
+        input_files, output_files = [DirEntryMock(name='OPSZSomeThinginput-01.txt', path='a'), DirEntryMock(name='input-02.txt', path='b')], [DirEntryMock(name='output-01.txt', path='c'), DirEntryMock(name='output-02.txt', path='d')]
+
+        try:
+            self.grader.read_tests(input_files, output_files)
+            self.fail("Should have raised an exception")
+        except Exception as e:
+            self.assertEqual(str(e), expected_error_message)
+
+    @patch('challenges.grader.open')
+    @patch('os.path.abspath')
+    def test_read_tests_work_correctly(self, abspath_mock, open_mock):
+        abspath_mock.return_value = lambda x: x
+        self.assertEqual(len(self.grader.test_cases), 0)  # the read_tests() method should fill the test_cases var
+        self.assertFalse(self.grader.read_input)
+        input_files, output_files = [DirEntryMock(name='input-01.txt', path='a'), DirEntryMock(name='input-02.txt', path='b')], [DirEntryMock(name='output-01.txt', path='c'), DirEntryMock(name='output-02.txt', path='d')]
+
+
+        self.grader.read_tests(sorted_input_files=input_files, sorted_output_files=output_files)
+
+        # assert the abspath and open was called with each of the files
+        for ip_file in input_files:
+            # open(os.path.abspath(input_file.path)) is the actual code
+            abspath_mock.assert_any_call(ip_file.path)
+            open_mock.assert_any_call(abspath_mock(ip_file.path))
+        self.assertEqual(len(self.grader.test_cases), 2)
+        self.assertTrue(all(isinstance(tc, GraderTestCase) for tc in self.grader.test_cases))
+        self.assertTrue(self.grader.read_input)
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
 # class RustGraderTest(TestCase):
