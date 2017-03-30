@@ -1,5 +1,14 @@
 import factory
-from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission
+from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User
+
+
+class UserFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = User
+
+    username = factory.Faker('name')
+    email = factory.Sequence(lambda n: 'user{0}@somewhere.com'.format(n))
+    password = factory.Faker('password')
 
 
 class MainCategoryFactory(factory.DjangoModelFactory):
@@ -28,7 +37,7 @@ class LanguageFactory(factory.DjangoModelFactory):
     class Meta:
         model = Language
 
-    name= factory.Sequence(lambda n: 'LANG{0}'.format(n))
+    name = factory.Sequence(lambda n: 'LANG{0}'.format(n))
 
 
 class ChallengeFactory(factory.DjangoModelFactory):

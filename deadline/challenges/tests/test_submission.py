@@ -8,17 +8,14 @@ from rest_framework.renderers import JSONRenderer
 
 from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer
-from challenges.tests.factories import ChallengeFactory, SubmissionFactory
+from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from accounts.models import User
 from unittest.mock import patch
 
 
 class SubmissionModelTest(TestCase):
     def setUp(self):
-        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
-                                                output_format='something', constraints='some',
-                                                sample_input='input sample', sample_output='output sample',
-                                                explanation='gotta push it to the limit')
+        self.sample_desc = ChallengeDescFactory()
         self.python_language = Language(name="Python");  self.python_language.save()
         self.rust_language = Language(name="Rust"); self.rust_language.save()
         self.sample_desc.save()
@@ -31,7 +28,7 @@ class SubmissionModelTest(TestCase):
         self.challenge.save()
         self.challenge_name = self.challenge.name
 
-        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        self.auth_user = UserFactory()
         self.auth_user.save()
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
         self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
@@ -77,23 +74,19 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
             selecting the top submission for each user
         """
         """ Arrange """
-        better_submission = Submission(language=self.rust_language, challenge=self.challenge, author=self.auth_user,
-                                       code=self.sample_code, result_score=50); better_submission.save()
+        f_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
         # Second user with submissions
-        _s_user = User(username='Seocnd user', password='123', email='EC@abv.bg', score=123); _s_user.save()
-        _submission = Submission(language=self.python_language, challenge=self.challenge, author=_s_user,
-                                 code=self.sample_code, result_score=50); _submission.save();
-        top_submission = Submission(language=self.python_language, challenge=self.challenge, author=_s_user,
-                                    code=self.sample_code, result_score=51); top_submission.save()
+        s_user = UserFactory()
+        _submission = SubmissionFactory(author=s_user, challenge=self.challenge)
+        top_submission = SubmissionFactory(author=s_user, challenge=self.challenge, result_score=51)
         # Third user with equal to first submission
-        _t_user = User(username='ThirdGuy', password='123', email='TR@abv.bg', score=123); _t_user.save()
-        tr_sub = Submission(language=self.python_language, challenge=self.challenge, author=_t_user,
-                            code=self.sample_code, result_score=50); tr_sub.save()
+        t_user = UserFactory()
+        tr_sub = SubmissionFactory(challenge=self.challenge, author=t_user, result_score=50)
 
-        expected_submissions = [top_submission, better_submission, tr_sub]  # ordered by score, then by date (oldest first)
-        """ Act """
+        expected_submissions = [top_submission, f_submission, tr_sub]  # ordered by score, then by date (oldest first)
+
         received_submissions = list(Submission.fetch_top_submissions_for_challenge(self.challenge.id))
-        """ Assert """
+
         self.assertEqual(expected_submissions, received_submissions)
 
     def test_fetch_top_submissions_no_submissions_should_be_empty(self):
@@ -274,16 +267,10 @@ class LatestSubmissionsViewTest(TestCase):
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
 
-        self.d1 = ChallengeDescription(1, 'What Up', 'Smt', 'smt', 'some', 'is', 'os', 'gotta push it to the limit')
-        self.c1 = Challenge(1, 'Hello', self.d1.id, 5, 10, 'h', 3, self.sub_cat)
+        self.c1 = ChallengeFactory(category=self.sub_cat)
+        self.c2 = ChallengeFactory(category=self.sub_cat)
+        self.c3 = ChallengeFactory(category=self.sub_cat)
 
-        self.d2 = ChallengeDescription(2, 'What Up', 'Smt', 'smt', 'some', 'is', 'os', 'gotta push it to the limit')
-        self.c2 = Challenge(2, 'Second', self.d2.id, 5, 10, 'h', 3, self.sub_cat)
-
-        self.d3 = ChallengeDescription(3, 'What Up', 'Smt', 'smt', 'some', 'is', 'os', 'gotta push it to the limit')
-        self.c3 = Challenge(3, 'Third', self.d3.id, 5, 10, 'h', 3, self.sub_cat)
-
-        self.d1.save(); self.c1.save(); self.d2.save(); self.c2.save(); self.d3.save(); self.c3.save()
         self.auth_user = User(username='123', password='123', email='123Sm2@abv.bg', score=123)
         self.auth_user.save()
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
@@ -291,14 +278,10 @@ class LatestSubmissionsViewTest(TestCase):
 
     def test_get_latest_challenge_submissions_from_user(self):
         """ The get_latest_submissions view should return all the latest submissions by the user distinct by their challenges"""
-        s1 = Submission(language=self.python_language, challenge=self.c1, author=self.auth_user, code=self.sample_code, result_score=10)
-        s1.save()
-        s2 = Submission(language=self.python_language, challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
-        s2.save()
-        s3 = Submission(language=self.python_language, challenge=self.c3, author=self.auth_user, code=self.sample_code, result_score=10)
-        s3.save()
-        s4 = Submission(language=self.python_language, challenge=self.c2, author=self.auth_user, code=self.sample_code, result_score=10)
-        s4.save()
+        s1 = SubmissionFactory(author=self.auth_user, challenge=self.c1)
+        s2 = SubmissionFactory(author=self.auth_user, challenge=self.c2)
+        s3 = SubmissionFactory(author=self.auth_user, challenge=self.c3)
+        s4 = SubmissionFactory(author=self.auth_user, challenge=self.c2)
 
         """ This should return a list with c2, c3, c1 ordered like that. """
         response = self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
@@ -308,6 +291,11 @@ class LatestSubmissionsViewTest(TestCase):
         # Hack for serializing the category
         expected_data = []
         for challenge in LimitedChallengeSerializer([self.c2, self.c3, self.c1], many=True).data:
-            challenge['category'] = challenge['category'].name
             expected_data.append(challenge)
         self.assertEqual(response.data, expected_data)
+
+    @patch('challenges.models.Submission.fetch_last_10_submissions_for_unique_challenges_by_user')
+    def test_assert_called_submission_method(self, method_mock):
+        """ Assert that the function calls the submission method"""
+        self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
+        method_mock.assert_called_once_with(user_id=self.auth_user.id)
