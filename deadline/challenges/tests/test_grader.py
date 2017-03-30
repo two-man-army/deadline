@@ -1,5 +1,6 @@
 import json
 from unittest.mock import MagicMock, Mock, patch, mock_open
+import subprocess
 
 from django.test import TestCase
 
@@ -114,6 +115,104 @@ class BaseGraderTests(TestCase):
         self.assertEqual(len(self.grader.test_cases), 2)
         self.assertTrue(all(isinstance(tc, GraderTestCase) for tc in self.grader.test_cases))
         self.assertTrue(self.grader.read_input)
+
+    def test_cleanup_error_message(self):
+        # It should return the same thing we passed it in the BaseGrader class
+        self.assertEqual('100xar3353fva#FCA', self.grader.cleanup_error_message('100xar3353fva#FCA'))
+
+    def test_run_program_process_should_raise_NotImplementedError(self):
+        with self.assertRaises(NotImplementedError):
+            self.grader.run_program_process()
+
+    def test_grade_solution_should_raise_NotImplementedError(self):
+        with self.assertRaises(NotImplementedError):
+            self.grader.grade_solution()
+
+    @patch('challenges.grader.BaseGrader.run_program_process')
+    def test_test_solution_expected_output_should_grade_sucessfully(self, run_process_mock):
+        self.grader.TIMEOUT_SECONDS = 10
+        test_case = GraderTestCase(input_lines='', expected_output_lines=["1, 2, 3"])
+        # Mock the process to return the expected outpu
+        communicate_mock = MagicMock()
+        communicate_mock.return_value = (b"1, 2, 3", b'')
+        process_mock = MagicMock(communicate=communicate_mock)
+        run_process_mock.return_value = process_mock
+
+        result: dict = self.grader.test_solution(test_case)
+
+        communicate_mock.assert_called_once_with(input=''.encode(), timeout=self.grader.TIMEOUT_SECONDS)
+        self.assertTrue(result['success'], True)
+        self.assertEqual(result['error_message'], '')
+        self.assertEqual(result['traceback'], '')
+
+    @patch('challenges.grader.BaseGrader.run_program_process')
+    def test_test_solution_expected_output_multiple_lines_should_grade_sucessfully(self, run_process_mock):
+        self.grader.TIMEOUT_SECONDS = 10
+        test_case = GraderTestCase(input_lines='', expected_output_lines=["1", "2", "3"])
+        # Mock the process to return the expected outpu
+        process_mock = MagicMock(communicate=lambda input, timeout: (b"1\n2\n3", b''))
+        run_process_mock.return_value = process_mock
+
+        result: dict = self.grader.test_solution(test_case)
+
+        self.assertTrue(result['success'], True)
+        self.assertEqual(result['error_message'], '')
+        self.assertEqual(result['traceback'], '')
+
+    @patch('challenges.grader.BaseGrader.run_program_process')
+    def test_test_solution_wrong_output_should_grade_as_failure(self, run_process_mock):
+        self.grader.TIMEOUT_SECONDS = 10
+        test_case = GraderTestCase(input_lines='', expected_output_lines=["1, 2, 3"])
+        # Mock the process to return the expected outpu
+        process_mock = MagicMock(communicate=lambda input, timeout: (b"1WROnG", b''))
+        run_process_mock.return_value = process_mock
+
+        result: dict = self.grader.test_solution(test_case)
+
+        self.assertEqual(result['success'], False)
+        self.assertIn('not equal', result['error_message'])
+
+    @patch('challenges.grader.BaseGrader.cleanup_error_message')
+    @patch('challenges.grader.BaseGrader.run_program_process')
+    def test_test_solution_error_message_should_grade_as_failure(self, run_process_mock, error_cleanup_mock):
+        error_msg = 'ERROR!'
+        error_cleanup_mock.return_value = error_msg
+        self.grader.TIMEOUT_SECONDS = 10
+        test_case = GraderTestCase(input_lines='', expected_output_lines=["1, 2, 3"])
+        # Mock the process to return the expected outpu
+        process_mock = MagicMock(communicate=lambda input, timeout: (b"1, 2, 3", error_msg.encode('utf-8')))
+        run_process_mock.return_value = process_mock
+
+        result: dict = self.grader.test_solution(test_case)
+
+        error_cleanup_mock.assert_called_once_with(error_msg)
+        self.assertEqual(result['success'], False)
+        self.assertEqual(result['traceback'], error_msg)
+        self.assertEqual(result['error_message'], '')
+
+
+
+    @patch('challenges.grader.BaseGrader.run_program_process')
+    def test_test_solution_time_expire_should_grade_as_failure(self, run_process_mock):
+        def raise_timeout_expired(*args, **kwargs):
+            raise subprocess.TimeoutExpired('smth', 3)
+        self.grader.TIMEOUT_SECONDS = 10
+        test_case = GraderTestCase(input_lines='', expected_output_lines=["1, 2, 3"])
+        # Mock the process to return the expected outpu
+
+        kill_mock = Mock()
+        communicate_mock = MagicMock()
+        communicate_mock.side_effect = raise_timeout_expired  # make it raise the timeout err
+        process_mock = MagicMock(communicate=communicate_mock, kill=kill_mock)
+        run_process_mock.return_value = process_mock
+
+        result: dict = self.grader.test_solution(test_case)
+
+        kill_mock.assert_called_once()
+        self.assertEqual(result['success'], False)
+        self.assertEqual(result['traceback'], f'Timed out after {self.grader.TIMEOUT_SECONDS} seconds')
+        self.assertEqual(result['error_message'], '')
+
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
 # class RustGraderTest(TestCase):

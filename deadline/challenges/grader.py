@@ -202,6 +202,7 @@ class BaseGrader:
             results = program_process.communicate(input=input_str.encode(), timeout=self.TIMEOUT_SECONDS)
             error_message = results[1].decode()
         except subprocess.TimeoutExpired:
+            # TODO: Add timed_out bool and maybe attach it to error_message instead of traceback
             error_message = f'Timed out after {self.TIMEOUT_SECONDS} seconds'
             program_process.kill()
 
