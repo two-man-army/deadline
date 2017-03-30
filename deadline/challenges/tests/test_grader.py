@@ -1,16 +1,28 @@
 import json
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
+
+from constants import TESTS_FOLDER_NAME
 from challenges.grader import RustGrader, GraderTestCase, BaseGrader
-from unittest.mock import MagicMock, Mock, patch
 
 
 class BaseGraderTests(TestCase):
     def setUp(self):
+        class DirEntryMock(Mock):
+            def __init__(self, name, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.name = name
+            def __lt__(self, other):
+                return self.name < other.name
+
         BaseGrader.FILE_EXTENSION = '.test'
-        self.test_case_count = 5
+        self.test_case_count = 2
         self.temp_file_name = 'testfile.txt'
         self.grader = BaseGrader(self.test_case_count, self.temp_file_name)
+        # MagicMock.__gt__ = lambda x, y: x.name > y.name
+        self.input_files_dir_entries = [DirEntryMock(name='input-01.txt'), DirEntryMock(name='input-02.txt'),
+                                        DirEntryMock(name='output-01.txt'), DirEntryMock(name='output-02.txt')]
 
     @patch('challenges.grader.BaseGrader.test_solution')
     def test_grade_all_tests(self, mocked_test_solution):
@@ -20,6 +32,22 @@ class BaseGraderTests(TestCase):
 
         expected_result = {'results': [42] * 10}  # should basically call test_solution 10 times
         self.assertEqual(self.grader.grade_all_tests(), json.dumps(expected_result))
+
+    @patch('challenges.grader.os.path.isdir')
+    @patch('challenges.grader.os.scandir')
+    def test_find_tests_works_correctly(self, scandir_mock, isdir_mock):
+        isdir_mock.return_value = True
+        scandir_mock.return_value = self.input_files_dir_entries
+
+        received_input_files, received_output_files = self.grader.find_tests()
+        self.assertEqual(len(received_input_files), 2)
+        self.assertEqual(len(received_output_files), 2)
+        # Assert they're sorted by name
+        self.assertEqual(received_input_files, sorted(received_input_files, key=lambda x: x.name))
+        self.assertEqual(received_output_files, sorted(received_output_files, key=lambda x: x.name))
+        # Assert the appropriate functions were called
+        scandir_mock.assert_called_once_with(TESTS_FOLDER_NAME)
+        isdir_mock.assert_called_once_with(TESTS_FOLDER_NAME)
 
     def test_find_tests_invalid_path_should_raise(self):
         # Patch an invalid test folder name
@@ -32,6 +60,20 @@ class BaseGraderTests(TestCase):
             self.fail()
         except Exception as e:
             self.assertEqual(str(e), expected_message)
+
+    @patch('challenges.grader.os.path.isdir')
+    @patch('challenges.grader.os.scandir')
+    def test_find_tests_invalid_file_count_should_raise(self, scandir_mock, isdir_mock):
+        """ Given input/output file count that is not equal to the set count in the constructor, it should raise an exception """
+        isdir_mock.return_value = True
+        scandir_mock.return_value = self.input_files_dir_entries[2:]  # this should only give the grader 2 output files
+        expected_error_message = 'Invalid input/output file count!'
+        try:
+            self.grader.find_tests()
+            self.fail()
+        except Exception as e:
+            self.assertEqual(str(e), expected_error_message)
+
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
 # class RustGraderTest(TestCase):
