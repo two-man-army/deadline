@@ -1,7 +1,8 @@
 language:  python
 python:
   - "3.6"
-  
+services:
+  - rabbitmq
 env:
   global:
     - DJANGO_SETTINGS_MODULE="deadline.settings"
