@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -97,6 +96,7 @@ DATABASES = {
 
 # Don't know where this stands security-wise
 CORS_ORIGIN_ALLOW_ALL = True
+from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = default_headers + ('access-control-allow-origin', 'Access-Control-Allow-Headers')
 
 # Password validation
