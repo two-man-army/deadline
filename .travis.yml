@@ -12,6 +12,6 @@ install:
   - "pip install -r requirements.txt"
 # command to run tests
 script: 
-  - "python deadline/manage.py test challenges"
-  -  python deadline/manage.py test accounts
+  - "python deadline_/manage.py test challenges"
+  -  python deadline_/manage.py test accounts
 
