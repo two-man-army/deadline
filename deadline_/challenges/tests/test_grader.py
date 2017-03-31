@@ -4,8 +4,8 @@ import subprocess
 
 from django.test import TestCase
 
-from constants import TESTS_FOLDER_NAME
-from challenges.grader import RustGrader, GraderTestCase, BaseGrader
+from constants import TESTS_FOLDER_NAME, GRADER_COMPILE_FAILURE
+from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader
 
 
 class DirEntryMock(Mock):
@@ -212,6 +212,59 @@ class BaseGraderTests(TestCase):
         self.assertEqual(result['success'], False)
         self.assertEqual(result['traceback'], f'Timed out after {self.grader.TIMEOUT_SECONDS} seconds')
         self.assertEqual(result['error_message'], '')
+
+
+class CompilableGraderTests(TestCase):
+    def setUp(self):
+        CompilableLangGrader.FILE_EXTENSION = 'woo'
+        self.grader = CompilableLangGrader(5, 'whatup')
+
+    @patch('challenges.grader.CompilableLangGrader.find_tests')
+    @patch('challenges.grader.CompilableLangGrader.read_tests')
+    @patch('challenges.grader.CompilableLangGrader.compile')
+    @patch('challenges.grader.CompilableLangGrader.grade_all_tests')
+    def test_grade_solution_works_correctly(self, grade_all_tests_mock, compile_mock, read_tests_mock, find_tests_mock):
+        """ The grade solution encompasses everything we want to do
+            It should find the tests, read them, compile the solution code and call the grade_all_tests()
+            if it compiled propely
+        """
+        expected_result = {'we aint ever getting older :)'}
+        find_tests_mock.return_value = (1, 2)
+        grade_all_tests_mock.return_value = expected_result
+        self.grader.compiled = True
+
+        received_result = self.grader.grade_solution()
+
+        find_tests_mock.assert_called_once()
+        read_tests_mock.assert_called_once_with(1, 2)  # the find_tests return values
+        compile_mock.assert_called_once()
+        grade_all_tests_mock.assert_called_once()
+        self.assertEqual(received_result, expected_result)
+
+    @patch('challenges.grader.CompilableLangGrader.find_tests')
+    @patch('challenges.grader.CompilableLangGrader.read_tests')
+    @patch('challenges.grader.CompilableLangGrader.compile')
+    @patch('challenges.grader.CompilableLangGrader.grade_all_tests')
+    def test_grade_solution_returns_compile_error_message_on_compile_failure(self, grade_all_tests_mock, compile_mock, read_tests_mock, find_tests_mock):
+        """ The grade solution encompasses everything we want to do
+            It should find the tests, read them, compile the solution code and call the grade_all_tests()
+            if it compiled propely
+        """
+        compilation_err_msg = "Compilation failed because ...."
+        expected_result = json.dumps({GRADER_COMPILE_FAILURE: compilation_err_msg})
+        find_tests_mock.return_value = (1, 2)
+        grade_all_tests_mock.return_value = compilation_err_msg
+        self.grader.compiled = False
+        self.grader.compile_error_message = compilation_err_msg  # compile() usually sets this
+
+        received_result = self.grader.grade_solution()
+
+        find_tests_mock.assert_called_once()
+        read_tests_mock.assert_called_once_with(1, 2)  # the find_tests return values
+        compile_mock.assert_called_once()
+        grade_all_tests_mock.assert_not_called()
+
+        self.assertEqual(received_result, expected_result)
 
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program

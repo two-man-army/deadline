@@ -240,7 +240,6 @@ class CompilableLangGrader(BaseGrader):
         This function does the whole process of grading a submission
         """
         print('# Running solution')
-        # self.create_solution_file()
         sorted_input_files, sorted_output_files = self.find_tests()
         print(f'# Found tests at {sorted_input_files} {sorted_output_files}')
         self.read_tests(sorted_input_files, sorted_output_files)
