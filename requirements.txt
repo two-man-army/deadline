@@ -10,7 +10,6 @@ djangorestframework==3.5.4
 docker==2.2.0
 docker-pycreds==0.2.1
 factory-boy==2.8.1
-fake-factory==9999.9.9
 Faker==0.7.10
 ipdb==0.10.2
 ipython==5.2.2
