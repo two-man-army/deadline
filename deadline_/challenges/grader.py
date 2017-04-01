@@ -42,8 +42,10 @@ RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
 RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
 RUSTLANG_FILE_EXTENSION = '.rs'
 RUSTLANG_UNFRIENDLY_ERROR_MESSAGE = "note: Run with `RUST_BACKTRACE=1`"  # error message that is of no interest to the user
+
 CPP_TIMEOUT_SECONDS = 4
 CPP_FILE_EXTENSION = '.cpp'
+CPP_COMPILE_ARGS = ['g++', '-std=c++11', '-o']
 
 
 def main():
@@ -321,10 +323,17 @@ class RustGrader(CompilableLangGrader):
         """
         return not (bool(error_message) and (RUSTLANG_ERROR_MESSAGE_SNIPPET in error_message or RUSTLANG_ERROR_MESSAGE_SNIPPET_2 in error_message))
 
+    def cleanup_error_message(self, error_msg) -> str:
+        """ Removes unecessary information from a Rust error message, making it more user friendly"""
+        if RUSTLANG_UNFRIENDLY_ERROR_MESSAGE in error_msg:
+            error_msg = error_msg.replace(RUSTLANG_UNFRIENDLY_ERROR_MESSAGE, '')
+
+        return error_msg
+
 
 class CppGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = CPP_TIMEOUT_SECONDS
-    COMPILE_ARGS = ['g++', '-std=c++11', '-o', ]
+    COMPILE_ARGS = CPP_COMPILE_ARGS
     FILE_EXTENSION = CPP_FILE_EXTENSION
 
     def compile(self):
@@ -346,14 +355,6 @@ class CppGrader(CompilableLangGrader):
         else:
             self.compiled = True
             self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
-
-    def cleanup_error_message(self, error_msg) -> str:
-        """ Removes unecessary information from a Rust error message, making it more user friendly"""
-        if RUSTLANG_UNFRIENDLY_ERROR_MESSAGE in error_msg:
-            emsg_idx = error_msg.index(unfriendly_emsg)
-            error_msg = error_msg[:emsg_idx]  # it is always at the end
-
-        return error_msg
 
 
 class PythonGrader(InterpretableLangGrader):

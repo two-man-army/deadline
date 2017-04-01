@@ -380,7 +380,19 @@ class RustGraderTests(TestCase):
     def test_has_compiled_warning(self):
         self.assertTrue(self.grader.has_compiled('Warning: The roof is on fire'))
 
+    def test_cleanup_error_message_removes_unfriendly_message(self):
+        from constants import RUSTLANG_UNFRIENDLY_ERROR_MESSAGE
 
+        unfriendly_message = f'Me@{RUSTLANG_UNFRIENDLY_ERROR_MESSAGE}abv.bg'
+        expected_message = 'Me@abv.bg'
+
+        self.assertEqual(expected_message, self.grader.cleanup_error_message(unfriendly_message))
+
+    def test_cleanup_error_message_doesnt_remove_error_message(self):
+        from constants import RUSTLANG_ERROR_MESSAGE_SNIPPET, RUSTLANG_ERROR_MESSAGE_SNIPPET_2
+        expected_message = f'Error here {RUSTLANG_ERROR_MESSAGE_SNIPPET} and {RUSTLANG_ERROR_MESSAGE_SNIPPET_2}re'
+
+        self.assertEqual(expected_message, self.grader.cleanup_error_message(expected_message))
 class CppGraderTests(TestCase):
     def setUp(self):
         self.temp_file_name = 'x'

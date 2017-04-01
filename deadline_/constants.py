@@ -26,10 +26,11 @@ GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
 RUSTLANG_TIMEOUT_SECONDS = 5
 RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
 RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
+RUSTLANG_UNFRIENDLY_ERROR_MESSAGE = "note: Run with `RUST_BACKTRACE=1`"  # error message that is of no interest to the user
 RUSTLANG_FILE_EXTENSION = '.rs'
 RUSTLANG_COMPILE_ARGS = ['rustc']
 
 
 CPP_TIMEOUT_SECONDS = 4
 CPP_FILE_EXTENSION = '.cpp'
-
+CPP_COMPILE_ARGS = ['g++', '-std=c++11', '-o']
