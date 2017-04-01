@@ -5,7 +5,7 @@ import subprocess
 from django.test import TestCase
 
 from constants import TESTS_FOLDER_NAME, GRADER_COMPILE_FAILURE
-from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader, InterpretableLangGrader
+from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader, InterpretableLangGrader, CppGrader
 
 
 class DirEntryMock(Mock):
@@ -379,6 +379,46 @@ class RustGraderTests(TestCase):
 
     def test_has_compiled_warning(self):
         self.assertTrue(self.grader.has_compiled('Warning: The roof is on fire'))
+
+
+class CppGraderTests(TestCase):
+    def setUp(self):
+        self.temp_file_name = 'x'
+        self.grader = CppGrader(3, self.temp_file_name)
+
+    def test_static_variables(self):
+        from constants import CPP_TIMEOUT_SECONDS, CPP_COMPILE_ARGS, CPP_FILE_EXTENSION
+        self.assertEqual(self.grader.TIMEOUT_SECONDS, CPP_TIMEOUT_SECONDS)
+        self.assertEqual(self.grader.COMPILE_ARGS, CPP_COMPILE_ARGS)
+        self.assertEqual(self.grader.FILE_EXTENSION, CPP_FILE_EXTENSION)
+
+    @patch('challenges.grader.SITE_ROOT', '/')
+    @patch('challenges.grader.subprocess.PIPE', 'pipe')
+    @patch('challenges.grader.CompilableLangGrader.has_compiled')
+    @patch('challenges.grader.subprocess.Popen')
+    def test_compile_works_correctly(self, popen_mock, has_compiled_mock):
+        """ The compile here basically  has slightly  different compile args, namely,
+        adding the absolute path to the desired executable"""
+        program_process = MagicMock()
+        program_process.communicate.return_value = (b'aaa', b'')
+        popen_mock.return_value = program_process
+        has_compiled_mock.return_value = True
+        self.grader.unique_name = 'woot'
+        self.grader.temp_file_abs_path = './me.abv'
+        self.grader.COMPILE_ARGS = ['some', 'args']
+        expected_popen_args = self.grader.COMPILE_ARGS + [self.grader.unique_name, f'/{self.grader.temp_file_name}']
+        expected_temp_exe_abs_path = '/woot'
+
+        self.assertFalse(self.grader.compiled)
+        self.assertIsNone(self.grader.temp_exe_abs_path)
+
+        self.grader.compile()
+
+        popen_mock.assert_called_once_with(expected_popen_args, stdout='pipe', stderr='pipe')
+        has_compiled_mock.assert_called_once_with('')  # the empty error message
+        self.assertTrue(self.grader.compiled)
+        self.assertEqual(self.grader.temp_exe_abs_path, expected_temp_exe_abs_path)
+# class CppGraderTests(TestCase):
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
