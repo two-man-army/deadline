@@ -190,8 +190,6 @@ class BaseGraderTests(TestCase):
         self.assertEqual(result['traceback'], error_msg)
         self.assertEqual(result['error_message'], '')
 
-
-
     @patch('challenges.grader.BaseGrader.run_program_process')
     def test_test_solution_time_expire_should_grade_as_failure(self, run_process_mock):
         def raise_timeout_expired(*args, **kwargs):
@@ -265,6 +263,46 @@ class CompilableGraderTests(TestCase):
         grade_all_tests_mock.assert_not_called()
 
         self.assertEqual(received_result, expected_result)
+
+    @patch('challenges.grader.SITE_ROOT', '/')
+    @patch('challenges.grader.subprocess.PIPE', 'pipe')
+    @patch('challenges.grader.CompilableLangGrader.has_compiled')
+    @patch('challenges.grader.subprocess.Popen')
+    def test_compile_works_correctly(self, popen_mock, has_compiled_mock):
+        program_process = MagicMock()
+        program_process.communicate.return_value = (b'aaa', b'')
+        popen_mock.return_value = program_process
+        has_compiled_mock.return_value = True
+        self.grader.unique_name = 'woot'
+        self.grader.temp_file_abs_path = './me.abv'
+        self.grader.COMPILE_ARGS = ['some', 'args']
+        expected_popen_args = ['some', 'args', './me.abv']
+        expected_temp_exe_abs_path = '/woot'
+
+        self.assertFalse(self.grader.compiled)
+        self.assertIsNone(self.grader.temp_exe_abs_path)
+
+        self.grader.compile()
+        popen_mock.assert_called_once_with(expected_popen_args, stdout='pipe', stderr='pipe')
+        has_compiled_mock.assert_called_once_with('')  # the empty error message
+        self.assertTrue(self.grader.compiled)
+        self.assertEqual(self.grader.temp_exe_abs_path, expected_temp_exe_abs_path)
+
+    @patch('challenges.grader.CompilableLangGrader.has_compiled')
+    @patch('challenges.grader.subprocess.Popen')
+    def test_compile_marks_as_failed_when_error(self, popen_mock, has_compiled_mock):
+        self.grader.COMPILE_ARGS = ['']
+        program_process = MagicMock()
+        program_process.communicate.return_value = (b'a', b'This is an error')
+        popen_mock.return_value = program_process
+        has_compiled_mock.return_value = False
+
+        self.grader.compile()
+
+        has_compiled_mock.assert_called_once_with('This is an error')
+        self.assertFalse(self.grader.compiled)
+        self.assertEqual(self.grader.compile_error_message, 'This is an error')
+
 
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
