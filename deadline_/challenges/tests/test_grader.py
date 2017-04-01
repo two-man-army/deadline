@@ -303,6 +303,22 @@ class CompilableGraderTests(TestCase):
         self.assertFalse(self.grader.compiled)
         self.assertEqual(self.grader.compile_error_message, 'This is an error')
 
+    @patch('challenges.grader.subprocess.PIPE', 'pipe')
+    @patch('challenges.grader.subprocess.Popen')
+    def test_run_program_process_works_correctly(self, popen_mock):
+        """ Should open a process with the exe path and all stdouts pointing to subprocess.pipe"""
+        self.grader.temp_exe_abs_path = '/exe/path.py'
+
+        self.grader.run_program_process()
+
+        popen_mock.assert_called_once_with(['/exe/path.py'], stdin='pipe', stdout='pipe', stderr='pipe')
+
+    def test_has_compiled_works_correctly(self):
+        """ Given an error message, this function should return true/false in accordance if the compile was successful"""
+        self.assertFalse(self.grader.has_compiled('This is an error'))
+
+    def test_has_compiled_empty_str(self):
+        self.assertTrue(self.grader.has_compiled(''))
 
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
