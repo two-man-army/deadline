@@ -36,6 +36,7 @@ GRADER_TEST_RESULT_ERROR_MESSAGE_KEY = 'error_message'
 GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
 
 RUSTLANG_TIMEOUT_SECONDS = 5
+RUSTLANG_COMPILE_ARGS = ['rustc']
 # TODO: Maybe think of a smarter way to go on about this or at least limit user input
 RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
 RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
@@ -312,7 +313,7 @@ class InterpretableLangGrader(BaseGrader):
 class RustGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = RUSTLANG_TIMEOUT_SECONDS
     FILE_EXTENSION = RUSTLANG_FILE_EXTENSION
-    COMPILE_ARGS = ['rustc']
+    COMPILE_ARGS = RUSTLANG_COMPILE_ARGS
 
     def has_compiled(self, error_message) -> bool:
         """

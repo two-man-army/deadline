@@ -351,6 +351,34 @@ class InterpretableGraderTests(TestCase):
         self.grader.run_program_process()
 
         popen_mock.assert_called_once_with(expected_args, stdin='pipe', stdout='pipe', stderr='pipe')
+
+
+class RustGraderTests(TestCase):
+    def setUp(self):
+        self.grader = RustGrader(3, 'a')
+
+    def test_static_variables(self):
+        from constants import RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_FILE_EXTENSION, RUSTLANG_COMPILE_ARGS
+
+        self.assertEqual(RustGrader.TIMEOUT_SECONDS, RUSTLANG_TIMEOUT_SECONDS)
+        self.assertEqual(RustGrader.COMPILE_ARGS, RUSTLANG_COMPILE_ARGS)
+        self.assertEqual(RustGrader.FILE_EXTENSION, RUSTLANG_FILE_EXTENSION)
+
+    def test_has_compiled_empty_str_should_return_true(self):
+        self.assertTrue(self.grader.has_compiled(''))
+
+    def test_has_compiled_str_with_known_error_snippet(self):
+        """ There are some constant messages that rust outputs as a warning and the program should ignore """
+        from constants import RUSTLANG_ERROR_MESSAGE_SNIPPET
+        self.assertFalse(self.grader.has_compiled(f'Afewifwajofjwaf{RUSTLANG_ERROR_MESSAGE_SNIPPET}fefaoifwjf'))
+
+    def test_has_compiled_str_with_known_error_snippet2(self):
+        """ There are some constant messages that rust outputs as a warning and the program should ignore """
+        from constants import RUSTLANG_ERROR_MESSAGE_SNIPPET_2
+        self.assertFalse(self.grader.has_compiled(f'Afewifwajofjwaf{RUSTLANG_ERROR_MESSAGE_SNIPPET_2}fefaoifwjf'))
+
+    def test_has_compiled_warning(self):
+        self.assertTrue(self.grader.has_compiled('Warning: The roof is on fire'))
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
 
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
