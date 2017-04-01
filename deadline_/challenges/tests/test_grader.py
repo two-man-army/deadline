@@ -5,7 +5,7 @@ import subprocess
 from django.test import TestCase
 
 from constants import TESTS_FOLDER_NAME, GRADER_COMPILE_FAILURE
-from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader
+from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader, InterpretableLangGrader
 
 
 class DirEntryMock(Mock):
@@ -320,7 +320,39 @@ class CompilableGraderTests(TestCase):
     def test_has_compiled_empty_str(self):
         self.assertTrue(self.grader.has_compiled(''))
 
+
+class InterpretableGraderTests(TestCase):
+    def setUp(self):
+        InterpretableLangGrader.FILE_EXTENSION = '.py'
+        self.grader = InterpretableLangGrader(test_case_count=2, temp_file_name='temp_file')
+
+    @patch('challenges.grader.InterpretableLangGrader.find_tests')
+    @patch('challenges.grader.InterpretableLangGrader.read_tests')
+    @patch('challenges.grader.InterpretableLangGrader.grade_all_tests')
+    def test_grade_solution_works_correctly(self, grade_tests_mock, read_tests_mock, find_tests_mock):
+        """ Should find the tests, read them and grade them all, returning the result"""
+        find_tests_return_value = [1], [2]
+        find_tests_mock.return_value = find_tests_return_value
+        grade_tests_mock.return_value = "Expected"
+
+        result = self.grader.grade_solution()
+
+        read_tests_mock.assert_called_once_with(*find_tests_return_value)
+        grade_tests_mock.assert_called_once()
+        self.assertEqual(result, 'Expected')
+
+    @patch('challenges.grader.subprocess.PIPE', 'pipe')
+    @patch('challenges.grader.subprocess.Popen')
+    def test_run_program_process_called_correctly(self, popen_mock):
+        self.grader.RUN_COMMAND = 'better run better run '
+        self.grader.temp_file_name = 'outrun my gun'
+        expected_args = ['better run better run ', 'outrun my gun']
+
+        self.grader.run_program_process()
+
+        popen_mock.assert_called_once_with(expected_args, stdin='pipe', stdout='pipe', stderr='pipe')
 # TODO: Test will need rework after the timing of the test is functional, since the hardcoded expected JSONs
+
 # have "time": "0s" in it and there will be no way to know the amount of time it'll take to run the program
 # class RustGraderTest(TestCase):
 #     def test_grader_should_not_compile(self):
