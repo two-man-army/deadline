@@ -48,6 +48,11 @@ CPP_FILE_EXTENSION = '.cpp'
 CPP_COMPILE_ARGS = ['g++', '-std=c++11', '-o']
 
 
+PYTHON_TIMEOUT_SECONDS = 5
+PYTHON_FILE_EXTENSION = '.py'
+PYTHON_RUN_COMMAND = 'python3'
+
+
 def main():
     """
     This main method is called exclusively while in the Docker container.
@@ -361,9 +366,9 @@ class PythonGrader(InterpretableLangGrader):
     """
     This is a sort of special class, since the
     """
-    TIMEOUT_SECONDS = 5
-    FILE_EXTENSION = '.py'
-    RUN_COMMAND = 'python3'
+    TIMEOUT_SECONDS = PYTHON_TIMEOUT_SECONDS
+    FILE_EXTENSION = PYTHON_FILE_EXTENSION
+    RUN_COMMAND = PYTHON_RUN_COMMAND
 
 
 if __name__ == '__main__':
