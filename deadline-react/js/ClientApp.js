@@ -1,15 +1,14 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { render } from 'react-dom'
+import LoginPage from './LoginPage'
 
 const selector = document.getElementById('app')
 
 const App = (props) => {
   return (
     <div className='app'>
-      <div className='landing'>
-        <div>Hello0, {props.name}!</div>
-      </div>
+      <LoginPage />
     </div>
   )
 }
@@ -18,4 +17,4 @@ App.propTypes = {
   name: PropTypes.string
 }
 
-render(<App name='c0re' />, selector)
+render(<App name='deadline' />, selector)
