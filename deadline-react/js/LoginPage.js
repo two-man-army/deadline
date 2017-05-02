@@ -3,7 +3,7 @@ import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
 import Video from './Video'
 import axios from 'axios'
-
+import {postLogIn, postRegister} from './requests.js'
 class LoginPage extends React.Component {
   constructor (props) {
     super(props)
@@ -47,27 +47,22 @@ class LoginPage extends React.Component {
     e.preventDefault()
     let user = this.state.user
 
-    axios.post('http://localhost:8000/accounts/login/', {
-      email: user.email,
-      password: user.password
-    })
-    .then(resp => (
+    postLogIn(user.email, user.password).then(resp => {
       console.log(resp)
-    ))
+    }).catch(err => {
+      throw err
+    })
   }
 
   processRegisterForm (e) {
     e.preventDefault()
 
-    let user = this.state.user
+    let {email, password, username} = this.state.user
 
-    axios.post('http://localhost:8000/accounts/register/', {
-      username: user.username,
-      email: user.email,
-      password: user.password
-    })
-    .then(resp => {
+    postRegister(email, password, username).then(resp => {
       console.log(resp)
+    }).catch(err => {
+      throw err
     })
   }
 
