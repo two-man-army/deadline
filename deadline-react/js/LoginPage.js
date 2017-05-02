@@ -2,8 +2,9 @@ import React from 'react'
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
 import Video from './Video'
-import axios from 'axios'
 import {postLogIn, postRegister} from './requests.js'
+import SweetAlert from 'sweetalert-react'
+
 class LoginPage extends React.Component {
   constructor (props) {
     super(props)
@@ -13,7 +14,11 @@ class LoginPage extends React.Component {
         email: '',
         password: '',
         repeatedPassword: ''
-      }
+      },
+      repeatedPasswordIsInvalid: false,
+      showAlert: false,
+      alertTitle: '',
+      alertDesc: ''
     }
 
     this.processLoginForm = this.processLoginForm.bind(this)
@@ -37,10 +42,14 @@ class LoginPage extends React.Component {
     const user = this.state.user
     user[field] = e.target.value
     // TODO compare passwords & validate data
-
-    this.setState({
-      user
-    })
+    if (user.password !== user.repeatedPassword) {
+      // Passwords are not the same, render a red glow
+      this.setState({user, repeatedPasswordIsInvalid: true})
+    } else {
+      this.setState({
+        user, repeatedPasswordIsInvalid: false
+      })
+    }
   }
 
   processLoginForm (e) {
@@ -57,13 +66,19 @@ class LoginPage extends React.Component {
   processRegisterForm (e) {
     e.preventDefault()
 
-    let {email, password, username} = this.state.user
+    let {email, password, username, repeatedPassword} = this.state.user
 
-    postRegister(email, password, username).then(resp => {
-      console.log(resp)
-    }).catch(err => {
-      throw err
-    })
+    if (password !== repeatedPassword) {
+      // Password is not valid
+      this.setState({user: this.state.user, repeatedPasswordIsInvalid: true, showAlert: true, alertDesc: 'Your passwords dont match!', alertTitle: 'Invalid passwords!'})
+    } else {
+      postRegister(email, password, username).then(resp => {
+        console.log(resp)
+      }).catch(err => {
+        throw err
+      })
+      // TODO: Redirect ?
+    }
   }
 
   render () {
@@ -77,6 +92,13 @@ class LoginPage extends React.Component {
               name='tab'
               className='sign-in'
               defaultChecked
+            />
+            <SweetAlert
+              type='error'
+              show={this.state.showAlert}
+              title={this.state.alertTitle}
+              text={this.state.alertDesc}
+              onConfirm={() => this.setState({ showAlert: false })}
             />
             <label htmlFor='tab-1' className='tab'>Sign In</label>
             <input
@@ -94,6 +116,7 @@ class LoginPage extends React.Component {
               <RegisterForm
                 onSubmit={this.processRegisterForm}
                 onChange={this.handleRegisterData}
+                repeatedPasswordIsInvalid={this.state.repeatedPasswordIsInvalid}
               />
             </div>
           </div>
