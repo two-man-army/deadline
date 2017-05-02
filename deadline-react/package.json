@@ -31,6 +31,7 @@
     "react-dom": "^15.5.4",
     "react-router": "^4.1.1",
     "standard": "^10.0.2",
+    "sweetalert-react": "^0.4.9",
     "webpack": "^2.4.1",
     "webpack-dev-server": "^2.4.2"
   }
