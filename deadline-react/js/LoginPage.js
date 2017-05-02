@@ -80,7 +80,6 @@ class LoginPage extends React.Component {
         alertDesc: 'Your passwords dont match!',
         alertTitle: 'Invalid passwords!'
       })
-
     } else {
       postRegister(email, password, username).then(resp => {
         console.log(resp)
