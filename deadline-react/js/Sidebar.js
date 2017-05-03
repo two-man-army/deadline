@@ -2,7 +2,7 @@ import React from 'react'
 import MetisMenu from 'react-metismenu'
 
 import { getCategoriesMetaInfo } from './requests.js'
-
+import { convertToUrlFriendlyText } from './helpers.js'
 
 class SideBar extends React.Component {
   constructor (props) {
@@ -33,19 +33,24 @@ class SideBar extends React.Component {
    * Create the array of categories to be passed down to the MetisMenu component
    */
   buildSidebarContent () {
-    let content = []
-    content = this.state.categories.map(category => {
+    let content = [
+      {
+        icon: 'dashboard',
+        label: 'Dashboard',
+        to: '/'
+      }
+    ]
+    content = content.concat(this.state.categories.map(category => {
       return {
         label: category.name,
-        to: '/',
         content: category.sub_categories.map(subCategory => {
           return {
             label: subCategory,
-            to: '/'
+            to: `/categories/${convertToUrlFriendlyText(subCategory)}`
           }
         })
       }
-    })
+    }))
     return content
   }
 
