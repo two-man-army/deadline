@@ -19,4 +19,18 @@ function postRegister (email, password, username) {
   })
 }
 
-export { postLogIn, postRegister }
+/**
+ * Queries the server for all the Challenge Categories and returns them in the following way:
+ * @returns {Object} [{"name": "Main Category",
+ *                    "sub_categories": ["a", "b", "c"] }, .. and so on ]
+ */
+function getCategoriesMetaInfo () {
+  return axios.get('http://localhost:8000/challenges/categories/all').then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while fetching categories: ${err}`)
+    throw err
+  })
+}
+
+export { postLogIn, postRegister, getCategoriesMetaInfo }
