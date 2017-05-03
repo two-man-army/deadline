@@ -88,12 +88,6 @@ class LoginPage extends React.Component {
       })
         // TODO: Redirect ?
     }
-
-    postRegister(email, password, username).then(resp => {
-      console.log(resp)
-    }).catch(err => {
-      throw err
-    })
   }
 
   render () {
