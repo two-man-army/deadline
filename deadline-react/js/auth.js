@@ -6,9 +6,10 @@ class Auth {
    *
    * @param {string} token
    */
+
   static authenticateUser (token) {
     if (window.localStorage) {
-      localStorage.setItem(ID_TOKEN_KEY, token)
+      window.localStorage.setItem(ID_TOKEN_KEY, token)
     }
   }
 
@@ -19,7 +20,7 @@ class Auth {
    */
   static isUserAuthenticated () {
     if (window.localStorage) {
-      return localStorage.getItem(ID_TOKEN_KEY) !== null
+      return window.localStorage.getItem(ID_TOKEN_KEY) !== null
     }
   }
 
@@ -29,7 +30,7 @@ class Auth {
    */
   static deauthenticateUser () {
     if (window.localStorage) {
-      localStorage.removeItem(ID_TOKEN_KEY)
+      window.localStorage.removeItem(ID_TOKEN_KEY)
     }
   }
 
@@ -40,7 +41,7 @@ class Auth {
    */
   static getToken () {
     if (window.localStorage) {
-      return localStorage.getItem(ID_TOKEN_KEY)
+      return window.localStorage.getItem(ID_TOKEN_KEY)
     }
   }
 }

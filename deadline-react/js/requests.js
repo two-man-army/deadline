@@ -1,7 +1,5 @@
 import axios from 'axios'
-
 import Auth from './auth.js'
-
 
 /**
  * Fills a config with headers of the required authentication for the backend
@@ -54,4 +52,4 @@ function getCategoriesMetaInfo () {
   })
 }
 
-export { postLogIn, postRegister, getCategoriesMetaInfo }
+export { postLogIn, postRegister, getCategoriesMetaInfo, getAxiosConfig }

@@ -25,7 +25,6 @@ if (Auth.isUserAuthenticated()) {
   }
 }
 
-
 App.propTypes = {
   name: PropTypes.string
 }
