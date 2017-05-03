@@ -1,9 +1,11 @@
 import React from 'react'
+import SweetAlert from 'sweetalert-react'
+
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
 import Video from './Video'
 import {postLogIn, postRegister} from './requests.js'
-import SweetAlert from 'sweetalert-react'
+import {SweetAlertError} from './errors.js'
 
 class LoginPage extends React.Component {
   constructor (props) {
@@ -84,7 +86,16 @@ class LoginPage extends React.Component {
       postRegister(email, password, username).then(resp => {
         console.log(resp)
       }).catch(err => {
-        throw err
+        console.log(typeof err)
+        if (err instanceof SweetAlertError) {
+          this.setState({
+            showAlert: true,
+            alertDesc: err.message,
+            alertTitle: err.title
+          })
+        } else {
+          console.log(err)
+        }
       })
         // TODO: Redirect ?
     }

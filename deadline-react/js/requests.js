@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Auth from './auth.js'
+import {SweetAlertError} from './errors.js'
 
 /**
  * Fills a config with headers of the required authentication for the backend
@@ -33,7 +34,11 @@ function postRegister (email, password, username) {
     Auth.authenticateUser(authToken)
     console.log(`Authenticated user (through register) with ${authToken}`)
   }).catch(err => {
-    console.log(`Error while registering: ${err}`)
+    if (err.response && err.response.data) {
+      if (err.response.data.email) {
+        throw new SweetAlertError('Invalid e-mail', 'A user with that e-mail already exists!')
+      }
+    }
     throw err
   })
 }
