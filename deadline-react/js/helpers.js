@@ -8,4 +8,12 @@ function convertToUrlFriendlyText (text) {
   return text.replace(' ', '_').toLowerCase()
 }
 
-export {convertToUrlFriendlyText}
+/**
+ * Reverts the conversion from the convertToUrlFriendlyText function
+ * @param {String} text
+ */
+function convertFromUrlToFriendlyText (text) {
+  return text.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+}
+
+export {convertToUrlFriendlyText, convertFromUrlToFriendlyText}
