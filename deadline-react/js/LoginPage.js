@@ -1,11 +1,12 @@
 import React from 'react'
 import SweetAlert from 'sweetalert-react'
-
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
 import Video from './Video'
-import {postLogIn, postRegister} from './requests.js'
-import {SweetAlertError} from './errors.js'
+import Auth from './auth.js'
+import { postLogIn, postRegister } from './requests'
+import { SweetAlertError } from './errors'
+import { Redirect } from 'react-router-dom'
 
 class LoginPage extends React.Component {
   constructor (props) {
@@ -20,7 +21,8 @@ class LoginPage extends React.Component {
       repeatedPasswordIsInvalid: false,
       showAlert: false,
       alertTitle: '',
-      alertDesc: ''
+      alertDesc: '',
+      redirectTo: ''
     }
 
     this.processLoginForm = this.processLoginForm.bind(this)
@@ -63,7 +65,9 @@ class LoginPage extends React.Component {
     let user = this.state.user
 
     postLogIn(user.email, user.password).then(resp => {
-      console.log(resp)
+      this.setState({
+        redirectTo: '/'
+      })
     }).catch(err => {
       throw err
     })
@@ -84,6 +88,10 @@ class LoginPage extends React.Component {
       })
     } else {
       postRegister(email, password, username).then(resp => {
+        this.setState({
+          redirectTo: '/'
+        })
+
         console.log(resp)
       }).catch(err => {
         console.log(typeof err)
@@ -102,6 +110,10 @@ class LoginPage extends React.Component {
   }
 
   render () {
+    if (Auth.isUserAuthenticated()) {
+      return <Redirect to={this.state.redirectTo} />
+    }
+
     return (
       <div>
         <div className='login-wrap'>
