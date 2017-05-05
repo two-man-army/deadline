@@ -27,6 +27,14 @@ class CategoryChallengeList extends React.Component {
     })
   }
 
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.match.params.category !== this.subCategory) {
+      // subCategory and URL has changed, therefore re-load and re-render challenges
+      this.subCategory = nextProps.match.params.category
+      this.loadSubCategoryChallenges()
+    }
+  }
+
   render () {
     return (
       <div>

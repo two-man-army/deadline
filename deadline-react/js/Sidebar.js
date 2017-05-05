@@ -1,6 +1,5 @@
 import React from 'react'
 import MetisMenu from 'react-metismenu'
-
 import { getCategoriesMetaInfo } from './requests.js'
 import { convertToUrlFriendlyText } from './helpers.js'
 
@@ -37,7 +36,7 @@ class SideBar extends React.Component {
       {
         icon: 'dashboard',
         label: 'Dashboard',
-        to: '/'
+        to: '/#/'
       }
     ]
     content = content.concat(this.state.categories.map(category => {
@@ -46,7 +45,7 @@ class SideBar extends React.Component {
         content: category.sub_categories.map(subCategory => {
           return {
             label: subCategory,
-            to: `/categories/${convertToUrlFriendlyText(subCategory)}`
+            to: `/#/categories/${convertToUrlFriendlyText(subCategory)}`
           }
         })
       }
