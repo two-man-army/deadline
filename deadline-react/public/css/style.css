@@ -279,3 +279,7 @@ div.login-html input:focus {
     outline: none;
     box-shadow: 0 0 20px #5686ff;
 }
+
+div.dashboard {
+    margin-left: 280px;  /* to go beyond the sidebar */
+}
