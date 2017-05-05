@@ -4,6 +4,9 @@ import { render } from 'react-dom'
 import Sidebar from './Sidebar.js'
 import LoginPage from './LoginPage.js'
 import Auth from './auth.js'
+import Dashboard from './Dashboard.js'
+import {HashRouter as Router} from 'react-router-dom'
+
 const selector = document.getElementById('app')
 
 let App = null
@@ -12,6 +15,7 @@ if (Auth.isUserAuthenticated()) {
     return (
       <div className='app'>
         <Sidebar />
+        <Dashboard />
       </div>
     )
   }
@@ -29,4 +33,8 @@ App.propTypes = {
   name: PropTypes.string
 }
 
-render(<App name='deadline' />, selector)
+render(
+  (<Router>
+    <App name='deadline' />
+  </Router>)
+, selector)
