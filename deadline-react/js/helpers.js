@@ -16,4 +16,12 @@ function convertFromUrlToFriendlyText (text) {
   return text.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
-export {convertToUrlFriendlyText, convertFromUrlToFriendlyText}
+/**
+ * Returns the link for the challenge details page
+ * @param {Number} id
+ */
+function getChallengeDetailsLink (id) {
+  return `/challenges/${id}`
+}
+
+export {convertToUrlFriendlyText, convertFromUrlToFriendlyText, getChallengeDetailsLink}

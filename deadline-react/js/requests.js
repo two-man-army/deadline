@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Auth from './auth.js'
 import {SweetAlertError} from './errors.js'
+import {convertFromUrlToFriendlyText} from './helpers.js'
 
 /**
  * Fills a config with headers of the required authentication for the backend
@@ -57,4 +58,29 @@ function getCategoriesMetaInfo () {
   })
 }
 
-export { postLogIn, postRegister, getCategoriesMetaInfo, getAxiosConfig }
+function getLatestAttemptedChallenges () {
+  return axios.get('http://localhost:8000/challenges/latest_attempted', getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while fetching latest attempted challenges: ${err}`)
+    throw err
+  })
+}
+
+/**
+ * Returns meta information about challenges from a specific SubCategory
+ */
+function getSubCategoryChallenges (subCategory) {
+  // TODO: Fix back-end to work with url friendly text subcategory query
+  let subCategoryStr = convertFromUrlToFriendlyText(subCategory)
+  return axios.get(`http://localhost:8000/challenges/subcategories/${subCategoryStr}`, getAxiosConfig())
+  .then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while fetching challenges from subcategory ${subCategoryStr}`)
+    console.log(err)
+    throw err
+  })
+}
+
+export { postLogIn, postRegister, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges }
