@@ -57,7 +57,22 @@ class SideBar extends React.Component {
     if (!this.state.loadedCategories) {
       return <div style={{background: '#2c3e50', color: '#FFF', width: 220, height: window.innerHeight}} />
     }
-    return <MetisMenu content={this.buildSidebarContent()} />
+    return (
+      <div>
+        <MetisMenu content={this.buildSidebarContent()} />
+        <div className='top-header'>
+          <div className='user pull-right'>
+            <div className='user-score'>
+              <p>Score: placeholder</p>
+            </div>
+            <div className='notification-icon'>
+              <i className='fa fa-bell-o' />
+            </div>
+            <img src='/assets/img/avatar.jpg' />
+          </div>
+        </div>
+      </div>
+    )
   }
 }
 
