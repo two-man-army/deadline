@@ -142,9 +142,9 @@ class ChallengeBoard extends React.Component {
 
 ChallengeBoard.propTypes = {
   id: PropTypes.number,
-  name: PropTypes.string,
-  rating: PropTypes.number,
-  score: PropTypes.number,
+  // name: PropTypes.string,
+  // rating: PropTypes.number,
+  // score: PropTypes.number,
   description: PropTypes.shape({
     content: PropTypes.string,
     input_format: PropTypes.string,
@@ -154,8 +154,8 @@ ChallengeBoard.propTypes = {
     sample_output: PropTypes.string,
     explanation: PropTypes.string
   }),
-  test_case_count: PropTypes.number,
-  category: PropTypes.string,
+  // test_case_count: PropTypes.number,
+  // category: PropTypes.string,
   supported_languages: PropTypes.arrayOf(PropTypes.string)
 }
 
