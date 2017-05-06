@@ -1,7 +1,8 @@
 import os.path
 import docker
 DOCKER_CLIENT = docker.from_env()
-DOCKER_IMAGE_PATH = '/home/netherblood/PycharmProjects/two-man-army/deadline/deadline_'
+ROOT_PATH = os.path.dirname(os.path.abspath(__file__))  # this is where the constants.py file should be
+DOCKER_IMAGE_PATH = ROOT_PATH
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait between submissions
 MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
