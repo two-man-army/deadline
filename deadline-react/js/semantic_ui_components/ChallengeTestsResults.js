@@ -1,5 +1,6 @@
 /* Provides a  Relaxed Horizontal List with Avatars */
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Icon, List } from 'semantic-ui-react'
 
 const ChallengeTestsResults = ({tests}) => (
@@ -22,5 +23,12 @@ const ChallengeTestsResults = ({tests}) => (
     })}
   </List>
 )
+
+ChallengeTestsResults.propTypes = {
+  tests: PropTypes.shape({
+    number: PropTypes.number,
+    success: PropTypes.boolean
+  })
+}
 
 export default ChallengeTestsResults

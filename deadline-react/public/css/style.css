@@ -296,3 +296,7 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
     margin-right: 10px;
     border-radius: 10px;
 }
+
+.solution-tests-container .list {  /* Block display for each child list with tests */
+    display: block !important;
+}

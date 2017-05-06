@@ -10,7 +10,7 @@ const SelectionSearch = ({options, placeholder, onChange}) => (
 )
 
 SelectionSearch.propTypes = {
-  options: PropTypes.func,
+  options: PropTypes.array,
   placeholder: PropTypes.string,
   onChange: PropTypes.func
 }
