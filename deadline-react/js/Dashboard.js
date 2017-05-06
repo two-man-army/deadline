@@ -1,7 +1,8 @@
 import React from 'react'
 import { getLatestAttemptedChallenges } from './requests.js'
 import { Route, Switch } from 'react-router-dom'
-import ChallengeMetaInfo from './ChallengeMetaInfo.js'
+// import ChallengeMetaInfo from './ChallengeMetaInfo.js'
+import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo.js'
 import CategoryChallengeList from './CategoryChallengeList.js'
 import ChallengeDetails from './ChallengeDetails.js'
 
@@ -34,7 +35,7 @@ class Dashboard extends React.Component {
       <div>
         {this.state.challenges.map(challenge => {
           return (
-            <ChallengeMetaInfo {...challenge} />
+            <DisplayMetaInfo {...challenge} />
           )
         })}
       </div>
