@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {getSubCategoryChallenges} from './requests.js'
-import ChallengeMetaInfo from './ChallengeMetaInfo.js'
+import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo.js'
 
 class CategoryChallengeList extends React.Component {
   constructor (props) {
@@ -40,7 +40,7 @@ class CategoryChallengeList extends React.Component {
       <div>
         <h1>{this.subCategory} Challenges</h1>
         {this.state.challenges.map(challenge => {
-          return <ChallengeMetaInfo {...challenge} />
+          return <DisplayMetaInfo {...challenge} />
         })}
       </div>
     )
