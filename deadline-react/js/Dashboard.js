@@ -3,6 +3,7 @@ import { getLatestAttemptedChallenges } from './requests.js'
 import { Route, Switch } from 'react-router-dom'
 import ChallengeMetaInfo from './ChallengeMetaInfo.js'
 import CategoryChallengeList from './CategoryChallengeList.js'
+import ChallengeDetails from './ChallengeDetails.js'
 
 class Dashboard extends React.Component {
   constructor (props) {
@@ -46,6 +47,7 @@ class Dashboard extends React.Component {
         <Switch>
           <Route exact path='/' render={() => { return this.getDefaultDashboardDOM() }} />
           <Route exact path='/categories/:category' component={CategoryChallengeList} />
+          <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
         </Switch>
       </div>
     )
