@@ -1,4 +1,4 @@
-import {convertToUrlFriendlyText, convertFromUrlToFriendlyText} from '../helpers.js'
+import {divideCollectionIntoPieces, convertToUrlFriendlyText, convertFromUrlToFriendlyText} from '../helpers.js'
 
 it('convertToUrlFriendlyText should replace whitespaces and de-capitalize letters', done => {
   let input = 'Dynamic Programming'
@@ -22,5 +22,29 @@ it('convert helper functions should be resuable one after another', done => {
     input = convertFromUrlToFriendlyText(convertToUrlFriendlyText(input))
   }
   expect(input).toBe(origInput)
+  done()
+})
+
+it('divide collection should divide', done => {
+  let inputCol = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  let expectedOutput = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11]]
+
+  expect(divideCollectionIntoPieces(inputCol, 3)).toEqual(expectedOutput)
+  done()
+})
+
+it('divideCollectionIntoPieces should not alter original array', done => {
+  let inputCol = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  let expectedOutput = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11]]
+
+  divideCollectionIntoPieces(inputCol, 3)
+  expect(inputCol).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+  done()
+})
+
+it('divideCollection should put as much as possible into one list', done => {
+  let inputCol = [1, 2, 3]
+  let expectedOutput = [[1, 2, 3]]
+  expect(divideCollectionIntoPieces(inputCol, 12)).toEqual(expectedOutput)
   done()
 })

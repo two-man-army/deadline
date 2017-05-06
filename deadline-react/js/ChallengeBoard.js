@@ -8,6 +8,8 @@ import MonacoEditor from 'react-monaco-editor'
 import {postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
+import { Segment, Dimmer } from 'semantic-ui-react'
+import {divideCollectionIntoPieces} from './helpers.js'
 
 class ChallengeBoard extends React.Component {
   constructor (props) {
@@ -26,9 +28,9 @@ class ChallengeBoard extends React.Component {
     this.editorDidMount = this.editorDidMount.bind(this)
     this.submitSolution = this.submitSolution.bind(this)
     this.langChangeHandler = this.langChangeHandler.bind(this)
-    this.buildLoadingIcon = this.buildLoadingIcon.bind(this)
     this.getGradedSolution = this.getGradedSolution.bind(this)
     this.buildSolutionResults = this.buildSolutionResults.bind(this)
+    this.displayLoadingTests = this.displayLoadingTests.bind(this)
   }
 
   /**
@@ -75,13 +77,6 @@ class ChallengeBoard extends React.Component {
     )
   }
 
-  buildLoadingIcon () {
-    if (this.state.isGrading) {
-      return <h1>GRADING</h1>
-    }
-    return <div />
-  }
-
   /**
    * Build the information for the Select component with the Challenge's supported languages
    */
@@ -124,12 +119,7 @@ class ChallengeBoard extends React.Component {
       })
 
       // Divide the tests into components with 5 tests each
-      let splitTests = []
-      let testIdx = 0
-      while (testIdx < tests.length) {
-        splitTests.push(tests.slice(testIdx, testIdx + 5))
-        testIdx += 5
-      }
+      let splitTests = divideCollectionIntoPieces(tests, 5)
 
       let solutionResultsJSX = (
         <div className='solution-tests-container'>
@@ -181,11 +171,38 @@ class ChallengeBoard extends React.Component {
     })
   }
 
+  /**
+   * Displays loading test cases for when a user submits a solution and is waiting for it to be graded
+   */
+  displayLoadingTests () {
+    let loadingTests = []
+    for (let i = 1; i < this.props.test_case_count + 1; i += 1) {
+      loadingTests.push({number: i, success: false})
+    }
+
+    let splitTests = divideCollectionIntoPieces(loadingTests, 5)
+
+    let solutionResultsJSX = (
+      <Segment>
+        <div className='solution-tests-container'>
+          <Dimmer active />
+          {splitTests.map((tsts, idx) => {
+            return <ChallengeTestsResults key={idx} tests={tsts} toDim toLoad />
+          })}
+        </div>
+      </Segment>
+    )
+
+    this.setState({solutionResultsJSX: solutionResultsJSX})
+  }
+
   submitSolution () {
     postChallengeSolution(this.props.id, this.state.code, this.state.chosenLanguage).then(submission => {
-      console.log(submission)
       this.setState({hasSubmitted: true, isGrading: true})
-      this.getGradedSolution(this.props.id, submission.id)
+
+      this.displayLoadingTests()
+
+      this.getGradedSolution(this.props.id, submission.id)  // start querying for the updated solution
     }).catch(err => {
       throw err
     })
@@ -215,7 +232,6 @@ class ChallengeBoard extends React.Component {
           <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
         </div>
         <button onClick={this.submitSolution}>Submit</button>
-        {this.buildLoadingIcon()}
         {this.state.solutionResultsJSX}
         <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
       </div>
@@ -237,7 +253,7 @@ ChallengeBoard.propTypes = {
     sample_output: PropTypes.string,
     explanation: PropTypes.string
   }),
-  // test_case_count: PropTypes.number,
+  test_case_count: PropTypes.number,
   // category: PropTypes.string,
   supported_languages: PropTypes.arrayOf(PropTypes.string)
 }

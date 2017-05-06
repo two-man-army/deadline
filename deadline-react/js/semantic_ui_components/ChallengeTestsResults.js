@@ -2,15 +2,21 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Icon, List } from 'semantic-ui-react'
+import CircularProgress from 'material-ui/CircularProgress'
 
-const ChallengeTestsResults = ({tests}) => (
+const ChallengeTestsResults = ({tests, toLoad}) => (
   <List horizontal relaxed>
     {tests.map((test, idx) => {
-      let testIcon = test.success ? (
-        <Icon color='green' name='checkmark' />
-      ) : (
-        <Icon color='red' name='remove' />
-      )
+      let testIcon = null
+      if (toLoad) {
+        testIcon = <CircularProgress size={14} thickness={1} style={{display: 'inline'}} />
+      } else {
+        testIcon = test.success ? (
+          <Icon color='green' name='checkmark' />
+        ) : (
+          <Icon color='red' name='remove' />
+        )
+      }
 
       return (
         <List.Item key={test.number}>
@@ -28,7 +34,8 @@ ChallengeTestsResults.propTypes = {
   tests: PropTypes.shape({
     number: PropTypes.number,
     success: PropTypes.boolean
-  })
+  }),
+  toLoad: PropTypes.boolean
 }
 
 export default ChallengeTestsResults

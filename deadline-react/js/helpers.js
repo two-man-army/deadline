@@ -24,4 +24,21 @@ function getChallengeDetailsLink (id) {
   return `/challenges/${id}`
 }
 
-export {convertToUrlFriendlyText, convertFromUrlToFriendlyText, getChallengeDetailsLink}
+/**
+ * Divides a collection into pieces of peiceCount parts
+ * Basically splits it into lists which all contain at most pieceCount items
+ * example - divideCollectionIntoPieces([1,2,3,4,5,6,7], 2) -> [[1,2], [3,4], [5,6], [7]]
+ * @param {Number} pieceCount
+ */
+function divideCollectionIntoPieces (collection, pieceCount) {
+  let splitItems = []
+  let idx = 0
+  while (idx < collection.length) {
+    splitItems.push(collection.slice(idx, idx + pieceCount))
+    idx += pieceCount
+  }
+
+  return splitItems
+}
+
+export {divideCollectionIntoPieces, convertToUrlFriendlyText, convertFromUrlToFriendlyText, getChallengeDetailsLink}

@@ -6,8 +6,18 @@ import LoginPage from './LoginPage.js'
 import Auth from './auth.js'
 import Dashboard from './Dashboard.js'
 import {HashRouter as Router} from 'react-router-dom'
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
+import getMuiTheme from 'material-ui/styles/getMuiTheme'
+import {orange600} from 'material-ui/styles/colors'
 
 const selector = document.getElementById('app')
+
+// Configure the colors for Mui components
+const muiTheme = getMuiTheme({
+  palette: {
+    textColor: orange600
+  }
+})
 
 let App = null
 if (Auth.isUserAuthenticated()) {
@@ -34,7 +44,11 @@ App.propTypes = {
 }
 
 render(
-  (<Router>
-    <App name='deadline' />
-  </Router>)
+  (
+    <MuiThemeProvider muiTheme={muiTheme}>
+      <Router>
+        <App name='deadline' />
+      </Router>
+    </MuiThemeProvider>
+  )
 , selector)
