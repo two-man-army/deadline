@@ -12,10 +12,10 @@ const ChallengeTestsResults = ({tests}) => (
       )
 
       return (
-        <List.Item>
+        <List.Item key={test.number}>
           {testIcon}
           <List.Content>
-            <List.Header as='a'>{`Test Case #${idx + 1}`}</List.Header>
+            <List.Header as='a'>{`Test Case #${test.number}`}</List.Header>
           </List.Content>
         </List.Item>
       )

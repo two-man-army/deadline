@@ -7,6 +7,7 @@ import PropTypes from 'prop-types'
 import MonacoEditor from 'react-monaco-editor'
 import {postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
+import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
 
 class ChallengeBoard extends React.Component {
   constructor (props) {
@@ -116,11 +117,24 @@ class ChallengeBoard extends React.Component {
 
     // TODO: Query the server for the test results and display them
     getSolutionTests(solution.challenge, solution.id).then(tests => {
+      // Assign a number to each test case
+      tests = tests.map((test, idx) => {
+        test.number = idx + 1
+        return test
+      })
+
+      // Divide the tests into components with 5 tests each
+      let splitTests = []
+      let testIdx = 0
+      while (testIdx < tests.length) {
+        splitTests.push(tests.slice(testIdx, testIdx + 5))
+        testIdx += 5
+      }
+
       let solutionResultsJSX = (
-        <div>
-          {tests.map(test => {
-            console.log(test)
-            return <h1>{test.time}</h1>
+        <div className='solution-tests-container'>
+          {splitTests.map((tsts, idx) => {
+            return <ChallengeTestsResults key={idx} tests={tsts} />
           })}
         </div>
       )

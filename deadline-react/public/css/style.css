@@ -287,3 +287,12 @@ div.dashboard {
 div.lang-choice-select {  /* A wrapper for the Select choice for submission language */
     max-width: 250px;
 }
+
+.solution-tests-container {
+    text-align: center;
+    margin-top: 25px;
+    padding: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 10px;
+}
