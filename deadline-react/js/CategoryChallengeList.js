@@ -1,7 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {getSubCategoryChallenges} from './requests.js'
-import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo.js'
+import { Container } from 'semantic-ui-react'
+import { getSubCategoryChallenges } from './requests'
+import { convertFromUrlToFriendlyText } from './helpers'
+import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
 
 class CategoryChallengeList extends React.Component {
   constructor (props) {
@@ -37,12 +39,17 @@ class CategoryChallengeList extends React.Component {
 
   render () {
     return (
-      <div>
-        <h1>{this.subCategory} Challenges</h1>
-        {this.state.challenges.map(challenge => {
-          return <DisplayMetaInfo {...challenge} />
-        })}
-      </div>
+      <Container>
+        <div>
+          <h1 style={{margin: '20px 83px'}}>{convertFromUrlToFriendlyText(this.subCategory)} Challenges</h1>
+          {this.state.challenges.length === 0 &&
+            <p>There are no challenges for this category.</p>
+          }
+          {this.state.challenges.map(challenge => {
+            return <DisplayMetaInfo key={challenge.id} {...challenge} />
+          })}
+        </div>
+      </Container>
     )
   }
 }
