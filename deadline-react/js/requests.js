@@ -141,4 +141,17 @@ function getSolutionTests (challengeId, solutionId) {
   })
 }
 
-export { getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
+/**
+ * Queries the server for all the submissions for a challenge from the current user
+ * @param {Number} challengeId
+ */
+function getAllUserSolutions (challengeId) {
+  return axios.get(`http://localhost:8000/challenges/${challengeId}/submissions/all`, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while fetching solutions for challenge ${challengeId}`)
+    throw err
+  })
+}
+
+export { getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }

@@ -1,8 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Tabs from 'react-tabs-navigation'
-import {getChallengeDetails} from './requests.js'
+import {getChallengeDetails, getAllUserSolutions} from './requests.js'
 import ChallengeBoard from './ChallengeBoard.js'
+import SubmissionsTable from './semantic_ui_components/SubmissionsTable.js'
 
 class ChallengeDetails extends React.Component {
   constructor (props) {
@@ -24,7 +25,8 @@ class ChallengeDetails extends React.Component {
       },
       test_case_count: undefined,
       category: undefined,
-      supported_languages: []
+      supported_languages: [],
+      solutions: []
     }
 
     this.loadChallengeDetails = this.loadChallengeDetails.bind(this)
@@ -34,8 +36,17 @@ class ChallengeDetails extends React.Component {
   loadChallengeDetails () {
     getChallengeDetails(this.props.match.params.challengeId).then(challenge => {
       this.setState(challenge)
+      this.loadSubmissions(challenge.id)
     }).catch(err => {
       throw err  // TODO: handle
+    })
+  }
+
+  loadSubmissions (challengeId) {
+    getAllUserSolutions(challengeId).then(solutions => {
+      this.setState({solutions})
+    }).catch(err => {
+      throw err
     })
   }
 
@@ -54,9 +65,7 @@ class ChallengeDetails extends React.Component {
           },
           {
             children: () => (
-              <div>
-                This is the second tab content
-              </div>
+              <SubmissionsTable maxScore={this.state.score} submissions={this.state.solutions} />
             ),
             displayName: 'Submissions'
           },

@@ -36,6 +36,7 @@
     "react-monaco-editor": "^0.8.1",
     "react-router-dom": "^4.1.1",
     "react-tabs-navigation": "^0.4.4",
+    "react-timeago": "^3.3.0",
     "semantic-ui-react": "^0.68.2",
     "standard": "^10.0.2",
     "sweetalert-react": "^0.4.9",
