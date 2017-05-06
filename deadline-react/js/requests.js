@@ -97,4 +97,20 @@ function getChallengeDetails (challengeId) {
   })
 }
 
-export { postLogIn, postRegister, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
+/**
+ * Posts the code as the solution to a specific Challenge
+ * @param {Number} challengeId
+ * @param {String} code
+ */
+function postChallengeSolution (challengeId, code, language) {
+  return axios.post(`http://localhost:8000/challenges/${challengeId}/submissions/new`, {code, language}, getAxiosConfig())
+  .then(resp => {
+    let submission = resp.data
+    return submission
+  }).catch(err => {
+    console.log(`Err while submitting solution to challenge with ID ${challengeId}`)
+    throw err
+  })
+}
+
+export { postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
