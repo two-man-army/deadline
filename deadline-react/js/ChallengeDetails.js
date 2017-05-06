@@ -1,9 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Tabs from 'react-tabs-navigation'
-import {getChallengeDetails, getAllUserSolutions} from './requests.js'
+import {getTopSolutions, getChallengeDetails, getAllUserSolutions} from './requests.js'
 import ChallengeBoard from './ChallengeBoard.js'
 import SubmissionsTable from './semantic_ui_components/SubmissionsTable.js'
+import LeaderboardTable from './semantic_ui_components/LeaderboardTable.js'
 
 class ChallengeDetails extends React.Component {
   constructor (props) {
@@ -30,6 +31,7 @@ class ChallengeDetails extends React.Component {
     }
 
     this.loadChallengeDetails = this.loadChallengeDetails.bind(this)
+    this.loadTopSubmissions = this.loadTopSubmissions.bind(this)
     this.loadChallengeDetails()
   }
 
@@ -45,6 +47,15 @@ class ChallengeDetails extends React.Component {
   loadSubmissions (challengeId) {
     getAllUserSolutions(challengeId).then(solutions => {
       this.setState({solutions})
+      this.loadTopSubmissions(challengeId)
+    }).catch(err => {
+      throw err
+    })
+  }
+
+  loadTopSubmissions (challengeId) {
+    getTopSolutions(challengeId).then(solutions => {
+      this.setState({topSolutions: solutions})
     }).catch(err => {
       throw err
     })
@@ -71,9 +82,7 @@ class ChallengeDetails extends React.Component {
           },
           {
             children: () => (
-              <div>
-                This is the second tab content
-              </div>
+              <LeaderboardTable maxScore={this.state.score} submissions={this.state.topSolutions} />
             ),
             displayName: 'Leaderboard'
           }

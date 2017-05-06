@@ -11,17 +11,18 @@ class SubmissionsTable extends React.Component {
   }
   buildSubmissionRow (submission) {
     let submissionStatusIcon = null
+    let iconSizeStyle = {'fontSize': '22px'}  // for some reason the size prop does not work
     if (submission.pending) {
-      submissionStatusIcon = <Icon size='small' color='orange' name='spinner' loading />
+      submissionStatusIcon = <Icon size='small' color='orange' name='spinner' loading style={iconSizeStyle} />
     } else {
       if (submission.compiled && submission.result_score !== 0) {
         if (submission.result_score === this.props.maxScore) {
-          submissionStatusIcon = <Icon size='small' color='green' name='checkmark' />
+          submissionStatusIcon = <Icon size='small' color='green' name='checkmark' style={iconSizeStyle} />
         } else {
-          submissionStatusIcon = <Icon size='small' color='orange' name='star half' />
+          submissionStatusIcon = <Icon size='small' color='orange' name='star half' style={iconSizeStyle} />
         }
       } else {
-        submissionStatusIcon = <Icon size='small' color='red' name='remove' />
+        submissionStatusIcon = <Icon size='small' color='red' name='remove' style={iconSizeStyle} />
       }
     }
 
@@ -34,9 +35,12 @@ class SubmissionsTable extends React.Component {
     return (
       <Table.Row key={submission.id}>
         <Table.Cell>
-          <Header as='p' icon style={{'fontSize': '10px'}}>
-            {submissionStatusIcon}
+          <Header as='h3' >
+            {submission.author}
           </Header>
+        </Table.Cell>
+        <Table.Cell>
+          {submissionStatusIcon}
         </Table.Cell>
         <Table.Cell>
           {`${submission.result_score}/${this.props.maxScore}`}
@@ -57,6 +61,7 @@ class SubmissionsTable extends React.Component {
       <Table basic='very' style={{margin: '20px auto', padding: '0 20px'}} >
         <Table.Header>
           <Table.Row>
+            <Table.HeaderCell>Author</Table.HeaderCell>
             <Table.HeaderCell>Status</Table.HeaderCell>
             <Table.HeaderCell>Score</Table.HeaderCell>
             <Table.HeaderCell>Language</Table.HeaderCell>

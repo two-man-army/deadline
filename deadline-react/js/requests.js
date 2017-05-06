@@ -154,4 +154,17 @@ function getAllUserSolutions (challengeId) {
   })
 }
 
-export { getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
+/**
+ * Queries the server for the top submissions for a challenge (one for each author)
+ * @param {Number} challengeId
+ */
+function getTopSolutions (challengeId) {
+  return axios.get(`http://localhost:8000/challenges/${challengeId}/submissions/top`, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while fetching top solutions for challenge ${challengeId}`)
+    throw err
+  })
+}
+
+export { getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
