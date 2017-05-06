@@ -83,4 +83,18 @@ function getSubCategoryChallenges (subCategory) {
   })
 }
 
-export { postLogIn, postRegister, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges }
+/**
+ * Returns information about a specific Challenge
+ * @param {String} challengeId
+ */
+function getChallengeDetails (challengeId) {
+  return axios.get(`http://localhost:8000/challenges/${challengeId}`, getAxiosConfig())
+  .then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while fetching Challenge with ID ${challengeId}`)
+    throw err
+  })
+}
+
+export { postLogIn, postRegister, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
