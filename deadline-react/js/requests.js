@@ -113,4 +113,32 @@ function postChallengeSolution (challengeId, code, language) {
   })
 }
 
-export { postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
+/**
+ * Queries the server for a specific solution
+ * @param {Number} challengeId
+ * @param {Number} solutionId
+ */
+function getChallengeSolution (challengeId, solutionId) {
+  return axios.get(`http://localhost:8000/challenges/${challengeId}/submissions/${solutionId}`, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while getting solution ${solutionId} for challenge ${challengeId}`)
+    throw err
+  })
+}
+
+/**
+ * Queries the server for the test cases of a given solution
+ * @param {Number} challengeId
+ * @param {Number} solutionId
+ */
+function getSolutionTests (challengeId, solutionId) {
+  return axios.get(`http://localhost:8000/challenges/${challengeId}/submissions/${solutionId}/tests`, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while getting tests for solution ${solutionId} for challenge ${challengeId}`)
+    throw err
+  })
+}
+
+export { getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }

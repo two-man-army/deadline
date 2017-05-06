@@ -5,7 +5,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import MonacoEditor from 'react-monaco-editor'
-import {postChallengeSolution} from './requests.js'
+import {postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 
 class ChallengeBoard extends React.Component {
@@ -13,13 +13,21 @@ class ChallengeBoard extends React.Component {
     super(props)
     this.state = {
       code: '',  // TODO: Load sample code
-      chosenLanguage: 'Python'  // TODO: Change with drop down
+      chosenLanguage: 'Python',  // TODO: Change with drop down
+      hasSubmitted: false,
+      isGrading: false,
+      loadedResults: false,
+      gradedSolution: undefined,
+      solutionResultsJSX: <div />
     }
     this.buildDescription = this.buildDescription.bind(this)
     this.onChange = this.onChange.bind(this)
     this.editorDidMount = this.editorDidMount.bind(this)
     this.submitSolution = this.submitSolution.bind(this)
     this.langChangeHandler = this.langChangeHandler.bind(this)
+    this.buildLoadingIcon = this.buildLoadingIcon.bind(this)
+    this.getGradedSolution = this.getGradedSolution.bind(this)
+    this.buildSolutionResults = this.buildSolutionResults.bind(this)
   }
 
   /**
@@ -66,6 +74,13 @@ class ChallengeBoard extends React.Component {
     )
   }
 
+  buildLoadingIcon () {
+    if (this.state.isGrading) {
+      return <h1>GRADING</h1>
+    }
+    return <div />
+  }
+
   /**
    * Build the information for the Select component with the Challenge's supported languages
    */
@@ -86,6 +101,36 @@ class ChallengeBoard extends React.Component {
     return options
   }
 
+  /**
+   * Build the JSX for displaying what the submission has scored
+   */
+  buildSolutionResults () {
+    let solution = this.state.gradedSolution
+    if (solution.pending) {
+      throw Error('Solution is pending when we want to show the results!')
+    }
+
+    if (!solution.compiled) {
+      // TODO: Solution has not compiled - show an error message
+    }
+
+    // TODO: Query the server for the test results and display them
+    getSolutionTests(solution.challenge, solution.id).then(tests => {
+      let solutionResultsJSX = (
+        <div>
+          {tests.map(test => {
+            console.log(test)
+            return <h1>{test.time}</h1>
+          })}
+        </div>
+      )
+
+      this.setState({solutionResultsJSX: solutionResultsJSX})
+    }).catch(err => {
+      throw err  // TODO: Handle
+    })
+  }
+
   editorDidMount (editor, monaco) {
     console.log('editorDidMount', editor)
     editor.focus()
@@ -101,10 +146,32 @@ class ChallengeBoard extends React.Component {
     this.setState({chosenLanguage: e.value})
   }
 
+  /**
+   * Constantly query the server until the solution is grader
+   * @param {Number} challengeId
+   * @param {Number} solutionId
+   */
+  getGradedSolution (challengeId, solutionId) {
+    return getChallengeSolution(challengeId, solutionId).then(solution => {
+      console.log(`Solution is pending ${solution.pending}`)
+      if (solution.pending) {
+        // Continue to query the server for the given solution
+        return setTimeout(() => {
+          return this.getGradedSolution(challengeId, solutionId)
+        }, 1000)
+      }
+
+      this.setState({isGrading: false, gradedSolution: solution})
+      this.buildSolutionResults()
+      return solution
+    })
+  }
+
   submitSolution () {
-    console.log('Submitting challenge')
     postChallengeSolution(this.props.id, this.state.code, this.state.chosenLanguage).then(submission => {
       console.log(submission)
+      this.setState({hasSubmitted: true, isGrading: true})
+      this.getGradedSolution(this.props.id, submission.id)
     }).catch(err => {
       throw err
     })
@@ -134,6 +201,8 @@ class ChallengeBoard extends React.Component {
           <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
         </div>
         <button onClick={this.submitSolution}>Submit</button>
+        {this.buildLoadingIcon()}
+        {this.state.solutionResultsJSX}
         <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
       </div>
     )
