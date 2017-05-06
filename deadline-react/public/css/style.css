@@ -300,3 +300,16 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 .solution-tests-container .list {  /* Block display for each child list with tests */
     display: block !important;
 }
+
+/* Override semantic ui card styles */
+.dashboard .ui.card {
+    margin: 20px auto;
+}
+
+.dashboard .ui.card, .ui.cards>.card {
+    width: 960px;
+}
+
+.dashboard .go-to-challenge {
+    margin-top: 10px;
+}
