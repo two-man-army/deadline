@@ -287,3 +287,17 @@ div.dashboard {
 div.lang-choice-select {  /* A wrapper for the Select choice for submission language */
     max-width: 250px;
 }
+
+
+/* Override semantic ui card styles */
+.dashboard .ui.card {
+    margin: 20px auto;
+}
+
+.dashboard .ui.card, .ui.cards>.card {
+    width: 960px;
+}
+
+.dashboard .go-to-challenge {
+    margin-top: 10px;
+}
