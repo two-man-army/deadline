@@ -1,9 +1,0 @@
-.ui.card {
-    margin: 0 auto;
-}
-
-.ui.card,
-.ui.cards>.card {
-    width: 900px;
-}
-
