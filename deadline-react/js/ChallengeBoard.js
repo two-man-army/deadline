@@ -6,7 +6,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import MonacoEditor from 'react-monaco-editor'
 import {postChallengeSolution} from './requests.js'
-
+import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 
 class ChallengeBoard extends React.Component {
   constructor (props) {
@@ -19,6 +19,7 @@ class ChallengeBoard extends React.Component {
     this.onChange = this.onChange.bind(this)
     this.editorDidMount = this.editorDidMount.bind(this)
     this.submitSolution = this.submitSolution.bind(this)
+    this.langChangeHandler = this.langChangeHandler.bind(this)
   }
 
   /**
@@ -65,6 +66,26 @@ class ChallengeBoard extends React.Component {
     )
   }
 
+  /**
+   * Build the information for the Select component with the Challenge's supported languages
+   */
+  buildLanguageSelectOptions () {
+    let options = []
+    this.props.supported_languages.forEach(lang => {
+      options.push({
+        key: lang,
+        value: lang,
+        text: lang,
+        image: {
+          avatar: true,
+          src: `/assets/img/avatars/small/${lang.toLowerCase()}.png`
+        }
+      })
+    })
+
+    return options
+  }
+
   editorDidMount (editor, monaco) {
     console.log('editorDidMount', editor)
     editor.focus()
@@ -73,6 +94,11 @@ class ChallengeBoard extends React.Component {
   onChange (newValue, e) {
     console.log('onChange', newValue, e)
     this.setState({code: newValue})
+  }
+
+  langChangeHandler (event, e) {
+    // TODO: Change code on editor
+    this.setState({chosenLanguage: e.value})
   }
 
   submitSolution () {
@@ -104,6 +130,9 @@ class ChallengeBoard extends React.Component {
           editorDidMount={this.editorDidMount}
           requireConfig={requireConfig}
         />
+        <div className='lang-choice-select'>
+          <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
+        </div>
         <button onClick={this.submitSolution}>Submit</button>
         <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
       </div>

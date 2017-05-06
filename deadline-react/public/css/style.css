@@ -283,3 +283,7 @@ div.login-html input:focus {
 div.dashboard {
     margin-left: 280px;  /* to go beyond the sidebar */
 }
+
+div.lang-choice-select {  /* A wrapper for the Select choice for submission language */
+    max-width: 250px;
+}
