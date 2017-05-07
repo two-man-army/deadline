@@ -1,6 +1,7 @@
 import React from 'react'
 import { getLatestAttemptedChallenges } from './requests.js'
 import { Route, Switch } from 'react-router-dom'
+import DashboardHeader from './semantic_ui_components/DashboardHeader'
 import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
 import CategoryChallengeList from './CategoryChallengeList'
 import ChallengeDetails from './ChallengeDetails'
@@ -45,6 +46,7 @@ class Dashboard extends React.Component {
   render () {
     return (
       <div className='dashboard'>
+        <DashboardHeader />
         <Switch>
           <Route exact path='/' render={() => { return this.getDefaultDashboardDOM() }} />
           <Route exact path='/categories/:category' component={CategoryChallengeList} />
