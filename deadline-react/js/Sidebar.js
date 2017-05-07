@@ -58,9 +58,10 @@ class SideBar extends React.Component {
     if (!this.state.loadedCategories) {
       return <div style={{background: '#2c3e50', color: '#FFF', width: 220, height: window.innerHeight}} />
     }
+
     return (
       <div>
-        <MetisMenu content={this.buildSidebarContent()} />
+        <MetisMenu content={this.buildSidebarContent()} activeLinkFromLocation />
         <div className='top-header'>
           <div className='user pull-right'>
             <div className='user-score'>
