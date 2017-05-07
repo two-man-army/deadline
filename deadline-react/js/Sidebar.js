@@ -2,6 +2,8 @@ import React from 'react'
 import MetisMenu from 'react-metismenu'
 import { getCategoriesMetaInfo } from './requests.js'
 import { convertToUrlFriendlyText } from './helpers.js'
+import { Button } from 'semantic-ui-react'
+import Auth from './auth.js'
 
 class SideBar extends React.Component {
   constructor (props) {
@@ -54,6 +56,11 @@ class SideBar extends React.Component {
     return content
   }
 
+  handleLogout () {
+    Auth.deauthenticateUser()
+    window.location.reload()
+  }
+
   render () {
     if (!this.state.loadedCategories) {
       return <div style={{background: '#2c3e50', color: '#FFF', width: 220, height: window.innerHeight}} />
@@ -63,6 +70,14 @@ class SideBar extends React.Component {
       <div>
         <MetisMenu content={this.buildSidebarContent()} activeLinkFromLocation />
         <div className='top-header'>
+          <Button animated='fade' onClick={this.handleLogout} style={{color: '#ff5533', background: 'transparent', height: '100%'}}>
+            <Button.Content visible>
+              Logout
+            </Button.Content>
+            <Button.Content hidden>
+              Bye! :)
+            </Button.Content>
+          </Button>
           <div className='user pull-right'>
             <div className='user-score'>
               <p>Score: placeholder</p>
