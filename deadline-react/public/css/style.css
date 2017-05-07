@@ -301,6 +301,10 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
     display: block !important;
 }
 
+.dashboard {
+    margin-top: 20px;
+}
+
 /* Override semantic ui card styles */
 .dashboard .ui.card {
     margin: 20px auto;
@@ -312,4 +316,18 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 
 .dashboard .go-to-challenge {
     margin-top: 10px;
+}
+
+.page-not-found {
+    margin-top: -20px;
+    padding: 20px;
+    background: peru;
+}
+
+.page-not-found h3 {
+    display: inline-block;
+}
+
+.page-not-found p {
+    margin-top: 20px;
 }
