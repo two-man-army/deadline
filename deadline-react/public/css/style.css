@@ -301,10 +301,6 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
     display: block !important;
 }
 
-.dashboard {
-    margin-top: 20px;
-}
-
 /* Override semantic ui card styles */
 .dashboard .ui.card {
     margin: 20px auto;
@@ -335,4 +331,11 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 .leaderboard-search i.dropdown.icon {
     /* Slight space for the triangle icon in the dropdown*/
     margin-left: 10px !important;
+}
+
+/* Dashboard header */
+.dashboard-header {
+    margin-bottom: 20px;
+    background: #303336;
+    height: 65px;
 }
