@@ -339,3 +339,22 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
     background: #303336;
     height: 65px;
 }
+
+
+.dashboard-header .user {
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  color: rgb(255, 85, 51)
+}
+
+.dashboard-header .notification-icon {
+    margin-left: 5px;
+}
+
+.dashboard-header img {
+    margin: 0 5px 0 10px;
+    width: 50px;
+    height: 50px;
+}
