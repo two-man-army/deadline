@@ -331,3 +331,8 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 .page-not-found p {
     margin-top: 20px;
 }
+
+.leaderboard-search i.dropdown.icon {
+    /* Slight space for the triangle icon in the dropdown*/
+    margin-left: 10px !important;
+}
