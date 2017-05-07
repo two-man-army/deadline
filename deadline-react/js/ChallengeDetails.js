@@ -5,6 +5,7 @@ import {getTopSolutions, getChallengeDetails, getAllUserSolutions} from './reque
 import ChallengeBoard from './ChallengeBoard.js'
 import SubmissionsTable from './semantic_ui_components/SubmissionsTable.js'
 import LeaderboardTable from './semantic_ui_components/LeaderboardTable.js'
+import { Container } from 'semantic-ui-react'
 
 class ChallengeDetails extends React.Component {
   constructor (props) {
@@ -63,31 +64,33 @@ class ChallengeDetails extends React.Component {
 
   render () {
     return (
-      <Tabs
-        banner={{
-          children: this.state.name
-        }}
-        tabs={[
-          {
-            children: () => (
-              <ChallengeBoard {...this.state} />
-            ),
-            displayName: 'Challenge'
-          },
-          {
-            children: () => (
-              <SubmissionsTable maxScore={this.state.score} submissions={this.state.solutions} />
-            ),
-            displayName: 'Submissions'
-          },
-          {
-            children: () => (
-              <LeaderboardTable maxScore={this.state.score} submissions={this.state.topSolutions} />
-            ),
-            displayName: 'Leaderboard'
-          }
-        ]}
-      />
+      <Container>
+        <Tabs
+          banner={{
+            children: this.state.name
+          }}
+          tabs={[
+            {
+              children: () => (
+                <ChallengeBoard {...this.state} />
+              ),
+              displayName: 'Challenge'
+            },
+            {
+              children: () => (
+                <SubmissionsTable maxScore={this.state.score} submissions={this.state.solutions} />
+              ),
+              displayName: 'Submissions'
+            },
+            {
+              children: () => (
+                <LeaderboardTable maxScore={this.state.score} submissions={this.state.topSolutions} />
+              ),
+              displayName: 'Leaderboard'
+            }
+          ]}
+        />
+      </Container>
     )
   }
 }
