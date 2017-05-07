@@ -8,7 +8,7 @@ import MonacoEditor from 'react-monaco-editor'
 import {postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
-import { Segment, Dimmer } from 'semantic-ui-react'
+import { Segment, Dimmer, Container } from 'semantic-ui-react'
 import {divideCollectionIntoPieces} from './helpers.js'
 
 class ChallengeBoard extends React.Component {
@@ -141,7 +141,6 @@ class ChallengeBoard extends React.Component {
   }
 
   onChange (newValue, e) {
-    console.log('onChange', newValue, e)
     this.setState({code: newValue})
   }
 
@@ -212,29 +211,31 @@ class ChallengeBoard extends React.Component {
     const requireConfig = {
       url: 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js',
       paths: {
-        'vs': '/node_modules/monaco-editor/min/vs/'
+        'vs': '/node_modules/monaco-editor/min/vs'
       }
     }
     // TODO: Show test results
     return (
-      <div className='challenge-board'>
-        {this.buildDescription()}
-        <MonacoEditor
-          width='800'
-          height='600'
-          language='javascript'
-          value={this.state.code}
-          onChange={this.onChange}
-          editorDidMount={this.editorDidMount}
-          requireConfig={requireConfig}
-        />
-        <div className='lang-choice-select'>
-          <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
+      <Container>
+        <div className='challenge-board'>
+          {this.buildDescription()}
+          <MonacoEditor
+            width='800'
+            height='600'
+            language='javascript'
+            value={this.state.code}
+            onChange={this.onChange}
+            editorDidMount={this.editorDidMount}
+            requireConfig={requireConfig}
+          />
+          <div className='lang-choice-select'>
+            <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
+          </div>
+          <button onClick={this.submitSolution}>Submit</button>
+          {this.state.solutionResultsJSX}
+          <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
         </div>
-        <button onClick={this.submitSolution}>Submit</button>
-        {this.state.solutionResultsJSX}
-        <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
-      </div>
+      </Container>
     )
   }
 }
