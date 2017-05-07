@@ -19,6 +19,15 @@ const DashboardHeader = () => {
           Bye! :)
         </Button.Content>
       </Button>
+      <div className='user pull-right'>
+        <div className='user-score'>
+          <p>Score: placeholder</p>
+        </div>
+        <div className='notification-icon'>
+          <i className='fa fa-bell-o' />
+        </div>
+        <img src='/assets/img/avatar.jpg' />
+      </div>
     </Header>
   )
 }
