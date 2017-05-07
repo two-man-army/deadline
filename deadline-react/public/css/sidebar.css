@@ -42,6 +42,11 @@
   margin: 0;
   padding: 0;
 }
+
+.metismenu-container.visible .metismenu-item:hover {
+    border-left: 3px solid peru;
+}
+
 .metismenu-container {
   list-style: none;
 }
