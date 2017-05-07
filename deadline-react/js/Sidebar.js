@@ -41,6 +41,7 @@ class SideBar extends React.Component {
     ]
     content = content.concat(this.state.categories.map(category => {
       return {
+        icon: 'graduation-cap',
         label: category.name,
         content: category.sub_categories.map(subCategory => {
           return {
