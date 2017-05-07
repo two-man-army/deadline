@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { Dropdown, Input, Icon, Header, Image, Table } from 'semantic-ui-react'
 import TimeAgo from 'react-timeago'
 
-class SubmissionsTable extends React.Component {
+class LeaderboardTable extends React.Component {
   constructor (props) {
     super(props)
 
@@ -115,6 +115,15 @@ class SubmissionsTable extends React.Component {
     this.setState({submissions, chosenSearchField: e.value})
   }
 
+  /**
+   * Reload the submissions props when we've received new info
+   */
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.submissions.length !== this.props.submissions.length) {
+      this.setState({submissions: nextProps.submissions})  // this is subject to problems, i.e resetting search queries
+    }
+  }
+
   render () {
     return (
       <div>
@@ -148,9 +157,9 @@ class SubmissionsTable extends React.Component {
   }
 }
 
-SubmissionsTable.propTypes = {
+LeaderboardTable.propTypes = {
   maxScore: PropTypes.number,
   submissions: PropTypes.array
 }
 
-export default SubmissionsTable
+export default LeaderboardTable

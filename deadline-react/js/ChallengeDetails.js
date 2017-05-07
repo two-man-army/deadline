@@ -1,11 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Tabs from 'react-tabs-navigation'
+import {Tabs, Tab} from 'material-ui/Tabs'
 import {getTopSolutions, getChallengeDetails, getAllUserSolutions} from './requests.js'
 import ChallengeBoard from './ChallengeBoard.js'
 import SubmissionsTable from './semantic_ui_components/SubmissionsTable.js'
 import LeaderboardTable from './semantic_ui_components/LeaderboardTable.js'
 import { Container } from 'semantic-ui-react'
+import SwipeableViews from 'react-swipeable-views'
 
 class ChallengeDetails extends React.Component {
   constructor (props) {
@@ -28,11 +29,14 @@ class ChallengeDetails extends React.Component {
       test_case_count: undefined,
       category: undefined,
       supported_languages: [],
-      solutions: []
+      solutions: [],
+      topSolutions: [],
+      slideIndex: 0
     }
 
     this.loadChallengeDetails = this.loadChallengeDetails.bind(this)
     this.loadTopSubmissions = this.loadTopSubmissions.bind(this)
+    this.handleTabChange = this.handleTabChange.bind(this)
     this.loadChallengeDetails()
   }
 
@@ -40,6 +44,7 @@ class ChallengeDetails extends React.Component {
     getChallengeDetails(this.props.match.params.challengeId).then(challenge => {
       this.setState(challenge)
       this.loadSubmissions(challenge.id)
+      this.loadTopSubmissions(challenge.id)
     }).catch(err => {
       throw err  // TODO: handle
     })
@@ -48,7 +53,6 @@ class ChallengeDetails extends React.Component {
   loadSubmissions (challengeId) {
     getAllUserSolutions(challengeId).then(solutions => {
       this.setState({solutions})
-      this.loadTopSubmissions(challengeId)
     }).catch(err => {
       throw err
     })
@@ -62,35 +66,54 @@ class ChallengeDetails extends React.Component {
     })
   }
 
+  handleTabChange (value, e) {
+    this.setState({
+      slideIndex: value
+    })
+  }
+
   render () {
+    const styles = {
+      headline: {
+        fontSize: 24,
+        paddingTop: 16,
+        marginBottom: 12,
+        fontWeight: 400
+      },
+      slide: {
+        padding: 10
+      }
+    }
     return (
-      <Container>
-        <Tabs
-          banner={{
-            children: this.state.name
-          }}
-          tabs={[
-            {
-              children: () => (
-                <ChallengeBoard {...this.state} />
-              ),
-              displayName: 'Challenge'
-            },
-            {
-              children: () => (
-                <SubmissionsTable maxScore={this.state.score} submissions={this.state.solutions} />
-              ),
-              displayName: 'Submissions'
-            },
-            {
-              children: () => (
-                <LeaderboardTable maxScore={this.state.score} submissions={this.state.topSolutions} />
-              ),
-              displayName: 'Leaderboard'
-            }
-          ]}
-        />
-      </Container>
+      <div>
+        <Container>
+          <Tabs
+            onChange={this.handleTabChange}
+            value={this.state.slideIndex}
+            className='challenge-details-tab'
+            tabItemContainerStyle={{background: '#303336'}}
+            inkBarStyle={{color: '#f55333'}}
+          >
+            <Tab label='Challenge' value={0} onClick={() => { this.handleTabChange(0) }} buttonStyle={{fontWeight: 'bold'}} />
+            <Tab label='Submissions' value={1} onClick={() => { this.handleTabChange(1) }} buttonStyle={{fontWeight: 'bold'}} />
+            <Tab label='Leaderboard' value={2} onClick={() => { this.handleTabChange(2) }} buttonStyle={{fontWeight: 'bold'}} />
+          </Tabs>
+          <SwipeableViews
+            index={this.state.slideIndex}
+            onChangeIndex={this.handleTabChange}
+          >
+            <div>
+              <ChallengeBoard {...this.state} />
+            </div>
+            <div style={styles.slide}>
+              <SubmissionsTable maxScore={this.state.score} submissions={this.state.solutions} />
+            </div>
+            <div style={styles.slide}>
+              <LeaderboardTable maxScore={this.state.score} submissions={this.state.topSolutions} />
+            </div>
+          </SwipeableViews>
+        </Container>
+      </div>
     )
   }
 }
