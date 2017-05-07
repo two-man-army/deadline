@@ -1,10 +1,10 @@
 import React from 'react'
 import { getLatestAttemptedChallenges } from './requests.js'
 import { Route, Switch } from 'react-router-dom'
-// import ChallengeMetaInfo from './ChallengeMetaInfo.js'
-import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo.js'
-import CategoryChallengeList from './CategoryChallengeList.js'
-import ChallengeDetails from './ChallengeDetails.js'
+import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
+import CategoryChallengeList from './CategoryChallengeList'
+import ChallengeDetails from './ChallengeDetails'
+import RouteNotFound from './RouteNotFound'
 
 class Dashboard extends React.Component {
   constructor (props) {
@@ -35,7 +35,7 @@ class Dashboard extends React.Component {
       <div>
         {this.state.challenges.map(challenge => {
           return (
-            <DisplayMetaInfo {...challenge} />
+            <DisplayMetaInfo key={challenge.id} {...challenge} />
           )
         })}
       </div>
@@ -49,6 +49,7 @@ class Dashboard extends React.Component {
           <Route exact path='/' render={() => { return this.getDefaultDashboardDOM() }} />
           <Route exact path='/categories/:category' component={CategoryChallengeList} />
           <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
+          <Route path='*' component={RouteNotFound} />
         </Switch>
       </div>
     )
