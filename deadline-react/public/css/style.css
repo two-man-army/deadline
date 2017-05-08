@@ -362,3 +362,22 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 .dashboard-header img:hover {
     cursor: pointer;
 }
+
+/* Account */
+.account-options ul {
+    width: 80%;
+    text-align: center;
+}
+
+.account-options ul li {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.account-options ul li:first-of-type {
+    border-top: 1px solid #ccc;
+}
+
+.description.account-dialog {
+    width: 100% !important;
+}
