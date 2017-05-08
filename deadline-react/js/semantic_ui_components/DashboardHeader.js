@@ -2,6 +2,7 @@ import React from 'react'
 import Auth from '../auth'
 import { Header } from 'grommet'
 import { Button } from 'semantic-ui-react'
+import ProfileOptions from './ProfileOptions'
 
 const DashboardHeader = () => {
   const handleLogout = () => {
@@ -26,7 +27,7 @@ const DashboardHeader = () => {
         <div className='notification-icon'>
           <i className='fa fa-bell-o' />
         </div>
-        <img src='/assets/img/avatar.jpg' />
+        <ProfileOptions />
       </div>
     </Header>
   )
