@@ -358,3 +358,7 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
     width: 50px;
     height: 50px;
 }
+
+.dashboard-header img:hover {
+    cursor: pointer;
+}
