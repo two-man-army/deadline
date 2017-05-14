@@ -2,7 +2,8 @@
 ![Deadline Logo](https://i.imgur.com/4htmJCt.png)
 
 Web App for solving programming challenges
-<img src="/sample.gif?raw=true" width="500px">
+
+<img src="/sample.gif?raw=true" width="1000px">
 
 ## Still a work in progress
 Supported languages:
