@@ -7,18 +7,20 @@ import time
 from challenges.models import Challenge, Submission
 from challenges.helper import convert_to_normal_text
 from constants import (MAX_TEST_RUN_SECONDS, PYTHONLANG_NAME, RUSTLANG_NAME, CPPLANG_NAME, DOCKER_CLIENT,
-                       DOCKER_IMAGE_PATH, TESTS_FOLDER_NAME, SITE_ROOT, CHALLENGES_APP_FOLDER_NAME, GRADER_FILE_NAME)
+                       DOCKER_IMAGE_PATH, TESTS_FOLDER_NAME, SITE_ROOT, CHALLENGES_APP_FOLDER_NAME, GRADER_FILE_NAME,
+                       GOLANG_NAME)
 
 from deadline.celery import app
 
-from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader
+from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader
 
 from challenges.helper import delete_file
 
 LANGUAGE_GRADERS = {
     PYTHONLANG_NAME: PythonGrader,
     RUSTLANG_NAME: RustGrader,
-    CPPLANG_NAME: CppGrader
+    CPPLANG_NAME: CppGrader,
+    GOLANG_NAME: GoGrader
 }
 
 

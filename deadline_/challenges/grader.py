@@ -25,6 +25,7 @@ TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds test
 RUSTLANG_NAME = 'Rust'
 PYTHONLANG_NAME = 'Python'
 CPPLANG_NAME = 'C++'
+GOLANG_NAME = 'Go'
 
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
@@ -52,6 +53,10 @@ PYTHON_TIMEOUT_SECONDS = 5
 PYTHON_FILE_EXTENSION = '.py'
 PYTHON_RUN_COMMAND = 'python3'
 
+GO_TIMEOUT_SECONDS = 4
+GO_FILE_EXTENSION = '.go'
+GO_COMPILE_ARGS = ['go', 'build']
+
 
 def main():
     """
@@ -62,12 +67,13 @@ def main():
     LANGUAGE_GRADERS = {
         PYTHONLANG_NAME: PythonGrader,
         RUSTLANG_NAME: RustGrader,
-        CPPLANG_NAME: CppGrader
+        CPPLANG_NAME: CppGrader,
+        GOLANG_NAME: GoGrader
     }
     solution_file = sys.argv[1]
     test_count = int(sys.argv[2])
     language = sys.argv[3]
-
+    print(f'Language is {language}')
     grader = LANGUAGE_GRADERS[language](test_count, solution_file)
 
     # Print out the results so that the main program running docker can get the information
@@ -360,6 +366,12 @@ class CppGrader(CompilableLangGrader):
         else:
             self.compiled = True
             self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
+
+
+class GoGrader(CompilableLangGrader):
+    TIMEOUT_SECONDS = GO_TIMEOUT_SECONDS
+    COMPILE_ARGS = GO_COMPILE_ARGS
+    FILE_EXTENSION = GO_FILE_EXTENSION
 
 
 class PythonGrader(InterpretableLangGrader):
