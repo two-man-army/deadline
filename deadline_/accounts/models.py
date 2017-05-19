@@ -21,7 +21,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
 class User(AbstractBaseUser):
     USERNAME_FIELD = 'email'
-    username = models.CharField(max_length=30)
+    username = models.CharField(max_length=30, unique=True)
     email = models.EmailField(max_length=30, unique=True)
     password = models.CharField(max_length=30)
     score = models.IntegerField(default=0)

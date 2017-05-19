@@ -15,6 +15,13 @@ class UserModelTest(TestCase):
         self.assertTrue(hasattr(us, 'auth_token'))
         self.assertIsNotNone(us.auth_token)
 
+    def test_user_register_requires_unique_username(self):
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us.save()
+        with self.assertRaises(Exception):
+            us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+            us.save()
+
     def test_serialization(self):
         """ Should convert a user object to a json """
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
@@ -57,9 +64,19 @@ class RegisterViewTest(APITestCase):
                                                                                'password': 'mer19222',
                                                                                'email': 'that_part@abv.bg'})
         self.assertEqual(response.status_code, 400)
-        # Should have successfully register the user and gave him a user token
         self.assertIn('email', response.data)
         self.assertIn('email already exists', ''.join(response.data['email']))
+
+    def test_register_existing_username_should_return_400(self):
+        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart')
+        # User.objects.create(email='smthh_aa@abv.bg', password='123', username='ThatPart')
+
+        response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'ThatPart',
+                                                                               'password': 'mer19222',
+                                                                               'email': 'TANKTNAK@abv.bg'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('username', response.data)
+        self.assertIn('username already exists', ''.join(response.data['username']))
 
 
 class LoginViewTest(APITestCase):
