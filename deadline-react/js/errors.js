@@ -4,9 +4,10 @@
  * @param {String} message
  */
 
-function SweetAlertError (title, message) {
+function SweetAlertError (title, message, field) {
   this.name = 'SweetAlertError'
   this.title = title || 'Unknown Error'
+  this.field = field || 'Unknown'
   this.message = message || 'Unknown Error'
   this.stack = (new Error()).stack
 }

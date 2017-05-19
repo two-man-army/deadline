@@ -18,6 +18,8 @@ class LoginPage extends React.Component {
         password: '',
         repeatedPassword: ''
       },
+      emailIsValid: true,
+      usernameIsValid: true,
       repeatedPasswordIsInvalid: false,
       showAlert: false,
       alertTitle: '',
@@ -46,18 +48,27 @@ class LoginPage extends React.Component {
     const user = this.state.user
     user[field] = e.target.value
     // TODO compare passwords & validate data
+    let repeatedPasswordIsInvalid = false
+    let usernameIsValid = this.state.usernameIsValid
+    let emailIsValid = this.state.emailIsValid
 
     if (user.password !== user.repeatedPassword) {
-      this.setState({
-        user,
-        repeatedPasswordIsInvalid: true
-      })
-    } else {
-      this.setState({
-        user,
-        repeatedPasswordIsInvalid: false
-      })
+      repeatedPasswordIsInvalid = true
     }
+    if (e.target.name === 'username') {
+      // username is changed
+      usernameIsValid = true
+    } else if (e.target.name === 'email') {
+      // email is changed
+      emailIsValid = true
+    }
+
+    this.setState({
+      user,
+      repeatedPasswordIsInvalid,
+      usernameIsValid,
+      emailIsValid
+    })
   }
 
   processLoginForm (e) {
@@ -96,10 +107,19 @@ class LoginPage extends React.Component {
       }).catch(err => {
         console.log(typeof err)
         if (err instanceof SweetAlertError) {
+          let emailIsValid = true
+          let usernameIsValid = true
+          if (err.field === 'email') {
+            emailIsValid = false
+          } else if (err.field === 'username') {
+            usernameIsValid = false
+          }
           this.setState({
             showAlert: true,
             alertDesc: err.message,
-            alertTitle: err.title
+            alertTitle: err.title,
+            emailIsValid,
+            usernameIsValid
           })
         } else {
           console.log(err)
@@ -149,6 +169,8 @@ class LoginPage extends React.Component {
                 onSubmit={this.processRegisterForm}
                 onChange={this.handleRegisterData}
                 repeatedPasswordIsInvalid={this.state.repeatedPasswordIsInvalid}
+                emailIsValid={this.state.emailIsValid}
+                usernameIsValid={this.state.usernameIsValid}
               />
             </div>
           </div>

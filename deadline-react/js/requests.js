@@ -37,7 +37,9 @@ function postRegister (email, password, username) {
   }).catch(err => {
     if (err.response && err.response.data) {
       if (err.response.data.email) {
-        throw new SweetAlertError('Invalid e-mail', 'A user with that e-mail already exists!')
+        throw new SweetAlertError('Invalid e-mail', 'A user with that e-mail already exists!', 'email')
+      } else if (err.response.data.username) {
+        throw new SweetAlertError('Invalid Username', 'A user with that username already exists!', 'username')
       }
     }
     throw err
