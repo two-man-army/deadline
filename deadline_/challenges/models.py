@@ -4,7 +4,8 @@ from challenges.validators import MaxFloatDigitValidator, PossibleFloatDigitVali
 from accounts.models import User
 from sql_queries import (
     SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE,
-    SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR)
+    SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR,
+    SUBMISSION_SELECT_TOP_SUBMISSION_FOR_CHALLENGE_BY_USER)
 
 
 class Language(models.Model):
@@ -46,6 +47,17 @@ class Submission(models.Model):
         Returns the top-rated Submissions for a specific Challenge, one for each User
         """
         return Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE, params=[challenge_id])
+
+    @staticmethod
+    def fetch_top_submission_for_challenge_and_user(challenge_id, user_id):
+        """
+        Returns the top-rated Submission for a specific Challenge from a specific User
+        """
+        submissions = list(Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSION_FOR_CHALLENGE_BY_USER, params=[challenge_id, user_id]))
+        if len(submissions) == 0 or submissions[0].id is None:
+            return None
+        else:
+            return submissions[0]
 
     @staticmethod
     def fetch_last_10_submissions_for_unique_challenges_by_user(user_id):

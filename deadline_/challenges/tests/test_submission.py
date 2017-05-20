@@ -93,6 +93,35 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         received_submissions = list(Submission.fetch_top_submissions_for_challenge(self.challenge.id))
         self.assertEqual([], received_submissions)
 
+    def test_fetch_top_submission_for_challenge_and_user_no_submissions_should_be_empty(self):
+        received_submission = Submission.fetch_top_submission_for_challenge_and_user(self.challenge.id, self.auth_user.id)
+        self.assertIsNone(received_submission)
+
+    def test_fetch_top_submission_for_challenge_and_user_ignores_pending_submissions(self):
+        f_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50, pending=1)
+        f_submission.save()
+        s_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=66, pending=1)
+        s_submission.save()
+
+        received_submission = Submission.fetch_top_submission_for_challenge_and_user(self.challenge.id,
+                                                                                     self.auth_user.id)
+        self.assertIsNone(received_submission)
+
+    def test_fetch_top_submission_for_challenge_and_user_returns_bigger_score(self):
+        f_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50, pending=0)
+        f_submission.save()
+        s_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=66, pending=0)
+        s_submission.save()
+        t_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=1000, pending=1)
+        t_submission.save()  # IS PENDING!
+        f_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=100, pending=0)
+        f_submission.save()
+
+        received_submission = Submission.fetch_top_submission_for_challenge_and_user(self.challenge.id,
+                                                                                     self.auth_user.id)
+        self.assertIsNotNone(received_submission)
+        self.assertEqual(received_submission.maxscore, 100)
+
     def test_fetch_last_10_submissions_for_unique_challenges_by_author(self):
         """ The method should return the last 10 submissions for unique challenges by the author """
         for _ in range(20):
@@ -278,11 +307,14 @@ class LatestSubmissionsViewTest(TestCase):
 
     def test_get_latest_challenge_submissions_from_user(self):
         """ The get_latest_submissions view should return all the latest submissions by the user distinct by their challenges"""
-        s1 = SubmissionFactory(author=self.auth_user, challenge=self.c1)
-        s2 = SubmissionFactory(author=self.auth_user, challenge=self.c2)
-        s3 = SubmissionFactory(author=self.auth_user, challenge=self.c3)
-        s4 = SubmissionFactory(author=self.auth_user, challenge=self.c2)
-
+        s1 = SubmissionFactory(author=self.auth_user, challenge=self.c1, pending=0)
+        s2 = SubmissionFactory(author=self.auth_user, challenge=self.c2, pending=0)
+        s3 = SubmissionFactory(author=self.auth_user, challenge=self.c3, pending=0)
+        s4 = SubmissionFactory(author=self.auth_user, challenge=self.c2, pending=0)
+        # s1.save;s2.save;s3.save;s4.save;  # view queries for the best submission
+        self.c1.user_max_score = s1.result_score
+        self.c3.user_max_score = s3.result_score
+        self.c2.user_max_score = max(s2.result_score, s4.result_score)
         """ This should return a list with c2, c3, c1 ordered like that. """
         response = self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
 
@@ -292,6 +324,8 @@ class LatestSubmissionsViewTest(TestCase):
         expected_data = []
         for challenge in LimitedChallengeSerializer([self.c2, self.c3, self.c1], many=True).data:
             expected_data.append(challenge)
+
+        self.assertCountEqual(response.data, expected_data)
         self.assertEqual(response.data, expected_data)
 
     @patch('challenges.models.Submission.fetch_last_10_submissions_for_unique_challenges_by_user')
