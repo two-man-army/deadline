@@ -46,7 +46,7 @@ class CategoryChallengeList extends React.Component {
             <p>There are no challenges for this category.</p>
           }
           {this.state.challenges.map(challenge => {
-            return <DisplayMetaInfo key={challenge.id} {...challenge} />
+            return <DisplayMetaInfo key={challenge.id} {...challenge} userScore={challenge.user_max_score} />
           })}
         </div>
       </Container>

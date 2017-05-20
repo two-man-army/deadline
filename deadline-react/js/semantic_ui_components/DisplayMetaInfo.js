@@ -5,8 +5,9 @@ import { Link } from 'react-router-dom'
 import {Card, Button} from 'semantic-ui-react'
 import StarRatingComponent from 'react-star-rating-component'
 import { getChallengeDetailsLink } from '../helpers.js'
+import ProgressBar from './ProgressBar.js'
 
-const DisplayMetaInfo = ({id, difficulty, score, name}) => (
+const DisplayMetaInfo = ({id, difficulty, score, name, userScore}) => (
   <Card>
     <Card.Content>
       <Card.Header>
@@ -30,12 +31,16 @@ const DisplayMetaInfo = ({id, difficulty, score, name}) => (
         </Link>
       </div>
     </Card.Content>
+    <Card.Content extra>
+      <ProgressBar value={userScore} maxValue={score} />
+    </Card.Content>
   </Card>
 )
 DisplayMetaInfo.propTypes = {
   id: PropTypes.number.isRequired,
   difficulty: PropTypes.number,
   score: PropTypes.number,
+  userScore: PropTypes.number,
   name: PropTypes.string
 }
 

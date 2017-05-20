@@ -36,7 +36,7 @@ class Dashboard extends React.Component {
       <div>
         {this.state.challenges.map(challenge => {
           return (
-            <DisplayMetaInfo key={challenge.id} {...challenge} />
+            <DisplayMetaInfo key={challenge.id} {...challenge} userScore={challenge.user_max_score} />
           )
         })}
       </div>
