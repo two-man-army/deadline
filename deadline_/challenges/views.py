@@ -44,7 +44,6 @@ class LatestAttemptedChallengesListView(ListAPIView):
             top_submission = Submission.fetch_top_submission_for_challenge_and_user(chl.id, request.user.id)
             max_score = top_submission.maxscore if top_submission else 0
             chl.user_max_score = max_score
-
         return Response(data=LimitedChallengeSerializer(latest_challenges, many=True).data)
 
 
@@ -78,7 +77,7 @@ class SubCategoryDetailView(RetrieveAPIView):
             ser = LimitedChallengeSerializer(data=subcategory_challenges, many=True)
             ser.is_valid()
 
-            return Response(data=json.dumps({"name": wanted_category, "challenges": ser.data}))
+            return Response(data={"name": wanted_category, "challenges": ser.data})
         except SubCategory.DoesNotExist:
             return Response(status=404)
 

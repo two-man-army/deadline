@@ -88,7 +88,7 @@ class SubCategoryViewTest(TestCase):
                                    HTTP_AUTHORIZATION=self.auth_token)
         self.c.user_max_score = 0
         ser = LimitedChallengeSerializer(data=[self.c], many=True); ser.is_valid()
-        expected_data = json.dumps({"name": self.sub1.name, "challenges": ser.data})
+        expected_data = {"name": self.sub1.name, "challenges": ser.data}
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected_data)
