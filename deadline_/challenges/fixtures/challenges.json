@@ -175,7 +175,7 @@
     "fields": {
       "name": "Say Hello World!",
       "description": 1,
-      "rating": 1,
+      "difficulty": 0,
       "score": 10,
       "test_file_name": "hello_tests",
       "test_case_count": 1,
@@ -202,7 +202,7 @@
     "fields": {
       "name": "Basic Numbers",
       "description": 2,
-      "rating": 35,
+      "difficulty": 4.5,
       "score": 40,
       "test_file_name": "basic_numbers_tests",
       "test_case_count": 8,
@@ -231,7 +231,7 @@
     "fields": {
       "name": "Array Sum",
       "description": 3,
-      "rating": 5,
+      "difficulty": 1,
       "score": 10,
       "test_file_name": "array_sum_tests",
       "test_case_count": 7,
@@ -260,7 +260,7 @@
     "fields": {
       "name": "Array Amplitude",
       "description": 4,
-      "rating": 7,
+      "difficulty": 1,
       "score": 10,
       "test_file_name": "array_amplitude_tests",
       "test_case_count": 10,
@@ -290,7 +290,7 @@
     "fields": {
       "name": "Lava World",
       "description": 5,
-      "rating": 25,
+      "difficulty": 3.5,
       "score": 30,
       "test_file_name": "lava_world_tests",
       "test_case_count": 6,
@@ -319,7 +319,7 @@
     "fields": {
       "name": "Labyrinth Adventure",
       "description": 6,
-      "rating": 35,
+      "difficulty": 4.5,
       "score": 40,
       "test_file_name": "labyrinth_adventure_tests",
       "test_case_count": 9,
