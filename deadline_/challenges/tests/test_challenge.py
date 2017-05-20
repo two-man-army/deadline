@@ -11,6 +11,8 @@ from rest_framework.parsers import JSONParser
 from challenges.models import Challenge, MainCategory, SubCategory, ChallengeDescription, Language
 from challenges.serializers import ChallengeSerializer, ChallengeDescriptionSerializer
 from accounts.models import User
+from challenges.tests.factories import ChallengeDescFactory
+
 
 # TODO: Add supported languages to tests
 class ChallengesModelTest(TestCase):
@@ -27,30 +29,47 @@ class ChallengesModelTest(TestCase):
         self.sub_cat.save()
 
     def test_absolute_url(self):
-        c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+        c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
         expected_url = '/challenges/{}'.format(c.id)
         self.assertEqual(c.get_absolute_url(), expected_url)
 
     def test_cannot_save_duplicate_challenge(self):
-        c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+        c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
         c.save()
         with self.assertRaises(ValidationError):
-            c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+            c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
             c.full_clean()
 
+    def test_cannot_have_three_digit_or_invalid_difficulty(self):
+        test_difficulties = [1.11, 1.111, 1.55, 1.4999]  # should all raise
+        for diff in test_difficulties:
+            sample_desc = ChallengeDescFactory(); sample_desc.save()
+
+            c = Challenge.objects.create(name='Hello'+str(diff), difficulty=diff, score=10, test_case_count=5, category=self.sub_cat,
+                          description=sample_desc, test_file_name='tank')
+
+            with self.assertRaises(ValidationError):
+                c.full_clean()
+
+        sample_desc = ChallengeDescFactory(); sample_desc.save()
+        c = Challenge.objects.create(name='Hello For The Last Time', difficulty=1.5, score=10, test_case_count=5,
+                                     category=self.sub_cat,
+                                     description=sample_desc, test_file_name='tank')
+        c.full_clean()  # should not raise
+
     def test_cannot_have_duplicate_descriptions(self):
-        c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat,
+        c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat,
                       description=self.sample_desc)
         c.save()
         with self.assertRaises(ValidationError):
-            c = Challenge(name='Working', rating=5, score=10, test_case_count=1, category=self.sub_cat,
+            c = Challenge(name='Working', difficulty=5, score=10, test_case_count=1, category=self.sub_cat,
                           description=self.sample_desc)
             c.full_clean()
 
     def test_cannot_have_same_language_twice(self):
         lang_1 = Language(name="AA")
         lang_1.save()
-        c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat,
+        c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat,
                       description=self.sample_desc)
         c.save()
         c.supported_languages.add(lang_1)
@@ -67,14 +86,14 @@ class ChallengesModelTest(TestCase):
         rust_lang = Language('Rust'); rust_lang.save()
         python_lang = Language('Python'); python_lang.save()
         c_lang = Language('C'); c_lang.save()
-        c = Challenge(name='Hello', rating=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+        c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
         c.save()
         c.supported_languages.add(*[rust_lang, c_lang, python_lang])
         expected_description_json = '{"content":"What Up","input_format":"Something",' \
                                     '"output_format":"something","constraints":"some",' \
                                     '"sample_input":"input sample","sample_output":"output sample",' \
                                     '"explanation":"gotta push it to the limit"}'
-        expected_json = ('{"id":1,"name":"Hello","rating":5,"score":10,"description":'
+        expected_json = ('{"id":1,"name":"Hello","difficulty":5.0,"score":10,"description":'
                          + expected_description_json
                          + ',"test_case_count":5,"category":"tests","supported_languages":["C","Python","Rust"]}')
         self.maxDiff = None
@@ -84,20 +103,20 @@ class ChallengesModelTest(TestCase):
     @skip
     def test_deserialization(self):
         self.fail("Implement deserialization somewhere down the line, with the ability to create a description object from the challenge serialization. You're gonna need to override the serializer's create method")
-        expected_json = b'{"name":"Hello","rating":5,"score":10,"description":"' + str(None) + '","test_case_count":3,"category":"tests"}'
+        expected_json = b'{"name":"Hello","difficulty":5.0,"score":10,"description":"' + str(None) + '","test_case_count":3,"category":"tests"}'
         data = JSONParser().parse(BytesIO(expected_json))
         serializer = ChallengeSerializer(data=data)
         serializer.is_valid()
 
         deser_challenge = serializer.save()
         self.assertEqual(deser_challenge.name, "Hello")
-        self.assertEqual(deser_challenge.rating, 5)
+        self.assertEqual(deser_challenge.difficulty, 5)
         self.assertEqual(deser_challenge.score, 10)
         self.assertEqual(deser_challenge.description, "What up")
 
     def test_invalid_deserialization(self):
         # No name!
-        expected_json = b'{"rating":5, "score":10, "description":"What up"}'
+        expected_json = b'{"difficulty":5.0, "score":10, "description":"What up"}'
         data = JSONParser().parse(BytesIO(expected_json))
         serializer = ChallengeSerializer(data=data)
 
@@ -146,7 +165,7 @@ class ChallengesViewsTest(APITestCase):
         self.sub_cat.save()
 
     def test_view_challenge(self):
-        c = Challenge(name='Hello', rating=5, score=10, test_file_name='hello_test.py',
+        c = Challenge(name='Hello', difficulty=5, score=10, test_file_name='hello_test.py',
                       test_case_count=2, category=self.sub_cat, description=self.sample_desc)
         c.save()
         c.supported_languages.add(self.rust_lang)
@@ -160,7 +179,7 @@ class ChallengesViewsTest(APITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_view_challenge_unauthorized_should_return_401(self):
-        c = Challenge(name='Hello', rating=5, score=10, test_file_name='hello_test.py',
+        c = Challenge(name='Hello', difficulty=5, score=10, test_file_name='hello_test.py',
                       test_case_count=3, category=self.sub_cat, description=self.sample_desc)
         c.save()
         response = self.client.get('/challenges/{}'.format(c.id))

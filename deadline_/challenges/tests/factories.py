@@ -46,7 +46,7 @@ class ChallengeFactory(factory.DjangoModelFactory):
 
     name= factory.Sequence(lambda n: 'CHALLENGE {0}'.format(n))
     description = factory.SubFactory(ChallengeDescFactory)
-    rating = factory.Faker('random_digit')
+    difficulty = factory.Faker('random_digit')
     score = factory.Faker('random_digit')
     test_case_count = factory.Faker('random_digit')
     category = factory.SubFactory(SubCategoryFactory)

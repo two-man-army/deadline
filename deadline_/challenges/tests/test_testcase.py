@@ -23,7 +23,7 @@ class TestCaseViewTest(APITestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description=self.sample_desc, test_case_count=2,
+        self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_case_count=2,
                                    category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name
@@ -112,7 +112,7 @@ class TestCaseModelTest(TestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description=self.sample_desc, test_case_count=5,
+        self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_case_count=5,
                                    category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name

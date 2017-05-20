@@ -26,7 +26,7 @@ class GradeResultTests(TestCase):
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
         self.challenge = Challenge(name='Hello World!', description=self.sample_desc,
-                                   rating=10, score=100, test_file_name='smth',
+                                   difficulty=10, score=100, test_file_name='smth',
                                    test_case_count=5, category=self.sub_cat)
         self.challenge.save()
         self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
@@ -68,7 +68,7 @@ class UpdateUserScoreTests(TestCase):
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
         self.challenge = Challenge(name='Hello World!', description=self.sample_desc,
-                                   rating=10, score=100, test_file_name='smth',
+                                   difficulty=10, score=100, test_file_name='smth',
                                    test_case_count=3, category=self.sub_cat)
         self.challenge.save()
         self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
@@ -103,7 +103,7 @@ class UpdateUserScoreTests(TestCase):
         sample_desc2 = ChallengeDescription(2, 'What Up', 'Ws', 's', 'some', 'input sample', 'output sample', 'gg')
         sample_desc2.save()
         new_challenge = Challenge(name='NEW MAN', description=sample_desc2,
-                                   rating=10, score=100, test_file_name='smth',
+                                   difficulty=10, score=100, test_file_name='smth',
                                    test_case_count=3, category=self.sub_cat)
         new_challenge.save()
         new_submission = Submission(language=self.python_language, challenge=new_challenge, author=self.user,

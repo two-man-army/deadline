@@ -13,7 +13,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Challenge
-        fields = ('id', 'name', 'rating', 'score', 'description', 'test_case_count', 'category', 'supported_languages')
+        fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count', 'category', 'supported_languages')
 
 
 class LimitedChallengeSerializer(serializers.ModelSerializer):
@@ -23,7 +23,7 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Challenge
-        fields = ('id', 'name', 'rating', 'score', 'category')
+        fields = ('id', 'name', 'difficulty', 'score', 'category')
 
 
 class SubmissionSerializer(serializers.ModelSerializer):

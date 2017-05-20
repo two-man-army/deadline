@@ -23,7 +23,7 @@ class SubmissionModelTest(TestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description=self.sample_desc, test_case_count=3,
+        self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_case_count=3,
                                    category=self.sub_cat)
         self.challenge.save()
         self.challenge_name = self.challenge.name
@@ -125,7 +125,7 @@ class SubmissionViewsTest(APITestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-        self.challenge = Challenge(name='Hello', rating=5, score=10, description=self.sample_desc, test_file_name='hello_tests',
+        self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_file_name='hello_tests',
                                    test_case_count=3, category=self.sub_cat)
         self.challenge.save()
         self.challenge.supported_languages.add(self.python_language)

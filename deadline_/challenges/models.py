@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from challenges.validators import MaxFloatDigitValidator, PossibleFloatDigitValidator
 from accounts.models import User
 from sql_queries import (
     SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE,
@@ -14,8 +14,8 @@ class Language(models.Model):
 class Challenge(models.Model):
     name = models.CharField(unique=True, max_length=30)
     description = models.OneToOneField('ChallengeDescription')
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
-    score = models.IntegerField(validators=[MinValueValidator(1)])
+    difficulty = models.FloatField(validators=[MinValueValidator(1), MaxValueValidator(10), PossibleFloatDigitValidator(['0', '5'])])
+    score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
     test_file_name = models.CharField(max_length=50)
     test_case_count = models.IntegerField(blank=False)
     category = models.ForeignKey(to='SubCategory', to_field='name', related_name='challenges')
