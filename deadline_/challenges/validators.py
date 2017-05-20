@@ -27,16 +27,19 @@ class PossibleFloatDigitValidator(BaseValidator):
     message = 'Ensure the digits after the float are equal to at least one %(possible_floats)s.'
     code = 'possible_floats'
 
-    def compare(self, given_float, possible_digits):
-        if not isinstance(possible_digits, Iterable):
-            raise Exception("PossibleFloatDigitValidator takes an iterable collection as an argument!")
-        # convert the digits to string in case
-        for idx, val in enumerate(possible_digits):
-            possible_digits[idx] = str(val)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+        if not isinstance(self.limit_value, Iterable):
+            raise Exception("PossibleFloatDigitValidator takes an iterable collection as an argument!")
+        for idx, val in enumerate(self.limit_value):
+            if not isinstance(val, str):
+                raise Exception("Each value in the collection must a string!")
+
+    def compare(self, given_float, possible_digits):
         given_float = str(given_float)
         try:
             floating_digits = given_float[given_float.index('.') + 1:]
             return floating_digits not in possible_digits
         except ValueError:
-            return False  # no floating digits
+            return '0' not in possible_digits
