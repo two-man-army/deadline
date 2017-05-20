@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-const RegisterForm = ({onSubmit, onChange, repeatedPasswordIsInvalid, emailIsValid, usernameIsValid}) => {
+const RegisterForm = ({onSubmit, onChange, repeatedPasswordIsValid, emailIsValid, usernameIsValid}) => {
   let repeatedPasswordStyle = {}
   let usernameFieldStyle = {}
   let emailFieldStyle = {}
@@ -9,10 +9,8 @@ const RegisterForm = ({onSubmit, onChange, repeatedPasswordIsInvalid, emailIsVal
     background: 'rgba(230, 93, 93, 0.78)',
     boxShadow: '0 0 67px red'
   }
-  if (repeatedPasswordIsInvalid) {
-    repeatedPasswordStyle = {
-      boxShadow: '0 0 20px red'
-    }
+  if (!repeatedPasswordIsValid) {
+    repeatedPasswordStyle = invalidFieldStyle
   }
 
   if (!usernameIsValid) {
@@ -79,7 +77,7 @@ const RegisterForm = ({onSubmit, onChange, repeatedPasswordIsInvalid, emailIsVal
         </div>
         <div className='hr' />
         <div className='foot-lnk'>
-          <label htmlFor='tab-1'>Already Member?</label>
+          <label htmlFor='tab-1'>Already A Member?</label>
         </div>
       </div>
     </form>
@@ -89,7 +87,7 @@ const RegisterForm = ({onSubmit, onChange, repeatedPasswordIsInvalid, emailIsVal
 RegisterForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
-  repeatedPasswordIsInvalid: PropTypes.bool.isRequired,
+  repeatedPasswordIsValid: PropTypes.bool.isRequired,
   usernameIsValid: PropTypes.bool.isRequired,
   emailIsValid: PropTypes.bool.isRequired
 }

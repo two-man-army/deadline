@@ -20,7 +20,7 @@ class LoginPage extends React.Component {
       },
       emailIsValid: true,
       usernameIsValid: true,
-      repeatedPasswordIsInvalid: false,
+      repeatedPasswordIsValid: true,
       showAlert: false,
       alertTitle: '',
       alertDesc: '',
@@ -49,11 +49,11 @@ class LoginPage extends React.Component {
     user[field] = e.target.value
     // TODO compare passwords & validate data
     let usernameIsValid = this.state.usernameIsValid
-    let repeatedPasswordIsInvalid = false
+    let repeatedPasswordIsValid = true
     let emailIsValid = this.state.emailIsValid
 
     if (user.password !== user.repeatedPassword) {
-      repeatedPasswordIsInvalid = true
+      repeatedPasswordIsValid = false
     }
     if (e.target.name === 'username') {
       // username is changed
@@ -65,7 +65,7 @@ class LoginPage extends React.Component {
 
     this.setState({
       user,
-      repeatedPasswordIsInvalid,
+      repeatedPasswordIsValid,
       usernameIsValid,
       emailIsValid
     })
@@ -99,7 +99,7 @@ class LoginPage extends React.Component {
     if (password !== repeatedPassword) {
       this.setState({
         // user: this.state.user,
-        // repeatedPasswordIsInvalid: true,
+        repeatedPasswordIsValid: false,
         showAlert: true,
         alertDesc: 'Your passwords dont match!',
         alertTitle: 'Invalid passwords!'
@@ -175,7 +175,7 @@ class LoginPage extends React.Component {
               <RegisterForm
                 onSubmit={this.processRegisterForm}
                 onChange={this.handleRegisterData}
-                repeatedPasswordIsInvalid={this.state.repeatedPasswordIsInvalid}
+                repeatedPasswordIsValid={this.state.repeatedPasswordIsValid}
                 emailIsValid={this.state.emailIsValid}
                 usernameIsValid={this.state.usernameIsValid}
               />

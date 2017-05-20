@@ -70,7 +70,7 @@ video {
     right: 0;
     bottom: 0;
     width: 400px;
-    margin: 20% auto;
+    margin: 5% auto;
     z-index: 10;
 }
 
@@ -272,7 +272,9 @@ label,
 }
 
 .foot-lnk{
+    color: #4183C4;
     text-align:center;
+    font-size: 1.2em;
 }
 
 div.login-html input:focus {
