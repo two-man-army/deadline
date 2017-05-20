@@ -24,6 +24,11 @@ function postLogIn (email, password) {
     console.log(`Authenticated user with ${authToken}`)
   }).catch(err => {
     console.log(`Error while trying to log in: ${err}`)
+    if (err.response && err.response.data && err.response.data.error) {
+      if (err.response.data.error.toLowerCase().includes('invalid credentials')) {
+        throw new SweetAlertError('Invalid Credentials', 'Your e-mail or password is invalid!')
+      }
+    }
   })
 }
 

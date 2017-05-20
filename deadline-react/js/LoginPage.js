@@ -48,8 +48,8 @@ class LoginPage extends React.Component {
     const user = this.state.user
     user[field] = e.target.value
     // TODO compare passwords & validate data
-    let repeatedPasswordIsInvalid = false
     let usernameIsValid = this.state.usernameIsValid
+    let repeatedPasswordIsInvalid = false
     let emailIsValid = this.state.emailIsValid
 
     if (user.password !== user.repeatedPassword) {
@@ -80,6 +80,13 @@ class LoginPage extends React.Component {
         redirectTo: '/'
       })
     }).catch(err => {
+      if (err instanceof SweetAlertError) {
+        this.setState({
+          showAlert: true,
+          alertDesc: err.message,
+          alertTitle: err.title
+        })
+      }
       throw err
     })
   }
