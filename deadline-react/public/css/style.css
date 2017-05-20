@@ -364,3 +364,10 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 .dashboard-header img:hover {
     cursor: pointer;
 }
+
+.challenge-meta-info-difficulty {
+    display: flex;  /* for vertical alignment in difficulty and the star ratings */
+}
+.challenge-meta-info-difficulty.dv-star-rating {
+    margin-left: 7px;
+}

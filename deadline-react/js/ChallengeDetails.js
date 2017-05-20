@@ -15,7 +15,7 @@ class ChallengeDetails extends React.Component {
     this.state = {
       id: undefined,
       name: undefined,
-      rating: undefined,
+      difficulty: undefined,
       score: undefined,
       description: {
         content: undefined,

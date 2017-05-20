@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom'
 
 import {getChallengeDetailsLink} from './helpers.js'
 
-const ChallengeMetaInfo = ({id, rating, score, name}) => (
+const ChallengeMetaInfo = ({id, difficulty, score, name}) => (
   <Link to={getChallengeDetailsLink(id)}>
     <div className='challenge-meta-info'>
       <div className='challenge-meta-header'>
         <h1>{name}</h1>
       </div>
       <div className='challenge-meta-content'>
-        <p>Rating: {rating}</p>
+        <p>Rating: {difficulty}</p>
         <p>Score: {score}</p>
       </div>
     </div>
@@ -20,7 +20,7 @@ const ChallengeMetaInfo = ({id, rating, score, name}) => (
 
 ChallengeMetaInfo.propTypes = {
   id: PropTypes.number.isRequired,
-  rating: PropTypes.number,
+  difficulty: PropTypes.number,
   score: PropTypes.number,
   name: PropTypes.string
 }
