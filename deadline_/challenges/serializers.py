@@ -18,12 +18,22 @@ class ChallengeSerializer(serializers.ModelSerializer):
 
 class LimitedChallengeSerializer(serializers.ModelSerializer):
     """
-    Returns the main information about a Challenge.
+    Returns the main information about a Challenge
+        and the current user's max score (this requires the challenge object to have user_max_score attached to it).
     Used, for example, when listing challenges.
     """
+
     class Meta:
         model = Challenge
-        fields = ('id', 'name', 'difficulty', 'score', 'category')
+        fields = ('id', 'name', 'difficulty', 'score', 'category')  # user_max_score is added as well but more implicitly
+
+    def to_representation(self, instance):
+        """
+        Modification to add the user_max_score to the serialized data
+        """
+        result = super().to_representation(instance)
+        result['user_max_score'] = instance.user_max_score
+        return result
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
