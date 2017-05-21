@@ -30,9 +30,7 @@ const DisplayMetaInfo = ({id, difficulty, score, name, userScore}) => (
           <Button basic color='green'>To Challenge</Button>
         </Link>
       </div>
-    </Card.Content>
-    <Card.Content extra>
-      <ProgressBar value={userScore} maxValue={score} />
+      <ProgressBar value={userScore} maxValue={score} style={{margin: '10px 0 0 0'}} />
     </Card.Content>
   </Card>
 )
