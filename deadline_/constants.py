@@ -15,6 +15,7 @@ RUSTLANG_NAME = 'Rust'
 PYTHONLANG_NAME = 'Python'
 CPPLANG_NAME = 'C++'
 GOLANG_NAME = 'Go'
+KOTLIN_NAME = 'Kotlin'
 
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
@@ -31,11 +32,12 @@ RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
 RUSTLANG_UNFRIENDLY_ERROR_MESSAGE = "note: Run with `RUST_BACKTRACE=1`"  # error message that is of no interest to the user
 RUSTLANG_FILE_EXTENSION = '.rs'
 RUSTLANG_COMPILE_ARGS = ['rustc']
-
+RUSTLANG_RUN_ARGS = []
 
 CPP_TIMEOUT_SECONDS = 4
 CPP_FILE_EXTENSION = '.cpp'
 CPP_COMPILE_ARGS = ['g++', '-std=c++11', '-o']
+CPP_RUN_ARGS = []
 
 PYTHON_TIMEOUT_SECONDS = 5
 PYTHON_FILE_EXTENSION = '.py'
@@ -44,3 +46,9 @@ PYTHON_RUN_COMMAND = 'python3'
 GO_TIMEOUT_SECONDS = 4
 GO_FILE_EXTENSION = '.go'
 GO_COMPILE_ARGS = ['go', 'build']
+GO_RUN_ARGS = []
+
+KOTLIN_TIMEOUT_SECONDS = 4
+KOTLIN_COMPILE_ARGS = ['kotlinc']
+KOTLIN_FILE_EXTENSION = '.kt'
+KOTLIN_RUN_ARGS = ['java', '-jar']

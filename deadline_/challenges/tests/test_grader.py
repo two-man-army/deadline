@@ -5,7 +5,7 @@ import subprocess
 from django.test import TestCase
 
 from constants import TESTS_FOLDER_NAME, GRADER_COMPILE_FAILURE
-from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader, InterpretableLangGrader, CppGrader, PythonGrader
+from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader, InterpretableLangGrader, CppGrader, PythonGrader, KotlinGrader
 
 
 class DirEntryMock(Mock):
@@ -443,3 +443,17 @@ class PythonGraderTests(TestCase):
         self.assertEqual(self.grader.TIMEOUT_SECONDS, PYTHON_TIMEOUT_SECONDS)
         self.assertEqual(self.grader.FILE_EXTENSION, PYTHON_FILE_EXTENSION)
         self.assertEqual(self.grader.RUN_COMMAND, PYTHON_RUN_COMMAND)
+
+
+class KotlinGraderTests(TestCase):
+    def setUp(self):
+        self.temp_file_name = 'x'
+        self.grader = KotlinGrader(3, self.temp_file_name)
+
+    @patch('challenges.grader.subprocess.Popen')
+    def test_run_program_process_attaches_jar_extension(self, popen_mock):
+        self.grader.temp_exe_abs_path = 'tank'
+
+        self.grader.run_program_process()
+
+        self.assertEqual(self.grader.temp_exe_abs_path, 'tank.jar')

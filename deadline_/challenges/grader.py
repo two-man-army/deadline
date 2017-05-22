@@ -26,6 +26,7 @@ RUSTLANG_NAME = 'Rust'
 PYTHONLANG_NAME = 'Python'
 CPPLANG_NAME = 'C++'
 GOLANG_NAME = 'Go'
+KOTLIN_NAME = 'Kotlin'
 
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
@@ -38,6 +39,7 @@ GRADER_COMPILE_FAILURE = 'COMPILATION FAILED'
 
 RUSTLANG_TIMEOUT_SECONDS = 5
 RUSTLANG_COMPILE_ARGS = ['rustc']
+RUSTLANG_RUN_ARGS = []
 # TODO: Maybe think of a smarter way to go on about this or at least limit user input
 RUSTLANG_ERROR_MESSAGE_SNIPPET = 'error: aborting due to previous error'
 RUSTLANG_ERROR_MESSAGE_SNIPPET_2 = 'error: incorrect close delimiter'
@@ -47,7 +49,7 @@ RUSTLANG_UNFRIENDLY_ERROR_MESSAGE = "note: Run with `RUST_BACKTRACE=1`"  # error
 CPP_TIMEOUT_SECONDS = 4
 CPP_FILE_EXTENSION = '.cpp'
 CPP_COMPILE_ARGS = ['g++', '-std=c++11', '-o']
-
+CPP_RUN_ARGS = []
 
 PYTHON_TIMEOUT_SECONDS = 5
 PYTHON_FILE_EXTENSION = '.py'
@@ -56,6 +58,12 @@ PYTHON_RUN_COMMAND = 'python3'
 GO_TIMEOUT_SECONDS = 4
 GO_FILE_EXTENSION = '.go'
 GO_COMPILE_ARGS = ['go', 'build']
+GO_RUN_ARGS = []
+
+KOTLIN_TIMEOUT_SECONDS = 4
+KOTLIN_COMPILE_ARGS = ['kotlinc']
+KOTLIN_FILE_EXTENSION = '.kt'
+KOTLIN_RUN_ARGS = ['java', '-jar']
 
 
 def main():
@@ -68,7 +76,8 @@ def main():
         PYTHONLANG_NAME: PythonGrader,
         RUSTLANG_NAME: RustGrader,
         CPPLANG_NAME: CppGrader,
-        GOLANG_NAME: GoGrader
+        GOLANG_NAME: GoGrader,
+        KOTLIN_NAME: KotlinGrader
     }
     solution_file = sys.argv[1]
     test_count = int(sys.argv[2])
@@ -102,7 +111,7 @@ class BaseGrader:
         self.test_case_count = test_case_count
 
         self.test_folder_name = temp_file_name
-        self.unique_name = temp_file_name
+        self.unique_name = temp_file_name  # the name of the file
 
         self.temp_file_name = temp_file_name + self.FILE_EXTENSION
         self.temp_file_abs_path = os.path.join(SITE_ROOT, self.temp_file_name)
@@ -289,7 +298,7 @@ class CompilableLangGrader(BaseGrader):
 
     def run_program_process(self):
         """ Start the program and return the process object. """
-        return subprocess.Popen([self.temp_exe_abs_path],
+        return subprocess.Popen(self.RUN_ARGS + [self.temp_exe_abs_path],
                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def has_compiled(self, error_message) -> bool:
@@ -327,6 +336,7 @@ class RustGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = RUSTLANG_TIMEOUT_SECONDS
     FILE_EXTENSION = RUSTLANG_FILE_EXTENSION
     COMPILE_ARGS = RUSTLANG_COMPILE_ARGS
+    RUN_ARGS = RUSTLANG_RUN_ARGS
 
     def has_compiled(self, error_message) -> bool:
         """
@@ -346,6 +356,7 @@ class CppGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = CPP_TIMEOUT_SECONDS
     COMPILE_ARGS = CPP_COMPILE_ARGS
     FILE_EXTENSION = CPP_FILE_EXTENSION
+    RUN_ARGS = CPP_RUN_ARGS
 
     def compile(self):
         """
@@ -372,6 +383,36 @@ class GoGrader(CompilableLangGrader):
     TIMEOUT_SECONDS = GO_TIMEOUT_SECONDS
     COMPILE_ARGS = GO_COMPILE_ARGS
     FILE_EXTENSION = GO_FILE_EXTENSION
+    RUN_ARGS = GO_RUN_ARGS
+
+
+class KotlinGrader(CompilableLangGrader):
+    TIMEOUT_SECONDS = KOTLIN_TIMEOUT_SECONDS
+    COMPILE_ARGS = KOTLIN_COMPILE_ARGS
+    FILE_EXTENSION = KOTLIN_FILE_EXTENSION
+    RUN_ARGS = KOTLIN_RUN_ARGS
+
+    def run_program_process(self):
+        self.temp_exe_abs_path += '.jar'  # add the .jar extension to our compiled file
+        return super().run_program_process()
+
+    def compile(self):
+        # TODO: Refactor into a get_compile_process command
+        compiler_proc = subprocess.Popen(
+            # Tell it to compile to a .jar file
+            self.COMPILE_ARGS + [self.temp_file_abs_path, '-include-runtime', '-d', self.unique_name + '.jar'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        compile_result = compiler_proc.communicate()
+        compiler_proc.kill()
+        error_message = compile_result[1].decode()
+
+        if not self.has_compiled(error_message):  # There is an error while compiling
+            self.compiled = False
+            self.compile_error_message = error_message
+        else:
+            self.compiled = True
+            self.temp_exe_abs_path = os.path.join(SITE_ROOT, self.unique_name)
 
 
 class PythonGrader(InterpretableLangGrader):

@@ -179,6 +179,58 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 #COPY go-wrapper /usr/local/bin/
 
+# KOTLIN
+
+ENV K_VERSION 1.0.3
+#
+ENV KOTLIN_COMPILER_URL https://github.com/JetBrains/kotlin/releases/download/v${K_VERSION}/kotlin-compiler-${K_VERSION}.zip
+#
+#RUN apt-get update &&
+#    apt-get install -y &&
+#    apt-get clean && \
+#    rm -rf /var/lib/apt/lists/*
+#
+RUN apt-get update && apt-get install unzip && apt-get install curl
+RUN apt-get update \
+	&& apt-get install -y curl tar unzip \
+	&& (curl -s -k -L -C - -b "oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.tar.gz | tar xfz - -C /opt) \
+	&& mv /opt/jdk1.7.0_79/jre /opt/jre1.7.0_79 \
+	&& mv /opt/jdk1.7.0_79/lib/tools.jar /opt/jre1.7.0_79/lib/ext \
+	&& rm -Rf /opt/jdk1.7.0_79 \
+	&& ln -s /opt/jre1.7.0_79 /opt/java
+
+# Set JAVA_HOME
+ENV JAVA_HOME /opt/java
+#ENV JAVA_VERSION 7u75
+#ENV BUILD_VERSION b13
+#
+## Upgrading system
+#RUN apt-get -y upgrade && \
+#    curl -L -k  -H "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/$JAVA_VERSION-$BUILD_VERSION/jdk-$JAVA_VERSION-linux-x64.rpm" > /tmp/jdk-7-linux-x64.rpm && \
+#    apt-get -y install /tmp/jdk-7-linux-x64.rpm && \
+#    apt-get clean all && rm -rf /tmp/jdk-7-linux-x64.rpm
+#
+#
+#RUN alternatives --install /usr/bin/java jar /usr/java/latest/bin/java 200000 && \
+#    alternatives --install /usr/bin/javaws javaws /usr/java/latest/bin/javaws 200000 && \
+#    alternatives --install /usr/bin/javac javac /usr/java/latest/bin/javac 200000
+#
+#ENV JAVA_HOME /usr/java/latest
+
+RUN wget $KOTLIN_COMPILER_URL -O /tmp/a.zip && \
+    unzip /tmp/a.zip -d /opt && \
+    rm /tmp/a.zip
+
+# Add java alias
+#RUN echo '#!/bin/bash\n/opt/java/bin/java' > /usr/bin/java
+#RUN chmod +x /usr/bin/java
+#RUN mv /opt/java/bin/java /
+# Add kotlinc alias
+#RUN echo '#!/bin/bash\n/opt/kotlinc/bin/kotlinc' > /usr/bin/kotlinc
+#RUN chmod +x /usr/bin/kotlinc
+# KOTLIN
+ENV PATH $PATH:/opt/kotlinc/bin
+ENV PATH $PATH:/opt/java/bin
 
     
 CMD ["/bin/bash"]
