@@ -1030,7 +1030,7 @@ circular-json@^0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/circular-json/-/circular-json-0.3.1.tgz#be8b36aefccde8b3ca7aa2d6afc07a37242c0d2d"
 
-classnames@^2.1.5, classnames@^2.2.3, classnames@^2.2.5:
+classnames@^2.1.5, classnames@^2.2.0, classnames@^2.2.3, classnames@^2.2.5:
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.5.tgz#fb3801d453467649ef3603c7d61a02bd129bde6d"
 
@@ -4093,6 +4093,13 @@ react-sidenav@^2.1.1:
     prop-types "^15.5.8"
     styled-components "*"
 
+react-star-rating-component@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/react-star-rating-component/-/react-star-rating-component-1.2.4.tgz#c6513bc55315c1681c46a311ae70c7c3ddd183b0"
+  dependencies:
+    classnames "^2.2.0"
+    react "^15.4.2"
+
 react-swipeable-views-core@^0.11.1:
   version "0.11.1"
   resolved "https://registry.yarnpkg.com/react-swipeable-views-core/-/react-swipeable-views-core-0.11.1.tgz#61d046799f90725bbf91a0eb3abcab805c774cac"
@@ -4134,7 +4141,7 @@ react-timeago@^3.3.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/react-timeago/-/react-timeago-3.3.0.tgz#5aa2573c1b2df2bceda89dc25db4145939255fee"
 
-react@^15.3.0, react@^15.5.4:
+react@^15.3.0, react@^15.4.2, react@^15.5.4:
   version "15.5.4"
   resolved "https://registry.yarnpkg.com/react/-/react-15.5.4.tgz#fa83eb01506ab237cdc1c8c3b1cea8de012bf047"
   dependencies:

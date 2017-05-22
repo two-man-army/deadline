@@ -16,7 +16,8 @@ const ProgressBar = ({value, maxValue, style}) => {
 
 ProgressBar.propTypes = {
   value: React.PropTypes.number.isRequired,
-  maxValue: React.PropTypes.number.isRequired
+  maxValue: React.PropTypes.number.isRequired,
+  style: React.PropTypes.string.isRequired
 }
 
 export default ProgressBar
