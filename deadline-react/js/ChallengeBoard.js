@@ -5,7 +5,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import MonacoEditor from 'react-monaco-editor'
-import {postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
+import {getLanguageDetail, postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
 import { Segment, Dimmer, Container } from 'semantic-ui-react'
@@ -199,8 +199,14 @@ class ChallengeBoard extends React.Component {
   }
 
   langChangeHandler (event, e) {
-    // TODO: Change code on editor
-    this.setState({chosenLanguage: e.value})
+    let languageName = e.value
+    getLanguageDetail(languageName).then(lang => {
+      let defaultCode = lang.default_code
+      if (this.state.code.length === 0) {
+        this.setState({code: defaultCode})
+      }
+    })
+    this.setState({chosenLanguage: languageName})
   }
 
   /**

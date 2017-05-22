@@ -174,4 +174,17 @@ function getTopSolutions (challengeId) {
   })
 }
 
-export { getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
+/**
+ * Queries the server for a Language object by its name
+ * @param {Name} langName
+ */
+function getLanguageDetail (langName) {
+  return axios.get(`http://localhost:8000/challenges/languages/${langName}`, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while fetching language details for language ${langName}`)
+    throw err
+  })
+}
+
+export { getLanguageDetail, getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
