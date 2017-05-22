@@ -39,12 +39,7 @@ class LatestAttemptedChallengesListView(ListAPIView):
 
         latest_challenges = [submission.challenge for submission in latest_submissions]
 
-        # Attach the user's max score to the challenge so that it gets serialized
-        for chl in latest_challenges:
-            top_submission = Submission.fetch_top_submission_for_challenge_and_user(chl.id, request.user.id)
-            max_score = top_submission.maxscore if top_submission else 0
-            chl.user_max_score = max_score
-        return Response(data=LimitedChallengeSerializer(latest_challenges, many=True).data)
+        return Response(data=LimitedChallengeSerializer(latest_challenges, many=True, context={'request': request}).data)
 
 
 # /challenges/categories/all
@@ -60,26 +55,6 @@ class SubCategoryDetailView(RetrieveAPIView):
     queryset = SubCategory.objects.all()
     serializer_class = SubCategorySerializer
     permission_classes = (IsAuthenticated, )
-
-    def retrieve(self, request, *args, **kwargs):
-        # TODO: Refactor
-        wanted_category = kwargs.get('pk', '')
-        try:
-            subcategory = SubCategory.objects.get(pk=wanted_category)
-            subcategory_challenges = list(Challenge.objects.filter(category_id=subcategory).all())
-
-            # attach max score to challenge
-            for chl in subcategory_challenges:
-                top_submission = Submission.fetch_top_submission_for_challenge_and_user(chl.id, request.user.id)
-                max_score = top_submission.maxscore if top_submission else 0
-                chl.user_max_score = max_score
-
-            ser = LimitedChallengeSerializer(data=subcategory_challenges, many=True)
-            ser.is_valid()
-
-            return Response(data={"name": wanted_category, "challenges": ser.data})
-        except SubCategory.DoesNotExist:
-            return Response(status=404)
 
 
 # /challenges/{challenge_id}/submissions/new

@@ -1,3 +1,5 @@
+from unittest.mock import patch, MagicMock
+
 from django.test import TestCase
 from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
@@ -45,6 +47,31 @@ class UserModelTest(TestCase):
         self.assertEqual(deser_user.email, 'me@abv.bg')
         self.assertNotEqual(deser_user.password, '123')  # should be hashed!
         self.assertEqual(deser_user.score, 123)
+
+    @patch('challenges.models.Submission.fetch_top_submission_for_challenge_and_user')
+    def test_fetch_max_score_for_challenge(self, fetch_mock):
+        """ Should call the submission's fetch_top_submission method"""
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us.save()
+        fetch_mock.return_value = MagicMock(maxscore=5)
+
+        received_score = us.fetch_max_score_for_challenge(1)
+
+        fetch_mock.assert_called_once_with(1, us.id)
+        self.assertEqual(received_score, 5)
+
+
+    @patch('challenges.models.Submission.fetch_top_submission_for_challenge_and_user')
+    def test_fetch_max_score_for_challenge_return_0_on_none_value(self, fetch_mock):
+        """ Should return 0 if no such score exists"""
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us.save()
+        fetch_mock.return_value = None
+
+        received_score = us.fetch_max_score_for_challenge(1)
+
+        fetch_mock.assert_called_once_with(1, us.id)
+        self.assertEqual(received_score, 0)
 
 
 class RegisterViewTest(APITestCase):

@@ -38,3 +38,13 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+    def fetch_max_score_for_challenge(self, challenge_id):
+        """
+        Fetches the maximum score this user has scored for the given challenge
+        """
+        from challenges.models import Submission
+
+        top_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge_id, self.id)
+        max_score = top_submission.maxscore if top_submission else 0
+        return max_score

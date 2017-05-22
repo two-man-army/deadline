@@ -32,7 +32,13 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
         Modification to add the user_max_score to the serialized data
         """
         result = super().to_representation(instance)
-        result['user_max_score'] = instance.user_max_score
+
+        user = getattr(self.context.get('request', None), 'user', None)
+        if user is None:
+            result['user_max_score'] = 0
+        else:
+            result['user_max_score'] = user.fetch_max_score_for_challenge(challenge_id=instance.id)
+
         return result
 
 

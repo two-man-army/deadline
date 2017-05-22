@@ -10,7 +10,7 @@ from challenges.models import Challenge, Submission, SubCategory, MainCategory, 
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from accounts.models import User
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 class SubmissionModelTest(TestCase):
@@ -316,15 +316,12 @@ class LatestSubmissionsViewTest(TestCase):
         self.c3.user_max_score = s3.result_score
         self.c2.user_max_score = max(s2.result_score, s4.result_score)
         """ This should return a list with c2, c3, c1 ordered like that. """
+        expected_data = LimitedChallengeSerializer([self.c2, self.c3, self.c1], many=True, context={'request': MagicMock(user=self.auth_user)}).data
+
         response = self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
-
         # Hack for serializing the category
-        expected_data = []
-        for challenge in LimitedChallengeSerializer([self.c2, self.c3, self.c1], many=True).data:
-            expected_data.append(challenge)
-
         self.assertCountEqual(response.data, expected_data)
         self.assertEqual(response.data, expected_data)
 
