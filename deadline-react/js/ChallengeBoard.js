@@ -31,50 +31,104 @@ class ChallengeBoard extends React.Component {
     this.getGradedSolution = this.getGradedSolution.bind(this)
     this.buildSolutionResults = this.buildSolutionResults.bind(this)
     this.displayLoadingTests = this.displayLoadingTests.bind(this)
+    this.convertBold = this.parseTextIntoHTML.bind(this)
+    this.cleanArray = this.cleanArray.bind(this)
   }
 
   /**
    * Build the description JSX for the challenge
    */
   buildDescription () {
-    let sampleInput = this.props.description.sample_input !== undefined ? (
+    let sampleInput = this.props.description.sample_input !== undefined && this.props.description.sample_input.length > 1 ? (
       <div className='challenge-desc-sample-input'>
-        <p>{this.props.description.sample_input}</p>
+        <h3>Sample Input</h3>
+        <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.sample_input)}} />
       </div>
     ) : (<div />)
-    let sampleOutput = this.props.description.sample_output !== undefined ? (
+    let sampleOutput = this.props.description.sample_output !== undefined && this.props.description.sample_output.length > 1 ? (
       <div className='challenge-desc-sample-output'>
-        <p>{this.props.description.sample_output}</p>
+        <h3>Sample Output:</h3>
+        <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.sample_output)}} />
       </div>
     ) : (<div />)
-    let explanation = this.props.description.explanation !== undefined ? (
+
+    let explanation = this.props.description.explanation !== undefined && this.props.description.explanation.length > 1 ? (
       <div className='challenge-desc-explanation'>
-        <p>{this.props.description.explanation}</p>
+        <h3>Explanation:</h3>
+        <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.explanation)}} />
       </div>
     ) : (<div />)
+
     return (
       <div className='challenge-description'>
-        <h1>Description:</h1>
         <div className='challenge-desc-content'>
-          <p>{this.props.description.content}</p>
+          <h1>Description:</h1>
+          <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.content)}} />
         </div>
-        <h3>Input Format:</h3>
         <div className='challenge-desc-input-format'>
-          <p>{this.props.description.input_format}</p>
+          <h3>Input Format:</h3>
+          <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.input_format)}} />
         </div>
-        <h3>Output Format:</h3>
         <div className='challenge-desc-output-format'>
-          <p>{this.props.description.output_format}</p>
+          <h3>Output Format:</h3>
+          <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.output_format)}} />
         </div>
-        <h3>Constraints:</h3>
         <div className='challenge-desc-constraints'>
-          <p>{this.props.description.constraints}</p>
+          <h3>Constraints:</h3>
+          <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.constraints)}} />
         </div>
         {sampleInput}
         {sampleOutput}
         {explanation}
       </div>
     )
+  }
+ // Will remove all falsy values: undefined, null, 0, false, NaN and "" (empty string)
+  cleanArray (actual) {
+    let newArray = []
+    for (var i = 0; i < actual.length; i++) {
+      if (actual[i]) {
+        newArray.push(actual[i])
+      }
+    }
+    return newArray
+  }
+
+  // Parses our text into HTML, searching for certain placeholders like {{NPL}} and ** surroundings
+  parseTextIntoHTML (str) {
+    if (str === undefined) {
+      return str
+    }
+
+    var splitContent = str.split(/\s/)
+    for (var i = 0; i < splitContent.length; i++) {
+      let word = splitContent[i]
+
+      // a bold word markup is a word surrounded by **word**
+      if (word.length > 4 && word.startsWith('**')) {
+        let lastThreeElements = word.substring(word.length - 3)
+
+        if (lastThreeElements.endsWith('**')) {
+          let wantedStr = word.substring(2, word.length - 2)
+          word = '<span class="variable-descriptor">' + wantedStr + '</span>'
+        } else if (lastThreeElements[0] === '*' && lastThreeElements[1] === '*') {
+          // word ends with a punctuation at the end. i.e **tank**.
+          var wantedStr = word.substring(2, word.length - 3)
+          let lastElement = lastThreeElements[2]
+          word = '<span class="variable-descriptor">' + wantedStr + '</span>' + lastElement
+        }
+      }
+
+      splitContent[i] = word
+    }
+    var result = this.cleanArray(splitContent.join(' ')
+                  .split('{{NPL}}')).join('<br>')  // format new line placeholders
+
+    if (result.length === 0) {
+      return ''
+    } else {
+      return '<p>' + result + '</p>'
+    }
   }
 
   /**
