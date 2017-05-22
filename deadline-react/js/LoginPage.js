@@ -24,7 +24,7 @@ class LoginPage extends React.Component {
       showAlert: false,
       alertTitle: '',
       alertDesc: '',
-      redirectTo: ''
+      redirectTo: '/'
     }
 
     this.processLoginForm = this.processLoginForm.bind(this)
@@ -138,6 +138,7 @@ class LoginPage extends React.Component {
 
   render () {
     if (Auth.isUserAuthenticated()) {
+      window.location.reload()  // TODO: Modify once react router rolls out an option
       return <Redirect to={this.state.redirectTo} />
     }
 
