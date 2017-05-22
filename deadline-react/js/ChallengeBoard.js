@@ -39,20 +39,20 @@ class ChallengeBoard extends React.Component {
    * Build the description JSX for the challenge
    */
   buildDescription () {
-    let sampleInput = this.props.description.sample_input !== undefined && this.props.description.sample_input.length > 1 ? (
+    let sampleInput = this.props.description.sample_input !== undefined && this.props.description.sample_input.length >= 1 ? (
       <div className='challenge-desc-sample-input'>
         <h3>Sample Input</h3>
         <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.sample_input)}} />
       </div>
     ) : (<div />)
-    let sampleOutput = this.props.description.sample_output !== undefined && this.props.description.sample_output.length > 1 ? (
+    let sampleOutput = this.props.description.sample_output !== undefined && this.props.description.sample_output.length >= 1 ? (
       <div className='challenge-desc-sample-output'>
         <h3>Sample Output:</h3>
         <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.sample_output)}} />
       </div>
     ) : (<div />)
 
-    let explanation = this.props.description.explanation !== undefined && this.props.description.explanation.length > 1 ? (
+    let explanation = this.props.description.explanation !== undefined && this.props.description.explanation.length >= 1 ? (
       <div className='challenge-desc-explanation'>
         <h3>Explanation:</h3>
         <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.explanation)}} />
@@ -272,6 +272,7 @@ class ChallengeBoard extends React.Component {
     return (
       <Container>
         <div className='challenge-board'>
+          <h1 className='challenge-board-title'>{this.props.name}</h1>
           {this.buildDescription()}
           <MonacoEditor
             width='800'
@@ -296,7 +297,7 @@ class ChallengeBoard extends React.Component {
 
 ChallengeBoard.propTypes = {
   id: PropTypes.number,
-  // name: PropTypes.string,
+  name: PropTypes.string,
   // rating: PropTypes.number,
   // score: PropTypes.number,
   description: PropTypes.shape({

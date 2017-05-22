@@ -15,7 +15,8 @@ const selector = document.getElementById('app')
 // Configure the colors for Mui components
 const muiTheme = getMuiTheme({
   palette: {
-    textColor: orange600
+    textColor: orange600,
+    accent1Color: '#ff4081'
   }
 })
 

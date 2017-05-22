@@ -385,3 +385,23 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 .challenge-description > div {
     margin: 10px 0;
 }
+
+.challenge-desc-sample-input > div, .challenge-desc-sample-output > div {
+    width: 250px;
+    background: rgba(128, 128, 128, 0.27);
+    padding: 10px;
+}
+
+.challenge-board-title {
+    padding: 20px 0;
+    text-shadow: 0 0 10p black;
+    text-align: center;
+    font-weight: bold;
+    color: rgb(255, 85, 51);
+    text-shadow: 0 0 0px black;
+    background: #303336;
+}
+
+.challenge-details-tab > div > div {
+    background-color: #ff5533 !important;
+}
