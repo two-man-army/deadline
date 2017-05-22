@@ -10,6 +10,7 @@ from sql_queries import (
 
 class Language(models.Model):
     name = models.CharField(unique=True, max_length=30, primary_key=True)
+    default_code = models.CharField(max_length=200)
 
 
 class Challenge(models.Model):

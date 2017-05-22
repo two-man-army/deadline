@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, Language
 
 
 class ChallengeDescriptionSerializer(serializers.ModelSerializer):
@@ -14,6 +14,12 @@ class ChallengeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Challenge
         fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count', 'category', 'supported_languages')
+
+
+class LanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = '__all__'
 
 
 class LimitedChallengeSerializer(serializers.ModelSerializer):

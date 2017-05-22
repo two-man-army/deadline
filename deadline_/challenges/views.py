@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer
 from challenges.tasks import run_grader_task
 from challenges.helper import grade_result, update_user_score
 from challenges.helper import update_test_cases
@@ -219,6 +219,17 @@ class TopSubmissionListView(ListAPIView):
 
         return Response(data=SubmissionSerializer(top_submissions, many=True).data)
 
+
+# /challenges/languages/{language_name}
+class LanguageDetailView(RetrieveAPIView):
+    queryset = Language.objects.all()
+    serializer_class = LanguageSerializer
+    permission_classes = (IsAuthenticated, )
+    lookup_field = 'name'
+
+    def retrieve(self, request, *args, **kwargs):
+        self.kwargs['name'] = kwargs.get('name', '').capitalize()
+        return super().retrieve(request, *args, **kwargs)
 
 # /challenges/{challenge_id}/submissions/{submission_id}/test/{testcase_id}
 class TestCaseDetailView(RetrieveAPIView):

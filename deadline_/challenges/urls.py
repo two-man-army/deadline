@@ -3,14 +3,14 @@ from django.conf.urls import url
 from challenges.views import (
     ChallengeDetailView, SubmissionDetailView, TestCaseDetailView, TestCaseListView,
     SubmissionCreateView, SubmissionListView, TopSubmissionListView, MainCategoryListView, SubCategoryDetailView,
-    LatestAttemptedChallengesListView)
+    LatestAttemptedChallengesListView, LanguageDetailView)
 
 urlpatterns = [
     url(r'^latest_attempted$', LatestAttemptedChallengesListView.as_view(), name='latest_challenges'),
 
     url(r'^categories/all$', MainCategoryListView.as_view(), name='category_list'),
     url(r'^subcategories/(?P<pk>[^/]+)$', SubCategoryDetailView.as_view(), name='subcategory_detail'),
-
+    url(r'^languages/(?P<name>[^/]+)$', LanguageDetailView.as_view(), name='language_detail'),
     url(r'^(?P<pk>\d+)$', ChallengeDetailView.as_view(), name='challenge_detail'),
 
     url(r'^(?P<challenge_pk>\d+)/submissions/(?P<pk>\d+)$', SubmissionDetailView.as_view(), name='submission_detail'),
