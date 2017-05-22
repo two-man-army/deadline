@@ -393,7 +393,8 @@ class KotlinGrader(CompilableLangGrader):
     RUN_ARGS = KOTLIN_RUN_ARGS
 
     def run_program_process(self):
-        self.temp_exe_abs_path += '.jar'  # add the .jar extension to our compiled file
+        if not self.temp_exe_abs_path.endswith('.jar'):
+            self.temp_exe_abs_path += '.jar'  # add the .jar extension to our compiled file
         return super().run_program_process()
 
     def compile(self):

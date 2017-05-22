@@ -457,3 +457,15 @@ class KotlinGraderTests(TestCase):
         self.grader.run_program_process()
 
         self.assertEqual(self.grader.temp_exe_abs_path, 'tank.jar')
+
+    @patch('challenges.grader.subprocess.Popen')
+    def test_run_program_multiple_times_doesnt_attach_jar_always(self, popen_mock):
+        self.grader.temp_exe_abs_path = 'tank'
+
+        self.grader.run_program_process()
+        self.grader.run_program_process()
+        self.grader.run_program_process()
+        self.grader.run_program_process()
+        self.grader.run_program_process()
+
+        self.assertEqual(self.grader.temp_exe_abs_path, 'tank.jar')
