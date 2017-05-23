@@ -6,6 +6,7 @@ import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
 import CategoryChallengeList from './CategoryChallengeList'
 import ChallengeDetails from './ChallengeDetails'
 import RouteNotFound from './RouteNotFound'
+import Profile from './Profile'
 
 class Dashboard extends React.Component {
   constructor (props) {
@@ -51,6 +52,8 @@ class Dashboard extends React.Component {
           <Route exact path='/' render={() => { return this.getDefaultDashboardDOM() }} />
           <Route exact path='/categories/:category' component={CategoryChallengeList} />
           <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
+          <Route exact path='/accounts/password/change' component={Profile} />
+          <Route exact path='/accounts/edit' component={Profile} />
           <Route path='*' component={RouteNotFound} />
         </Switch>
       </div>
