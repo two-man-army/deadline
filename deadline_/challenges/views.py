@@ -182,7 +182,7 @@ class SubmissionDetailView(RetrieveAPIView):
                             status=400)
 
         # validate that the current User is either the author or has solved it perfectly
-        if submission.id != self.request.user.id:
+        if submission.author_id != self.request.user.id:
             top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge.id, self.request.user.id)
             if top_user_submission is None or top_user_submission.result_score != challenge.score:
                 # User has not fully solved this and as such does not have access to the solution
