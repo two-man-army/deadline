@@ -325,6 +325,53 @@ class SubmissionViewsTest(APITestCase):
         self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
         mock_top_submissions.assert_called_once_with(challenge_id=str(self.challenge.id))
 
+    def test_get_self_top_submission(self):
+        """ Should return the user's top submission """
+        new_user = User(username='1223', password='123', email='12223@abv.bg', score=123)
+        new_user.save()
+        new_auth_token = 'Token {}'.format(new_user.auth_token.key)
+        submission = Submission(language=self.python_language, challenge=self.challenge, author=new_user,
+                                     code=self.sample_code, result_score=5, pending=0)
+        submission.save()
+        top_submission = Submission(language=self.python_language, challenge=self.challenge, author=new_user,
+                                code=self.sample_code, result_score=6, pending=0)
+        top_submission.save()
+        sec_submission = Submission(language=self.python_language, challenge=self.challenge, author=new_user,
+                                code=self.sample_code, result_score=5, pending=0)
+        sec_submission.save()
+
+        response = self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop', HTTP_AUTHORIZATION=new_auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, SubmissionSerializer(top_submission).data)
+
+    def test_get_self_top_submission_no_submission(self):
+        """ Should return 404 """
+        new_user = User(username='1223', password='123', email='12223@abv.bg', score=123)
+        new_user.save()
+        new_auth_token = 'Token {}'.format(new_user.auth_token.key)
+
+        response = self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop', HTTP_AUTHORIZATION=new_auth_token)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_self_top_submission_requires_auth(self):
+        self.assertEqual(self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop').status_code, 401)
+
+    def test_get_self_top_submission_invalid_challenge_id(self):
+        """/challenges/(?P<challenge_pk>\d+)/submissions/selfTop"""
+        response = self.client.get(f'/challenges/255/submissions/selfTop', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 400)
+
+    @patch('challenges.models.Submission.fetch_top_submission_for_challenge_and_user')
+    def test_get_self_top_submission_calls_Submission_method(self, mock_top_submission):
+        """Should call the submission's method """
+        mock_top_submission.return_value = self.submission
+
+        self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop', HTTP_AUTHORIZATION=self.auth_token)
+
+        mock_top_submission.assert_called_once_with(challenge_id=str(self.challenge.id), user_id=self.auth_user.id)
+
 
 class LatestSubmissionsViewTest(TestCase):
     def setUp(self):

@@ -227,6 +227,29 @@ class TopSubmissionListView(ListAPIView):
         return Response(data=SubmissionSerializer(top_submissions, many=True).data)
 
 
+# /challenges/{challenge_id}/submissions/selfTop
+class SelfTopSubmissionDetailView(RetrieveAPIView):
+    """
+    Returns the top-rated submission for the current User
+    """
+    serializer_class = SubmissionSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def retrieve(self, request, *args, **kwargs):
+        challenge_pk = kwargs.get('challenge_pk', '')
+        try:
+            Challenge.objects.get(pk=challenge_pk)
+        except Challenge.DoesNotExist:
+            return Response(data={'error': f'Invalid challenge id {challenge_pk}!'}, status=400)
+
+        top_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge_id=challenge_pk, user_id=request.user.id)
+
+        if top_submission is None:
+            return Response(status=404)  # doesnt exist
+
+        return Response(data=SubmissionSerializer(top_submission).data)
+
+
 # /challenges/languages/{language_name}
 class LanguageDetailView(RetrieveAPIView):
     queryset = Language.objects.all()
@@ -237,6 +260,7 @@ class LanguageDetailView(RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         self.kwargs['name'] = kwargs.get('name', '').capitalize()
         return super().retrieve(request, *args, **kwargs)
+
 
 # /challenges/{challenge_id}/submissions/{submission_id}/test/{testcase_id}
 class TestCaseDetailView(RetrieveAPIView):
