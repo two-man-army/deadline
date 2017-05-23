@@ -1,6 +1,6 @@
 /* http://meyerweb.com/eric/tools/css/reset/ 
-   v2.0 | 20110126
-   License: none (public domain)
+v2.0 | 20110126
+License: none (public domain)
  */
 
 html, body, div, span, applet, object, iframe,
@@ -88,7 +88,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ */
 body{
     color:#6a6f8c;
     background:#c8c8c8;
@@ -344,11 +344,11 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 
 
 .dashboard-header .user {
-  display: flex;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-  color: rgb(255, 85, 51)
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    color: rgb(255, 85, 51)
 }
 
 .dashboard-header .notification-icon {
@@ -405,3 +405,55 @@ div.lang-choice-select {  /* A wrapper for the Select choice for submission lang
 .challenge-details-tab > div > div {
     background-color: #ff5533 !important;
 }
+
+/* Account options */
+.account-options ul {
+    width: 80%;
+    text-align: center;
+}
+
+.account-options ul li {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.account-options ul li:first-of-type {
+    border-top: 1px solid #ccc;
+}
+
+.description.account-dialog {
+    width: 100% !important;
+}
+
+/* profile page */
+.profile-page {
+    margin: 0 auto;
+    border: 1px solid #dbdbdb;
+    height: 700px;
+    max-width: 935px;
+    width: 100%;
+}
+
+.profile-page ul, article {
+    height: 700px;
+}
+
+.profile-page ul {
+    float: left;
+    padding: 10px;
+    border-right: 1px solid #dbdbdb;
+    width: 100%;
+    max-width: 230px;
+}
+
+.profile-page article {
+    float: right;
+    padding: 10px;
+    width: 100%;
+    max-width: 700px;
+}
+
+
+
+
+
