@@ -2,27 +2,36 @@
   {
     "model": "challenges.language",
     "pk": "Python",
-    "fields": {}
+    "fields": {
+      "default_code": "def main():\n    # Let's go champ\n    pass\n\nif __name__ == '__main__':\n    main()\n"
+    }
   },
   {
     "model": "challenges.language",
     "pk": "Go",
-    "fields": {}
+    "fields": {
+      "default_code": "package main\nimport \"fmt\"\n\nfunc main() {\n\t\n}"}
   },
   {
     "model": "challenges.language",
     "pk": "Rust",
-    "fields": {}
+    "fields": {
+      "default_code": "use std::io;\n\nfn main() {\n\t\n}"
+    }
   },
   {
     "model": "challenges.language",
     "pk": "C++",
-    "fields": {}
+    "fields": {
+      "default_code": "#include <iostream>\n\nuse std::cin;\nuse std::cout;\n\nint main() {\n\t\n\treturn 0;\n}"
+    }
   },
   {
     "model": "challenges.language",
     "pk": "Kotlin",
-    "fields": {}
+    "fields": {
+      "default_code": "import java.util.*\n\nfun main(args: Array<String>) {\n\t\n}"
+    }
   },
   {
     "model": "challenges.maincategory",

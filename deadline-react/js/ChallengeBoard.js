@@ -202,9 +202,7 @@ class ChallengeBoard extends React.Component {
     let languageName = e.value
     getLanguageDetail(languageName).then(lang => {
       let defaultCode = lang.default_code
-      if (this.state.code.length === 0) {
-        this.setState({code: defaultCode})
-      }
+      this.setState({code: defaultCode})
     })
     this.setState({chosenLanguage: languageName})
   }
