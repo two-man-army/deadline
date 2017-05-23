@@ -187,4 +187,20 @@ function getLanguageDetail (langName) {
   })
 }
 
-export { getLanguageDetail, getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
+/**
+ * Queries the server for the current user's best submission for the given challenge
+ * @param {Number} challengeId
+ */
+function getSelfUserTopSubmission (challengeId) {
+  return axios.get(`http://localhost:8000/challenges/${challengeId}/submissions/selfTop`, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    if (err.response.statusCode === 404) {
+      return {}
+    }
+    console.log(`Error while fetching the current user's top submission for challenge ${challengeId}`)
+    throw err
+  })
+}
+
+export { getSelfUserTopSubmission, getLanguageDetail, getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }

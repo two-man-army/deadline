@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {Tabs, Tab} from 'material-ui/Tabs'
-import {getTopSolutions, getChallengeDetails, getAllUserSolutions} from './requests.js'
+import {getSelfUserTopSubmission, getTopSolutions, getChallengeDetails, getAllUserSolutions} from './requests.js'
 import ChallengeBoard from './ChallengeBoard.js'
 import SubmissionsTable from './semantic_ui_components/SubmissionsTable.js'
 import LeaderboardTable from './semantic_ui_components/LeaderboardTable.js'
@@ -31,18 +31,28 @@ class ChallengeDetails extends React.Component {
       supported_languages: [],
       solutions: [],
       topSolutions: [],
-      slideIndex: 0
+      slideIndex: 0,
+      userInfo: {maxScore: 0}
     }
-
+    // TODO: Load user Max Score for challenge
     this.loadChallengeDetails = this.loadChallengeDetails.bind(this)
     this.loadTopSubmissions = this.loadTopSubmissions.bind(this)
     this.handleTabChange = this.handleTabChange.bind(this)
+    this.modifyScore = this.modifyScore.bind(this)
     this.loadChallengeDetails()
   }
 
   loadChallengeDetails () {
     getChallengeDetails(this.props.match.params.challengeId).then(challenge => {
       this.setState(challenge)
+      getSelfUserTopSubmission(challenge.id).then(topSubmission => {
+        console.log('top submission')
+        console.log(topSubmission)
+        this.modifyScore(topSubmission.result_score || 0)
+      }).catch(err => {
+        console.log(err)
+        throw err
+      })
       this.loadSubmissions(challenge.id)
       this.loadTopSubmissions(challenge.id)
     }).catch(err => {
@@ -72,6 +82,14 @@ class ChallengeDetails extends React.Component {
     })
   }
 
+  modifyScore (newScore) {
+    if (newScore > this.state.userInfo.maxScore) {
+      console.log('MODIFIED SCORE')
+      console.log(newScore)
+      this.setState({userInfo: {maxScore: newScore}})
+    }
+  }
+
   render () {
     const styles = {
       headline: {
@@ -84,6 +102,8 @@ class ChallengeDetails extends React.Component {
         padding: 10
       }
     }
+    console.log('USER INFO')
+    console.log(this.state.userInfo)
     return (
       <div>
         <Container>
@@ -101,15 +121,15 @@ class ChallengeDetails extends React.Component {
           <SwipeableViews
             index={this.state.slideIndex}
             onChangeIndex={this.handleTabChange}
-          >
+            enableMouseEvents={false}>
             <div>
-              <ChallengeBoard {...this.state} />
+              <ChallengeBoard {...this.state} userInfo={this.state.userInfo} modifyScore={this.modifyScore} />
             </div>
             <div style={styles.slide}>
               <SubmissionsTable maxScore={this.state.score} submissions={this.state.solutions} />
             </div>
             <div style={styles.slide}>
-              <LeaderboardTable maxScore={this.state.score} submissions={this.state.topSolutions} />
+              <LeaderboardTable maxScore={this.state.score} submissions={this.state.topSolutions} hasUnlockedSubmissions={this.state.userInfo.maxScore === this.state.score && this.state.score !== undefined} />
             </div>
           </SwipeableViews>
         </Container>

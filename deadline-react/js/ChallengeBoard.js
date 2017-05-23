@@ -226,6 +226,11 @@ class ChallengeBoard extends React.Component {
 
       this.setState({isGrading: false, gradedSolution: solution})
       this.buildSolutionResults()
+      // TODO: Add to max score
+      if (this.props.userInfo.maxScore < solution.result_score) {
+        console.log('NEW SCORE')
+        this.props.modifyScore(solution.result_score)
+      }
       return solution
     })
   }
@@ -317,7 +322,9 @@ ChallengeBoard.propTypes = {
   }),
   test_case_count: PropTypes.number,
   // category: PropTypes.string,
-  supported_languages: PropTypes.arrayOf(PropTypes.string)
+  supported_languages: PropTypes.arrayOf(PropTypes.string),
+  modifyScore: PropTypes.func.isRequired,
+  userInfo: PropTypes.object
 }
 
 export default ChallengeBoard

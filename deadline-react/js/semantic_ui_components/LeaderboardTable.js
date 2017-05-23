@@ -24,7 +24,12 @@ class LeaderboardTable extends React.Component {
     this.handleSearchTermChange = this.handleSearchTermChange.bind(this)
     this.handleSearch = this.handleSearch.bind(this)
   }
-  buildSubmissionRow (submission) {
+  /**
+   * Builds the submission row for a specific submission
+   * @param {object} submission
+   * @param {bool} withLinks - if we want to include a link to the code
+   */
+  buildSubmissionRow (submission, withLinks) {
     let submissionStatusIcon = null
     let iconSizeStyle = {'fontSize': '22px'}  // for some reason the size prop does not work
     if (submission.pending) {
@@ -67,10 +72,23 @@ class LeaderboardTable extends React.Component {
         <Table.Cell>
           <TimeAgo date={submission.created_at} />
         </Table.Cell>
+        {this.buildSubmissionLink(withLinks, submission)}
       </Table.Row>
     )
   }
 
+/**
+ * Return a table cell with a link to the given submission
+ * @param {boolean} toRender - bool indicating if we want to render the link
+ * @param {*} submission
+ */
+  buildSubmissionLink(toRender, submission) {
+    if (!toRender) {
+      return
+    }
+    // TODO: Create a submission detail view and add link
+    return <Table.Cell>{"LINK"}</Table.Cell>
+  }
   handleSearch (ev, e) {
     let searchVal = e.value
     if (searchVal === '') {
@@ -125,6 +143,9 @@ class LeaderboardTable extends React.Component {
   }
 
   render () {
+    let toRenderLinks = this.props.hasUnlockedSubmissions
+    let linkHeader = toRenderLinks ? <Table.HeaderCell>Code</Table.HeaderCell> : null
+    console.log(linkHeader)
     return (
       <div>
         <Input
@@ -143,12 +164,13 @@ class LeaderboardTable extends React.Component {
               <Table.HeaderCell>Score</Table.HeaderCell>
               <Table.HeaderCell>Language</Table.HeaderCell>
               <Table.HeaderCell>Submitted</Table.HeaderCell>
+              {linkHeader}
             </Table.Row>
           </Table.Header>
 
           <Table.Body>
             {this.state.submissions.map(submission => {
-              return this.buildSubmissionRow(submission)
+              return this.buildSubmissionRow(submission, toRenderLinks)
             })}
           </Table.Body>
         </Table>
@@ -159,7 +181,8 @@ class LeaderboardTable extends React.Component {
 
 LeaderboardTable.propTypes = {
   maxScore: PropTypes.number,
-  submissions: PropTypes.array
+  submissions: PropTypes.array,
+  hasUnlockedSubmissions: PropTypes.bool
 }
 
 export default LeaderboardTable
