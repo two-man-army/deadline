@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import SweetAlert from 'sweetalert-react'
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
@@ -6,7 +7,6 @@ import Video from './Video'
 import Auth from './auth.js'
 import { postLogIn, postRegister } from './requests'
 import { SweetAlertError } from './errors'
-import { Redirect } from 'react-router-dom'
 
 class LoginPage extends React.Component {
   constructor (props) {
@@ -138,8 +138,8 @@ class LoginPage extends React.Component {
 
   render () {
     if (Auth.isUserAuthenticated()) {
-      window.location.reload()  // TODO: Modify once react router rolls out an option
-      return <Redirect to={this.state.redirectTo} />
+      // Show the real application
+      return <this.props.authApp />
     }
 
     return (
@@ -187,6 +187,10 @@ class LoginPage extends React.Component {
       </div>
     )
   }
+}
+
+LoginPage.propTypes = {
+  authApp: PropTypes.func.isRequired
 }
 
 export default LoginPage
