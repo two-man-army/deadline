@@ -171,11 +171,50 @@ class SubmissionViewsTest(APITestCase):
         grocery_bill = sum(prices[fruit] * my_purchase[fruit]
                            for fruit in my_purchase)
         print 'I owe the grocer $%.2f' % grocery_bill"""
-        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code, result_score=40)
+        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code, result_score=10, pending=0)
         self.submission.save()
 
     def test_view_submission(self):
         response = self.client.get(path=self.submission.get_absolute_url(), HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SubmissionSerializer(self.submission).data, response.data)
+
+    def test_view_own_non_solved_user_submission_should_show(self):
+        """ Even though the user hasn't solved the challenge fully, it is his own so he should be able to see it"""
+        aut_user2 = User(username='user2', password='user2', email='user2@abv.bg', score=123)
+        aut_user2.save()
+        auth_token2 = 'Token {}'.format(aut_user2.auth_token.key)
+        submission = Submission(language=self.python_language, challenge=self.challenge, author=aut_user2, pending=0,
+                                code=self.sample_code, result_score=3)  # user has not solved it perfectly
+        submission.save()
+
+        response = self.client.get(path=submission.get_absolute_url(), HTTP_AUTHORIZATION=auth_token2)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SubmissionSerializer(submission).data, response.data)
+
+    def test_view_submission_non_solved_user_should_not_show(self):
+        aut_user2 = User(username='user2', password='user2', email='user2@abv.bg', score=123)
+        aut_user2.save()
+        auth_token2 = 'Token {}'.format(aut_user2.auth_token.key)
+        submission = Submission(language=self.python_language, challenge=self.challenge, author=aut_user2, pending=0,
+                                     code=self.sample_code, result_score=9)  # user has not solved it perfectly
+        submission.save()
+
+        response = self.client.get(path=self.submission.get_absolute_url(), HTTP_AUTHORIZATION=auth_token2)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['error'], "You have not fully solved the challenge")
+
+    def test_view_submission_solved_user_should_show(self):
+        aut_user2 = User(username='user2', password='user2', email='user2@abv.bg', score=123)
+        aut_user2.save()
+        auth_token2 = 'Token {}'.format(aut_user2.auth_token.key)
+        submission = Submission(language=self.python_language, challenge=self.challenge, author=aut_user2, pending=0,
+                                code=self.sample_code, result_score=10)  # user has perfectly
+        submission.save()
+
+        response = self.client.get(path=self.submission.get_absolute_url(), HTTP_AUTHORIZATION=auth_token2)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(SubmissionSerializer(self.submission).data, response.data)
 

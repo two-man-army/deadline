@@ -24,6 +24,7 @@ class BaseGraderTests(TestCase):
         self.test_case_count = 2
         self.temp_file_name = 'testfile.txt'
         self.grader = BaseGrader(self.test_case_count, self.temp_file_name)
+        self.grader.RUN_ARGS = ['']
         # MagicMock.__gt__ = lambda x, y: x.name > y.name
         self.input_files_dir_entries = [DirEntryMock(name='input-01.txt'), DirEntryMock(name='input-02.txt'),
                                         DirEntryMock(name='output-01.txt'), DirEntryMock(name='output-02.txt')]
@@ -216,6 +217,7 @@ class CompilableGraderTests(TestCase):
     def setUp(self):
         CompilableLangGrader.FILE_EXTENSION = 'woo'
         self.grader = CompilableLangGrader(5, 'whatup')
+        self.grader.RUN_ARGS = []
 
     @patch('challenges.grader.CompilableLangGrader.find_tests')
     @patch('challenges.grader.CompilableLangGrader.read_tests')
