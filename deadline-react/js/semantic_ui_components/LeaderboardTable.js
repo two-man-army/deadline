@@ -82,12 +82,12 @@ class LeaderboardTable extends React.Component {
  * @param {boolean} toRender - bool indicating if we want to render the link
  * @param {*} submission
  */
-  buildSubmissionLink(toRender, submission) {
+  buildSubmissionLink (toRender, submission) {
     if (!toRender) {
       return
     }
     // TODO: Create a submission detail view and add link
-    return <Table.Cell>{"LINK"}</Table.Cell>
+    return <Table.Cell>{'LINK'}</Table.Cell>
   }
   handleSearch (ev, e) {
     let searchVal = e.value
