@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Dropdown, Input, Icon, Header, Image, Table } from 'semantic-ui-react'
 import TimeAgo from 'react-timeago'
+import { postCastSubmissionVote, deleteRemoveSubmissionVote } from '../requests.js'
 
 class LeaderboardTable extends React.Component {
   constructor (props) {
@@ -23,7 +24,11 @@ class LeaderboardTable extends React.Component {
     this.filterSubmissionsBySearchQuery = this.filterSubmissionsBySearchQuery.bind(this)
     this.handleSearchTermChange = this.handleSearchTermChange.bind(this)
     this.handleSearch = this.handleSearch.bind(this)
+    this.handleSubmissionDownvote = this.handleSubmissionDownvote.bind(this)
+    this.handleSubmissionUpvote = this.handleSubmissionUpvote.bind(this)
+    this.buildSubmissionVoteIcons = this.buildSubmissionVoteIcons.bind(this)
   }
+
   /**
    * Builds the submission row for a specific submission
    * @param {object} submission
@@ -45,6 +50,7 @@ class LeaderboardTable extends React.Component {
         submissionStatusIcon = <Icon size='small' color='red' name='remove' style={iconSizeStyle} />
       }
     }
+
 
     let langIconStyle = {
       width: '20px',
@@ -73,6 +79,7 @@ class LeaderboardTable extends React.Component {
           <TimeAgo date={submission.created_at} />
         </Table.Cell>
         {this.buildSubmissionLink(withLinks, submission)}
+        {this.buildSubmissionVoteIcons(withLinks, submission)}
       </Table.Row>
     )
   }
@@ -89,6 +96,28 @@ class LeaderboardTable extends React.Component {
     // TODO: Create a submission detail view and add link
     return <Table.Cell>{'LINK'}</Table.Cell>
   }
+
+  buildSubmissionVoteIcons (toRender, submission) {
+    if (!toRender) {
+      return
+    }
+    let upvoteStyle = submission.user_has_voted && submission.user_has_upvoted ? {color: '#ff4081'} : undefined
+    let downvoteStyle = submission.user_has_voted && !submission.user_has_upvoted ? {color: '#ff4081'} : undefined
+  
+    return (
+      <Table.Cell>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '10%'
+        }}>
+          <Icon size='large' link name='angle up' onClick={() => { this.handleSubmissionUpvote(submission.id, submission) }} style={upvoteStyle} />
+          <Icon size='large' link name='angle down' onClick={() => { this.handleSubmissionDownvote(submission.id, submission) }} style={downvoteStyle} />
+        </div>
+        <p>{submission.upvote_count - submission.downvote_count}</p>
+      </Table.Cell>
+    )
+  }
   handleSearch (ev, e) {
     let searchVal = e.value
     if (searchVal === '') {
@@ -98,6 +127,60 @@ class LeaderboardTable extends React.Component {
 
     let submissions = this.filterSubmissionsBySearchQuery(searchVal, this.state.chosenSearchField)
     this.setState({submissions, searchQuery: e.value})
+  }
+
+  handleSubmissionUpvote (submissionId, submission) {
+    // TODO: Upvote
+
+    if (submission.user_has_voted) {
+      if (submission.user_has_upvoted) {
+        // this removes the vote
+        submission.upvote_count -= 1
+        submission.user_has_voted = false
+        submission.user_has_upvoted = false
+        deleteRemoveSubmissionVote(submission.id)
+      } else {
+        // user has downvoted and now switches it to an upvote
+        submission.downvote_count -= 1
+        submission.upvote_count += 1
+        submission.user_has_upvoted = true
+        postCastSubmissionVote(submission.id, true)
+      }
+    } else {
+      submission.upvote_count += 1
+      submission.user_has_voted = true
+      submission.user_has_upvoted = true
+      postCastSubmissionVote(submission.id, true)
+    }
+
+    console.log(`User has voted: ${submission.user_has_voted}`)
+    console.log(`Submission is upvoted: ${submission.user_has_upvoted}`)
+
+    this.setState({submissions: this.state.submissions})
+  }
+
+  handleSubmissionDownvote (submissionId, submission) {
+    if (submission.user_has_voted) {
+      if (!submission.user_has_upvoted) {
+        // this removes the vote
+        submission.downvote_count -= 1
+        submission.user_has_voted = false
+        deleteRemoveSubmissionVote(submission.id)
+      } else {
+        // user removes his upvote and casts a downvote
+        submission.upvote_count -= 1
+        submission.downvote_count += 1
+        submission.user_has_upvoted = false
+        postCastSubmissionVote(submission.id, false)
+      }
+    } else {
+      submission.downvote_count += 1
+      submission.user_has_voted = true
+      submission.user_has_upvoted = false
+      postCastSubmissionVote(submission.id, false)
+    }
+
+    this.setState({submissions: this.state.submissions})
   }
 
   /**
@@ -145,7 +228,8 @@ class LeaderboardTable extends React.Component {
   render () {
     let toRenderLinks = this.props.hasUnlockedSubmissions
     let linkHeader = toRenderLinks ? <Table.HeaderCell>Code</Table.HeaderCell> : null
-    console.log(linkHeader)
+    let voteHeader = toRenderLinks ? <Table.HeaderCell>Votes</Table.HeaderCell> : null
+
     return (
       <div>
         <Input
@@ -165,6 +249,7 @@ class LeaderboardTable extends React.Component {
               <Table.HeaderCell>Language</Table.HeaderCell>
               <Table.HeaderCell>Submitted</Table.HeaderCell>
               {linkHeader}
+              {voteHeader}
             </Table.Row>
           </Table.Header>
 
