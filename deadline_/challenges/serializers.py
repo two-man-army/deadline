@@ -61,6 +61,20 @@ class SubmissionSerializer(serializers.ModelSerializer):
                   'compiled', 'compile_error_message', 'language')
 
 
+class LimitedSubmissionSerializer(serializers.ModelSerializer):
+    """ Serializes everything about a submission except its code """
+    id = serializers.IntegerField(read_only=True)
+    challenge = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = serializers.StringRelatedField(read_only=True)
+    result_score = serializers.IntegerField(read_only=True)
+    pending = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Submission
+        fields = ('id', 'challenge', 'author', 'result_score', 'pending', 'created_at',
+                  'compiled', 'compile_error_message', 'language')
+
+
 class TestCaseSerializer(serializers.ModelSerializer):
     submission = serializers.PrimaryKeyRelatedField(read_only=True)
     success = serializers.BooleanField(read_only=True)

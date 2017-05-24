@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language
-from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer
+from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from accounts.models import User
 from unittest.mock import patch, MagicMock
@@ -65,6 +65,17 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":"' + str(self.auth_user.username)
                          + '","code":"' + self.sample_code + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '",'
                          + '"compiled":true,"compile_error_message":"","language":"Python"}')
+        content = JSONRenderer().render(serializer.data)
+        self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
+
+    def test_limited_serialization_should_not_serialize_code(self):
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                       code=self.sample_code)
+        s.save()
+        serializer = LimitedSubmissionSerializer(s)
+        expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":"' + str(self.auth_user.username)
+                            + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '",'
+                            + '"compiled":true,"compile_error_message":"","language":"Python"}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
 
@@ -225,7 +236,17 @@ class SubmissionViewsTest(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         # Should order them by creation date descending
-        self.assertEqual(SubmissionSerializer([second_submission, self.submission], many=True).data, response.data)
+        self.assertEqual(LimitedSubmissionSerializer([second_submission, self.submission], many=True).data, response.data)
+
+    def test_view_all_submissions_does_not_show_code_for_submissions(self):
+        second_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        second_submission.save()
+        response = self.client.get(path='/challenges/{}/submissions/all'.format(self.challenge.id), HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        for submission in response.data:
+            for sub_val in submission.values():
+                self.assertNotEqual(sub_val, self.sample_code)
 
     def test_view_submission_doesnt_exist(self):
         response = self.client.get('challenges/{}/submissions/15'.format(self.submission.challenge_id)
@@ -311,7 +332,7 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, SubmissionSerializer([top_submission, better_submission], many=True).data)
+        self.assertEqual(response.data, LimitedSubmissionSerializer([top_submission, better_submission], many=True).data)
 
     def test_get_top_submissions_invalid_id(self):
         response = self.client.get('/challenges/33/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
@@ -343,7 +364,7 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop', HTTP_AUTHORIZATION=new_auth_token)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, SubmissionSerializer(top_submission).data)
+        self.assertEqual(response.data, LimitedSubmissionSerializer(top_submission).data)
 
     def test_get_self_top_submission_no_submission(self):
         """ Should return 404 """

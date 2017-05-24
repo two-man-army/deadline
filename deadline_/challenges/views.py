@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, LimitedSubmissionSerializer
 from challenges.tasks import run_grader_task
 from challenges.helper import grade_result, update_user_score
 from challenges.helper import update_test_cases
@@ -118,7 +118,13 @@ class SubmissionCreateView(CreateAPIView):
 
 # /challenges/{challenge_id}/submissions/{submission_id}
 class SubmissionDetailView(RetrieveAPIView):
-    """ Returns information about a specific Submission """
+    """
+    Returns information about a specific Submission
+     Normally used for when we want to open a page with the solution's code
+        We want to give access to this submission only if:
+            a) the requester is the author of the submission
+            b) the requester has solved the associated challenge with max score
+    """
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
     permission_classes = (IsAuthenticated, )
@@ -194,12 +200,12 @@ class SubmissionDetailView(RetrieveAPIView):
 # /challenges/{challenge_id}/submissions/all
 class SubmissionListView(ListAPIView):
     """ Returns all the Submissions for a specific Challenge from the current user """
-    serializer_class = SubmissionSerializer
+    serializer_class = LimitedSubmissionSerializer
     permission_classes = (IsAuthenticated,)
 
     def list(self, request, *args, **kwargs):
         challenge_pk = kwargs.get('challenge_pk')
-        return Response(data=SubmissionSerializer(Submission.objects
+        return Response(data=LimitedSubmissionSerializer(Submission.objects
                                                   .filter(challenge=challenge_pk, author=request.user)
                                                   .order_by('-created_at')  # newest first
                                                   .all(), many=True).data
@@ -212,7 +218,7 @@ class TopSubmissionListView(ListAPIView):
     Returns the top-rated Submissions for a specific Challenge, one for each User
      Used for a Challenge's leaderboard
     """
-    serializer_class = SubmissionSerializer
+    serializer_class = LimitedSubmissionSerializer
     permission_classes = (IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
@@ -224,7 +230,7 @@ class TopSubmissionListView(ListAPIView):
 
         top_submissions = Submission.fetch_top_submissions_for_challenge(challenge_id=challenge_pk)
 
-        return Response(data=SubmissionSerializer(top_submissions, many=True).data)
+        return Response(data=LimitedSubmissionSerializer(top_submissions, many=True).data)
 
 
 # /challenges/{challenge_id}/submissions/selfTop
@@ -232,7 +238,7 @@ class SelfTopSubmissionDetailView(RetrieveAPIView):
     """
     Returns the top-rated submission for the current User
     """
-    serializer_class = SubmissionSerializer
+    serializer_class = LimitedSubmissionSerializer
     permission_classes = (IsAuthenticated, )
 
     def retrieve(self, request, *args, **kwargs):
@@ -247,7 +253,7 @@ class SelfTopSubmissionDetailView(RetrieveAPIView):
         if top_submission is None:
             return Response(status=404)  # doesnt exist
 
-        return Response(data=SubmissionSerializer(top_submission).data)
+        return Response(data=LimitedSubmissionSerializer(top_submission).data)
 
 
 # /challenges/languages/{language_name}
