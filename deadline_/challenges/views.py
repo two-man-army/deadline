@@ -241,6 +241,29 @@ class CastSubmissionVoteView(APIView):
         return Response(status=201)
 
 
+# /challenges/submissions/{submission_id}/removeVote
+class RemoveSubmissionVoteView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def delete(self, request, *args, **kwargs):
+        # get the submission
+        submission_id = kwargs.get('submission_id', None)
+        try:
+            submission = Submission.objects.get(id=submission_id)
+        except Submission.DoesNotExist:
+            return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
+
+        # see if such a Submission exists
+        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user,
+                                                                        submission=submission).first()
+        if submission_vote is None:
+            return Response(status=404, data={'error': f'The user has not voted for submission with ID {submission.id}'})
+
+        submission_vote.delete()
+
+        return Response(status=200)
+
+
 # /challenges/{challenge_id}/submissions/top
 class TopSubmissionListView(ListAPIView):
     """
