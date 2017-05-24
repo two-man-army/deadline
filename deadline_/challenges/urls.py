@@ -3,7 +3,8 @@ from django.conf.urls import url
 from challenges.views import (
     ChallengeDetailView, SubmissionDetailView, TestCaseDetailView, TestCaseListView,
     SubmissionCreateView, SubmissionListView, TopSubmissionListView, MainCategoryListView, SubCategoryDetailView,
-    LatestAttemptedChallengesListView, LanguageDetailView, SelfTopSubmissionDetailView)
+    LatestAttemptedChallengesListView, LanguageDetailView, SelfTopSubmissionDetailView,
+    CastSubmissionVoteView)
 
 urlpatterns = [
     url(r'^latest_attempted$', LatestAttemptedChallengesListView.as_view(), name='latest_challenges'),
@@ -17,6 +18,7 @@ urlpatterns = [
     url(r'^(?P<challenge_pk>\d+)/submissions/new$', SubmissionCreateView.as_view(), name='submission_create'),
     url(r'^(?P<challenge_pk>\d+)/submissions/all$', SubmissionListView.as_view(), name='submission_list'),
     url(r'^(?P<challenge_pk>\d+)/submissions/top$', TopSubmissionListView.as_view(), name='top_submission_list'),
+    url(r'^submissions/(?P<submission_id>\d+)/vote', CastSubmissionVoteView.as_view(), name='vote_submission'),
     url(r'^(?P<challenge_pk>\d+)/submissions/selfTop$', SelfTopSubmissionDetailView.as_view(), name='self_top_submission'),
     url(r'^(?P<challenge_pk>\d+)/submissions/(?P<submission_pk>\d+)/tests$', TestCaseListView.as_view(),
         name='test_case_list'),

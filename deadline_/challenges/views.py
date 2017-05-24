@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, LimitedSubmissionSerializer
 from challenges.tasks import run_grader_task
 from challenges.helper import grade_result, update_user_score
@@ -210,6 +210,35 @@ class SubmissionListView(ListAPIView):
                                                   .order_by('-created_at')  # newest first
                                                   .all(), many=True).data
                         , status=200)
+
+
+# /challenges/submissions/{submission_id}/vote
+class CastSubmissionVoteView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        is_upvote = request.data.get('is_upvote', None)
+        if is_upvote is None:
+            return Response(status=400)
+
+        # get the submission
+        submission_id = kwargs.get('submission_id', None)
+        try:
+            submission = Submission.objects.get(id=submission_id)
+        except Submission.DoesNotExist:
+            return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
+
+        # try to find such a SubmissionVote first
+        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user, submission=submission).first()
+        if submission_vote is None:
+            # user has not voted before
+            SubmissionVote.objects.create(author_id=request.user.id, submission_id=submission.id, is_upvote=is_upvote)
+        elif submission_vote.is_upvote != is_upvote:
+            # user has voted with another value, update the vote
+            submission_vote.is_upvote = is_upvote
+            submission_vote.save()
+
+        return Response(status=201)
 
 
 # /challenges/{challenge_id}/submissions/top

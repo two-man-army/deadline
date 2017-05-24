@@ -526,3 +526,74 @@ class SubmissionVoteModelTest(TestCase):
         s2 = SubmissionVote(author=self.auth_user, submission=self.submission, is_upvote=False)
         with self.assertRaises(IntegrityError):
             s2.save()
+
+
+class SubmissionVoteViewTest(APITestCase):
+    def setUp(self):
+        challenge_cat = MainCategory('Tests')
+        challenge_cat.save()
+        self.python_language = Language(name="Python"); self.python_language.save()
+
+        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
+        self.sub_cat.save()
+
+        self.c1 = ChallengeFactory(category=self.sub_cat)
+
+        self.auth_user = User(username='123', password='123', email='123Sm2@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.sample_code = "print(hello)"
+        self.submission = Submission(language=self.python_language, challenge=self.c1, author=self.auth_user,
+                       code=self.sample_code)
+        self.submission.save()
+
+    def test_cast_submission_vote_creates_vote(self):
+        self.assertEqual(len(SubmissionVote.objects.all()), 0)
+        response = self.client.post(f'/challenges/submissions/{self.submission.id}/vote', HTTP_AUTHORIZATION=self.auth_token, data={
+            'is_upvote': True
+        })
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(len(SubmissionVote.objects.all()), 1)
+        self.assertTrue(SubmissionVote.objects.all().first().is_upvote)
+        self.submission.refresh_from_db()
+        self.assertEqual(self.submission.get_votes_count(), (1, 0))
+
+    def test_cast_submission_vote_modifies_upvote_to_downvote(self):
+        submission_vote = SubmissionVote.objects.create(author_id=self.auth_user.id,
+                                                        submission_id=self.submission.id, is_upvote=True)
+        submission_vote.save()
+        self.assertEqual(len(SubmissionVote.objects.all()), 1)
+
+        response = self.client.post(f'/challenges/submissions/{self.submission.id}/vote', HTTP_AUTHORIZATION=self.auth_token,
+                                    data={
+                                        'is_upvote': False
+                                    })
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(len(SubmissionVote.objects.all()), 1)
+        self.assertFalse(SubmissionVote.objects.all().first().is_upvote)  # should have been modified
+
+    def test_cast_submission_vote_doesnt_modify_upvote_when_voted_again(self):
+        submission_vote = SubmissionVote.objects.create(author_id=self.auth_user.id,
+                                                        submission_id=self.submission.id, is_upvote=True)
+        submission_vote.save()
+        self.assertEqual(len(SubmissionVote.objects.all()), 1)
+
+        response = self.client.post(f'/challenges/submissions/{self.submission.id}/vote', HTTP_AUTHORIZATION=self.auth_token,
+                                    data={
+                                        'is_upvote': True
+                                    })
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(len(SubmissionVote.objects.all()), 1)
+        self.assertTrue(SubmissionVote.objects.all().first().is_upvote)  # should have been modified
+
+    def test_cast_submission_vote_invalid_submission_id_returns_404(self):
+        response = self.client.post(f'/challenges/submissions/111/vote', HTTP_AUTHORIZATION=self.auth_token,
+                                    data={
+                                        'is_upvote': True
+                                    })
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.data['error'], 'A submission with ID 111 does not exist!')
+
+
+
