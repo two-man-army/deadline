@@ -60,6 +60,36 @@ class SubmissionSerializer(serializers.ModelSerializer):
         fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at',
                   'compiled', 'compile_error_message', 'language')
 
+    def to_representation(self, instance: Submission):
+        """
+        Modification to add four variables to the serialized data
+            - user_has_voted - Boolean indicating if the user has voted at all for this
+            - user_has_upvoted - Boolean indicating if the user has upvoted the submission (user_has_voted must be true)
+            - upvote_count - int showing the amount of upvotes this submission has
+            - downvote_count - int showing the amount of downvotes this submission has
+        """
+        from accounts.models import User
+        result = super().to_representation(instance)
+        user:User = getattr(self.context.get('request', None), 'user', None)
+        # TODO: Move to helper
+        if user is None:
+            result['user_has_voted'] = False
+            result['user_has_upvoted'] = False
+        else:
+            user_vote = user.get_vote_for_submission(submission_id=instance.id)
+            if user_vote is None:
+                result['user_has_voted'] = False
+                result['user_has_upvoted'] = False
+            else:
+                result['user_has_voted'] = True
+                result['user_has_upvoted'] = user_vote.is_upvote
+
+        upvote_count, downvote_count = instance.get_votes_count()
+        result['upvote_count'] = upvote_count
+        result['downvote_count'] = downvote_count
+
+        return result
+
 
 class LimitedSubmissionSerializer(serializers.ModelSerializer):
     """ Serializes everything about a submission except its code """
@@ -73,6 +103,36 @@ class LimitedSubmissionSerializer(serializers.ModelSerializer):
         model = Submission
         fields = ('id', 'challenge', 'author', 'result_score', 'pending', 'created_at',
                   'compiled', 'compile_error_message', 'language')
+
+    def to_representation(self, instance: Submission):
+        """
+        Modification to add four variables to the serialized data
+            - user_has_voted - Boolean indicating if the user has voted at all for this
+            - user_has_upvoted - Boolean indicating if the user has upvoted the submission (user_has_voted must be true)
+            - upvote_count - int showing the amount of upvotes this submission has
+            - downvote_count - int showing the amount of downvotes this submission has
+        """
+        from accounts.models import User
+        result = super().to_representation(instance)
+        user:User = getattr(self.context.get('request', None), 'user', None)
+        # TODO: Move to helper
+        if user is None:
+            result['user_has_voted'] = False
+            result['user_has_upvoted'] = False
+        else:
+            user_vote = user.get_vote_for_submission(submission_id=instance.id)
+            if user_vote is None:
+                result['user_has_voted'] = False
+                result['user_has_upvoted'] = False
+            else:
+                result['user_has_voted'] = True
+                result['user_has_upvoted'] = user_vote.is_upvote
+
+        upvote_count, downvote_count = instance.get_votes_count()
+        result['upvote_count'] = upvote_count
+        result['downvote_count'] = downvote_count
+
+        return result
 
 
 class TestCaseSerializer(serializers.ModelSerializer):

@@ -61,10 +61,13 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
     def test_serialization(self):
         s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         s.save()
-        serializer = SubmissionSerializer(s)
-        expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":"' + str(self.auth_user.username)
-                         + '","code":"' + self.sample_code + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '",'
-                         + '"compiled":true,"compile_error_message":"","language":"Python"}')
+        sv = SubmissionVote(submission_id=s.id, author_id=self.auth_user.id, is_upvote=False); sv.save()
+        serializer = SubmissionSerializer(s, context={'request': MagicMock(user=self.auth_user)})
+        created_at_date = s.created_at.isoformat()[:-6] + 'Z'
+        expected_json = (f'{{"id":{s.id},"challenge":{self.challenge.id},"author":"{self.auth_user.username}",'
+                         f'"code":"{self.sample_code}","result_score":0,"pending":true,"created_at":"{created_at_date}",'
+                         f'"compiled":true,"compile_error_message":"","language":"Python",'
+                         f'"user_has_voted":true,"user_has_upvoted":false,"upvote_count":0,"downvote_count":1}}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
 
@@ -73,9 +76,11 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
                        code=self.sample_code)
         s.save()
         serializer = LimitedSubmissionSerializer(s)
-        expected_json = ('{"id":' + str(s.id) + ',"challenge":' + str(self.challenge.id) + ',"author":"' + str(self.auth_user.username)
-                            + '","result_score":0,"pending":true,"created_at":"' + s.created_at.isoformat()[:-6] + 'Z' + '",'
-                            + '"compiled":true,"compile_error_message":"","language":"Python"}')
+        created_at_date = s.created_at.isoformat()[:-6] + 'Z'
+        expected_json = (f'{{"id":{s.id},"challenge":{self.challenge.id},"author":"{self.auth_user.username}",'
+                         f'"result_score":0,"pending":true,"created_at":"{created_at_date}",'
+                         f'"compiled":true,"compile_error_message":"","language":"Python",'
+                         f'"user_has_voted":false,"user_has_upvoted":false,"upvote_count":0,"downvote_count":0}}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
 
