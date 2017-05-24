@@ -8,6 +8,7 @@ from rest_framework.parsers import JSONParser
 
 from accounts.models import User
 from accounts.serializers import UserSerializer
+from challenges.tests.factories import UserFactory, ChallengeDescFactory
 
 
 # Create your tests here.
@@ -47,6 +48,30 @@ class UserModelTest(TestCase):
         self.assertEqual(deser_user.email, 'me@abv.bg')
         self.assertNotEqual(deser_user.password, '123')  # should be hashed!
         self.assertEqual(deser_user.score, 123)
+
+    def test_get_vote_for_submission_returns_vote(self):
+        from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language, \
+            SubmissionVote
+        python_language = Language(name="Python") ;python_language.save()
+        challenge_cat = MainCategory('Tests'); challenge_cat.save()
+        sub_cat = SubCategory(name='tests', meta_category=challenge_cat); sub_cat.save()
+        challenge = Challenge(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
+                                   test_case_count=3,
+                                   category=sub_cat); challenge.save()
+        auth_user = UserFactory()
+        auth_user.save()
+        s = Submission(language=python_language, challenge=challenge, author=auth_user,
+                       code='a')
+        s.save()
+        sv1 = SubmissionVote(author=auth_user, submission=s, is_upvote=False)
+        sv1.save()
+
+        received_vote = auth_user.get_vote_for_submission(submission_id=s.id)
+        self.assertEqual(received_vote, sv1)
+
+    def test_get_vote_for_submission_no_vote_returns_None(self):
+        auth_user = UserFactory()
+        self.assertIsNone(auth_user.get_vote_for_submission(submission_id=1))
 
     @patch('challenges.models.Submission.fetch_top_submission_for_challenge_and_user')
     def test_fetch_max_score_for_challenge(self, fetch_mock):

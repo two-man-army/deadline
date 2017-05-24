@@ -48,3 +48,10 @@ class User(AbstractBaseUser):
         top_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge_id, self.id)
         max_score = top_submission.maxscore if top_submission else 0
         return max_score
+
+    def get_vote_for_submission(self, submission_id):
+        from challenges.models import SubmissionVote
+        try:
+            return SubmissionVote.objects.get(submission=submission_id, author=self.id)
+        except SubmissionVote.DoesNotExist:
+            return None
