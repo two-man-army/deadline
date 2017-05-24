@@ -171,7 +171,7 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         self.assertEqual((0, 0), s.get_votes_count())
 
     def test_get_votes_with_delete_returns_expected(self):
-        sec_user = UserFactory() sec_user.save();
+        sec_user = UserFactory(); sec_user.save()
         third_user = UserFactory(); third_user.save()
         s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user,
                        code=self.sample_code)
