@@ -203,4 +203,37 @@ function getSelfUserTopSubmission (challengeId) {
   })
 }
 
-export { getSelfUserTopSubmission, getLanguageDetail, getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, postLogIn, postRegister, postChallengeSolution, getCategoriesMetaInfo, getAxiosConfig, getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails }
+/**
+ * Issues a post request to the server from the name of the user, casting a vote on a submissoin
+ * @param {Number} submissionId - the ID of the submission
+ * @param {Boolean} isUpvote - boolean indicating if the vote is an upvote
+ */
+function postCastSubmissionVote (submissionId, isUpvote) {
+  return axios.post(`http://localhost:8000/challenges/submissions/${submissionId}/vote`, {'is_upvote': isUpvote}, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while voting for submission ${submissionId}!`)
+    throw err
+  })
+}
+
+/**
+ * Issues a delete request to the server from the name of the user, removing his vote on a submission
+ * @param {Number} submissionId - the ID of the submission
+ */
+function deleteRemoveSubmissionVote (submissionId) {
+  return axios.delete(`http://localhost:8000/challenges/submissions/${submissionId}/removeVote`, getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while voting for submission ${submissionId}!`)
+    throw err
+  })
+}
+
+export {getAxiosConfig,
+  postLogIn, postRegister, postChallengeSolution, postCastSubmissionVote,
+  getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails, getCategoriesMetaInfo,
+  getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, getSelfUserTopSubmission,
+  getLanguageDetail,
+  deleteRemoveSubmissionVote
+}
