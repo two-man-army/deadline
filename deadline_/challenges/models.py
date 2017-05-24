@@ -42,6 +42,21 @@ class Submission(models.Model):
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)
 
+    def get_votes_count(self):
+        """
+        Returns the amount of upvote and downvotes this submission has
+        :return: (int, int) - (upvote, downvote)
+        """
+        upvote_count, downvote_count = 0, 0
+
+        for vote in self.votes.all():
+            if vote.is_upvote:
+                upvote_count += 1
+            else:
+                downvote_count += 1
+
+        return upvote_count, downvote_count
+
     @staticmethod
     def fetch_top_submissions_for_challenge(challenge_id):
         """
@@ -65,6 +80,15 @@ class Submission(models.Model):
         """ Queries the DB for the last 10 submissions issued by the given user, grouped by the challenge """
         return Submission.objects.raw(SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR,
                                       params=[user_id])
+
+
+class SubmissionVote(models.Model):
+    is_upvote = models.BooleanField()
+    submission = models.ForeignKey(to=Submission, related_name='votes')
+    author = models.ForeignKey(User)
+
+    class Meta:
+        unique_together = ('submission', 'author')
 
 
 class TestCase(models.Model):

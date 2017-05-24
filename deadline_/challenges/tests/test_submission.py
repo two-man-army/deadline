@@ -6,7 +6,7 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language
+from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language, SubmissionVote
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from accounts.models import User
@@ -150,6 +150,44 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         # they should all be for unique challenges
         unique_challenge_ids = set([s.challenge.id for s in latest_unique_submissions])
         self.assertEqual(10, len(unique_challenge_ids))
+
+    def test_get_votes_count(self):
+        sec_user = UserFactory()
+        sec_user.save()
+        third_user = UserFactory()
+        third_user.save()
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
+        s.save()
+        sv1 = SubmissionVote(author=self.auth_user, submission=s, is_upvote=False)
+        sv2 = SubmissionVote(author=sec_user, submission=s, is_upvote=True)
+        sv3 = SubmissionVote(author=third_user, submission=s, is_upvote=False)
+        sv1.save(); sv2.save(); sv3.save()
+        self.assertEqual((1, 2), s.get_votes_count())
+
+    def test_get_votes_no_votes_returns_0(self):
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                       code=self.sample_code)
+        s.save()
+        self.assertEqual((0, 0), s.get_votes_count())
+
+    def test_get_votes_with_delete_returns_expected(self):
+        sec_user = UserFactory() sec_user.save();
+        third_user = UserFactory(); third_user.save()
+        s = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                       code=self.sample_code)
+        s.save()
+        sv1 = SubmissionVote(author=self.auth_user, submission=s, is_upvote=False)
+        sv2 = SubmissionVote(author=sec_user, submission=s, is_upvote=True)
+        sv3 = SubmissionVote(author=third_user, submission=s, is_upvote=False)
+        sv1.save(); sv2.save(); sv3.save()
+        self.assertEqual((1, 2), s.get_votes_count())
+
+        sv3.delete()
+        self.assertEqual((1, 1), s.get_votes_count())
+        sv2.delete()
+        self.assertEqual((0, 1), s.get_votes_count())
+        sv1.delete()
+        self.assertEqual((0, 0), s.get_votes_count())
 
 
 class SubmissionViewsTest(APITestCase):
@@ -437,3 +475,49 @@ class LatestSubmissionsViewTest(TestCase):
         """ Assert that the function calls the submission method"""
         self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
         method_mock.assert_called_once_with(user_id=self.auth_user.id)
+
+
+class SubmissionVoteModelTest(TestCase):
+    def setUp(self):
+        self.sample_desc = ChallengeDescFactory()
+        self.python_language = Language(name="Python");
+        self.python_language.save()
+        self.rust_language = Language(name="Rust");
+        self.rust_language.save()
+        self.sample_desc.save()
+        challenge_cat = MainCategory('Tests')
+        challenge_cat.save()
+        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
+        self.sub_cat.save()
+        self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc,
+                                   test_case_count=3,
+                                   category=self.sub_cat)
+        self.challenge.save()
+        self.challenge_name = self.challenge.name
+
+        self.auth_user = UserFactory()
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
+        my_purchase = {
+            'apple': 1,
+            'banana': 6}
+        grocery_bill = sum(prices[fruit] * my_purchase[fruit]
+                           for fruit in my_purchase)
+        print 'I owe the grocer $%.2f' % grocery_bill"""
+        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                                     code=self.sample_code)
+        self.submission.save()
+
+    def test_cannot_save_blank(self):
+        s = SubmissionVote(author=self.auth_user)
+        with self.assertRaises(Exception):
+            s.full_clean()
+
+    def test_cannot_save_duplicate_vote(self):
+        from django.db.utils import IntegrityError
+        s = SubmissionVote(author=self.auth_user, submission=self.submission, is_upvote=True)
+        s.save()
+        s2 = SubmissionVote(author=self.auth_user, submission=self.submission, is_upvote=False)
+        with self.assertRaises(IntegrityError):
+            s2.save()
