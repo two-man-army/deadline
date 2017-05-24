@@ -6,7 +6,8 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language, SubmissionVote
+from challenges.models import (Challenge, Submission, SubCategory, MainCategory,
+                               ChallengeDescription, Language, SubmissionVote)
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from accounts.models import User
@@ -16,7 +17,7 @@ from unittest.mock import patch, MagicMock
 class SubmissionModelTest(TestCase):
     def setUp(self):
         self.sample_desc = ChallengeDescFactory()
-        self.python_language = Language(name="Python");  self.python_language.save()
+        self.python_language = Language(name="Python"); self.python_language.save()
         self.rust_language = Language(name="Rust"); self.rust_language.save()
         self.sample_desc.save()
         challenge_cat = MainCategory('Tests')
@@ -580,20 +581,34 @@ class SubmissionVoteViewTest(APITestCase):
         self.assertEqual(len(SubmissionVote.objects.all()), 1)
 
         response = self.client.post(f'/challenges/submissions/{self.submission.id}/vote', HTTP_AUTHORIZATION=self.auth_token,
-                                    data={
-                                        'is_upvote': True
-                                    })
+                                    data={'is_upvote': True})
         self.assertEqual(response.status_code, 201)
         self.assertEqual(len(SubmissionVote.objects.all()), 1)
         self.assertTrue(SubmissionVote.objects.all().first().is_upvote)  # should have been modified
 
     def test_cast_submission_vote_invalid_submission_id_returns_404(self):
         response = self.client.post(f'/challenges/submissions/111/vote', HTTP_AUTHORIZATION=self.auth_token,
-                                    data={
-                                        'is_upvote': True
-                                    })
+                                    data={'is_upvote': True})
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.data['error'], 'A submission with ID 111 does not exist!')
 
+    def test_remove_submission_vote_invalid_submission_id_returns_404(self):
+        response = self.client.delete(f'/challenges/submissions/111/removeVote', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.data['error'], 'A submission with ID 111 does not exist!')
 
+    def test_remove_submission_vote_no_vote_returns_404(self):
+        response = self.client.delete(f'/challenges/submissions/{self.submission.id}/removeVote', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.data['error'], f'The user has not voted for submission with ID {self.submission.id}')
 
+    def test_remove_submission_vote_removes_vote(self):
+        submission_vote = SubmissionVote.objects.create(author_id=self.auth_user.id,
+                                                        submission_id=self.submission.id, is_upvote=True)
+        submission_vote.save()
+        self.assertEqual(len(SubmissionVote.objects.all()), 1)
+
+        response = self.client.delete(f'/challenges/submissions/{self.submission.id}/removeVote', HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(SubmissionVote.objects.all()), 0)
