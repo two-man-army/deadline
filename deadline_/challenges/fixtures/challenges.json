@@ -340,5 +340,33 @@
       "category": "Dynamic Programming",
       "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
     }
+    },
+
+    {
+      "model": "challenges.challengedescription",
+      "pk": 7,
+      "fields": {
+        "content": "Joe has decided it is time to mow his **N**x**M** lawn, although before he starts off, he wants to know how much time it will take him.{{NPL}}He knows how much seconds each square meter will take him, but is not good enough to calculate the overall time.{{NPL}}Joe will also ask you for **T** various land areas to find one that will take exactly as much time as he wants to spend today.{{NPL}}For each single land area, Joe will give you (**i**, **j**) the top-left and (**k**, **l**) bottom-right point coordinates and will expect you to tell him the amount of seconds it will take him to mow that lawn area.",
+        "input_format": "On the first line, you will receive **N** and **M** indicating the lawn's height and width, respectively{{NPL}}On the second line, you will receive **T**, the count of land areas Joe will ask for{{NPL}}For **N** more lines, you will receive **M** space separated integers, denoting the seconds required to mow the square meter at that line.{{NPL}}For **T** more lines, you will receive **i**, **j**, **k**, and **ll**, denoting the top-left and bottom-right points of the area Joe is asking for.",
+        "output_format": "For each **T** area, output a single integer denoting the sum of the seconds in all cells that fall withing the given area.",
+        "constraints": "1 <= **N** <= 2500{{NPL}}1 <= **M** <= 2500{{NPL}}5 <= **T** <= 25000",
+        "sample_input": "4 4{{NPL}}2{{NPL}}3 0 1 4{{NPL}}5 6 3 2{{NPL}}1 2 0 1{{NPL}}4 1 0 1{{NPL}}2 2 3 3{{NPL}}0 0 1 2",
+        "sample_output": "4{{NPL}}18"
+      }
+    },
+
+    {
+      "model": "challenges.challenge",
+      "pk": 7,
+      "fields": {
+        "name": "Lawnmower",
+        "description": 7,
+        "difficulty": 4.5,
+        "score": 35,
+        "test_file_name": "lawnmower_tests",
+        "test_case_count": 9,
+        "category": "Dynamic Programming",
+        "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+      }
     }
 ]
