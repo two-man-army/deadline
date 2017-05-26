@@ -16,6 +16,10 @@ const ChallengeTestsResults = ({tests, toLoad}) => (
         ) : (
           <Icon color='red' name='remove' />
         )
+        if (test.timed_out) {
+          // set a timed out icon
+          testIcon = <Icon color='#810000' name='clock' />
+        }
       }
 
       return (
