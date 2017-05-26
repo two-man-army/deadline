@@ -301,7 +301,9 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get(path=self.submission.get_absolute_url())
         self.assertEqual(response.status_code, 401)
 
-    def test_create_submission(self):
+    @patch('challenges.views.run_grader_task.delay')
+    def test_create_submission(self, mock_delay):
+        mock_delay.return_value = 1
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
                                     data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
@@ -314,7 +316,9 @@ class SubmissionViewsTest(APITestCase):
         # assert that the test cases have been created
         self.assertEqual(submission.testcase_set.count(), submission.challenge.test_case_count)
 
-    def test_create_submission_invalid_language_should_return_400(self):
+    @patch('challenges.views.run_grader_task.delay')
+    def test_create_submission_invalid_language_should_return_400(self, mock_delay):
+        mock_delay.return_value = 1
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
                                     data={'code': 'print("Hello World")', 'language': 'Elixir'},
                                     HTTP_AUTHORIZATION=self.auth_token)
@@ -323,7 +327,9 @@ class SubmissionViewsTest(APITestCase):
         # If this test ever fails, this app must be going places
         self.assertEqual(response.data['error'], "The language Elixir is not supported!")
 
-    def test_create_two_submissions_in_10_seconds_second_should_not_work(self):
+    @patch('challenges.views.run_grader_task.delay')
+    def test_create_two_submissions_in_10_seconds_second_should_not_work(self, mock_delay):
+        mock_delay.return_value = 1
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
                                     data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
@@ -338,7 +344,9 @@ class SubmissionViewsTest(APITestCase):
         self.assertEqual(response.data['error'], 'You must wait 10 more seconds before submitting a solution.')
         self.assertEqual(Submission.objects.count(), 2)
 
-    def test_create_two_submissions_10_seconds_apart_should_not_work(self):
+    @patch('challenges.views.run_grader_task.delay')
+    def test_create_two_submissions_10_seconds_apart_should_not_work(self, mock_delay):
+        mock_delay.return_value = 1
         response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
                                     data={'code': 'print("Hello World")', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
@@ -355,7 +363,9 @@ class SubmissionViewsTest(APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Submission.objects.count(), 3)
 
-    def test_create_submission_invalid_challenge_should_return_400(self):
+    @patch('challenges.views.run_grader_task.delay')
+    def test_create_submission_invalid_challenge_should_return_400(self, mock_delay):
+        mock_delay.return_value = 1
         response = self.client.post('/challenges/111/submissions/new',
                                     data={'code': 'heyfriendheytherehowareyou', 'language': 'Python'},
                                     HTTP_AUTHORIZATION=self.auth_token)
