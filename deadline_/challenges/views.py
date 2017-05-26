@@ -94,12 +94,15 @@ class SubmissionCreateView(CreateAPIView):
                                     challenge=challenge, task_id=1,
                                     language=language)
             submission.save()
-            run_grader_task.delay(test_case_count=challenge.test_case_count,
+            tsk = run_grader_task.delay(test_case_count=challenge.test_case_count,
                                   test_folder_name=challenge.test_file_name,
                                   code=code_given, lang=language.name, submission_id=submission.id)
 
             request.user.last_submit_at = timezone.now()
             request.user.save()
+
+            submission.task_id = tsk
+            submission.save()
 
             # Create the test cases
             TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])

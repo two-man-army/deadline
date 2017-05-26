@@ -4,7 +4,8 @@ from django.db.models import Max
 
 from constants import (
     GRADER_TEST_RESULT_TRACEBACK_KEY, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY,
-    GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_TEST_RESULT_DESCRIPTION_KEY)
+    GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_TEST_RESULT_DESCRIPTION_KEY,
+    GRADER_TEST_RESULT_TIMED_OUT_KEY)
 from challenges.models import Challenge, Submission, TestCase
 from accounts.models import User
 
@@ -60,6 +61,7 @@ def update_test_cases(grader_results: dict, test_cases: [TestCase]):
         test_results = grader_results[idx]
         test_case.success = test_results[GRADER_TEST_RESULT_SUCCESS_KEY]
         test_case.time = test_results[GRADER_TEST_RESULT_TIME_KEY] + 's'
+        test_case.timed_out = test_results[GRADER_TEST_RESULT_TIMED_OUT_KEY]
         test_case.pending = False
         test_case.description = test_results[GRADER_TEST_RESULT_DESCRIPTION_KEY]
         test_case.traceback = test_results[GRADER_TEST_RESULT_TRACEBACK_KEY]

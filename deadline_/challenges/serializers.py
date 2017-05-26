@@ -146,7 +146,7 @@ class TestCaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TestCase
-        fields = ('submission', 'pending', 'success', 'time', 'description', 'traceback', 'error_message')
+        fields = ('submission', 'pending', 'success', 'time', 'description', 'traceback', 'error_message', 'timed_out')
 
 
 class MainCategorySerializer(serializers.ModelSerializer):

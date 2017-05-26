@@ -214,7 +214,8 @@ class BaseGrader:
             "success": False,
             "time": "0",
             GRADER_TEST_RESULT_DESCRIPTION_KEY: f'Testing with {input_str}',
-            'traceback': ""
+            'traceback': "",
+            'timed_out': False
         }
 
         # Run the program
@@ -228,7 +229,7 @@ class BaseGrader:
             # TODO: Add timed_out bool and maybe attach it to error_message instead of traceback
             error_message = f'Timed out after {self.TIMEOUT_SECONDS} seconds'
             program_process.kill()
-
+            result_dict['timed_out'] = True
         if error_message:  # There is some error in the code
             result_dict["traceback"] = self.cleanup_error_message(error_message)
         else:  # Program has run successfully

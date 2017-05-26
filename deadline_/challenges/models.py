@@ -99,6 +99,7 @@ class TestCase(models.Model):
     description = models.CharField(max_length=1000)
     traceback = models.CharField(max_length=2000)
     error_message = models.CharField(max_length=100)
+    timed_out = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['id', ]
