@@ -8,13 +8,12 @@ from challenges.models import Challenge, Submission
 from challenges.helper import convert_to_normal_text
 from constants import (MAX_TEST_RUN_SECONDS, PYTHONLANG_NAME, RUSTLANG_NAME, CPPLANG_NAME, DOCKER_CLIENT,
                        DOCKER_IMAGE_PATH, TESTS_FOLDER_NAME, SITE_ROOT, CHALLENGES_APP_FOLDER_NAME, GRADER_FILE_NAME,
-                       GOLANG_NAME, KOTLIN_NAME)
-
+                       GOLANG_NAME, KOTLIN_NAME, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY)
 from deadline.celery import app
 
 from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader, KotlinGrader
-
-from challenges.helper import delete_file
+from challenges.models import Submission
+from challenges.helper import delete_file, grade_result, update_user_score, update_test_cases
 
 LANGUAGE_GRADERS = {
     PYTHONLANG_NAME: PythonGrader,
@@ -97,11 +96,28 @@ def run_grader(test_case_count, test_folder_name, code, lang) -> dict:
 
     return json.loads(results)
 
+
 @app.task
-def run_grader_task(test_case_count, test_folder_name, code, lang) -> dict:
+def run_grader_task(test_case_count: int, test_folder_name: str, code: str, lang: str, submission_id: int):
     """
-    Runs a celery task for the grader, after which saves the result to the DB (by returning the value)
+    Runs a celery task for the grader, after which save the result to the DB
     Note: The Grader runs in Docker and prints out the results in a JSON format at the end.
           That is why we get them by accessing [-2] from the stdout output
     """
-    return run_grader(test_case_count, test_folder_name, code, lang)
+    submission_grade_result: dict = run_grader(test_case_count, test_folder_name, code, lang)
+    submission = Submission.objects.get(id=submission_id)
+
+    if GRADER_COMPILE_FAILURE in submission_grade_result:
+        # Compiling the code has failed
+        submission.compiled = False
+        submission.pending = False
+        submission.compile_error_message = submission_grade_result[GRADER_COMPILE_FAILURE]
+        submission.save()
+    else:
+        # Update the Submission's TestCases
+        update_test_cases(grader_results=submission_grade_result[GRADER_TEST_RESULTS_RESULTS_KEY],
+                          test_cases=submission.testcase_set.all())
+
+        grade_result(submission)  # update the submission's score
+
+        update_user_score(user=submission.author, submission=submission)

@@ -9,12 +9,10 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
-from constants import MIN_SUBMISSION_INTERVAL_SECONDS, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_COMPILE_FAILURE
+from constants import MIN_SUBMISSION_INTERVAL_SECONDS
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, LimitedSubmissionSerializer
 from challenges.tasks import run_grader_task
-from challenges.helper import grade_result, update_user_score
-from challenges.helper import update_test_cases
 
 
 # /challenges/{challenge_id}
@@ -92,17 +90,13 @@ class SubmissionCreateView(CreateAPIView):
                 return Response(data={'error': 'You must wait 10 more seconds before submitting a solution.'},
                                 status=400)
 
-            import subprocess
-            import os
-
-            celery_grader_task = run_grader_task.delay(test_case_count=challenge.test_case_count,
-                                                  test_folder_name=challenge.test_file_name,
-                                                  code=code_given, lang=language.name)
-
             submission = Submission(code=code_given, author=request.user,
-                                    challenge=challenge, task_id=celery_grader_task,
+                                    challenge=challenge, task_id=1,
                                     language=language)
             submission.save()
+            run_grader_task.delay(test_case_count=challenge.test_case_count,
+                                  test_folder_name=challenge.test_file_name,
+                                  code=code_given, lang=language.name, submission_id=submission.id)
 
             request.user.last_submit_at = timezone.now()
             request.user.save()
@@ -131,42 +125,12 @@ class SubmissionDetailView(RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Get the submission,
-            validate and
-            check if its tests have been completed. If they have, save them
+        Get the submission
         """
         result = self.validate_data(challenge_pk=kwargs.get('challenge_pk'),
                                     submission_pk=kwargs.get('pk'))
         if isinstance(result, Response):
             return result  # There has been a validation error
-
-        challenge, submission = result
-
-        # Query for the tests and populate if there is a result (AND they were not populated)
-        submission_is_pending = any(test_case.pending for test_case in submission.testcase_set.all())
-        if submission_is_pending:
-            potential_result = run_grader_task.AsyncResult(submission.task_id)
-            if potential_result.ready():
-                result = potential_result.get()
-
-                if GRADER_COMPILE_FAILURE in result:
-                    # Compiling the code has failed
-                    submission.compiled = False
-                    submission.pending = False
-                    submission.compile_error_message = result[GRADER_COMPILE_FAILURE]
-                    submission.save()
-                    return super().retrieve(request, *args, **kwargs)
-
-                overall_results = result
-
-                # Update the Submission's TestCases
-                update_test_cases(grader_results=overall_results[GRADER_TEST_RESULTS_RESULTS_KEY],
-                                  test_cases=submission.testcase_set.all())
-
-                grade_result(submission)  # update the submission's score
-
-                update_user_score(user=submission.author, submission=submission)
-
         return super().retrieve(request, *args, **kwargs)
 
     def validate_data(self, challenge_pk, submission_pk) -> Response or tuple():

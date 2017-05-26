@@ -11,7 +11,7 @@ from accounts.models import User
 
 def grade_result(submission: Submission):
     """ Given a tested submission, update it's score in accordance to the number of test cases passed"""
-    challenge = submission.challenge  # type: Challenge
+    challenge: Challenge = submission.challenge
 
     num_successful_tests = len([True for ts_cs in submission.testcase_set.all()
                                 if not ts_cs.pending and ts_cs.success])
