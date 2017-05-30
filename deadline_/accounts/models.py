@@ -11,7 +11,7 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 from accounts.helpers import hash_password
-from sql_queries import ALL_CHALLENGES_SELECT_USER_LEADERBOARD_POSITION
+
 
 # This code is triggered whenever a new user has been created and saved to the database
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

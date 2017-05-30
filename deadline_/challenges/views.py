@@ -275,6 +275,7 @@ class SelfTopSubmissionDetailView(RetrieveAPIView):
         return Response(data=LimitedSubmissionSerializer(top_submission).data)
 
 
+# /challenges/selfLeaderboardPosition/
 class SelfGetLeaderboardPositionView(APIView):
     """
     Returns the current user's position in the overall challenge leaderboard
@@ -351,3 +352,47 @@ class TestCaseListView(ListAPIView):
                 status=400)
 
         return response
+
+
+class GetLeaderboardView(APIView):
+    """
+    Returns the overall leaderboard, returning a list of objects containing the user's name and position
+    [
+        {
+            'name':"Nether",
+            'position': 1,
+            'score': 150
+        },
+        {
+            'name':"Else",
+            'position': 2,
+            'score': 140
+        }
+    ]
+    """
+    def get(self, request, *args, **kwargs):
+        # Iterate through all the users and attach their position
+        # This will be incredibly slow
+        all_users = User.objects.order_by('-score').all()
+        last_score = all_users[0].score
+        current_position = 1
+        user_count = 1
+        leaderboard = [{
+            'name': all_users[0].username,
+            'score': last_score,
+            'position': current_position
+        }]
+
+        for user in all_users[1:]:
+            if user.score != last_score:
+                # Found new lower score, lower the current position
+                current_position = user_count + 1
+                last_score = user.score
+            leaderboard.append({
+                'name': user.username,
+                'score': user.score,
+                'position': current_position
+            })
+            user_count += 1
+
+        return Response(data=leaderboard)
