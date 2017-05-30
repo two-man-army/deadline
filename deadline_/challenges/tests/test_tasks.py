@@ -17,6 +17,7 @@ class TasksTests(TestCase):
         and update the submission with the given result
         :return:
         """
+        mock_update_test_cases.return_value = 50  # should return the percentage of timed out test cases
         user = UserFactory()
         submission = SubmissionFactory(author=user)
         test_case_count = 5
@@ -33,8 +34,8 @@ class TasksTests(TestCase):
         # the submission score and user score
         mock_run_grader.assert_called_once_with(test_case_count, test_folder_name, code, lang)
         mock_update_test_cases.assert_called()
-        self.assertIn('batman', get_mock_function_arguments(mock_update_test_cases))  # grade results in the update_test_cases
-        mock_grade_result.assert_called_once_with(submission)
+        self.assertIn('batman', get_mock_function_arguments(mock_update_test_cases)) # grade results in the update_test_cases
+        mock_grade_result.assert_called_once_with(submission, mock_update_test_cases.return_value)
         mock_update_user_score.assert_called_once()
         update_us_arguments = get_mock_function_arguments(mock_update_user_score)
         self.assertIn(submission.author, update_us_arguments)

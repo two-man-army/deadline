@@ -5,13 +5,17 @@ from django.db.models import Max
 from constants import (
     GRADER_TEST_RESULT_TRACEBACK_KEY, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY,
     GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_TEST_RESULT_DESCRIPTION_KEY,
-    GRADER_TEST_RESULT_TIMED_OUT_KEY)
+    GRADER_TEST_RESULT_TIMED_OUT_KEY, SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE)
 from challenges.models import Challenge, Submission, TestCase
 from accounts.models import User
 
 
-def grade_result(submission: Submission):
-    """ Given a tested submission, update it's score in accordance to the number of test cases passed"""
+def grade_result(submission: Submission, timed_out_percentage: int):
+    """
+    Given a tested submission and the percentage of test cases that have timed out,
+        update its score in accordance to the number of test cases passed
+        and if more than 40% of the test cases have timed out, set the Submission's timed_out field as true
+    """
     challenge: Challenge = submission.challenge
 
     num_successful_tests = len([True for ts_cs in submission.testcase_set.all()
@@ -20,6 +24,8 @@ def grade_result(submission: Submission):
 
     submission.result_score = num_successful_tests * result_per_test
     submission.pending = False
+    if timed_out_percentage >= SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE:
+        submission.timed_out = True
     submission.save()
 
 
@@ -50,23 +56,28 @@ def update_user_score(user: User, submission: Submission) -> bool:
     return False
 
 
-def update_test_cases(grader_results: dict, test_cases: [TestCase]):
+def update_test_cases(grader_results: dict, test_cases: [TestCase]) -> int:
     """
     Update every TestCase model with the information given by the grader
     :param grader_results: The results given by the grader
     :param test_cases: A list of TestCase objects
-    :return:
+    :return: a percentage of the overall timed out test cases
+        i.e 5 out of 10 test cases timed out, -> 0.5
     """
+    timed_out_count = 0
     for idx, test_case in enumerate(test_cases):
         test_results = grader_results[idx]
         test_case.success = test_results[GRADER_TEST_RESULT_SUCCESS_KEY]
         test_case.time = test_results[GRADER_TEST_RESULT_TIME_KEY] + 's'
         test_case.timed_out = test_results[GRADER_TEST_RESULT_TIMED_OUT_KEY]
+        timed_out_count += int(test_case.timed_out)
         test_case.pending = False
         test_case.description = test_results[GRADER_TEST_RESULT_DESCRIPTION_KEY]
         test_case.traceback = test_results[GRADER_TEST_RESULT_TRACEBACK_KEY]
         test_case.error_message = test_results[GRADER_TEST_RESULT_ERROR_MESSAGE_KEY]
         test_case.save()  # TODO: Maybe save at once SOMEHOW, django transaction does not work
+    timed_out_percentage = int((timed_out_count / len(test_cases)) * 100)
+    return timed_out_percentage
 
 
 def convert_to_normal_text(lines: list) -> str:

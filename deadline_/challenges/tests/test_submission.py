@@ -67,7 +67,7 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         created_at_date = s.created_at.isoformat()[:-6] + 'Z'
         expected_json = (f'{{"id":{s.id},"challenge":{self.challenge.id},"author":"{self.auth_user.username}",'
                          f'"code":"{self.sample_code}","result_score":0,"pending":true,"created_at":"{created_at_date}",'
-                         f'"compiled":true,"compile_error_message":"","language":"Python",'
+                         f'"compiled":true,"compile_error_message":"","language":"Python","timed_out":false,'
                          f'"user_has_voted":true,"user_has_upvoted":false,"upvote_count":0,"downvote_count":1}}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
@@ -80,7 +80,7 @@ print 'I owe the grocer $%.2f' % grocery_bill"""
         created_at_date = s.created_at.isoformat()[:-6] + 'Z'
         expected_json = (f'{{"id":{s.id},"challenge":{self.challenge.id},"author":"{self.auth_user.username}",'
                          f'"result_score":0,"pending":true,"created_at":"{created_at_date}",'
-                         f'"compiled":true,"compile_error_message":"","language":"Python",'
+                         f'"compiled":true,"compile_error_message":"","language":"Python","timed_out":false,'
                          f'"user_has_voted":false,"user_has_upvoted":false,"upvote_count":0,"downvote_count":0}}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)

@@ -38,6 +38,7 @@ class Submission(models.Model):
     compile_error_message = models.CharField(max_length=1000, blank=False)
     language = models.ForeignKey(Language, to_field='name', blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    timed_out = models.BooleanField(default=False)  # showing if the majority of the tests have timed out
 
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)

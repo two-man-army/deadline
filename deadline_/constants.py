@@ -17,6 +17,8 @@ CPPLANG_NAME = 'C++'
 GOLANG_NAME = 'Go'
 KOTLIN_NAME = 'Kotlin'
 
+SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE = 40  # the minimum percentage of timed out tests a submission needs to have for the whole submission to be considered 'timed_out'
+
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
 GRADER_TEST_RESULT_SUCCESS_KEY = 'success'

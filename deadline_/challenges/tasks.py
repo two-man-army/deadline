@@ -115,9 +115,9 @@ def run_grader_task(test_case_count: int, test_folder_name: str, code: str, lang
         submission.save()
     else:
         # Update the Submission's TestCases
-        update_test_cases(grader_results=submission_grade_result[GRADER_TEST_RESULTS_RESULTS_KEY],
-                          test_cases=submission.testcase_set.all())
+        timed_out_percentage = update_test_cases(grader_results=submission_grade_result[GRADER_TEST_RESULTS_RESULTS_KEY],
+                                    test_cases=submission.testcase_set.all())
 
-        grade_result(submission)  # update the submission's score
+        grade_result(submission, timed_out_percentage)  # update the submission's score
 
         update_user_score(user=submission.author, submission=submission)

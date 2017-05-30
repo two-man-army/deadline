@@ -58,7 +58,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Submission
         fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at',
-                  'compiled', 'compile_error_message', 'language')
+                  'compiled', 'compile_error_message', 'language', 'timed_out')
 
     def to_representation(self, instance: Submission):
         """
@@ -102,7 +102,7 @@ class LimitedSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Submission
         fields = ('id', 'challenge', 'author', 'result_score', 'pending', 'created_at',
-                  'compiled', 'compile_error_message', 'language')
+                  'compiled', 'compile_error_message', 'language', 'timed_out')
 
     def to_representation(self, instance: Submission):
         """
