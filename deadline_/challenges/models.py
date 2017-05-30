@@ -71,10 +71,14 @@ class Submission(models.Model):
         """
         Returns the top-rated Submission for a specific Challenge from a specific User
         """
+        print('Current DB Submissions')
+        for currsub in Submission.objects.all():
+            print(currsub.id, currsub.pending, currsub.result_score, currsub.author)
         submissions = list(Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSION_FOR_CHALLENGE_BY_USER, params=[challenge_id, user_id]))
         if len(submissions) == 0 or submissions[0].id is None:
             return None
         else:
+            print(f'Queried submissions {submissions}')
             return submissions[0]
 
     @staticmethod
