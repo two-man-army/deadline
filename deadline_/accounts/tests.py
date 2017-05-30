@@ -98,6 +98,30 @@ class UserModelTest(TestCase):
         fetch_mock.assert_called_once_with(1, us.id)
         self.assertEqual(received_score, 0)
 
+    def test_fetch_overall_leaderboard_position(self):
+        """ Should return the user's leaderboard position """
+        first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
+        second_user2 = User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122)
+        second_user3 = User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122)
+        fifth_user = User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121)
+        fifth_user.save()
+
+        self.assertEqual(fifth_user.fetch_overall_leaderboard_position(), 5)
+        self.assertEqual(second_user.fetch_overall_leaderboard_position(), 2)
+        self.assertEqual(second_user2.fetch_overall_leaderboard_position(), 2)
+        self.assertEqual(second_user3.fetch_overall_leaderboard_position(), 2)
+        self.assertEqual(first_user.fetch_overall_leaderboard_position(), 1)
+
+    def test_fetch_user_count(self):
+        User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
+        User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122)
+        User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122)
+        User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121)
+
+        self.assertEqual(User.fetch_user_count(), 5)
+
 
 class RegisterViewTest(APITestCase):
     def test_register(self):
@@ -152,3 +176,36 @@ class LoginViewTest(APITestCase):
         # the response should return an error that the email is invalid
         self.assertIn('error', response.data)
         self.assertIn('Invalid credentials', ''.join(response.data['error']))
+
+
+class LeaderboardViewTest(APITestCase):
+    def setUp(self):
+        """
+        Create users with expected positions
+        """
+        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
+        self.second_user2 = User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122)
+        self.second_user3 = User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122)
+        self.fifth_user = User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121)
+
+    def test_view_returns_expected_position(self):
+        auth_token = 'Token {}'.format(self.first_user.auth_token.key)
+        received_data = self.client.get('/challenges/selfLeaderboardPosition/', HTTP_AUTHORIZATION=auth_token).data
+        self.assertEqual(received_data['position'], 1)
+        self.assertEqual(received_data['leaderboard_count'], 5)
+
+    def test_view_returns_expected_last_position(self):
+        auth_token = 'Token {}'.format(self.fifth_user.auth_token.key)
+        received_data = self.client.get('/challenges/selfLeaderboardPosition/', HTTP_AUTHORIZATION=auth_token).data
+
+        self.assertEqual(received_data['position'], 5)
+        self.assertEqual(received_data['leaderboard_count'], 5)
+
+    def test_view_returns_expected_multiple_user_position(self):
+        """ When multiple users have the same score and position, should return that position """
+        auth_token = 'Token {}'.format(self.second_user3.auth_token.key)
+        received_data = self.client.get('/challenges/selfLeaderboardPosition/', HTTP_AUTHORIZATION=auth_token).data
+
+        self.assertEqual(received_data['position'], 2)
+        self.assertEqual(received_data['leaderboard_count'], 5)

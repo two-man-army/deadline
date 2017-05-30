@@ -3,6 +3,7 @@ import hashlib, uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Count
 from django.db.models.signals import post_save
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.dispatch import receiver
@@ -10,7 +11,7 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 from accounts.helpers import hash_password
-
+from sql_queries import ALL_CHALLENGES_SELECT_USER_LEADERBOARD_POSITION
 
 # This code is triggered whenever a new user has been created and saved to the database
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -48,6 +49,14 @@ class User(AbstractBaseUser):
         top_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge_id, self.id)
         max_score = top_submission.maxscore if top_submission else 0
         return max_score
+
+    def fetch_overall_leaderboard_position(self):
+        leaderboard_position = User.objects.all().filter(score__gt=self.score).aggregate(Count('score'))['score__count']
+        return leaderboard_position + 1
+
+    @staticmethod
+    def fetch_user_count():
+        return User.objects.count()
 
     def get_vote_for_submission(self, submission_id):
         from challenges.models import SubmissionVote

@@ -4,7 +4,7 @@ from challenges.views import (
     ChallengeDetailView, SubmissionDetailView, TestCaseDetailView, TestCaseListView,
     SubmissionCreateView, SubmissionListView, TopSubmissionListView, MainCategoryListView, SubCategoryDetailView,
     LatestAttemptedChallengesListView, LanguageDetailView, SelfTopSubmissionDetailView,
-    CastSubmissionVoteView, RemoveSubmissionVoteView)
+    CastSubmissionVoteView, RemoveSubmissionVoteView, SelfGetLeaderboardPositionView)
 
 urlpatterns = [
     url(r'^latest_attempted$', LatestAttemptedChallengesListView.as_view(), name='latest_challenges'),
@@ -25,4 +25,7 @@ urlpatterns = [
         name='test_case_list'),
     url(r'^(?P<challenge_pk>\d+)/submissions/(?P<submission_pk>\d+)/test/(?P<pk>\d+)$', TestCaseDetailView.as_view(),
         name='test_case_detail'),
+
+    url(r'^selfLeaderboardPosition/$', SelfGetLeaderboardPositionView.as_view(),
+        name='self_leaderboard_position'),
 ]

@@ -275,6 +275,20 @@ class SelfTopSubmissionDetailView(RetrieveAPIView):
         return Response(data=LimitedSubmissionSerializer(top_submission).data)
 
 
+class SelfGetLeaderboardPositionView(APIView):
+    """
+    Returns the current user's position in the overall challenge leaderboard
+        and the total amount of users in the leaderboard
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, *args, **kwargs):
+        leaderboard_position = request.user.fetch_overall_leaderboard_position()
+        overall_leaderboard_count = request.user.fetch_user_count()
+
+        return Response(data={'position': leaderboard_position, 'leaderboard_count': overall_leaderboard_count})
+
+
 # /challenges/languages/{language_name}
 class LanguageDetailView(RetrieveAPIView):
     queryset = Language.objects.all()
