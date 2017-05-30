@@ -230,10 +230,22 @@ function deleteRemoveSubmissionVote (submissionId) {
   })
 }
 
+/**
+ *  Issues a GET request to get the overall leaderboard, containing every user ordered by their score
+ */
+function getOverallLeaderboard () {
+  return axios.get('http://localhost:8000/challenges/getLeaderboard', getAxiosConfig()).then(resp => {
+    return resp.data
+  }).catch(err => {
+    console.log(`Error while GETting the overall leaderboard`)
+    throw err
+  })
+}
+
 export {getAxiosConfig,
   postLogIn, postRegister, postChallengeSolution, postCastSubmissionVote,
   getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails, getCategoriesMetaInfo,
   getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, getSelfUserTopSubmission,
-  getLanguageDetail,
+  getOverallLeaderboard, getLanguageDetail,
   deleteRemoveSubmissionVote
 }

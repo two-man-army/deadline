@@ -38,6 +38,11 @@ class SideBar extends React.Component {
         icon: 'dashboard',
         label: 'Dashboard',
         to: '/#/'
+      },
+      {
+        icon: 'tropy',
+        label: 'Leaderboard',
+        to: '/#/leaderboard'
       }
     ]
     content = content.concat(this.state.categories.map(category => {

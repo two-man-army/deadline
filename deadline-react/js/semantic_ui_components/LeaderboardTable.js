@@ -5,6 +5,9 @@ import TimeAgo from 'react-timeago'
 import { postCastSubmissionVote, deleteRemoveSubmissionVote } from '../requests.js'
 
 class LeaderboardTable extends React.Component {
+  /**
+   * Represents the Leaderboard Table for a specific Challenge
+   */
   constructor (props) {
     super(props)
 
