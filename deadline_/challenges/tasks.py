@@ -8,7 +8,8 @@ from challenges.models import Challenge, Submission
 from challenges.helper import convert_to_normal_text
 from constants import (MAX_TEST_RUN_SECONDS, PYTHONLANG_NAME, RUSTLANG_NAME, CPPLANG_NAME, DOCKER_CLIENT,
                        DOCKER_IMAGE_PATH, TESTS_FOLDER_NAME, SITE_ROOT, CHALLENGES_APP_FOLDER_NAME, GRADER_FILE_NAME,
-                       GOLANG_NAME, KOTLIN_NAME, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY)
+                       GOLANG_NAME, KOTLIN_NAME, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY,
+                       GRADER_TEST_RESULT_TIME_KEY)
 from deadline.celery import app
 
 from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader, KotlinGrader
@@ -117,7 +118,7 @@ def run_grader_task(test_case_count: int, test_folder_name: str, code: str, lang
         # Update the Submission's TestCases
         timed_out_percentage = update_test_cases(grader_results=submission_grade_result[GRADER_TEST_RESULTS_RESULTS_KEY],
                                     test_cases=submission.testcase_set.all())
-
-        grade_result(submission, timed_out_percentage)  # update the submission's score
+        # update the submission
+        grade_result(submission, timed_out_percentage, submission_grade_result[GRADER_TEST_RESULT_TIME_KEY])
 
         update_user_score(user=submission.author, submission=submission)

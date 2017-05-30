@@ -8,6 +8,7 @@ import sys
 import uuid
 import subprocess
 import json
+from datetime import datetime
 
 # from constants import (
 #     GRADER_TEST_RESULT_DESCRIPTION_KEY, GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_TIME_KEY,
@@ -89,6 +90,15 @@ def main():
     print(grader.grade_solution())
 
 
+def get_seconds_duration(start: datetime, end: datetime) -> float:
+    """
+        returns the duration in seconds between two datetime objects
+        This is in a separate function to ease testability
+    """
+    # TODO: Move to helpers.py
+    return (end-start).total_seconds()
+
+
 class GraderTestCase:
     def __init__(self, input_lines: [str], expected_output_lines: [str]):
         self.input_lines = input_lines
@@ -136,12 +146,17 @@ class BaseGrader:
         This function goes through every input/output and runs an instance of the code for each.
         :returns A JSON string representing the results
         """
+        grade_start_time = datetime.now()
         overall_dict = {"results": []}
 
         for test_case in self.test_cases:
             test_case_result: dict = self.test_solution(test_case)
             overall_dict['results'].append(test_case_result)
 
+        grade_end_time = datetime.now()
+        elapsed_seconds = get_seconds_duration(grade_start_time, grade_end_time)
+
+        overall_dict['elapsed_seconds'] = elapsed_seconds
         return json.dumps(overall_dict)
 
     def find_tests(self) -> [os.DirEntry]:
@@ -207,6 +222,7 @@ class BaseGrader:
         :param test_case:
         :return:
         """
+        test_start_time = datetime.now()
         input_str = '\n'.join(test_case.input_lines)
 
         result_dict = {
@@ -242,6 +258,8 @@ class BaseGrader:
                 print(f'{given_output} is not equal to {expected_output}')
                 result_dict['error_message'] = f"{given_output} is not equal to the expected {expected_output}"
 
+        elapsed_seconds = get_seconds_duration(test_start_time, datetime.now())
+        result_dict['elapsed_seconds'] = elapsed_seconds
         return result_dict
 
 

@@ -30,12 +30,15 @@ class BaseGraderTests(TestCase):
                                         DirEntryMock(name='output-01.txt'), DirEntryMock(name='output-02.txt')]
 
     @patch('challenges.grader.BaseGrader.test_solution')
-    def test_grade_all_tests(self, mocked_test_solution):
+    @patch('challenges.grader.get_seconds_duration')
+    def test_grade_all_tests(self, mocked_get_duration, mocked_test_solution):
         """ Method should go through every input/output and run self.test_solution() for it """
+        mocked_get_duration.return_value = 155
         mocked_test_solution.return_value = 42
         self.grader.test_cases = [None] * 10  # 10 empty items
 
-        expected_result = {'results': [42] * 10}  # should basically call test_solution 10 times
+        # should basically call test_solution 10 times
+        expected_result = {'results': [42] * 10, 'elapsed_seconds': 155}
         self.assertEqual(self.grader.grade_all_tests(), json.dumps(expected_result))
 
     @patch('challenges.grader.os.path.isdir')

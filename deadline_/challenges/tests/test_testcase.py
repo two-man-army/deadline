@@ -40,9 +40,9 @@ class TestCaseViewTest(APITestCase):
             print 'I owe the grocer $%.2f' % grocery_bill"""
         self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
         self.submission.save()
-        self.tc = TestCaseModel(submission=self.submission, pending=False, success=True, time='1.25s')
+        self.tc = TestCaseModel(submission=self.submission, pending=False, success=True, time=1.25)
         self.tc_2 = TestCaseModel(submission=self.submission)
-        self.tc_3 = TestCaseModel(submission=self.submission, pending=False, success=False, time='0.2s')
+        self.tc_3 = TestCaseModel(submission=self.submission, pending=False, success=False, time=0.2)
         self.tc.save(); self.tc_2.save(); self.tc_3.save()
 
     def test_load_all_test_cases(self):
@@ -152,14 +152,14 @@ class TestCaseModelTest(TestCase):
         tc = TestCaseModel(submission=self.submission)
         tc.save()
 
-        self.assertEqual(tc.time, '0.00s')
+        self.assertEqual(tc.time, 0)
         self.assertTrue(tc.pending)
         self.assertFalse(tc.success)
 
     def test_serialize(self):
-        tc = TestCaseModel(submission=self.submission, pending=False, success=True, time='1.25s', description='Testing', traceback='You suck at coding', error_message="whatup", timed_out=True)
+        tc = TestCaseModel(submission=self.submission, pending=False, success=True, time=1.25, description='Testing', traceback='You suck at coding', error_message="whatup", timed_out=True)
         tc.save()
-        expected_json = '{"submission":' + str(tc.submission.id) + ',"pending":false,"success":true,"time":"1.25s","description":"Testing","traceback":"You suck at coding","error_message":"whatup","timed_out":true}'
+        expected_json = '{"submission":' + str(tc.submission.id) + ',"pending":false,"success":true,"time":"1.25","description":"Testing","traceback":"You suck at coding","error_message":"whatup","timed_out":true}'
         serialized_test_case: bytes = JSONRenderer().render(data=TestCaseSerializer(tc).data)
 
         self.assertEqual(serialized_test_case.decode('utf-8'), expected_json)

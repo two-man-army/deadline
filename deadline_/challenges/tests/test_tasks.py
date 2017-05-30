@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 from unittest import TestCase
 
 from challenges.tests.helpers import get_mock_function_arguments
-from challenges.tasks import run_grader_task, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY
+from challenges.tasks import run_grader_task, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY
 from challenges.tests.factories import SubmissionFactory, UserFactory
 
 
@@ -25,7 +25,7 @@ class TasksTests(TestCase):
         code = 'print("hello world")'
         lang = "python3"
         submission_id = submission.id
-        mock_run_grader.return_value = {GRADER_TEST_RESULTS_RESULTS_KEY: 'batman'}
+        mock_run_grader.return_value = {GRADER_TEST_RESULTS_RESULTS_KEY: 'batman', GRADER_TEST_RESULT_TIME_KEY: 155}
 
         run_grader_task(test_case_count=test_case_count, test_folder_name=test_folder_name,
                         code=code, lang=lang, submission_id=submission_id)
@@ -35,7 +35,7 @@ class TasksTests(TestCase):
         mock_run_grader.assert_called_once_with(test_case_count, test_folder_name, code, lang)
         mock_update_test_cases.assert_called()
         self.assertIn('batman', get_mock_function_arguments(mock_update_test_cases)) # grade results in the update_test_cases
-        mock_grade_result.assert_called_once_with(submission, mock_update_test_cases.return_value)
+        mock_grade_result.assert_called_once_with(submission, mock_update_test_cases.return_value, 155)
         mock_update_user_score.assert_called_once()
         update_us_arguments = get_mock_function_arguments(mock_update_user_score)
         self.assertIn(submission.author, update_us_arguments)

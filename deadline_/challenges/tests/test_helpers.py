@@ -43,15 +43,18 @@ class GradeResultTests(TestCase):
         num_successful_tests = len([True for test_case in self.test_cases if not test_case.pending and test_case.success])
         expected_score =  num_successful_tests * (self.challenge.score / self.challenge.test_case_count)
 
-        grade_result(submission=self.submission, timed_out_percentage=0)
+        grade_result(submission=self.submission, timed_out_percentage=0, elapsed_seconds=1.1)
 
         # Should have updated the submission's score
         self.assertEqual(self.submission.result_score, expected_score)
+        self.assertFalse(self.submission.timed_out)
+        self.assertEqual(self.submission.elapsed_seconds, 1.1)
 
-    def test_grade_result_should_set_timed_out_var(self):
+    def test_grade_result_should_set_timed_out_var_and_elapsed_seconds(self):
         from constants import SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE
-        grade_result(submission=self.submission, timed_out_percentage=SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE)
+        grade_result(submission=self.submission, timed_out_percentage=SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE, elapsed_seconds=1.1)
         self.assertTrue(self.submission.timed_out)
+        self.assertEqual(self.submission.elapsed_seconds, 1.1)
 
 
 class UpdateUserScoreTests(TestCase):

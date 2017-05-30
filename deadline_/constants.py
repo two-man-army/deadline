@@ -22,7 +22,7 @@ SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE = 40  # the minimum percentage of timed 
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
 GRADER_TEST_RESULT_SUCCESS_KEY = 'success'
-GRADER_TEST_RESULT_TIME_KEY = 'time'
+GRADER_TEST_RESULT_TIME_KEY = 'elapsed_seconds'
 GRADER_TEST_RESULT_DESCRIPTION_KEY = 'description'
 GRADER_TEST_RESULT_TRACEBACK_KEY = 'traceback'
 GRADER_TEST_RESULT_ERROR_MESSAGE_KEY = 'error_message'

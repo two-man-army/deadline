@@ -10,7 +10,7 @@ from challenges.models import Challenge, Submission, TestCase
 from accounts.models import User
 
 
-def grade_result(submission: Submission, timed_out_percentage: int):
+def grade_result(submission: Submission, timed_out_percentage: int, elapsed_seconds: float):
     """
     Given a tested submission and the percentage of test cases that have timed out,
         update its score in accordance to the number of test cases passed
@@ -24,6 +24,7 @@ def grade_result(submission: Submission, timed_out_percentage: int):
 
     submission.result_score = num_successful_tests * result_per_test
     submission.pending = False
+    submission.elapsed_seconds = elapsed_seconds
     if timed_out_percentage >= SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE:
         submission.timed_out = True
     submission.save()
@@ -68,7 +69,7 @@ def update_test_cases(grader_results: dict, test_cases: [TestCase]) -> int:
     for idx, test_case in enumerate(test_cases):
         test_results = grader_results[idx]
         test_case.success = test_results[GRADER_TEST_RESULT_SUCCESS_KEY]
-        test_case.time = test_results[GRADER_TEST_RESULT_TIME_KEY] + 's'
+        test_case.time = test_results[GRADER_TEST_RESULT_TIME_KEY]
         test_case.timed_out = test_results[GRADER_TEST_RESULT_TIMED_OUT_KEY]
         timed_out_count += int(test_case.timed_out)
         test_case.pending = False

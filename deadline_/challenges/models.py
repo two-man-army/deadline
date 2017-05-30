@@ -39,6 +39,7 @@ class Submission(models.Model):
     language = models.ForeignKey(Language, to_field='name', blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     timed_out = models.BooleanField(default=False)  # showing if the majority of the tests have timed out
+    elapsed_seconds = models.FloatField(default=0)
 
     def get_absolute_url(self):
         return '/challenges/{}/submissions/{}'.format(self.challenge_id, self.id)
@@ -94,7 +95,7 @@ class SubmissionVote(models.Model):
 
 class TestCase(models.Model):
     submission = models.ForeignKey(Submission)
-    time = models.CharField(default='0.00s', max_length=5)
+    time = models.FloatField(default=0)
     success = models.BooleanField(default=False)
     pending = models.BooleanField(default=True)
     description = models.CharField(max_length=1000)
