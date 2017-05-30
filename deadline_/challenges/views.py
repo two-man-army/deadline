@@ -65,52 +65,63 @@ class SubmissionCreateView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         challenge_pk = kwargs.get('challenge_pk')
+        code_given = request.data.get('code')
+        language_given = request.data.get('language')
+
+        challenge, language, is_valid, response = self.validate_data(challenge_pk, code_given, language_given, request.user)
+        if not is_valid:
+            return response  # invalid data
+
+        submission = Submission(code=code_given, author=request.user, challenge=challenge, task_id=1, language=language)
+        submission.save()
+        celery_task = run_grader_task.delay(test_case_count=challenge.test_case_count,
+                                            test_folder_name=challenge.test_file_name,
+                                            code=code_given, lang=language.name, submission_id=submission.id)
+
+        request.user.last_submit_at = timezone.now()
+        request.user.save()
+
+        submission.task_id = celery_task
+        submission.save()
+
+        # Create the test cases
+        TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])
+
+        return Response(data=SubmissionSerializer(submission).data, status=201)
+
+    def validate_data(self, challenge_pk, code_given, language_given, user) -> (Challenge, Language, bool, Response):
+        """
+        Tries to validate all our data, returning relevant info and a boolean indicating if we validated it
+        If it validates it successfully, returns the challenge and language we expect to use
+        Otherwise, it returns a response at the end
+        """
         try:
             challenge = Challenge.objects.get(id=challenge_pk)
-            code_given = request.data.get('code')
-            language_given = request.data.get('language')
-
-            if not code_given:
-                return Response(data={'error': 'The code given cannot be empty.'},
-                                status=400)
-            elif not language_given:
-                return Response(data={'error': 'The language given cannot be empty.'},
-                                status=400)
-
-            try:
-                language = challenge.supported_languages.get(name=language_given)
-            except Language.DoesNotExist:
-                return Response(data={'error': f'The language {language_given} is not supported!'},
-                                status=400)
-
-            # Check for time between submissions
-            time_now = timezone.make_aware(datetime.now(), timezone.utc)
-            time_since_last_submission = time_now - request.user.last_submit_at
-            if time_since_last_submission.seconds < MIN_SUBMISSION_INTERVAL_SECONDS:
-                return Response(data={'error': 'You must wait 10 more seconds before submitting a solution.'},
-                                status=400)
-
-            submission = Submission(code=code_given, author=request.user,
-                                    challenge=challenge, task_id=1,
-                                    language=language)
-            submission.save()
-            tsk = run_grader_task.delay(test_case_count=challenge.test_case_count,
-                                  test_folder_name=challenge.test_file_name,
-                                  code=code_given, lang=language.name, submission_id=submission.id)
-
-            request.user.last_submit_at = timezone.now()
-            request.user.save()
-
-            submission.task_id = tsk
-            submission.save()
-
-            # Create the test cases
-            TestCase.objects.bulk_create([TestCase(submission=submission) for _ in range(challenge.test_case_count)])
-
-            return Response(data=SubmissionSerializer(submission).data, status=201)
         except Challenge.DoesNotExist:
-            return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
-                            status=400)
+            return None, None, False, Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
+                                               status=400)
+
+        if not code_given:
+            return None, None, False, Response(data={'error': 'The code given cannot be empty.'},
+                                             status=400)
+        elif not language_given:
+            return None, None, False, Response(data={'error': 'The language given cannot be empty.'},
+                                               status=400)
+
+        try:
+            language = challenge.supported_languages.get(name=language_given)
+        except Language.DoesNotExist:
+            return None, None, False, Response(data={'error': f'The language {language_given} is not supported!'},
+                                               status=400)
+
+        # Check for time between submissions
+        time_now = timezone.make_aware(datetime.now(), timezone.utc)
+        time_since_last_submission = time_now - user.last_submit_at
+        if time_since_last_submission.seconds < MIN_SUBMISSION_INTERVAL_SECONDS:
+            resp = Response(data={'error': f'You must wait {MIN_SUBMISSION_INTERVAL_SECONDS} more seconds before submitting a solution.'}, status=400)
+            return None, None, False, resp
+
+        return challenge, language, True, None
 
 
 # /challenges/{challenge_id}/submissions/{submission_id}
@@ -173,10 +184,9 @@ class SubmissionListView(ListAPIView):
     def list(self, request, *args, **kwargs):
         challenge_pk = kwargs.get('challenge_pk')
         return Response(data=LimitedSubmissionSerializer(Submission.objects
-                                                  .filter(challenge=challenge_pk, author=request.user)
-                                                  .order_by('-created_at')  # newest first
-                                                  .all(), many=True).data
-                        , status=200)
+                                                         .filter(challenge=challenge_pk, author=request.user)
+                                                         .order_by('-created_at')  # newest first
+                                                         .all(), many=True).data)
 
 
 # /challenges/submissions/{submission_id}/vote
