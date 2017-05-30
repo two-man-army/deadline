@@ -411,6 +411,7 @@ class SubmissionViewsTest(APITestCase):
         top_submission = Submission(language=self.python_language, challenge=self.challenge, author=new_user,
                                 code=self.sample_code, result_score=6, pending=0)
         top_submission.save()
+        top_submission.refresh_from_db()
         sec_submission = Submission(language=self.python_language, challenge=self.challenge, author=new_user,
                                 code=self.sample_code, result_score=5, pending=0)
         sec_submission.save()
@@ -418,6 +419,9 @@ class SubmissionViewsTest(APITestCase):
         response = self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop', HTTP_AUTHORIZATION=new_auth_token)
 
         self.assertEqual(response.status_code, 200)
+        print(response.data)
+        print(LimitedSubmissionSerializer(top_submission).data)
+        print(Submission.objects.all())
         self.assertEqual(response.data, LimitedSubmissionSerializer(top_submission).data)
 
     def test_get_self_top_submission_no_submission(self):
