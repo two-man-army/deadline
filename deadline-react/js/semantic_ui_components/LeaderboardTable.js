@@ -44,13 +44,23 @@ class LeaderboardTable extends React.Component {
         if (submission.result_score === this.props.maxScore) {
           submissionStatusIcon = <Icon size='small' color='green' name='checkmark' style={iconSizeStyle} />
         } else {
-          submissionStatusIcon = <Icon size='small' color='orange' name='star half' style={iconSizeStyle} />
+          if (submission.timed_out) {
+            // Submission has mostly timed out
+            submissionStatusIcon = <Icon size='small' color='#810000' name='clock' style={iconSizeStyle} />
+          } else {
+            // Submission is partly solved
+            submissionStatusIcon = <Icon size='small' color='orange' name='star half' style={iconSizeStyle} />
+          }
         }
       } else {
-        submissionStatusIcon = <Icon size='small' color='red' name='remove' style={iconSizeStyle} />
+        // Submission has failed
+        if (submission.timed_out) {
+          submissionStatusIcon = <Icon size='small' color='#810000' name='clock' style={iconSizeStyle} />
+        } else {
+          submissionStatusIcon = <Icon size='small' color='red' name='remove' style={iconSizeStyle} />
+        }
       }
     }
-
 
     let langIconStyle = {
       width: '20px',
@@ -103,7 +113,7 @@ class LeaderboardTable extends React.Component {
     }
     let upvoteStyle = submission.user_has_voted && submission.user_has_upvoted ? {color: '#ff4081'} : undefined
     let downvoteStyle = submission.user_has_voted && !submission.user_has_upvoted ? {color: '#ff4081'} : undefined
-  
+
     return (
       <Table.Cell>
         <div style={{

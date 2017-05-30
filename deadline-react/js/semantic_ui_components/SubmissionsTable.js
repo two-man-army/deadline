@@ -18,10 +18,21 @@ class SubmissionsTable extends React.Component {
         if (submission.result_score === this.props.maxScore) {
           submissionStatusIcon = <Icon size='small' color='green' name='checkmark' />
         } else {
-          submissionStatusIcon = <Icon size='small' color='orange' name='star half' />
+          if (submission.timed_out) {
+            // Submission has mostly timed out
+            submissionStatusIcon = <Icon size='small' color='#810000' name='clock' />
+          } else {
+            // Submission is partly solved
+            submissionStatusIcon = <Icon size='small' color='orange' name='star half' />
+          }
         }
       } else {
-        submissionStatusIcon = <Icon size='small' color='red' name='remove' />
+        // Submission has failed
+        if (submission.timed_out) {
+          submissionStatusIcon = <Icon size='small' color='#810000' name='clock' />
+        } else {
+          submissionStatusIcon = <Icon size='small' color='red' name='remove' />
+        }
       }
     }
 
