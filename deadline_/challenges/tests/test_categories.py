@@ -137,8 +137,7 @@ class UserSubcategoryProgressModelTest(TestCase):
         sub1.save()
         user = UserFactory()
         user.save()
-        first_sub = UserSubcategoryProgress(user_id=user.id, subcategory_id=sub1.id, user_score=0)
-        first_sub.save()
+        # NOTE: One UserSubcategoryProgress is already created on user model creation
         with self.assertRaises(Exception):
             sec_sub = UserSubcategoryProgress(user.id, self.sub1.id, 0)
             sec_sub.save()

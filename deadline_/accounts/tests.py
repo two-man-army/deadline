@@ -13,10 +13,32 @@ from challenges.tests.factories import UserFactory, ChallengeDescFactory
 
 # Create your tests here.
 class UserModelTest(TestCase):
+    def setUp(self):
+        from challenges.models import MainCategory, SubCategory
+        self.main_cat = MainCategory.objects.create(name='tank')
+        self.main_cat2 = MainCategory.objects.create(name='helicopter')
+        self.sub1 = SubCategory.objects.create(name='AAX-190', meta_category=self.main_cat, max_score=250)
+        self.sub2 = SubCategory.objects.create(name='MX-5', meta_category=self.main_cat2, max_score=250)
+
     def test_user_register_creates_token(self):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
         self.assertTrue(hasattr(us, 'auth_token'))
         self.assertIsNotNone(us.auth_token)
+
+    def test_user_register_creates_user_subcategory_progresses(self):
+        # Registering a user should create a subcategory progress model for each available subcategory
+        from challenges.models import UserSubcategoryProgress
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us.save()
+        print(UserSubcategoryProgress.objects.all())
+        sub1_obj = UserSubcategoryProgress.objects.filter(subcategory_id=self.sub1.id).first()
+        sub2_obj = UserSubcategoryProgress.objects.filter(subcategory_id=self.sub2.id).first()
+        self.assertIsNotNone(sub1_obj)
+        self.assertIsNotNone(sub2_obj)
+        self.assertEqual(sub1_obj.user_id, us.id)
+        self.assertEqual(sub2_obj.user_id, us.id)
+        self.assertEqual(sub1_obj.user_score, 0)
+        self.assertEqual(sub2_obj.user_score, 0)
 
     def test_user_register_requires_unique_username(self):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
