@@ -2,7 +2,7 @@ import random
 from django.test import TestCase
 from challenges.models import (
     Challenge, Submission, TestCase as TestCaseModel, MainCategory, SubCategory, ChallengeDescription,
-    Language, UserSubcategoryProgress)
+    Language, UserSubcategoryProgress, Proficiency)
 
 from accounts.models import User
 from challenges.helper import grade_result, update_user_score
@@ -24,6 +24,7 @@ class GradeResultTests(TestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
         self.challenge = Challenge(name='Hello World!', description=self.sample_desc,
@@ -75,7 +76,7 @@ class UpdateUserScoreTests(TestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
 

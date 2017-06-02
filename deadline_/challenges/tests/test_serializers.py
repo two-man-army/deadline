@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import MagicMock
 from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer
-from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, Challenge
+from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, Challenge, Proficiency
 from accounts.models import User
 
 
@@ -23,6 +23,7 @@ class TestLimitedSubmissionSerializer(TestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc,
                                    test_file_name='hello_tests',
                                    test_case_count=3, category=self.sub_cat)
@@ -84,6 +85,7 @@ class TestSubmissionSerializer(TestCase):
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc,
                                    test_file_name='hello_tests',
                                    test_case_count=3, category=self.sub_cat)

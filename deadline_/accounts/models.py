@@ -63,6 +63,17 @@ class User(AbstractBaseUser):
             raise Exception(f'Could not find a UserSubcategoryProgress object for user {self} with subcategory_id {subcategory_id}')
         return usp
 
+    def fetch_proficiency_by_subcategory(self, subcategory_id) -> 'Proficiency':
+        """
+        Queries the DB and returns a Proficiency object associated with the given user and subcategory
+        """
+        from challenges.models import UserSubcategoryProficiency
+        usp: UserSubcategoryProficiency = UserSubcategoryProficiency.objects\
+            .filter(subcategory_id=subcategory_id, user_id=self.id).first()
+        if usp is None:
+            raise Exception(f'Cound not find a UserSubcategoryProficiency object for user {self} with subcategory_id {subcategory_id}')
+        return usp.proficiency
+
     def get_vote_for_submission(self, submission_id):
         from challenges.models import SubmissionVote
         try:
@@ -78,11 +89,14 @@ def user_post_save(sender, instance, created, *args, **kwargs):
         Create the UserSubcategoryProgress models for each subcategory
             and the Token object
     """
-    from challenges.models import SubCategory, UserSubcategoryProgress
+    from challenges.models import SubCategory, UserSubcategoryProgress, UserSubcategoryProficiency, Proficiency
     if not created:
         return
 
     Token.objects.create(user=instance)
+    starter_proficiency = Proficiency.objects.filter(needed_percentage=0).first()
 
+    # create a UserSubcategoryProgress for each subcategory and a UserSubcategoryProficiency
     for subcat in SubCategory.objects.all():
         UserSubcategoryProgress.objects.create(user=instance, subcategory=subcat, user_score=0)
+        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency)

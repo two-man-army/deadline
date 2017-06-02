@@ -157,3 +157,13 @@ class Proficiency(models.Model):
     name = models.CharField(max_length=100, unique=True)
     # represents the needed percentage to achieve this proficiency
     needed_percentage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+
+class UserSubcategoryProficiency(models.Model):
+    """ Holds each user's proficiency in a given subcategory """
+    user = models.ForeignKey(User)
+    subcategory = models.ForeignKey(SubCategory)
+    proficiency = models.ForeignKey(Proficiency)
+
+    class Meta:
+        unique_together = ('user', 'subcategory')

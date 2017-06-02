@@ -14,11 +14,13 @@ from challenges.tests.factories import UserFactory, ChallengeDescFactory
 # Create your tests here.
 class UserModelTest(TestCase):
     def setUp(self):
-        from challenges.models import MainCategory, SubCategory
+        from challenges.models import MainCategory, SubCategory, Proficiency
         self.main_cat = MainCategory.objects.create(name='tank')
         self.main_cat2 = MainCategory.objects.create(name='helicopter')
         self.sub1 = SubCategory.objects.create(name='AAX-190', meta_category=self.main_cat, max_score=250)
         self.sub2 = SubCategory.objects.create(name='MX-5', meta_category=self.main_cat2, max_score=250)
+        self.advanced_proficiency = Proficiency.objects.create(name="test", needed_percentage=21)
+        self.starter_proficiency = Proficiency.objects.create(name="scrub", needed_percentage=0)
 
     def test_user_register_creates_token(self):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
@@ -30,7 +32,6 @@ class UserModelTest(TestCase):
         from challenges.models import UserSubcategoryProgress
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
         us.save()
-        print(UserSubcategoryProgress.objects.all())
         sub1_obj = UserSubcategoryProgress.objects.filter(subcategory_id=self.sub1.id).first()
         sub2_obj = UserSubcategoryProgress.objects.filter(subcategory_id=self.sub2.id).first()
         self.assertIsNotNone(sub1_obj)
@@ -39,6 +40,16 @@ class UserModelTest(TestCase):
         self.assertEqual(sub2_obj.user_id, us.id)
         self.assertEqual(sub1_obj.user_score, 0)
         self.assertEqual(sub2_obj.user_score, 0)
+
+    def test_user_register_creates_user_subcategory_proficiency(self):
+        from challenges.models import UserSubcategoryProficiency
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us.save()
+
+        received: UserSubcategoryProficiency = UserSubcategoryProficiency.objects.filter(user=us, subcategory=self.sub1).first()
+        self.assertEqual(received.proficiency, self.starter_proficiency)
+        received_sub2: UserSubcategoryProficiency = UserSubcategoryProficiency.objects.filter(user=us, subcategory=self.sub2).first()
+        self.assertEqual(received_sub2.proficiency, self.starter_proficiency)
 
     def test_user_register_requires_unique_username(self):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
@@ -146,6 +157,29 @@ class UserModelTest(TestCase):
         user.save()  # should create the UserSubcatProgress objects
         with self.assertRaises(Exception):
             usp: UserSubcategoryProgress = user.fetch_subcategory_progress(subcategory_id=255)
+
+    def test_fetch_subcategory_proficiency(self):
+        """
+        Should return a Proficiency object
+        """
+        from challenges.models import UserSubcategoryProficiency, Proficiency, MainCategory, SubCategory
+        mc = MainCategory.objects.create(name='t')
+        mc.save()
+        sc = SubCategory.objects.create(name='tank', meta_category=mc)
+        sc.save()
+        user: User = UserFactory()
+        user.save()  # should create the UserSubcatProgress objects
+
+        received_prof = user.fetch_proficiency_by_subcategory(sc.id)
+
+        self.assertEqual(received_prof, self.starter_proficiency)
+
+    def test_fetch_invalid_subcategory_proficiency(self):
+        """ Should raise """
+        user = UserFactory()
+        user.save()  # should create the UserSubcatProgress objects
+        with self.assertRaises(Exception):
+            usp = user.fetch_subcategory_proficiency(subcategory_id=255)
 
     def test_fetch_overall_leaderboard_position(self):
         """ Should return the user's leaderboard position """

@@ -201,6 +201,14 @@
     "model": "challenges.proficiency",
     "pk": 1,
     "fields": {
+      "name": "",
+      "needed_percentage": 0
+    }
+  },
+  {
+    "model": "challenges.proficiency",
+    "pk": 2,
+    "fields": {
       "name": "Novice",
       "needed_percentage": 20
     }
@@ -208,7 +216,7 @@
 
   {
     "model": "challenges.proficiency",
-    "pk": 2,
+    "pk": 3,
     "fields": {
       "name": "Intermediate",
       "needed_percentage": 45
@@ -217,7 +225,7 @@
 
   {
     "model": "challenges.proficiency",
-    "pk": 3,
+    "pk": 4,
     "fields": {
       "name": "Experienced",
       "needed_percentage": 70
@@ -226,7 +234,7 @@
 
   {
     "model": "challenges.proficiency",
-    "pk": 4,
+    "pk": 5,
     "fields": {
       "name": "Advanced",
       "needed_percentage": 95

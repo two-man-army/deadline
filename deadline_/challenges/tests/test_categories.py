@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 from unittest import skip
-from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProgress
+from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProgress, Proficiency
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tests.factories import ChallengeDescFactory, UserFactory
 
@@ -99,6 +99,7 @@ class SubCategoryViewTest(TestCase):
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
         self.sample_desc.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
         auth_user.save()
         self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
@@ -135,6 +136,7 @@ class UserSubcategoryProgressModelTest(TestCase):
         c1.save()
         sub1 = SubCategory(name='Unit', meta_category=c1)
         sub1.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         user = UserFactory()
         user.save()
         # NOTE: One UserSubcategoryProgress is already created on user model creation
