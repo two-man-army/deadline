@@ -6,7 +6,7 @@ from constants import (
     GRADER_TEST_RESULT_TRACEBACK_KEY, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY,
     GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_TEST_RESULT_DESCRIPTION_KEY,
     GRADER_TEST_RESULT_TIMED_OUT_KEY, SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE)
-from challenges.models import Challenge, Submission, TestCase
+from challenges.models import Challenge, Submission, TestCase, UserSubcategoryProgress
 from accounts.models import User
 
 
@@ -42,14 +42,20 @@ def update_user_score(user: User, submission: Submission) -> bool:
                                        .all() \
                                        .aggregate(Max('result_score'))['result_score__max']
 
-    if max_prev_score is None:
-        # The user does not have any previous submissions, so we update his score
-        user.score += submission.result_score
-        user.save()
-        return True
-    elif max_prev_score < submission.result_score:
-        # The user has submitted a better-scoring solution. Update his score
-        score_improvement = submission.result_score - max_prev_score
+    if max_prev_score is None or max_prev_score < submission.result_score:
+        score_improvement = None
+        if max_prev_score is None:
+            # The user does not have any previous submissions, so we update his score
+            score_improvement = submission.result_score
+        else:
+            # The user has submitted a better-scoring solution. Update his score
+            score_improvement = submission.result_score - max_prev_score
+
+        # TODO: test this
+        user_subcat_progress: UserSubcategoryProgress = user.fetch_subcategory_progress(submission.challenge.category_id)
+        user_subcat_progress.user_score += score_improvement
+        user_subcat_progress.save()
+
         user.score += score_improvement
         user.save()
         return True

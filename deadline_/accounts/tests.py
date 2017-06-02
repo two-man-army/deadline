@@ -75,7 +75,7 @@ class UserModelTest(TestCase):
         from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language, \
             SubmissionVote
         python_language = Language(name="Python") ;python_language.save()
-        challenge_cat = MainCategory('Tests'); challenge_cat.save()
+        challenge_cat = MainCategory.objects.create(name='Tests'); challenge_cat.save()
         sub_cat = SubCategory(name='tests', meta_category=challenge_cat); sub_cat.save()
         challenge = Challenge(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
                                    test_case_count=3,
@@ -119,6 +119,33 @@ class UserModelTest(TestCase):
 
         fetch_mock.assert_called_once_with(1, us.id)
         self.assertEqual(received_score, 0)
+
+    def test_fetch_subcategory_progress(self):
+        """
+        Should return a UserSubcategoryProgress model
+        """
+        from challenges.models import UserSubcategoryProgress, SubCategory, MainCategory
+        # from challenges.tests.factories import SubCategoryFactory, MainCategoryFactory
+        mc = MainCategory.objects.create(name='t')
+        mc.save()
+        sc = SubCategory(name='tank', meta_category=mc)
+        sc.save()
+        user = UserFactory()
+        user.save()  # should create the UserSubcatProgress objects
+        expected_model = UserSubcategoryProgress.objects.filter(subcategory=sc).first()
+
+        usp: UserSubcategoryProgress = user.fetch_subcategory_progress(subcategory_id=sc.id)
+
+        self.assertEqual(expected_model, usp)
+
+    def test_fetch_invalid_subcategory_progress(self):
+        """
+        Should raise an exception
+        """
+        user = UserFactory()
+        user.save()  # should create the UserSubcatProgress objects
+        with self.assertRaises(Exception):
+            usp: UserSubcategoryProgress = user.fetch_subcategory_progress(subcategory_id=255)
 
     def test_fetch_overall_leaderboard_position(self):
         """ Should return the user's leaderboard position """

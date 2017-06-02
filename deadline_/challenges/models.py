@@ -15,6 +15,7 @@ class Language(models.Model):
     def __str__(self):
         return self.name
 
+
 class Challenge(models.Model):
     name = models.CharField(unique=True, max_length=30)
     description = models.OneToOneField('ChallengeDescription')
