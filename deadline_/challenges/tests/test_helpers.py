@@ -17,9 +17,9 @@ class GradeResultTests(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
-        self.python_language = Language(name="Python")
+        self.python_language = Language.objects.create(name="Python")
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
@@ -67,11 +67,11 @@ class UpdateUserScoreTests(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
-        self.python_language = Language(name="Python")
+        self.python_language = Language.objects.create(name="Python")
         self.sample_desc.save()
         self.user = User(email="hello@abv.bg", password='123', username='me')
         self.user.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()

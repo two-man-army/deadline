@@ -3,14 +3,14 @@ import json
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 from unittest import skip
-from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User
+from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProgress
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
-from challenges.tests.factories import ChallengeDescFactory
+from challenges.tests.factories import ChallengeDescFactory, UserFactory
 
 
 class CategoryModelTest(TestCase):
     def setUp(self):
-        self.c1 = MainCategory(name='Test')
+        self.c1 = MainCategory.objects.create(name='Test')
         self.sub1 = SubCategory(name='Unit', meta_category=self.c1)
         self.sub2 = SubCategory(name='Mock', meta_category=self.c1)
         self.sub3 = SubCategory(name='Patch', meta_category=self.c1)
@@ -51,7 +51,7 @@ class SubCategoryModelTest(TestCase):
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
         self.sample_desc.save()
-        self.c1 = MainCategory(name='Test')
+        self.c1 = MainCategory.objects.create(name='Test')
         self.sub1 = SubCategory(name='Unit', meta_category=self.c1)
         self.sub2 = SubCategory(name='Mock', meta_category=self.c1)
         self.sub3 = SubCategory(name='Patch', meta_category=self.c1)
@@ -103,6 +103,7 @@ class SubCategoryViewTest(TestCase):
         auth_user.save()
         self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
         self.c1 = MainCategory(name='Test')
+        self.c1.save()
         self.sub1 = SubCategory(name='Unit Tests', meta_category=self.c1)
         self.sub1.save()
         self.c = Challenge(name='TestThis', difficulty=5, score=10, description=self.sample_desc, test_case_count=5, category=self.sub1)
@@ -126,3 +127,18 @@ class SubCategoryViewTest(TestCase):
         response = self.client.get('/challenges/subcategories/{}'.format('" OR 1=1;'),
                                    HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)
+
+
+class UserSubcategoryProgressModelTest(TestCase):
+    def test_user_id_and_subcat_are_unique_together(self):
+        c1 = MainCategory(name='Test')
+        c1.save()
+        sub1 = SubCategory(name='Unit', meta_category=c1)
+        sub1.save()
+        user = UserFactory()
+        user.save()
+        first_sub = UserSubcategoryProgress(user_id=user.id, subcategory_id=sub1.id, user_score=0)
+        first_sub.save()
+        with self.assertRaises(Exception):
+            sec_sub = UserSubcategoryProgress(user.id, self.sub1.id, 0)
+            sec_sub.save()

@@ -1,0 +1,33 @@
+/*
+CHEAT SHEET
+Python: 1
+Go: 2
+Rust: 3
+C++: 4
+Kotlin: 5
+
+MainCategory:
+Algorithms: 1
+Data Structures: 2
+Python Language: 3
+
+SubCategory:
+Python
+  Introduction: 1,
+  Collections: 2,
+  Closures and Decorators: 3,
+  Itertools: 4,
+  Array: 5,
+Data Structures:
+  Linked List: 6,
+  Trees: 7,
+  Disjoint Set: 8
+Algorithms:
+  Recursion: 9
+  Sorting: 10
+  Greedy: 11
+  Strings: 12
+  Graphs: 13
+  Dynamic Programming: 14
+  Miscellaneous 15
+*/

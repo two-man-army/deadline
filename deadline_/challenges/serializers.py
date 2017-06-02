@@ -10,7 +10,8 @@ class ChallengeDescriptionSerializer(serializers.ModelSerializer):
 
 class ChallengeSerializer(serializers.ModelSerializer):
     description = ChallengeDescriptionSerializer()
-
+    category = serializers.StringRelatedField()
+    supported_languages = serializers.StringRelatedField(many=True)
     class Meta:
         model = Challenge
         fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count', 'category', 'supported_languages')
@@ -28,7 +29,7 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
         and the current user's max score (this requires the challenge object to have user_max_score attached to it).
     Used, for example, when listing challenges.
     """
-
+    category = serializers.StringRelatedField()
     class Meta:
         model = Challenge
         fields = ('id', 'name', 'difficulty', 'score', 'category')  # user_max_score is added as well but more implicitly

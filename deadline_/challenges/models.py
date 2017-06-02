@@ -9,9 +9,11 @@ from sql_queries import (
 
 
 class Language(models.Model):
-    name = models.CharField(unique=True, max_length=30, primary_key=True)
+    name = models.CharField(unique=True, max_length=30)
     default_code = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.name
 
 class Challenge(models.Model):
     name = models.CharField(unique=True, max_length=30)
@@ -20,7 +22,7 @@ class Challenge(models.Model):
     score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
     test_file_name = models.CharField(max_length=50)
     test_case_count = models.IntegerField(blank=False)
-    category = models.ForeignKey(to='SubCategory', to_field='name', related_name='challenges')
+    category = models.ForeignKey(to='SubCategory', related_name='challenges')
     supported_languages = models.ManyToManyField(Language)
 
     def get_absolute_url(self):
@@ -113,12 +115,12 @@ class TestCase(models.Model):
 
 class MainCategory(models.Model):
     """ A Main Category for Challenges. ie: Algorithms """
-    name = models.CharField(max_length=100, unique=True, primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
 
 
 class SubCategory(models.Model):
     """ A more specific Category for Challenges, ie: Graph Theory """
-    name = models.CharField(max_length=100, unique=True, primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
     meta_category = models.ForeignKey(to=MainCategory, related_name='sub_categories')
     max_score = models.IntegerField(default=0, verbose_name="The maximum score from all the challenges in this subcategory")
 

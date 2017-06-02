@@ -1,173 +1,199 @@
 [
   {
     "model": "challenges.language",
-    "pk": "Python",
+    "pk": 1,
     "fields": {
+      "name": "Python",
       "default_code": "def main():\n    # Let's go champ\n    pass\n\nif __name__ == '__main__':\n    main()\n"
     }
   },
   {
     "model": "challenges.language",
-    "pk": "Go",
+    "pk": 2,
     "fields": {
+      "name": "Go",
       "default_code": "package main\nimport \"fmt\"\n\nfunc main() {\n\t\n}"}
   },
   {
     "model": "challenges.language",
-    "pk": "Rust",
+    "pk": 3,
     "fields": {
+      "name": "Rust",
       "default_code": "use std::io;\n\nfn main() {\n\t\n}"
     }
   },
   {
     "model": "challenges.language",
-    "pk": "C++",
+    "pk": 4,
     "fields": {
+      "name": "C++",
       "default_code": "#include <iostream>\n\nuse std::cin;\nuse std::cout;\n\nint main() {\n\t\n\treturn 0;\n}"
     }
   },
   {
     "model": "challenges.language",
-    "pk": "Kotlin",
+    "pk": 5,
     "fields": {
+      "name": "Kotlin",
       "default_code": "import java.util.*\n\nfun main(args: Array<String>) {\n\t\n}"
     }
   },
   {
     "model": "challenges.maincategory",
-    "pk": "Algorithms",
-    "fields": {}
+    "pk": 1,
+    "fields": {
+      "name": "Algorithms"
+    }
   },
 
   {
     "model": "challenges.maincategory",
-    "pk": "Data Structures",
-    "fields": {}
+    "pk": 2,
+    "fields": {
+      "name": "Data Structures"
+    }
   },
 
   {
     "model": "challenges.maincategory",
-    "pk": "Python Language",
-    "fields": {}
-  },
-
-  {
-    "model": "challenges.subcategory",
-    "pk": "Introduction",
+    "pk": 3,
     "fields": {
-      "meta_category": "Python Language"
+      "name": "Python Language"
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Collections",
+    "pk": 1,
     "fields": {
-      "meta_category": "Python Language"
+      "name": "Introduction",
+      "meta_category": 3
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Closures and Decorators",
+    "pk": 2,
     "fields": {
-      "meta_category": "Python Language"
+      "name": "Collections",
+      "meta_category": 3
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Itertools",
+    "pk": 3,
     "fields": {
-      "meta_category": "Python Language"
+      "name": "Closures and Decorators",
+      "meta_category": 3
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Array",
+    "pk": 4,
     "fields": {
-      "meta_category": "Data Structures"
+      "name": "Itertools",
+      "meta_category": 3
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Linked List",
+    "pk": 5,
     "fields": {
-      "meta_category": "Data Structures"
+      "name": "Array",
+      "meta_category": 2
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Trees",
+    "pk": 6,
     "fields": {
-      "meta_category": "Data Structures"
+      "name": "Linked List",
+      "meta_category": 2
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Disjoint Set",
+    "pk": 7,
     "fields": {
-      "meta_category": "Data Structures"
+      "name": "Trees",
+      "meta_category": 2
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Recursion",
+    "pk": 8,
     "fields": {
-      "meta_category": "Algorithms"
+      "name": "Disjoint Set",
+      "meta_category": 2
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Sorting",
+    "pk": 9,
     "fields": {
-      "meta_category": "Algorithms"
+      "name": "Recursion",
+      "meta_category": 1
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Greedy",
+    "pk": 10,
     "fields": {
-      "meta_category": "Algorithms"
+      "name": "Sorting",
+      "meta_category": 1
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Strings",
+    "pk": 11,
     "fields": {
-      "meta_category": "Algorithms"
+      "name": "Greedy",
+      "meta_category": 1
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Graphs",
+    "pk": 12,
     "fields": {
-      "meta_category": "Algorithms"
+      "name": "Strings",
+      "meta_category": 1
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Dynamic Programming",
+    "pk": 13,
     "fields": {
-      "meta_category": "Algorithms"
+      "name": "Graphs",
+      "meta_category": 1
     }
   },
 
   {
     "model": "challenges.subcategory",
-    "pk": "Miscellaneous",
+    "pk": 14,
     "fields": {
-      "meta_category": "Algorithms"
+      "name": "Dynamic Programming",
+      "meta_category": 1
+    }
+  },
+
+  {
+    "model": "challenges.subcategory",
+    "pk": 15,
+    "fields": {
+      "name": "Miscellaneous",
+      "meta_category": 1
     }
   },
   {
@@ -193,8 +219,8 @@
       "score": 10,
       "test_file_name": "hello_tests",
       "test_case_count": 1,
-      "category": "Miscellaneous",
-      "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+      "category": 15,
+      "supported_languages": [1, 3, 4, 2, 5]
     }
   },
   {
@@ -220,8 +246,8 @@
       "score": 40,
       "test_file_name": "basic_numbers_tests",
       "test_case_count": 8,
-      "category": "Dynamic Programming",
-      "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+      "category": 14,
+      "supported_languages": [1, 3, 4, 2, 5]
     }
   },
 
@@ -249,8 +275,8 @@
       "score": 10,
       "test_file_name": "array_sum_tests",
       "test_case_count": 7,
-      "category": "Miscellaneous",
-      "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+      "category": 15,
+      "supported_languages": [1, 3, 4, 2, 5]
     }
   },
 
@@ -278,8 +304,8 @@
       "score": 10,
       "test_file_name": "array_amplitude_tests",
       "test_case_count": 10,
-      "category": "Miscellaneous",
-      "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+      "category": 15,
+      "supported_languages": [1, 3, 4, 2, 5]
     }
   },
 
@@ -308,8 +334,8 @@
       "score": 30,
       "test_file_name": "lava_world_tests",
       "test_case_count": 6,
-      "category": "Graphs",
-      "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+      "category": 13,
+      "supported_languages": [1, 3, 4, 2, 5]
     }
   },
 
@@ -337,8 +363,8 @@
       "score": 40,
       "test_file_name": "labyrinth_adventure_tests",
       "test_case_count": 9,
-      "category": "Dynamic Programming",
-      "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+      "category": 14,
+      "supported_languages": [1, 3, 4, 2, 5]
     }
     },
 
@@ -365,8 +391,8 @@
         "score": 35,
         "test_file_name": "lawnmower_tests",
         "test_case_count": 9,
-        "category": "Dynamic Programming",
-        "supported_languages": ["Python", "Rust", "C++", "Go", "Kotlin"]
+        "category": 14,
+        "supported_languages": [1, 3, 4, 2, 5]
       }
     }
 ]

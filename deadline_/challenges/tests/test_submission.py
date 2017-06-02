@@ -17,10 +17,10 @@ from unittest.mock import patch, MagicMock
 class SubmissionModelTest(TestCase):
     def setUp(self):
         self.sample_desc = ChallengeDescFactory()
-        self.python_language = Language(name="Python"); self.python_language.save()
-        self.rust_language = Language(name="Rust"); self.rust_language.save()
+        self.python_language = Language.objects.create(name="Python"); self.python_language.save()
+        self.rust_language = Language.objects.create(name="Rust"); self.rust_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
@@ -205,7 +205,7 @@ class SubmissionViewsTest(APITestCase):
         self.python_language = Language(name="Python")
         self.python_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
@@ -450,7 +450,7 @@ class SubmissionViewsTest(APITestCase):
 
 class LatestSubmissionsViewTest(TestCase):
     def setUp(self):
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.python_language = Language(name="Python"); self.python_language.save()
 
@@ -501,7 +501,7 @@ class SubmissionVoteModelTest(TestCase):
         self.rust_language = Language(name="Rust");
         self.rust_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
@@ -541,7 +541,7 @@ class SubmissionVoteModelTest(TestCase):
 
 class SubmissionVoteViewTest(APITestCase):
     def setUp(self):
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.python_language = Language(name="Python"); self.python_language.save()
 
