@@ -5,6 +5,7 @@ from rest_framework.renderers import JSONRenderer
 from unittest import skip
 from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
+from challenges.tests.factories import ChallengeDescFactory
 
 
 class CategoryModelTest(TestCase):
@@ -65,6 +66,30 @@ class SubCategoryModelTest(TestCase):
         expected_json = '{"name":"Unit","challenges":[{"id":1,"name":"TestThis","difficulty":5.0,"score":10,"category":"Unit"}]}'
         received_data = JSONRenderer().render(SubCategorySerializer(self.sub1).data)
         self.assertEqual(received_data.decode('utf-8'), expected_json)
+
+    def test_subcategory_max_score_is_updated(self):
+        """
+        The ChallengeConfig is called on every startup of the application
+        Test if it updates the Submission XP
+        """
+        from django.apps import apps
+        c1 = Challenge(name='Sub1', difficulty=5, score=200, description=ChallengeDescFactory(),
+                      test_case_count=5, category=self.sub1)
+        c2 = Challenge(name='Sub1_2', difficulty=5, score=200, description=ChallengeDescFactory(),
+                      test_case_count=5, category=self.sub1)
+        c3 = Challenge(name='Sub2', difficulty=5, score=200, description=ChallengeDescFactory(),
+                       test_case_count=5, category=self.sub2)
+        c1.save(); c2.save(); c3.save()
+
+        challenge_config = apps.get_app_config('challenges')
+        challenge_config.ready()
+
+        self.sub1.refresh_from_db()
+        self.sub2.refresh_from_db()
+        self.sub3.refresh_from_db()
+        self.assertEqual(self.sub1.max_score, 400)
+        self.assertEqual(self.sub2.max_score, 200)
+        self.assertEqual(self.sub3.max_score, 0)
 
 
 class SubCategoryViewTest(TestCase):
