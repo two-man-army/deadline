@@ -162,4 +162,4 @@ class SubCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SubCategory
-        fields = ('name', 'challenges')
+        fields = ('name', 'challenges', 'max_score')
