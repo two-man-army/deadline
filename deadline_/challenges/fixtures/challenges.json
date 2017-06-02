@@ -196,6 +196,43 @@
       "meta_category": 1
     }
   },
+
+  {
+    "model": "challenges.proficiency",
+    "pk": 1,
+    "fields": {
+      "name": "Novice",
+      "needed_percentage": 20
+    }
+  },
+
+  {
+    "model": "challenges.proficiency",
+    "pk": 2,
+    "fields": {
+      "name": "Intermediate",
+      "needed_percentage": 45
+    }
+  },
+
+  {
+    "model": "challenges.proficiency",
+    "pk": 3,
+    "fields": {
+      "name": "Experienced",
+      "needed_percentage": 70
+    }
+  },
+
+  {
+    "model": "challenges.proficiency",
+    "pk": 4,
+    "fields": {
+      "name": "Advanced",
+      "needed_percentage": 95
+    }
+  },
+
   {
     "model": "challenges.challengedescription",
     "pk": 1,

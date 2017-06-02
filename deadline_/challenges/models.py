@@ -148,3 +148,12 @@ class ChallengeDescription(models.Model):
     sample_input = models.CharField(max_length=1000)
     sample_output = models.CharField(max_length=1000)
     explanation = models.CharField(max_length=1000)
+
+
+class Proficiency(models.Model):
+    """
+        Constitutes some milestone for a user's progress in a subcategory's challenges
+    """
+    name = models.CharField(max_length=100, unique=True)
+    # represents the needed percentage to achieve this proficiency
+    needed_percentage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
