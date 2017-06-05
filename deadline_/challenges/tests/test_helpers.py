@@ -2,7 +2,7 @@ import random
 from django.test import TestCase
 from challenges.models import (
     Challenge, Submission, TestCase as TestCaseModel, MainCategory, SubCategory, ChallengeDescription,
-    Language, UserSubcategoryProficiency, Proficiency)
+    Language, UserSubcategoryProficiency, Proficiency, SubcategoryProficiencyAward)
 
 from accounts.models import User
 from challenges.helper import grade_result, update_user_score
@@ -109,7 +109,7 @@ class UpdateUserScoreTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.score, 20)  # should not have changed
 
-    def test_submission_with_higher_score_should_update(self):
+    def test_submission_with_higher_score_should_update_proficiency_score_and_user_score(self):
         higher_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
                                        code='hack you', task_id='123', result_score=30)
         higher_submission.save()
@@ -146,3 +146,21 @@ class UpdateUserScoreTests(TestCase):
         self.assertTrue(result)
         self.user.refresh_from_db()
         self.assertEqual(self.user.score, 120)  # should have updated it
+
+    def test_submission_jumping_to_new_proficiency_should_reach_it(self):
+        next_prof = Proficiency.objects.create(name='mid', needed_percentage=10)
+        award = SubcategoryProficiencyAward.objects.create(subcategory=self.sub_cat, proficiency=next_prof, xp_reward=1000)
+        higher_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
+                                       code='hack you', task_id='123', result_score=30)
+        higher_submission.save()
+        expected_user_score = 1000 + 30  # proficiency award + submission
+        old_sc_progress = self.subcategory_progress.user_score
+        old_sc_proficiency = self.subcategory_progress.proficiency
+        expected_prof = next_prof
+
+        result = update_user_score(user=self.user, submission=higher_submission)
+
+        self.subcategory_progress.refresh_from_db()
+        self.user.refresh_from_db()
+        self.assertEqual(expected_user_score, self.user.score)
+        self.assertEqual(self.subcategory_progress.proficiency, expected_prof)

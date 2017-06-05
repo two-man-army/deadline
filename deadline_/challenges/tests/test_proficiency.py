@@ -1,5 +1,5 @@
 from django.test import TestCase
-from challenges.models import Proficiency, MainCategory, SubCategory, UserSubcategoryProficiency, User, Challenge
+from challenges.models import Proficiency, MainCategory, SubCategory, UserSubcategoryProficiency, User, Challenge, SubcategoryProficiencyAward
 from challenges.tests.factories import UserFactory, ChallengeFactory, ChallengeDescFactory
 
 
@@ -35,8 +35,10 @@ class UserSubcategoryProficiencyModelTest(TestCase):
         self.chal2 = Challenge.objects.create(name='Hello2', difficulty=1, score=200, test_case_count=5, category=self.sub1,
                           description=ChallengeDescFactory(), test_file_name='tank2')
         self.max_challenge_score = 400
-        Proficiency.objects.create(name='starter', needed_percentage=0)
-        Proficiency.objects.create(name='mid', needed_percentage=50)
+        self.starter_prof = Proficiency.objects.create(name='starter', needed_percentage=0)
+        self.mid_prof = Proficiency.objects.create(name='mid', needed_percentage=50)
+        self.mid_prof_award = SubcategoryProficiencyAward.objects.create(subcategory=self.sub1, proficiency=self.mid_prof,
+                                                                    xp_reward=1000)
         self.top_prof = Proficiency.objects.create(name='top', needed_percentage=100)
         self.user: User = UserFactory()
         self.user.save()
@@ -83,3 +85,37 @@ class UserSubcategoryProficiencyModelTest(TestCase):
 
         subcat_proficiency.save()
         self.assertFalse(subcat_proficiency.to_update_proficiency())
+
+    def test_try_update_proficiency_updates_when_needed(self):
+        subcat_proficiency: UserSubcategoryProficiency = self.user.fetch_subcategory_proficiency(self.sub1.id)
+        subcat_proficiency.user_score = 202 # this places the user right at the 51% mark
+        subcat_proficiency.proficiency = self.starter_prof
+        self.user.score = 202
+        self.user.save()
+        subcat_proficiency.save()
+        # meaning his proficiency should be updated
+        expected_proficiency = self.mid_prof
+        expected_score = self.mid_prof_award.xp_reward + self.user.score
+
+        updated_prof = subcat_proficiency.try_update_proficiency()
+        self.user.refresh_from_db()
+        self.assertTrue(updated_prof)
+        # should update the user's score and proficiency
+        self.assertEqual(self.user.score, expected_score)
+        self.assertEqual(subcat_proficiency.proficiency, expected_proficiency)
+
+    def test_try_update_proficiency_does_not_update_when_needed(self):
+        subcat_proficiency: UserSubcategoryProficiency = self.user.fetch_subcategory_proficiency(self.sub1.id)
+        subcat_proficiency.proficiency = self.starter_prof
+        subcat_proficiency.user_score = 199  # this places the user right at the 49% mark
+        # meaning he should not update
+        self.user.score = 199
+        self.user.save()
+        subcat_proficiency.save()
+
+        updated_prof = subcat_proficiency.try_update_proficiency()
+        self.user.refresh_from_db()
+        self.assertFalse(updated_prof)
+        # should update the user's score and proficiency
+        self.assertEqual(self.user.score, 199)
+        self.assertEqual(subcat_proficiency.proficiency, self.starter_prof)

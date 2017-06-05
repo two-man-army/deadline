@@ -55,12 +55,11 @@ def update_user_score(user: User, submission: Submission) -> bool:
         user_subcat_progress.user_score += score_improvement
         user_subcat_progress.save()
 
-        # TODO: See if a user's proficiency has been updated and update it if it has
-        # TODO: need to get the current percentage and the biggest percentage thats smaller than the current one
-
-
         user.score += score_improvement
         user.save()
+
+        # try to update the user's proficiency
+        updated_proficiency = user_subcat_progress.try_update_proficiency()
         return True
 
     return False
