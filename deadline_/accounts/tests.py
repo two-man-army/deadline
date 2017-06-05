@@ -27,20 +27,6 @@ class UserModelTest(TestCase):
         self.assertTrue(hasattr(us, 'auth_token'))
         self.assertIsNotNone(us.auth_token)
 
-    def test_user_register_creates_user_subcategory_progresses(self):
-        # Registering a user should create a subcategory progress model for each available subcategory
-        from challenges.models import UserSubcategoryProgress
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        us.save()
-        sub1_obj = UserSubcategoryProgress.objects.filter(subcategory_id=self.sub1.id).first()
-        sub2_obj = UserSubcategoryProgress.objects.filter(subcategory_id=self.sub2.id).first()
-        self.assertIsNotNone(sub1_obj)
-        self.assertIsNotNone(sub2_obj)
-        self.assertEqual(sub1_obj.user_id, us.id)
-        self.assertEqual(sub2_obj.user_id, us.id)
-        self.assertEqual(sub1_obj.user_score, 0)
-        self.assertEqual(sub2_obj.user_score, 0)
-
     def test_user_register_creates_user_subcategory_proficiency(self):
         from challenges.models import UserSubcategoryProficiency
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
@@ -131,32 +117,32 @@ class UserModelTest(TestCase):
         fetch_mock.assert_called_once_with(1, us.id)
         self.assertEqual(received_score, 0)
 
-    def test_fetch_subcategory_progress(self):
+    def test_fetch_subcategory_proficiency(self):
         """
-        Should return a UserSubcategoryProgress model
+        Should return a UserSubcategoryProficiency model
         """
-        from challenges.models import UserSubcategoryProgress, SubCategory, MainCategory
+        from challenges.models import UserSubcategoryProficiency, SubCategory, MainCategory
         # from challenges.tests.factories import SubCategoryFactory, MainCategoryFactory
         mc = MainCategory.objects.create(name='t')
         mc.save()
         sc = SubCategory(name='tank', meta_category=mc)
         sc.save()
         user = UserFactory()
-        user.save()  # should create the UserSubcatProgress objects
-        expected_model = UserSubcategoryProgress.objects.filter(subcategory=sc).first()
+        user.save()  # should create the UserSubcatProficiency objects
+        expected_model = UserSubcategoryProficiency.objects.filter(subcategory=sc).first()
 
-        usp: UserSubcategoryProgress = user.fetch_subcategory_progress(subcategory_id=sc.id)
+        usp: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=sc.id)
 
         self.assertEqual(expected_model, usp)
 
-    def test_fetch_invalid_subcategory_progress(self):
+    def test_fetch_invalid_subcategory_proficiency(self):
         """
         Should raise an exception
         """
         user = UserFactory()
-        user.save()  # should create the UserSubcatProgress objects
+        user.save()  # should create the UserSubcatProficiency objects
         with self.assertRaises(Exception):
-            usp: UserSubcategoryProgress = user.fetch_subcategory_progress(subcategory_id=255)
+            usp: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=255)
 
     def test_fetch_subcategory_proficiency(self):
         """

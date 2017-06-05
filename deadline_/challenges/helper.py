@@ -6,7 +6,7 @@ from constants import (
     GRADER_TEST_RESULT_TRACEBACK_KEY, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY,
     GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_TEST_RESULT_DESCRIPTION_KEY,
     GRADER_TEST_RESULT_TIMED_OUT_KEY, SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE)
-from challenges.models import Challenge, Submission, TestCase, UserSubcategoryProgress
+from challenges.models import Challenge, Submission, TestCase, UserSubcategoryProficiency
 from accounts.models import User
 
 
@@ -51,12 +51,13 @@ def update_user_score(user: User, submission: Submission) -> bool:
             # The user has submitted a better-scoring solution. Update his score
             score_improvement = submission.result_score - max_prev_score
 
-        user_subcat_progress: UserSubcategoryProgress = user.fetch_subcategory_progress(submission.challenge.category_id)
+        user_subcat_progress: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(submission.challenge.category_id)
         user_subcat_progress.user_score += score_improvement
         user_subcat_progress.save()
 
         # TODO: See if a user's proficiency has been updated and update it if it has
         # TODO: need to get the current percentage and the biggest percentage thats smaller than the current one
+
 
         user.score += score_improvement
         user.save()

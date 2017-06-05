@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 from unittest import skip
-from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProgress, Proficiency
+from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProficiency, Proficiency
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tests.factories import ChallengeDescFactory, UserFactory
 
@@ -130,7 +130,7 @@ class SubCategoryViewTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class UserSubcategoryProgressModelTest(TestCase):
+class UserSubcategoryProficiencyModelTest(TestCase):
     def test_user_id_and_subcat_are_unique_together(self):
         c1 = MainCategory(name='Test')
         c1.save()
@@ -139,7 +139,7 @@ class UserSubcategoryProgressModelTest(TestCase):
         Proficiency.objects.create(name='starter', needed_percentage=0)
         user = UserFactory()
         user.save()
-        # NOTE: One UserSubcategoryProgress is already created on user model creation
+        # NOTE: One UserSubcategoryProficiency is already created on user model creation
         with self.assertRaises(Exception):
-            sec_sub = UserSubcategoryProgress(user.id, self.sub1.id, 0)
+            sec_sub = UserSubcategoryProficiency(user.id, self.sub1.id, 0)
             sec_sub.save()

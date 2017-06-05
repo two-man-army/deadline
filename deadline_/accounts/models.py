@@ -53,14 +53,14 @@ class User(AbstractBaseUser):
     def fetch_user_count():
         return User.objects.count()
 
-    def fetch_subcategory_progress(self, subcategory_id) -> 'UserSubcategoryProgress':
+    def fetch_subcategory_proficiency(self, subcategory_id) -> 'UserSubcategoryProficiency':
         """
         Queries the DB and returns the UserSubcategoryProgress model associated with the given subcategory
         """
-        from challenges.models import UserSubcategoryProgress
-        usp: UserSubcategoryProgress = UserSubcategoryProgress.objects.filter(subcategory_id=subcategory_id).first()
+        from challenges.models import UserSubcategoryProficiency
+        usp: UserSubcategoryProficiency = UserSubcategoryProficiency.objects.filter(subcategory_id=subcategory_id).first()
         if usp is None:
-            raise Exception(f'Could not find a UserSubcategoryProgress object for user {self} with subcategory_id {subcategory_id}')
+            raise Exception(f'Could not find a UserSubcategoryProficiency object for user {self} with subcategory_id {subcategory_id}')
         return usp
 
     def fetch_proficiency_by_subcategory(self, subcategory_id) -> 'Proficiency':
@@ -89,7 +89,7 @@ def user_post_save(sender, instance, created, *args, **kwargs):
         Create the UserSubcategoryProgress models for each subcategory
             and the Token object
     """
-    from challenges.models import SubCategory, UserSubcategoryProgress, UserSubcategoryProficiency, Proficiency
+    from challenges.models import SubCategory, UserSubcategoryProficiency, Proficiency
     if not created:
         return
 
@@ -98,5 +98,5 @@ def user_post_save(sender, instance, created, *args, **kwargs):
 
     # create a UserSubcategoryProgress for each subcategory and a UserSubcategoryProficiency
     for subcat in SubCategory.objects.all():
-        UserSubcategoryProgress.objects.create(user=instance, subcategory=subcat, user_score=0)
-        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency)
+        # UserSubcategoryProgress.objects.create(user=instance, subcategory=subcat, user_score=0)
+        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency, user_score=0)

@@ -129,16 +129,6 @@ class SubCategory(models.Model):
         return self.name
 
 
-class UserSubcategoryProgress(models.Model):
-    """ Holds each user's progress in a subcategory """
-    user = models.ForeignKey(User)
-    subcategory = models.ForeignKey(SubCategory)
-    user_score = models.IntegerField(default=0, verbose_name="The score that the user has accumulated for this subcategory")
-
-    class Meta:
-        unique_together = ('user', 'subcategory')
-
-
 class ChallengeDescription(models.Model):
     """ Holds the description for a specific challenge """
     content = models.CharField(max_length=3000)
@@ -164,9 +154,18 @@ class UserSubcategoryProficiency(models.Model):
     user = models.ForeignKey(User)
     subcategory = models.ForeignKey(SubCategory)
     proficiency = models.ForeignKey(Proficiency)
+    user_score = models.IntegerField(default=0, verbose_name="The score that the user has accumulated for this subcategory")
 
     class Meta:
         unique_together = ('user', 'subcategory')
+
+    def to_update_proficiency(self) -> bool:
+        """
+        Returns a boolean indicating if the user has passed the current proficiency bounds and
+        should update hihs progress to the next
+        :return:
+        """
+        pass
 
 
 class SubcategoryProficiencyAward(models.Model):
