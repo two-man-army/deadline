@@ -55,7 +55,6 @@ class SubCategoryDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
     lookup_field = 'name'
 
-
 # /challenges/{challenge_id}/submissions/new
 class SubmissionCreateView(CreateAPIView):
     """

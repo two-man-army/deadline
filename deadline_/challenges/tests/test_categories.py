@@ -6,6 +6,7 @@ from unittest import skip
 from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProficiency, Proficiency
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tests.factories import ChallengeDescFactory, UserFactory
+from collections import OrderedDict
 
 
 class CategoryModelTest(TestCase):
@@ -100,22 +101,30 @@ class SubCategoryViewTest(TestCase):
                                                 explanation='gotta push it to the limit')
         self.sample_desc.save()
         Proficiency.objects.create(name='starter', needed_percentage=0)
-        auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
-        auth_user.save()
-        self.auth_token = 'Token {}'.format(auth_user.auth_token.key)
         self.c1 = MainCategory(name='Test')
         self.c1.save()
         self.sub1 = SubCategory(name='Unit Tests', meta_category=self.c1)
         self.sub1.save()
+        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
+        self.auth_user.save()
+        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+
         self.c = Challenge(name='TestThis', difficulty=5, score=10, description=self.sample_desc, test_case_count=5, category=self.sub1)
         self.c.save()
 
     def test_view_subcategory_detail_should_show(self):
-        response = self.client.get('/challenges/subcategories/{}'.format(self.sub1.name),
-                                   HTTP_AUTHORIZATION=self.auth_token)
         self.c.user_max_score = 0
         ser = LimitedChallengeSerializer(data=[self.c], many=True); ser.is_valid()
-        expected_data = {"name": self.sub1.name, "challenges": ser.data, 'max_score': self.sub1.max_score}
+        subcat_prof = self.auth_user.fetch_subcategory_proficiency(self.sub1.id)
+        subcat_prof.user_score = 5
+        subcat_prof.save()
+        prof_obj = OrderedDict()
+        prof_obj['name'] = 'starter'
+        prof_obj['percentage_progress'] = 50
+        expected_data = {"name": self.sub1.name, "challenges": ser.data, 'max_score': self.sub1.max_score, 'proficiency': prof_obj}
+
+        response = self.client.get('/challenges/subcategories/{}'.format(self.sub1.name),
+                                   HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected_data)

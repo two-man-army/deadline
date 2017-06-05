@@ -1,5 +1,8 @@
+from collections import OrderedDict
+
 from rest_framework import serializers
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, Language
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, Language, UserSubcategoryProficiency
+from challenges.models import User
 
 
 class ChallengeDescriptionSerializer(serializers.ModelSerializer):
@@ -164,3 +167,17 @@ class SubCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = SubCategory
         fields = ('name', 'challenges', 'max_score')
+
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+
+        # attach the current user's proficiency
+        user: User = getattr(self.context.get('request', None), 'user', None)
+        user_proficiency: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=instance.id)
+        proficiency_object = OrderedDict()
+        proficiency_object['name'] = user_proficiency.proficiency.name
+        max_score = sum(ch.score for ch in instance.challenges.all())  # TODO: Store somewhere
+        proficiency_object['percentage_progress'] = int((user_proficiency.user_score / max_score) * 100)
+        result['proficiency'] = proficiency_object
+
+        return result
