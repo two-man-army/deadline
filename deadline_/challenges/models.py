@@ -167,3 +167,15 @@ class UserSubcategoryProficiency(models.Model):
 
     class Meta:
         unique_together = ('user', 'subcategory')
+
+
+class SubcategoryProficiencyAward(models.Model):
+    """
+        Holds the awards that are given once a certain proficiency of a certain subcategory is achieved
+    """
+    subcategory = models.ForeignKey(SubCategory)
+    proficiency = models.ForeignKey(Proficiency)
+    xp_reward = models.IntegerField()
+
+    class Meta:
+        unique_together = ('subcategory', 'proficiency')

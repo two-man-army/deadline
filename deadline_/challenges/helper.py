@@ -51,10 +51,12 @@ def update_user_score(user: User, submission: Submission) -> bool:
             # The user has submitted a better-scoring solution. Update his score
             score_improvement = submission.result_score - max_prev_score
 
-        # TODO: test this
         user_subcat_progress: UserSubcategoryProgress = user.fetch_subcategory_progress(submission.challenge.category_id)
         user_subcat_progress.user_score += score_improvement
         user_subcat_progress.save()
+
+        # TODO: See if a user's proficiency has been updated and update it if it has
+        # TODO: need to get the current percentage and the biggest percentage thats smaller than the current one
 
         user.score += score_improvement
         user.save()
