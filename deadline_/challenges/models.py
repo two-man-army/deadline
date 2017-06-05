@@ -148,6 +148,15 @@ class Proficiency(models.Model):
     # represents the needed percentage to achieve this proficiency
     needed_percentage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
 
+    def fetch_next_proficiency(self) -> 'Proficiency':
+        """
+        Fetches the next level (ceiling) proficiency given some percentage
+        # :param curr_xp:
+        :return:
+        """
+        next_prof = Proficiency.objects.filter(needed_percentage__gt=self.needed_percentage).order_by('needed_percentage').first()
+        return next_prof
+
 
 class UserSubcategoryProficiency(models.Model):
     """ Holds each user's proficiency in a given subcategory """
@@ -162,10 +171,14 @@ class UserSubcategoryProficiency(models.Model):
     def to_update_proficiency(self) -> bool:
         """
         Returns a boolean indicating if the user has passed the current proficiency bounds and
-        should update hihs progress to the next
-        :return:
+        should update his proficiency to the next
         """
-        pass
+        # get current percentage completion
+        max_score = sum(ch.score for ch in self.subcategory.challenges.all())  # TODO: Store somewhere
+        completion_percentage = (self.user_score / max_score) * 100
+        next_proficiency = self.proficiency.fetch_next_proficiency()
+
+        return next_proficiency is not None and next_proficiency.needed_percentage <= completion_percentage
 
 
 class SubcategoryProficiencyAward(models.Model):

@@ -130,16 +130,3 @@ class SubCategoryViewTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class UserSubcategoryProficiencyModelTest(TestCase):
-    def test_user_id_and_subcat_are_unique_together(self):
-        c1 = MainCategory(name='Test')
-        c1.save()
-        sub1 = SubCategory(name='Unit', meta_category=c1)
-        sub1.save()
-        Proficiency.objects.create(name='starter', needed_percentage=0)
-        user = UserFactory()
-        user.save()
-        # NOTE: One UserSubcategoryProficiency is already created on user model creation
-        with self.assertRaises(Exception):
-            sec_sub = UserSubcategoryProficiency(user.id, self.sub1.id, 0)
-            sec_sub.save()
