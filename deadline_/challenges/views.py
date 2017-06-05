@@ -53,7 +53,7 @@ class SubCategoryDetailView(RetrieveAPIView):
     queryset = SubCategory.objects.all()
     serializer_class = SubCategorySerializer
     permission_classes = (IsAuthenticated, )
-
+    lookup_field = 'name'
 
 # /challenges/{challenge_id}/submissions/new
 class SubmissionCreateView(CreateAPIView):

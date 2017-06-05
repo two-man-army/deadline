@@ -1,0 +1,826 @@
+[
+
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 1,
+        "fields": {
+          "subcategory": 1,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 2,
+        "fields": {
+          "subcategory": 1,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 3,
+        "fields": {
+          "subcategory": 1,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 4,
+        "fields": {
+          "subcategory": 1,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 5,
+        "fields": {
+          "subcategory": 1,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 6,
+        "fields": {
+          "subcategory": 2,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 7,
+        "fields": {
+          "subcategory": 2,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 8,
+        "fields": {
+          "subcategory": 2,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 9,
+        "fields": {
+          "subcategory": 2,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 10,
+        "fields": {
+          "subcategory": 2,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 11,
+        "fields": {
+          "subcategory": 3,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 12,
+        "fields": {
+          "subcategory": 3,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 13,
+        "fields": {
+          "subcategory": 3,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 14,
+        "fields": {
+          "subcategory": 3,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 15,
+        "fields": {
+          "subcategory": 3,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 16,
+        "fields": {
+          "subcategory": 4,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 17,
+        "fields": {
+          "subcategory": 4,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 18,
+        "fields": {
+          "subcategory": 4,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 19,
+        "fields": {
+          "subcategory": 4,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 20,
+        "fields": {
+          "subcategory": 4,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 21,
+        "fields": {
+          "subcategory": 5,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 22,
+        "fields": {
+          "subcategory": 5,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 23,
+        "fields": {
+          "subcategory": 5,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 24,
+        "fields": {
+          "subcategory": 5,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 25,
+        "fields": {
+          "subcategory": 5,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 26,
+        "fields": {
+          "subcategory": 6,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 27,
+        "fields": {
+          "subcategory": 6,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 28,
+        "fields": {
+          "subcategory": 6,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 29,
+        "fields": {
+          "subcategory": 6,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 30,
+        "fields": {
+          "subcategory": 6,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 31,
+        "fields": {
+          "subcategory": 7,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 32,
+        "fields": {
+          "subcategory": 7,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 33,
+        "fields": {
+          "subcategory": 7,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 34,
+        "fields": {
+          "subcategory": 7,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 35,
+        "fields": {
+          "subcategory": 7,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 36,
+        "fields": {
+          "subcategory": 8,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 37,
+        "fields": {
+          "subcategory": 8,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 38,
+        "fields": {
+          "subcategory": 8,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 39,
+        "fields": {
+          "subcategory": 8,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 40,
+        "fields": {
+          "subcategory": 8,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 41,
+        "fields": {
+          "subcategory": 9,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 42,
+        "fields": {
+          "subcategory": 9,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 43,
+        "fields": {
+          "subcategory": 9,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 44,
+        "fields": {
+          "subcategory": 9,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 45,
+        "fields": {
+          "subcategory": 9,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 46,
+        "fields": {
+          "subcategory": 10,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 47,
+        "fields": {
+          "subcategory": 10,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 48,
+        "fields": {
+          "subcategory": 10,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 49,
+        "fields": {
+          "subcategory": 10,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 50,
+        "fields": {
+          "subcategory": 10,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 51,
+        "fields": {
+          "subcategory": 11,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 52,
+        "fields": {
+          "subcategory": 11,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 53,
+        "fields": {
+          "subcategory": 11,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 54,
+        "fields": {
+          "subcategory": 11,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 55,
+        "fields": {
+          "subcategory": 11,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 56,
+        "fields": {
+          "subcategory": 12,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 57,
+        "fields": {
+          "subcategory": 12,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 58,
+        "fields": {
+          "subcategory": 12,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 59,
+        "fields": {
+          "subcategory": 12,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 60,
+        "fields": {
+          "subcategory": 12,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 61,
+        "fields": {
+          "subcategory": 13,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 62,
+        "fields": {
+          "subcategory": 13,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 63,
+        "fields": {
+          "subcategory": 13,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 64,
+        "fields": {
+          "subcategory": 13,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 65,
+        "fields": {
+          "subcategory": 13,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 66,
+        "fields": {
+          "subcategory": 14,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 67,
+        "fields": {
+          "subcategory": 14,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 68,
+        "fields": {
+          "subcategory": 14,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 69,
+        "fields": {
+          "subcategory": 14,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 70,
+        "fields": {
+          "subcategory": 14,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 71,
+        "fields": {
+          "subcategory": 15,
+          "proficiency": 1,
+          "xp_reward": 112
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 72,
+        "fields": {
+          "subcategory": 15,
+          "proficiency": 2,
+          "xp_reward": 1001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 73,
+        "fields": {
+          "subcategory": 15,
+          "proficiency": 3,
+          "xp_reward": 2001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 74,
+        "fields": {
+          "subcategory": 15,
+          "proficiency": 4,
+          "xp_reward": 3001
+        }
+    },
+
+            
+    {
+        "model": "challenges.subcategoryproficiencyaward",
+        "pk": 75,
+        "fields": {
+          "subcategory": 15,
+          "proficiency": 5,
+          "xp_reward": 4001
+        }
+    }
+]

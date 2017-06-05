@@ -11,13 +11,8 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 from accounts.helpers import hash_password
-
-
-# This code is triggered whenever a new user has been created and saved to the database
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+from django.db import models
+from django.dispatch import receiver
 
 
 class User(AbstractBaseUser):
@@ -58,9 +53,50 @@ class User(AbstractBaseUser):
     def fetch_user_count():
         return User.objects.count()
 
+    def fetch_subcategory_proficiency(self, subcategory_id) -> 'UserSubcategoryProficiency':
+        """
+        Queries the DB and returns the UserSubcategoryProgress model associated with the given subcategory
+        """
+        from challenges.models import UserSubcategoryProficiency
+        usp: UserSubcategoryProficiency = UserSubcategoryProficiency.objects.filter(subcategory_id=subcategory_id).first()
+        if usp is None:
+            raise Exception(f'Could not find a UserSubcategoryProficiency object for user {self} with subcategory_id {subcategory_id}')
+        return usp
+
+    def fetch_proficiency_by_subcategory(self, subcategory_id) -> 'Proficiency':
+        """
+        Queries the DB and returns a Proficiency object associated with the given user and subcategory
+        """
+        from challenges.models import UserSubcategoryProficiency
+        usp: UserSubcategoryProficiency = UserSubcategoryProficiency.objects\
+            .filter(subcategory_id=subcategory_id, user_id=self.id).first()
+        if usp is None:
+            raise Exception(f'Cound not find a UserSubcategoryProficiency object for user {self} with subcategory_id {subcategory_id}')
+        return usp.proficiency
+
     def get_vote_for_submission(self, submission_id):
         from challenges.models import SubmissionVote
         try:
             return SubmissionVote.objects.get(submission=submission_id, author=self.id)
         except SubmissionVote.DoesNotExist:
             return None
+
+
+# This code is triggered whenever a new user has been created and saved to the database
+@receiver(post_save, sender=User)
+def user_post_save(sender, instance, created, *args, **kwargs):
+    """
+        Create the UserSubcategoryProgress models for each subcategory
+            and the Token object
+    """
+    from challenges.models import SubCategory, UserSubcategoryProficiency, Proficiency
+    if not created:
+        return
+
+    Token.objects.create(user=instance)
+    starter_proficiency = Proficiency.objects.filter(needed_percentage=0).first()
+
+    # create a UserSubcategoryProgress for each subcategory and a UserSubcategoryProficiency
+    for subcat in SubCategory.objects.all():
+        # UserSubcategoryProgress.objects.create(user=instance, subcategory=subcat, user_score=0)
+        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency, user_score=0)

@@ -4,6 +4,7 @@ from unittest import TestCase
 from challenges.tests.helpers import get_mock_function_arguments
 from challenges.tasks import run_grader_task, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY
 from challenges.tests.factories import SubmissionFactory, UserFactory
+from challenges.models import Proficiency
 
 
 class TasksTests(TestCase):
@@ -43,6 +44,7 @@ class TasksTests(TestCase):
 
     @patch('challenges.tasks.run_grader')
     def test_run_grader_task_correctly_sets_on_compile_failure(self, mock_run_grader):
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         user = UserFactory()
         submission = SubmissionFactory(author=user)
         test_case_count = 5

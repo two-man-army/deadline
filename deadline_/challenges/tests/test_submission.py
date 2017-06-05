@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.models import (Challenge, Submission, SubCategory, MainCategory,
-                               ChallengeDescription, Language, SubmissionVote)
+                               ChallengeDescription, Language, SubmissionVote, Proficiency)
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from accounts.models import User
@@ -17,13 +17,14 @@ from unittest.mock import patch, MagicMock
 class SubmissionModelTest(TestCase):
     def setUp(self):
         self.sample_desc = ChallengeDescFactory()
-        self.python_language = Language(name="Python"); self.python_language.save()
-        self.rust_language = Language(name="Rust"); self.rust_language.save()
+        self.python_language = Language.objects.create(name="Python"); self.python_language.save()
+        self.rust_language = Language.objects.create(name="Rust"); self.rust_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_case_count=3,
                                    category=self.sub_cat)
         self.challenge.save()
@@ -205,10 +206,11 @@ class SubmissionViewsTest(APITestCase):
         self.python_language = Language(name="Python")
         self.python_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_file_name='hello_tests',
                                    test_case_count=3, category=self.sub_cat)
         self.challenge.save()
@@ -450,13 +452,13 @@ class SubmissionViewsTest(APITestCase):
 
 class LatestSubmissionsViewTest(TestCase):
     def setUp(self):
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.python_language = Language(name="Python"); self.python_language.save()
 
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.c1 = ChallengeFactory(category=self.sub_cat)
         self.c2 = ChallengeFactory(category=self.sub_cat)
         self.c3 = ChallengeFactory(category=self.sub_cat)
@@ -501,7 +503,8 @@ class SubmissionVoteModelTest(TestCase):
         self.rust_language = Language(name="Rust");
         self.rust_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
@@ -541,13 +544,13 @@ class SubmissionVoteModelTest(TestCase):
 
 class SubmissionVoteViewTest(APITestCase):
     def setUp(self):
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.python_language = Language(name="Python"); self.python_language.save()
 
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
-
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.c1 = ChallengeFactory(category=self.sub_cat)
 
         self.auth_user = User(username='123', password='123', email='123Sm2@abv.bg', score=123)

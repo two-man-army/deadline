@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import MagicMock
 from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer
-from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, Challenge
+from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, Challenge, Proficiency
 from accounts.models import User
 
 
@@ -17,12 +17,13 @@ class TestLimitedSubmissionSerializer(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
-        self.python_language = Language(name="Python"); self.python_language.save()
+        self.python_language = Language.objects.create(name="Python"); self.python_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc,
                                    test_file_name='hello_tests',
                                    test_case_count=3, category=self.sub_cat)
@@ -78,12 +79,13 @@ class TestSubmissionSerializer(TestCase):
                                                 output_format='something', constraints='some',
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
-        self.python_language = Language(name="Python"); self.python_language.save()
+        self.python_language = Language.objects.create(name="Python"); self.python_language.save()
         self.sample_desc.save()
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
         self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc,
                                    test_file_name='hello_tests',
                                    test_case_count=3, category=self.sub_cat)

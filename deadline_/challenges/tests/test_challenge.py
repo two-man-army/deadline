@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-from challenges.models import Challenge, MainCategory, SubCategory, ChallengeDescription, Language
+from challenges.models import Challenge, MainCategory, SubCategory, ChallengeDescription, Language, Proficiency
 from challenges.serializers import ChallengeSerializer, ChallengeDescriptionSerializer
 from accounts.models import User
 from challenges.tests.factories import ChallengeDescFactory
@@ -17,7 +17,7 @@ from challenges.tests.factories import ChallengeDescFactory
 # TODO: Add supported languages to tests
 class ChallengesModelTest(TestCase):
     def setUp(self):
-        challenge_cat = MainCategory('Tests')
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
                                                 output_format='something', constraints='some',
@@ -73,9 +73,10 @@ class ChallengesModelTest(TestCase):
                       description=self.sample_desc)
         c.save()
         c.supported_languages.add(lang_1)
-        c.supported_languages.add(lang_1)
-        c.save()
-        self.assertEqual(len(c.supported_languages.all()), 1)
+        with self.assertRaises(Exception):
+            c.supported_languages.add(lang_1)
+            c.save()
+
 
     def test_cannot_save_blank_challenge(self):
         c = Challenge()
@@ -83,9 +84,9 @@ class ChallengesModelTest(TestCase):
             c.full_clean()
 
     def test_serialization(self):
-        rust_lang = Language('Rust'); rust_lang.save()
-        python_lang = Language('Python'); python_lang.save()
-        c_lang = Language('C'); c_lang.save()
+        rust_lang = Language.objects.create(name='Rust'); rust_lang.save()
+        python_lang = Language.objects.create(name='Python'); python_lang.save()
+        c_lang = Language.objects.create(name='C'); c_lang.save()
         c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
         c.save()
         c.supported_languages.add(*[rust_lang, c_lang, python_lang])
@@ -95,7 +96,7 @@ class ChallengesModelTest(TestCase):
                                     '"explanation":"gotta push it to the limit"}'
         expected_json = ('{"id":1,"name":"Hello","difficulty":5.0,"score":10,"description":'
                          + expected_description_json
-                         + ',"test_case_count":5,"category":"tests","supported_languages":["C","Python","Rust"]}')
+                         + ',"test_case_count":5,"category":"tests","supported_languages":["Rust","Python","C"]}')
         self.maxDiff = None
         content = JSONRenderer().render(ChallengeSerializer(c).data)
         self.assertEqual(content.decode('utf-8'), expected_json)
@@ -158,8 +159,8 @@ class ChallengesViewsTest(APITestCase):
                                                 sample_input='input sample', sample_output='output sample',
                                                 explanation='gotta push it to the limit')
         self.sample_desc.save()
-        self.rust_lang = Language('Rust'); self.rust_lang.save()
-        challenge_cat = MainCategory('Tests')
+        self.rust_lang = Language.objects.create(name='Rust'); self.rust_lang.save()
+        challenge_cat = MainCategory.objects.create(name='Tests')
         challenge_cat.save()
         self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
         self.sub_cat.save()

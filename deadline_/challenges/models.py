@@ -9,8 +9,11 @@ from sql_queries import (
 
 
 class Language(models.Model):
-    name = models.CharField(unique=True, max_length=30, primary_key=True)
+    name = models.CharField(unique=True, max_length=30)
     default_code = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
 
 
 class Challenge(models.Model):
@@ -20,7 +23,7 @@ class Challenge(models.Model):
     score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
     test_file_name = models.CharField(max_length=50)
     test_case_count = models.IntegerField(blank=False)
-    category = models.ForeignKey(to='SubCategory', to_field='name', related_name='challenges')
+    category = models.ForeignKey(to='SubCategory', related_name='challenges')
     supported_languages = models.ManyToManyField(Language)
 
     def get_absolute_url(self):
@@ -113,13 +116,14 @@ class TestCase(models.Model):
 
 class MainCategory(models.Model):
     """ A Main Category for Challenges. ie: Algorithms """
-    name = models.CharField(max_length=100, unique=True, primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
 
 
 class SubCategory(models.Model):
     """ A more specific Category for Challenges, ie: Graph Theory """
-    name = models.CharField(max_length=100, unique=True, primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
     meta_category = models.ForeignKey(to=MainCategory, related_name='sub_categories')
+    max_score = models.IntegerField(default=0, verbose_name="The maximum score from all the challenges in this subcategory")
 
     def __str__(self):
         return self.name
@@ -134,3 +138,74 @@ class ChallengeDescription(models.Model):
     sample_input = models.CharField(max_length=1000)
     sample_output = models.CharField(max_length=1000)
     explanation = models.CharField(max_length=1000)
+
+
+class Proficiency(models.Model):
+    """
+        Constitutes some milestone for a user's progress in a subcategory's challenges
+    """
+    name = models.CharField(max_length=100, unique=True)
+    # represents the needed percentage to achieve this proficiency
+    needed_percentage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    def fetch_next_proficiency(self) -> 'Proficiency':
+        """
+        Fetches the next level (ceiling) proficiency given some percentage
+        # :param curr_xp:
+        :return:
+        """
+        next_prof = Proficiency.objects.filter(needed_percentage__gt=self.needed_percentage).order_by('needed_percentage').first()
+        return next_prof
+
+
+class UserSubcategoryProficiency(models.Model):
+    """ Holds each user's proficiency in a given subcategory """
+    user = models.ForeignKey(User)
+    subcategory = models.ForeignKey(SubCategory)
+    proficiency = models.ForeignKey(Proficiency)
+    user_score = models.IntegerField(default=0, verbose_name="The score that the user has accumulated for this subcategory")
+
+    class Meta:
+        unique_together = ('user', 'subcategory')
+
+    def to_update_proficiency(self) -> bool:
+        """
+        Returns a boolean indicating if the user has passed the current proficiency bounds and
+        should update his proficiency to the next
+        """
+        # get current percentage completion
+        max_score = sum(ch.score for ch in self.subcategory.challenges.all())  # TODO: Store somewhere
+        completion_percentage = (self.user_score / max_score) * 100
+        next_proficiency = self.proficiency.fetch_next_proficiency()
+
+        return next_proficiency is not None and next_proficiency.needed_percentage <= completion_percentage
+
+    def try_update_proficiency(self) -> bool:
+        """
+        Updates the user's proficiency if he has reached a new one
+        :return: a boolean indicating if we have updated it
+        """
+        to_update = self.to_update_proficiency()
+
+        if to_update:
+            next_prof = self.proficiency.fetch_next_proficiency()
+            self.proficiency = next_prof
+            # fetch next_proficiency awards and award the user
+            prof_award = SubcategoryProficiencyAward.objects.filter(subcategory_id=self.subcategory.id, proficiency_id=next_prof.id).first()
+            self.user.score += prof_award.xp_reward
+            self.user.save()
+            self.save()
+
+        return to_update
+
+
+class SubcategoryProficiencyAward(models.Model):
+    """
+        Holds the awards that are given once a certain proficiency of a certain subcategory is achieved
+    """
+    subcategory = models.ForeignKey(SubCategory)
+    proficiency = models.ForeignKey(Proficiency)
+    xp_reward = models.IntegerField()
+
+    class Meta:
+        unique_together = ('subcategory', 'proficiency')
