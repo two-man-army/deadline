@@ -7,7 +7,9 @@ class ChallengesConfig(AppConfig):
 
     def ready(self):
         # load subcategories and update their max_xp
-        self.__update_subcategories_max_xp()
+        # TODO: Find another spot for this
+        # self.__update_subcategories_max_xp()
+        pass
         # TODO: Assert SubcategoryProficiencyAwards exist for each subcategory
 
     def __update_subcategories_max_xp(self):
