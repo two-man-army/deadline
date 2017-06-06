@@ -15,6 +15,7 @@ end
 # Holds a constant variable which depends on constant values
 class IndependantVariable < Variable
   def initialize(value = NIL, min = NIL, max = NIL)
+    @name = NIL
     @value = value
     @min = min
     @max = max
@@ -29,6 +30,8 @@ class IndependantVariable < Variable
   end
 
   def gen_value(rnd_obj)
+    puts @min
+    puts @max
     @value = rnd_obj.rand(@min..@max)
   end
 end
@@ -44,7 +47,10 @@ class DependantVariable < Variable
   end
 
   def value
-    @value.value
+    if @value.nil?
+      raise Exception("#{@name}'s value is not generated!")
+    end
+    @value
   end
 
   def gen_value(rnd_obj)
@@ -83,9 +89,12 @@ class Generator
 
     output_string
   end
+# TODO: STRUCT CLASSES
+
 
   # generates input from the given input format
   def generate_output(input_format)
+    puts input_format
     repeat_count = input_format.repeat_count
     if repeat_count.is_a? Variable
       repeat_count = repeat_count.value
@@ -93,9 +102,22 @@ class Generator
     output = []
     curr_output = []
     (0...repeat_count).each{||
+      puts "INPUT FORMAT #{input_format}"
+      puts "INPUT STRUCTURE #{input_format.structure}"
       input_format.structure.each{|struct|
         # convert list of variables to a string
-        output = struct.map {|var| var.gen_value(@rnd_obj)}
+        output = struct.map {|inner_struct|
+          puts "INNER STRUCT #{inner_struct}"
+          if inner_struct.class.method_defined? :map
+            str = inner_struct.map{|var|
+              var.gen_value(@rnd_obj)
+            }
+            str.join ' '
+          else
+            inner_struct
+          end
+        }
+        puts "OUTPUT IS #{output}"
         curr_output << output.join(' ')
         curr_output << "\n"
       }
@@ -112,7 +134,7 @@ end
 # Contains a part of the input, i.e the initialization phase
 class InputFormat
   attr_reader :repeat_count, :name, :structure
-  def initialize(repeat_count=1, structure, name)
+  def initialize(repeat_count, structure, name)
     @name = name
     @repeat_count = repeat_count
     @structure = structure  # a list of lists of Variable objects
@@ -130,20 +152,134 @@ class InputContent
   end
 end
 
+# Parses input variables into Variable objects
+class InputParser
+  def initialize
+    @variables = {}
+    @rnd_obj = Random.new
+  end
 
+  def parse_input
+    init_struct = parse_initialization
+    content_struct = parse_content
+
+    return InputContent.new(init_struct, content_struct, NIL)
+    # parse_annexation
+  end
+
+  def parse_initialization
+    puts 'Currently building: INITIALIZATION PHASE'
+    puts 'Enter the number of initialization lines'
+    init_line_count = gets.chomp.to_i
+    initialization_structure = []  # list of lists of variables
+    (1..init_line_count).each {|line|
+      puts "At line #{line}"
+      puts 'Enter the name of the variables, separated by space'
+      variables = gets.chomp.split
+      populated_vars = variables.map {|varname|
+        var = parse_variable varname
+        @variables[varname] = var
+        var
+      }  # populate the variables
+      initialization_structure << populated_vars
+    }
+    puts "INIT STRUCTURE #{initialization_structure}"
+    InputFormat.new(1, initialization_structure, 'hope i die')
+  end
+
+  def parse_content
+    puts 'Currently building: CONTENT PHASE'
+    puts 'Enter the number of content pairs (overall line count)'
+    content_structuer = []
+    content_line_count = parse_variable_value
+
+    pair = parse_pair
+    (0...content_line_count).each {||
+      content_structuer << pair
+    }
+
+    puts "CONTENT STRUCTURE #{content_structuer}"
+    InputFormat.new(1, content_structuer, 'hope i die')
+  end
+
+  # parses a pair of content
+  def parse_pair
+    puts 'Currently building a content pair'
+    puts 'Enter the number of lines each pair requires'
+    line_count = parse_variable_value
+    pair_structure = []
+    # TODO: add option to parse variables again
+    (0...line_count).each {|ln|
+      puts 'At line #{ln} of pair, enter number count'
+      element_count = parse_variable_value
+      element = parse_variable "array element"
+      pair_structure << (0...element_count).map{element.clone}
+    }
+
+    pair_structure
+  end
+
+  def parse_variable(varname)
+    is_dependant = false  # tracks if the variable is dependant on other vars
+    puts "Building variable #{varname.upcase}"
+    puts 'Enter lower limit of the variable (variable name or number)'
+    lower = gets.chomp
+    unless lower.is_number?
+      # lower is a variable
+      unless @variables.key?(lower)
+        raise Exception("Variables #{lower} was not defined!")
+      end
+      lower = @variables[lower]
+      is_dependant = true
+    else
+      lower = lower.to_i
+    end
+    puts 'Enter upper limit of the variable (variable name or number)'
+    upper = gets.chomp
+    unless upper.is_number?
+      # upper is a variable
+      unless @variables.key?(upper)
+        raise Exception("Variables #{upper} was not defined!")
+      end
+      upper = @variables[upper]
+      is_dependant = true
+    else
+      upper = upper.to_i
+    end
+
+
+    if is_dependant
+      var = DependantVariable.new(name=varname, value=NIL, min=lower, max=upper)
+      var.gen_value @rnd_obj
+      @variables[varname] = var
+      var
+    else
+      var = IndependantVariable.new(value=NIL, min=lower, max=upper)
+      var.gen_value @rnd_obj
+      var
+    end
+  end
+
+  # parses a variable, either by converting it to an integer or fetching its Variable object's value
+  def parse_variable_value
+    variable = gets.chomp
+    if variable.is_number?
+      return variable.to_i
+    else
+      unless @variables.key?(variable)
+        raise Exception("Variable #{variable} does not exist!")
+      end
+      return @variables[variable].value
+    end
+  end
+end
 # create a sample input
 # one N - count of array
 # N elements array
-N = IndependantVariable.new(value=NIL, min=100, max=1000)
-N.gen_value(Random.new)
-array_number = DependantVariable.new(name="arrNum", value=NIL, min=N, max=1000000000000)
-initialization_phase = InputFormat.new(1, [[N]], "Initialization")
-content_phase = InputFormat.new(1, [[array_number] * N.value], name="Array phase")
-input_content = InputContent.new(initialization_phase, content_phase, NIL)
-generator = Generator.new input_content
-generator.generate
-
-
+ip = InputParser.new
+input_content = ip.parse_input
+gen = Generator.new(input_content)
+gen.generate
 
 
 
