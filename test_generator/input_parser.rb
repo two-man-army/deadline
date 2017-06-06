@@ -9,8 +9,8 @@ end
 
 
 class Variable
-
 end
+
 
 # Holds a constant variable which depends on constant values
 class IndependantVariable < Variable
@@ -60,26 +60,42 @@ class DependantVariable < Variable
   end
 end
 
-# Contains a part of the input, i.e the initialization phase
-class InputFormat
-  def initialize(repeat_count=1, structure, name)
-    @name = name
-    @repeat_count = repeat_count
-    @structure = structure  # a list of lists of Variable objects
+
+class Generator
+  def initialize(input_content)
+    @input_content = input_content
+    @rnd_obj = Random.new
   end
 
-  # evaluate the structure and return a string
-  def eval(rnd_obj)
-    repeat_count = @repeat_count
+  # @return [String]
+  def generate
+    output_string = ''
+
+    unless @input_content.initialization_part.nil?
+      output_string += generate_output @input_content.initialization_part
+    end
+    unless @input_content.content_part.nil?
+      output_string += generate_output @input_content.content_part
+    end
+    unless @input_content.annexation.nil?
+      output_string += generate_output @input_content.annexation
+    end
+
+    output_string
+  end
+
+  # generates input from the given input format
+  def generate_output(input_format)
+    repeat_count = input_format.repeat_count
     if repeat_count.is_a? Variable
       repeat_count = repeat_count.value
     end
     output = []
     curr_output = []
     (0...repeat_count).each{||
-      @structure.each{|struct|
+      input_format.structure.each{|struct|
         # convert list of variables to a string
-        output = struct.map {|var| var.gen_value(rnd_obj)}
+        output = struct.map {|var| var.gen_value(@rnd_obj)}
         curr_output << output.join(' ')
         curr_output << "\n"
       }
@@ -90,10 +106,23 @@ class InputFormat
 
     output.join "\n"
   end
+
+end
+
+# Contains a part of the input, i.e the initialization phase
+class InputFormat
+  attr_reader :repeat_count, :name, :structure
+  def initialize(repeat_count=1, structure, name)
+    @name = name
+    @repeat_count = repeat_count
+    @structure = structure  # a list of lists of Variable objects
+  end
 end
 
 # Contains numerous InputFormats, constituting the whole input
 class InputContent
+  attr_reader :initialization_part, :content_part, :annexation
+
   def initialize(setup_part, content_part, annexation)
     @initialization_part = setup_part
     @content_part = content_part
@@ -110,8 +139,22 @@ N.gen_value(Random.new)
 array_number = DependantVariable.new(name="arrNum", value=NIL, min=N, max=1000000000000)
 initialization_phase = InputFormat.new(1, [[N]], "Initialization")
 content_phase = InputFormat.new(1, [[array_number] * N.value], name="Array phase")
-initialization_phase.eval(Random.new)
-content_phase.eval(Random.new)
+input_content = InputContent.new(initialization_phase, content_phase, NIL)
+generator = Generator.new input_content
+generator.generate
+
+
+
+
+
+
+
+
+
+
+
+
+
 #
 #
 #
