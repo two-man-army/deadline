@@ -32,6 +32,12 @@ class IndependantVariable < Variable
   def gen_value(rnd_obj)
     @value = rnd_obj.rand(@min..@max)
   end
+  def gen_harder_value(rnd_obj)
+    # generate from the top 70% upwards
+    diff = @max-@min
+    top_seventy_percent = 0.7 * diff
+    @value = rnd_obj.rand(Integer(top_seventy_percent)..@max)
+  end
 end
 
 
@@ -64,11 +70,15 @@ class DependantVariable < Variable
   end
 end
 
+require 'set'
 
 class Generator
-  def initialize(input_content)
+  def initialize(input_content, generate_harder=false)
     @input_content = input_content
     @rnd_obj = Random.new
+    @generate_harder = generate_harder
+    @no_duplicates = true
+    @duplicates = Set.new
   end
 
   # @return [String]
@@ -78,6 +88,7 @@ class Generator
     unless @input_content.initialization_part.nil?
       output_string += generate_output @input_content.initialization_part
     end
+    @generate_harder = false  # only generate higher values for the initialization
     unless @input_content.content_part.nil?
       output_string += generate_output @input_content.content_part
     end
@@ -114,7 +125,22 @@ class Generator
     elsif struct.class.method_defined? :get_structure
       parse_structure struct.get_structure
     else
-      struct.gen_value(@rnd_obj)
+      while true
+        gen_value = if @generate_harder
+                    struct.gen_harder_value(@rnd_obj)
+                  else
+                    struct.gen_value(@rnd_obj)
+                  end
+        if @no_duplicates
+          if @duplicates.include? gen_value
+            puts "#{gen_value} is a duplicate, redoing"
+          else
+            @duplicates.add gen_value
+            break
+          end
+        end
+      end
+      return struct.value
     end
   end
 
@@ -220,13 +246,10 @@ class InputParser
 
     if is_dependant
       var = DependantVariable.new(name=varname, value=NIL, min=lower, max=upper)
-      # var.gen_value @rnd_obj
       @variables[varname] = var
       var
     else
-      var = IndependantVariable.new(value=NIL, min=lower, max=upper)
-      # var.gen_value @rnd_obj
-      var
+      IndependantVariable.new(value=NIL, min=lower, max=upper)
     end
   end
 
@@ -244,7 +267,6 @@ class InputParser
     end
   end
 end
-
 
 class InputStructure
   def initialize(line_count, element)
@@ -288,7 +310,7 @@ def main
     test_case_idx = 0
     puts "NAIVE TEST COUNT #{naive_test_case_count}"
     puts "GOOD TEST COUNT #{good_test_case_count}"
-    (0..Integer(naive_test_case_count)).each do |idx|
+    (0...Integer(naive_test_case_count)).each do |idx|
       gen = Generator.new(input_content)
       input = gen.generate
       ts_val = NaiveTestCaseValidator.new(input, 'min_diff_naive.py', 5, true)
@@ -305,18 +327,25 @@ def main
       end
     end
     # generate the non-naive test cases
-    (0..Integer(good_test_case_count)).each do |idx|
-      gen = Generator.new(input_content)
+    gen_harder = false
+    (0...Integer(good_test_case_count)).each do |idx|
+      gen = Generator.new(input_content, gen_harder)
       input = gen.generate
       ts_val = NaiveTestCaseValidator.new(input, 'min_diff_good.py', 5, true)
       ts_val.run_program
+      good_results = ts_val.validate
       naive_val = NaiveTestCaseValidator.new(input, 'min_diff_naive.py', 5, false)
       naive_val.run_program
-      if ts_val.validate && naive_val.validate
+      naive_results = naive_val.validate
+      puts "naive #{naive_results} and good #{good_results}"
+      if good_results && naive_results
         File.open("input_#{test_case_idx+1}.txt", 'w').write(input)
         File.open("output_#{test_case_idx+1}.txt", 'w').write(ts_val.program_output)
         test_case_idx+=1
+        gen_harder = false
       else
+        puts "generating harder"
+        gen_harder = true
         redo
       end
     end
