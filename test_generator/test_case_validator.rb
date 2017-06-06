@@ -33,6 +33,8 @@ class NaiveTestCaseValidator
           @program_output = result
         end
       rescue Timeout::Error
+        Process.kill 9, io.pid
+        puts 'timed out'
         @timed_out = true
       end
     end

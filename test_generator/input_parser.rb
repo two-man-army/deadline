@@ -266,22 +266,74 @@ class InputStructure
 end
 
 require_relative 'test_case_validator.rb'
+
+
 def main
   ip = InputParser.new
   input_content = ip.parse_input
-  (0..5).each {|idx|
-    gen = Generator.new(input_content)
-    input = gen.generate
-    ts_val = NaiveTestCaseValidator.new(input, "test.py", 5, true)
-    ts_val.run_program
-    if ts_val.validate
-      File.open("tank_input#{idx}.txt", 'w').write(input)
-      File.open("tank_output#{idx}.txt", 'w').write(ts_val.program_output)
-    else
-      redo
-    end
-  }
+  puts 'Do you have two solutions (good solution and naive)? (y/n)'
+  test_case_count = 10
+  ans = gets.chomp
 
+  if ans.include? 'y'
+    puts 'How many (in percentage) test cases do you want to pass with the naive solution?'
+    percentage = gets.chomp
+    if not percentage.is_number? or percentage.to_i < 0 or percentage.to_i > 100
+      raise Exception('INVALID PERCENTAGE')
+    end
+    percentage = percentage.to_i
+    naive_test_case_count = (percentage/100.0) * test_case_count
+    good_test_case_count = (1-(percentage/100.0)) * test_case_count
+    # generate the naive test cases
+    test_case_idx = 0
+    puts "NAIVE TEST COUNT #{naive_test_case_count}"
+    puts "GOOD TEST COUNT #{good_test_case_count}"
+    (0..Integer(naive_test_case_count)).each do |idx|
+      gen = Generator.new(input_content)
+      input = gen.generate
+      ts_val = NaiveTestCaseValidator.new(input, 'min_diff_naive.py', 5, true)
+      ts_val.run_program
+      is_valid = ts_val.validate
+      puts "PROGRAM VALID? #{is_valid}"
+      puts input[1,20]
+      if is_valid
+        File.open("input_#{test_case_idx+1}.txt", 'w').write(input)
+        File.open("output_#{test_case_idx+1}.txt", 'w').write(ts_val.program_output)
+        test_case_idx+=1
+      else
+        redo
+      end
+    end
+    # generate the non-naive test cases
+    (0..Integer(good_test_case_count)).each do |idx|
+      gen = Generator.new(input_content)
+      input = gen.generate
+      ts_val = NaiveTestCaseValidator.new(input, 'min_diff_good.py', 5, true)
+      ts_val.run_program
+      naive_val = NaiveTestCaseValidator.new(input, 'min_diff_naive.py', 5, false)
+      naive_val.run_program
+      if ts_val.validate && naive_val.validate
+        File.open("input_#{test_case_idx+1}.txt", 'w').write(input)
+        File.open("output_#{test_case_idx+1}.txt", 'w').write(ts_val.program_output)
+        test_case_idx+=1
+      else
+        redo
+      end
+    end
+  else
+    (0..5).each do |idx|
+      gen = Generator.new(input_content)
+      input = gen.generate
+      ts_val = NaiveTestCaseValidator.new(input, 'test.py', 5, true)
+      ts_val.run_program
+      if ts_val.validate
+        File.open("input_#{idx+1}.txt", 'w').write(input)
+        File.open("output_#{idx+1}.txt", 'w').write(ts_val.program_output)
+      else
+        redo
+      end
+    end
+  end
 end
 # create a sample input
 # one N - count of array
