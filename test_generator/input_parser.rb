@@ -1,4 +1,6 @@
 # Currently only works with INTEGER numbers
+require_relative 'test_case_validator.rb'
+require 'set'
 
 # Reads input from the user
 class Object
@@ -14,6 +16,7 @@ end
 
 # Holds a constant variable which depends on constant values
 class IndependantVariable < Variable
+  attr_accessor :value
   def initialize(value = NIL, min = NIL, max = NIL)
     @name = NIL
     @value = value
@@ -21,17 +24,11 @@ class IndependantVariable < Variable
     @max = max
   end
 
-  def value
-    @value
-  end
-
-  def value=(val)
-    @value = val
-  end
-
   def gen_value(rnd_obj)
     @value = rnd_obj.rand(@min..@max)
   end
+
+  # Generates a higher value
   def gen_harder_value(rnd_obj)
     # generate from the top 70% upwards
     diff = @max-@min
@@ -45,33 +42,31 @@ end
 class DependantVariable < Variable
   def initialize(name = NIL, value = NIL, min = NIL, max = NIL)
     @name = name
-    @value = value  # should be a Variable instance
+    @value = value # should be a Variable instance
     @min = min
     @max = max
   end
 
   def value
-    if @value.nil?
-      raise Exception("#{@name}'s value is not generated!")
-    end
+    raise Exception("#{@name}'s value is not generated!") if @value.nil?
+
     @value
   end
 
   def gen_value(rnd_obj)
     min_value = @min
     max_value = @max
-    if @min.is_a? Variable
-      min_value = @min.value
-    end
-    if @max.is_a? Variable
-      max_value = @max.value
-    end
+
+    min_value = @min.value if @min.is_a? Variable
+    max_value = @max.value if @max.is_a? Variable
+
     @value = rnd_obj.rand(min_value..max_value)
   end
 end
 
-require 'set'
 
+# Given an InputContent object, goes through all the input and generates it
+#  dynamically
 class Generator
   def initialize(input_content, generate_harder=false)
     @input_content = input_content
@@ -106,13 +101,13 @@ class Generator
     repeat_count = repeat_count.value if repeat_count.is_a? Variable
     output = []
     curr_output = []
-    (0...repeat_count).each{||
-      input_format.structure.each{|struct|
+    (0...repeat_count).each do
+      input_format.structure.each do |struct|
         curr_output += [parse_structure(struct), "\n"]
-      }
+      end
 
       output << curr_output.join
-    }
+    end
 
     output.join "\n"
   end
@@ -120,30 +115,41 @@ class Generator
   # given a list of variables (or lists of lists), convert them to a string
   def parse_structure(struct)
     if struct.class.method_defined? :map
-      str = struct.map{|var| parse_structure var}
+      str = struct.map { |var| parse_structure var }
       str.join ' '
-    elsif struct.class.method_defined? :get_structure
-      parse_structure struct.get_structure
+    elsif struct.class.method_defined? :spread_structure
+      parse_structure struct.spread_structure
     else
-      while true
-        gen_value = if @generate_harder
-                    struct.gen_harder_value(@rnd_obj)
-                  else
-                    struct.gen_value(@rnd_obj)
-                  end
-        if @no_duplicates
-          if @duplicates.include? gen_value
-            puts "#{gen_value} is a duplicate, redoing"
-          else
-            @duplicates.add gen_value
-            break
-          end
-        end
-      end
-      return struct.value
+      generate_variable_value struct
+      struct.value
     end
   end
 
+  # given a variable, generate a value for it and add it to the duplicates
+  def generate_variable_value(variable)
+    loop do
+      generated_value = if @generate_harder
+                          variable.gen_harder_value(@rnd_obj)
+                        else
+                          variable.gen_value(@rnd_obj)
+                        end
+      break unless handle_dup_value_generation generated_value
+    end
+  end
+
+  # handles a duplicate value generation if @no_duplicates flag is set
+  # @return [Bool] - if the value is a duplicate
+  def handle_dup_value_generation(value)
+    return false unless @no_duplicates
+
+    if @duplicates.include? value
+      puts "#{value} is a duplicate, redoing"
+      true
+    else
+      @duplicates.add value
+      false
+    end
+  end
 end
 
 # Contains a part of the input, i.e the initialization phase
@@ -152,7 +158,7 @@ class InputFormat
   def initialize(repeat_count, structure, name)
     @name = name
     @repeat_count = repeat_count
-    @structure = structure  # a list of lists of Variable objects
+    @structure = structure # a list of lists of Variable objects
   end
 end
 
@@ -183,35 +189,39 @@ class InputParser
   end
 
   def parse_initialization
-    puts 'Currently building: INITIALIZATION PHASE'
-    puts 'Enter the number of initialization lines'
+    puts "Currently building: INITIALIZATION PHASE\n" \
+         'Enter the number of initialization lines'
     init_line_count = gets.chomp.to_i
-    initialization_structure = []  # list of lists of variables
-    (1..init_line_count).each {|line|
-      puts "At line #{line}"
-      puts 'Enter the name of the variables, separated by space'
+    initialization_structure = [] # list of lists of variables
+    (1..init_line_count).each do |line|
+      puts "At line #{line}\nEnter the name of the variables, separated by space"
       variables = gets.chomp.split
-      populated_vars = variables.map {|varname|
-        var = parse_variable varname
-        @variables[varname] = var
-        var
-      }  # populate the variables
+      populated_vars = populate_variables variables
       initialization_structure << populated_vars
-    }
+    end
     puts "INIT STRUCTURE #{initialization_structure}"
-    InputFormat.new(1, initialization_structure, 'hope i die')
+    InputFormat.new(1, initialization_structure, 'Initialization Phase')
+  end
+
+  # Given a list of variables, parse them and populate the @variables list
+  def populate_variables(variables)
+    variables.map do |var_name|
+      var = parse_variable var_name
+      @variables[var_name] = var
+      var
+    end
   end
 
   def parse_content
     puts 'Currently building: CONTENT PHASE'
     puts 'Enter the number of content pairs (overall line count)'
     content_structure = []
-    content_line_count, _ = parse_variable_value
+    content_line_count, = parse_variable_value
 
     pair = parse_pair
-    (0...content_line_count).each {||
+    (0...content_line_count).each do ||
       content_structure << pair
-    }
+    end
 
     puts "CONTENT STRUCTURE #{content_structure}"
     InputFormat.new(1, content_structure, 'hope i die')
@@ -219,75 +229,155 @@ class InputParser
 
   # parses a pair of content
   def parse_pair
-    puts 'Currently building a content pair'
-    puts 'Enter the number of lines each pair requires'
+    puts "Currently building a content pair\n"\
+         'Enter the number of lines each pair requires'
     line_count = gets.chomp.to_i
     pair_structure = []
     # TODO: add option to parse variables again
-    (0...line_count).each {|ln|
+    (0...line_count).each do |ln|
       puts "At line #{ln} of pair, enter number count"
-      element_count, _ = parse_variable_value
-      element = parse_variable "array element"
+      element_count, = parse_variable_value
+      element = parse_variable 'array element'
       pair_structure << InputStructure.new(element_count, element)
-    }
+    end
 
     pair_structure
   end
 
   def parse_variable(varname)
-    is_dependant = false  # tracks if the variable is dependant on other vars
+    is_dependant = false # tracks if the variable is dependant on other vars
     puts "Building variable #{varname.upcase}"
     puts 'Enter lower limit of the variable (variable name or number)'
     lower, was_dep = parse_variable_value
-    is_dependant |= was_dep
     puts 'Enter upper limit of the variable (variable name or number)'
-    upper, was_dep = parse_variable_value
-    is_dependant |= was_dep
+    upper, was_dep2 = parse_variable_value
+    is_dependant |= was_dep | was_dep2
 
+    variable = create_variable(lower, upper, varname, is_dependant)
+    @variables[varname] = variable if is_dependant
+    variable
+  end
+
+  def create_variable(lower, upper, name, is_dependant)
     if is_dependant
-      var = DependantVariable.new(name=varname, value=NIL, min=lower, max=upper)
-      @variables[varname] = var
-      var
+      DependantVariable.new(name, NIL, lower, upper)
     else
-      IndependantVariable.new(value=NIL, min=lower, max=upper)
+      IndependantVariable.new(NIL, lower, upper)
     end
   end
 
-  # parses a variable, either by converting it to an integer or fetching its Variable object's value
-  # @return [Fixnum, Boolean] - the number and a boolean indicating if it was a variable
+  # parses a variable, either by converting it to an integer
+  #   or fetching its Variable object's value
+  # @return [Fixnum, Boolean] - the number and a boolean
+  #   indicating if it was a variable
   def parse_variable_value
     variable = gets.chomp
-    if variable.is_number?
-      return variable.to_i, false
-    else
-      unless @variables.key?(variable)
-        raise Exception("Variable #{variable} does not exist!")
-      end
-      return @variables[variable]
+    return variable.to_i, false if variable.is_number?
+
+    unless @variables.key?(variable)
+      raise Exception("Variable #{variable} does not exist!")
     end
+    @variables[variable]
   end
 end
 
+# Holds a structured input, maybe dependant on variables
 class InputStructure
   def initialize(line_count, element)
     @line_count = line_count
     @element = element
   end
 
-  def get_structure
-    line_count = @line_count
-    if line_count.is_a? Variable
-      if line_count.value.nil?
-        line_count.gen_value
-      end
-      line_count = line_count.value
+  # spreads the structure if the line_count is a Variable
+  def spread_structure
+    return unless @line_count.is_a? Variable
 
-      (0...line_count).map{@element.clone}
-    end
+    line_count = @line_count
+    line_count.gen_value if line_count.value.nil?
+    line_count = line_count.value
+
+    (0...line_count).map{ @element.clone } # clone the element
   end
 end
 
-require_relative 'test_case_validator.rb'
+# Generated the naive test cases for a program
+class NaiveTestCaseGenerator
+  def initialize(test_count, timeout_seconds, input_content, naive_file_name)
+    @test_count = test_count
+    @input_content = input_content
+    @timeout_seconds = timeout_seconds
+    @naive_file_name = naive_file_name
+    @test_case_idx = 0
+  end
+
+  def generate_naive_test_cases(test_count)
+    (0...Integer(test_count)).each do
+      gen = Generator.new(@input_content)
+      input = gen.generate
+      ts_val = NaiveTestCaseValidator.new(input, @naive_file_name,
+                                          @timeout_seconds, true)
+      ts_val.run_program
+      is_valid = ts_val.validate
+      puts "PROGRAM VALID? #{is_valid} #{input[1, 20]}"
+      redo unless is_valid
+      File.open("input_#{@test_case_idx+1}.txt", 'w').write(input)
+      File.open("output_#{@test_case_idx+1}.txt", 'w').write(ts_val.program_output)
+      @test_case_idx += 1
+    end
+  end
+
+  def generate
+    puts "Generating Naive Only #{@test_count} tests."
+    generate_naive_test_cases(@test_count)
+  end
+end
+
+# Generate a certain amount of naive and good test cases
+class GoodAndNaiveTestCaseGenerator < NaiveTestCaseGenerator
+  # @param [Integer] naive_percentage - 1-100 integer,
+  #             denoting how much percentage of test cases
+  #             we want to be passable by the naive tests
+  def initialize(test_case_count, timeout_seconds, input_content, naive_file_name, good_file_name, naive_percentage)
+    @good_file_name = good_file_name
+    @naive_percentage = naive_percentage
+    @naive_test_case_count = Integer((naive_percentage/100.0) * test_case_count)
+    @good_test_case_count = Integer((1-(naive_percentage/100.0)) * test_case_count)
+    super(@naive_test_case_count, timeout_seconds, input_content, naive_file_name)
+  end
+
+  def generate_good_test_cases(test_count)
+    gen_harder = false
+    (0...test_count).each do
+      gen = Generator.new(@input_content, gen_harder)
+      input = gen.generate
+      ts_val = NaiveTestCaseValidator.new(input, @good_file_name, 5, true)
+      ts_val.run_program
+      good_results = ts_val.validate
+      naive_val = NaiveTestCaseValidator.new(input, @naive_file_name, 5, false)
+      naive_val.run_program
+      naive_results = naive_val.validate
+      puts "naive #{naive_results} and good #{good_results}"
+      # assert that the good test has passed and the naived not
+      unless good_results && naive_results
+        puts 'generating harder'
+        gen_harder = true
+        redo
+      end
+
+      File.open("input_#{@test_case_idx+1}.txt", 'w').write(input)
+      File.open("output_#{@test_case_idx+1}.txt", 'w').write(ts_val.program_output)
+      @test_case_idx+=1
+      gen_harder = false
+    end
+  end
+
+  def generate
+    puts "Generating #{@naive_test_case_count} naive tests"
+    generate_naive_test_cases(@naive_test_case_count)
+    puts "Generating #{@good_test_case_count} non-naive tests "
+    generate_good_test_cases(@good_test_case_count)
+  end
+end
 
 
 def main
@@ -303,66 +393,13 @@ def main
     if not percentage.is_number? or percentage.to_i < 0 or percentage.to_i > 100
       raise Exception('INVALID PERCENTAGE')
     end
-    percentage = percentage.to_i
-    naive_test_case_count = (percentage/100.0) * test_case_count
-    good_test_case_count = (1-(percentage/100.0)) * test_case_count
-    # generate the naive test cases
-    test_case_idx = 0
-    puts "NAIVE TEST COUNT #{naive_test_case_count}"
-    puts "GOOD TEST COUNT #{good_test_case_count}"
-    (0...Integer(naive_test_case_count)).each do |idx|
-      gen = Generator.new(input_content)
-      input = gen.generate
-      ts_val = NaiveTestCaseValidator.new(input, 'min_diff_naive.py', 5, true)
-      ts_val.run_program
-      is_valid = ts_val.validate
-      puts "PROGRAM VALID? #{is_valid}"
-      puts input[1,20]
-      if is_valid
-        File.open("input_#{test_case_idx+1}.txt", 'w').write(input)
-        File.open("output_#{test_case_idx+1}.txt", 'w').write(ts_val.program_output)
-        test_case_idx+=1
-      else
-        redo
-      end
-    end
-    # generate the non-naive test cases
-    gen_harder = false
-    (0...Integer(good_test_case_count)).each do |idx|
-      gen = Generator.new(input_content, gen_harder)
-      input = gen.generate
-      ts_val = NaiveTestCaseValidator.new(input, 'min_diff_good.py', 5, true)
-      ts_val.run_program
-      good_results = ts_val.validate
-      naive_val = NaiveTestCaseValidator.new(input, 'min_diff_naive.py', 5, false)
-      naive_val.run_program
-      naive_results = naive_val.validate
-      puts "naive #{naive_results} and good #{good_results}"
-      if good_results && naive_results
-        File.open("input_#{test_case_idx+1}.txt", 'w').write(input)
-        File.open("output_#{test_case_idx+1}.txt", 'w').write(ts_val.program_output)
-        test_case_idx+=1
-        gen_harder = false
-      else
-        puts "generating harder"
-        gen_harder = true
-        redo
-      end
-    end
+    test_gen = GoodAndNaiveTestCaseGenerator.new(
+      test_case_count, 5, input_content, 'min_diff_naive.py',
+      'min_diff_good.py', percentage.to_i)
   else
-    (0..5).each do |idx|
-      gen = Generator.new(input_content)
-      input = gen.generate
-      ts_val = NaiveTestCaseValidator.new(input, 'test.py', 5, true)
-      ts_val.run_program
-      if ts_val.validate
-        File.open("input_#{idx+1}.txt", 'w').write(input)
-        File.open("output_#{idx+1}.txt", 'w').write(ts_val.program_output)
-      else
-        redo
-      end
-    end
+    test_gen = NaiveTestCaseGenerator.new(5, 5, input_content, 'min_diff_naive.py')
   end
+  test_gen.generate
 end
 # create a sample input
 # one N - count of array
