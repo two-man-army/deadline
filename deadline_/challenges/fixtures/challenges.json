@@ -439,5 +439,33 @@
         "category": 14,
         "supported_languages": [1, 3, 4, 2, 5]
       }
+    },
+
+  {
+      "model": "challenges.challengedescription",
+      "pk": 8,
+      "fields": {
+        "content": "Rodger is preparing for the greatest tennis competition of all time. Although, to qualify for it, he needs to accumulate points from other contests. {{NPL}}Tennis contests are either ranked or unranked. {{NPL}}Rodger knows for a fact that out of all the ranked competitions, he will win K of them. (for the rest, he plays it safe and assumes he'll lose). Lost contests will take away points from him! {{NPL}}For the unranked competitions, Rodger is confident he will win all of them, as he is really skilled.{{NPL}}Given all the upcoming competitions, figure out the maximum amount of points Rodger can accumulate, given the constraints above.",
+        "input_format": "The first line contains two space-separated integers, **N** (the number of contests) and **K** (the number of ranked contests Rodger will win){{NPL}}{{NPL}}Each line of the **N** subsequent lines contain two space-separated integers, **P** (the contests points awarded for winning) and **IMP** (0 or 1, denoting if the contest is important or not)",
+        "output_format": "Print a single integer denoting the maximum amount of points Rodger can accumulate while taking the constraints into account",
+        "constraints": "1 <= **N** <= 20000{{NPL}}1 <= **K** <= **N** {{NPL}}1 <= **P** <= 200",
+        "sample_input": "",
+        "sample_output": ""
+      }
+    },
+
+     {
+      "model": "challenges.challenge",
+      "pk": 8,
+      "fields": {
+        "name": "Rodger's Rise",
+        "description": 8,
+        "difficulty": 3,
+        "score": 20,
+        "test_file_name": "rodger_rise_tests",
+        "test_case_count": 10,
+        "category": 11,
+        "supported_languages": [1, 3, 4, 2, 5]
+      }
     }
 ]
