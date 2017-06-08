@@ -213,6 +213,12 @@ class InputParser
       puts 'Do you want to have the same variable repeated? (y\n)'
       if gets.chomp == 'y'
         element = parse_variable 'array element'
+        puts 'Do you want your array element to have a depend on another variable? (y\n)'
+        if gets.chomp == 'y'
+          puts 'Pick a number or variable that you want your array element to be a factor of'
+          factor, = parse_variable_value
+          element.factor_of = factor
+        end
         pair_structure << InputStructure.new(element_count, element)
       else
         puts 'Enter the name of the variables, separated by space'
@@ -241,9 +247,9 @@ class InputParser
 
   def create_variable(lower, upper, name, is_dependant)
     if is_dependant
-      DependantVariable.new(name, NIL, lower, upper)
+      DependantVariable.new(name, NIL, lower, upper, NIL)
     else
-      IndependantVariable.new(NIL, lower, upper)
+      IndependantVariable.new(NIL, lower, upper, NIL)
     end
   end
 
@@ -258,7 +264,7 @@ class InputParser
     unless @variables.key?(variable)
       puts @variables
       @variables.key?(variable)
-      raise Exception("Variable #{variable} does not exist!")
+      raise Exception.new("Variable #{variable} does not exist!")
     end
     return @variables[variable], true
   end
