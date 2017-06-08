@@ -12,11 +12,11 @@ end
 # Given an InputContent object, goes through all the input and generates it
 #  dynamically
 class InputGenerator
-  def initialize(input_content, generate_harder=false)
+  def initialize(input_content, generate_harder=false, allow_duplicates=false)
     @input_content = input_content
     @rnd_obj = Random.new
     @generate_harder = generate_harder
-    @no_duplicates = true
+    @no_duplicates = !allow_duplicates
     @duplicates = Set.new
   end
 

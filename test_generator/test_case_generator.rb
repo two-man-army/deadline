@@ -2,17 +2,18 @@ require_relative 'test_case_validator'
 
 # Generated the naive test cases for a program
 class NaiveTestCaseGenerator
-  def initialize(test_count, timeout_seconds, input_content, naive_file_name)
+  def initialize(test_count, timeout_seconds, input_content, naive_file_name, allow_duplicates)
     @test_count = test_count
     @input_content = input_content
     @timeout_seconds = timeout_seconds
     @naive_file_name = naive_file_name
     @test_case_idx = 0
+    @allow_duplicates = allow_duplicates
   end
 
   def generate_naive_test_cases(test_count)
     (0...Integer(test_count)).each do
-      gen = InputGenerator.new(@input_content)
+      gen = InputGenerator.new(@input_content, false, @allow_duplicates)
       input = gen.generate
       ts_val = NaiveTestCaseValidator.new(input, @naive_file_name,
                                           @timeout_seconds, true)
@@ -37,18 +38,18 @@ class GoodAndNaiveTestCaseGenerator < NaiveTestCaseGenerator
   # @param [Integer] naive_percentage - 1-100 integer,
   #             denoting how much percentage of test cases
   #             we want to be passable by the naive tests
-  def initialize(test_case_count, timeout_seconds, input_content, naive_file_name, good_file_name, naive_percentage)
+  def initialize(test_case_count, timeout_seconds, input_content, naive_file_name, good_file_name, naive_percentage, allow_duplicates)
     @good_file_name = good_file_name
     @naive_percentage = naive_percentage
     @naive_test_case_count = Integer((naive_percentage/100.0) * test_case_count)
     @good_test_case_count = Integer((1-(naive_percentage/100.0)) * test_case_count)
-    super(@naive_test_case_count, timeout_seconds, input_content, naive_file_name)
+    super(@naive_test_case_count, timeout_seconds, input_content, naive_file_name, allow_duplicates)
   end
 
   def generate_good_test_cases(test_count)
     gen_harder = false
     (0...test_count).each do
-      gen = InputGenerator.new(@input_content, gen_harder)
+      gen = InputGenerator.new(@input_content, gen_harder, @allow_duplicates)
       input = gen.generate
       ts_val = NaiveTestCaseValidator.new(input, @good_file_name, 5, true)
       ts_val.run_program
