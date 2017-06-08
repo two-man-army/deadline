@@ -210,8 +210,16 @@ class InputParser
     (0...line_count).each do |ln|
       puts "At line #{ln} of pair, enter number count"
       element_count, = parse_variable_value
-      element = parse_variable 'array element'
-      pair_structure << InputStructure.new(element_count, element)
+      puts 'Do you want to have the same variable repeated? (y\n)'
+      if gets.chomp == 'y'
+        element = parse_variable 'array element'
+        pair_structure << InputStructure.new(element_count, element)
+      else
+        puts 'Enter the name of the variables, separated by space'
+        variables = gets.chomp.split
+        populated_vars = populate_variables variables
+        pair_structure << populated_vars
+      end
     end
 
     pair_structure

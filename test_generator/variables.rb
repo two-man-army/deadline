@@ -51,4 +51,15 @@ class DependantVariable < Variable
 
     @value = rnd_obj.rand(min_value..max_value)
   end
+  # Generates a higher value
+  def gen_harder_value(rnd_obj)
+    min_value = @min
+    max_value = @max
+    # generate from the top 70% upwards
+    min_value = @min.value if @min.is_a? Variable
+    max_value = @max.value if @max.is_a? Variable
+    diff = max_value-min_value
+    top_seventy_percent = 0.7 * diff
+    @value = rnd_obj.rand(Integer(top_seventy_percent)..max_value)
+  end
 end
