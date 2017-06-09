@@ -47,15 +47,8 @@ class InputGenerator
     curr_output = []
     # TODO: InputFormat should not have repeat count
     (0...repeat_count).each do
+      if_struct = input_format.content
 
-
-      if_struct = input_format.structure
-      if if_struct.is_a? InputStructure
-        if_struct = if_struct.spread_structure
-        puts "PARSED STRUCT #{if_struct}"
-      else
-        puts "NON-pARSED STRUCT #{if_struct}"
-      end
       if_struct.each do |struct|
         @duplicates = Set.new  # reset duplicates for each new line
         puts "STRUCT IS #{struct}"
@@ -68,19 +61,31 @@ class InputGenerator
     output.join "\n"
   end
 
-  # given a list of variables (or lists of lists), convert them to a string
+
   def parse_structure(struct)
-    if struct.class.method_defined? :map
-      str = struct.map { |var| parse_structure var }
-      str.join ' '
-    elsif struct.class.method_defined? :spread_structure
-      parse_structure struct.spread_structure
-    else
-      generate_variable_value struct
-      struct.value
-    end
+    # We're given a Structure, so spread it and parse its content
+    inner_struct_parse struct.spread_structure
   end
 
+  # given a list of variables (or lists of lists, or Structure objects), convert them to a string
+  # as Structures can be deeply nested, we need some recursion here
+  def inner_struct_parse(s)
+    if s.class.method_defined? :map
+      # We're down to a list, so call parse on every element in it
+      str = s.each_with_index.map do |var, idx|
+        inner_struct_parse var
+        # TODO: decide how to impose limits e.g 30% factors
+      end
+      str.join ' '
+    elsif s.class.method_defined? :spread_structure
+      # We're down to a Structure, so spread it
+      inner_struct_parse s.spread_structure
+    else
+      # We're down to a variable, generate it
+      generate_variable_value s
+      s.value
+    end
+  end
   # given a variable, generate a value for it and add it to the duplicates
   def generate_variable_value(variable)
     loop do
@@ -110,11 +115,11 @@ end
 
 # Contains a part of the input, i.e the initialization phase
 class InputFormat
-  attr_reader :repeat_count, :name, :structure
-  def initialize(repeat_count, structure, name)
+  attr_reader :repeat_count, :name, :content
+  def initialize(repeat_count, content, name)
     @name = name
     @repeat_count = repeat_count
-    @structure = structure # a list of lists of Variable objects
+    @content = content # a list of InputStructure objects
   end
 end
 
@@ -174,7 +179,7 @@ class InputParser
       puts "At line #{line}\nEnter the name of the variables, separated by space"
       variables = gets.chomp.split
       populated_vars = populate_variables variables
-      initialization_structure << populated_vars
+      initialization_structure << InputStructure.new(1, populated_vars)
     end
     puts "INIT STRUCTURE #{initialization_structure}"
     InputFormat.new(1, initialization_structure, 'Initialization Phase')
@@ -197,7 +202,7 @@ class InputParser
     pair = parse_pair
     content_structure = InputStructure.new(content_line_count, pair)
     puts "CONTENT STRUCTURE #{content_structure}"
-    InputFormat.new(1, content_structure, 'Content Phase')
+    InputFormat.new(1, [content_structure], 'Content Phase')
   end
 
   # parses a pair of content

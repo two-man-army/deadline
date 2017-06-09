@@ -91,3 +91,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# deadline specific folders
+# input/output text files in the test_generator
+test_generator/**/input_*.txt
+test_generator/**/output_*.txt
+# test gen solutions
+test_generator/**/*.py
