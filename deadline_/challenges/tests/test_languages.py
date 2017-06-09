@@ -3,15 +3,13 @@ from rest_framework.test import APITestCase
 from accounts.models import User
 from challenges.models import Language
 from challenges.serializers import LanguageSerializer
+from challenges.tests.base import TestHelperMixin
 
 
-class LanguageViewTest(APITestCase):
+class LanguageViewTest(APITestCase, TestHelperMixin):
     def setUp(self):
-        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
-        self.auth_user.save()
-        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.create_user_and_auth_token()
         self.php = Language.objects.create(name="Php")
-        self.php.save()
 
     def test_retrieve_lang(self):
         response = self.client.get(path='/challenges/languages/Php', HTTP_AUTHORIZATION=self.auth_token)

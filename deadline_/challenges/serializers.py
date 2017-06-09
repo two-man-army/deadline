@@ -33,6 +33,7 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
     Used, for example, when listing challenges.
     """
     category = serializers.StringRelatedField()
+
     class Meta:
         model = Challenge
         fields = ('id', 'name', 'difficulty', 'score', 'category')  # user_max_score is added as well but more implicitly
@@ -74,7 +75,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         """
         from accounts.models import User
         result = super().to_representation(instance)
-        user:User = getattr(self.context.get('request', None), 'user', None)
+        user: User = getattr(self.context.get('request', None), 'user', None)
         # TODO: Move to helper
         if user is None:
             result['user_has_voted'] = False

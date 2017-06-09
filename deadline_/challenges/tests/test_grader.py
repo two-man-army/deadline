@@ -1,11 +1,17 @@
+"""
+Really mocky and pure unit tests of the grader.py file
+"""
 import json
-from unittest.mock import MagicMock, Mock, patch, mock_open
 import subprocess
+from unittest.mock import MagicMock, Mock, patch, mock_open
+from unittest import TestCase
 
-from django.test import TestCase
-
-from constants import TESTS_FOLDER_NAME, GRADER_COMPILE_FAILURE
-from challenges.grader import RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader, InterpretableLangGrader, CppGrader, PythonGrader, KotlinGrader
+from constants import TESTS_FOLDER_NAME, GRADER_COMPILE_FAILURE, PYTHON_TIMEOUT_SECONDS, PYTHON_FILE_EXTENSION, PYTHON_RUN_COMMAND
+from challenges.grader import (
+    RustGrader, GraderTestCase, BaseGrader, CompilableLangGrader, InterpretableLangGrader, CppGrader, PythonGrader,
+    KotlinGrader, RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_FILE_EXTENSION, RUSTLANG_COMPILE_ARGS,
+    RUSTLANG_ERROR_MESSAGE_SNIPPET, RUSTLANG_ERROR_MESSAGE_SNIPPET_2, RUSTLANG_UNFRIENDLY_ERROR_MESSAGE,
+    CPP_TIMEOUT_SECONDS, CPP_COMPILE_ARGS, CPP_FILE_EXTENSION)
 
 
 class DirEntryMock(Mock):
@@ -25,7 +31,6 @@ class BaseGraderTests(TestCase):
         self.temp_file_name = 'testfile.txt'
         self.grader = BaseGrader(self.test_case_count, self.temp_file_name)
         self.grader.RUN_ARGS = ['']
-        # MagicMock.__gt__ = lambda x, y: x.name > y.name
         self.input_files_dir_entries = [DirEntryMock(name='input-01.txt'), DirEntryMock(name='input-02.txt'),
                                         DirEntryMock(name='output-01.txt'), DirEntryMock(name='output-02.txt')]
 
@@ -227,8 +232,9 @@ class CompilableGraderTests(TestCase):
     @patch('challenges.grader.CompilableLangGrader.compile')
     @patch('challenges.grader.CompilableLangGrader.grade_all_tests')
     def test_grade_solution_works_correctly(self, grade_all_tests_mock, compile_mock, read_tests_mock, find_tests_mock):
-        """ The grade solution encompasses everything we want to do
-            It should find the tests, read them, compile the solution code and call the grade_all_tests()
+        """
+        The grade solution encompasses everything we want to do
+        It should find the tests, read them, compile the solution code and call the grade_all_tests()
             if it compiled propely
         """
         expected_result = {'we aint ever getting older :)'}
@@ -363,8 +369,6 @@ class RustGraderTests(TestCase):
         self.grader = RustGrader(3, 'a')
 
     def test_static_variables(self):
-        from constants import RUSTLANG_TIMEOUT_SECONDS, RUSTLANG_FILE_EXTENSION, RUSTLANG_COMPILE_ARGS
-
         self.assertEqual(RustGrader.TIMEOUT_SECONDS, RUSTLANG_TIMEOUT_SECONDS)
         self.assertEqual(RustGrader.COMPILE_ARGS, RUSTLANG_COMPILE_ARGS)
         self.assertEqual(RustGrader.FILE_EXTENSION, RUSTLANG_FILE_EXTENSION)
@@ -374,27 +378,22 @@ class RustGraderTests(TestCase):
 
     def test_has_compiled_str_with_known_error_snippet(self):
         """ There are some constant messages that rust outputs as a warning and the program should ignore """
-        from constants import RUSTLANG_ERROR_MESSAGE_SNIPPET
         self.assertFalse(self.grader.has_compiled(f'Afewifwajofjwaf{RUSTLANG_ERROR_MESSAGE_SNIPPET}fefaoifwjf'))
 
     def test_has_compiled_str_with_known_error_snippet2(self):
         """ There are some constant messages that rust outputs as a warning and the program should ignore """
-        from constants import RUSTLANG_ERROR_MESSAGE_SNIPPET_2
         self.assertFalse(self.grader.has_compiled(f'Afewifwajofjwaf{RUSTLANG_ERROR_MESSAGE_SNIPPET_2}fefaoifwjf'))
 
     def test_has_compiled_warning(self):
         self.assertTrue(self.grader.has_compiled('Warning: The roof is on fire'))
 
     def test_cleanup_error_message_removes_unfriendly_message(self):
-        from constants import RUSTLANG_UNFRIENDLY_ERROR_MESSAGE
-
         unfriendly_message = f'Me@{RUSTLANG_UNFRIENDLY_ERROR_MESSAGE}abv.bg'
         expected_message = 'Me@abv.bg'
 
         self.assertEqual(expected_message, self.grader.cleanup_error_message(unfriendly_message))
 
     def test_cleanup_error_message_doesnt_remove_error_message(self):
-        from constants import RUSTLANG_ERROR_MESSAGE_SNIPPET, RUSTLANG_ERROR_MESSAGE_SNIPPET_2
         expected_message = f'Error here {RUSTLANG_ERROR_MESSAGE_SNIPPET} and {RUSTLANG_ERROR_MESSAGE_SNIPPET_2}re'
 
         self.assertEqual(expected_message, self.grader.cleanup_error_message(expected_message))
@@ -406,7 +405,6 @@ class CppGraderTests(TestCase):
         self.grader = CppGrader(3, self.temp_file_name)
 
     def test_static_variables(self):
-        from constants import CPP_TIMEOUT_SECONDS, CPP_COMPILE_ARGS, CPP_FILE_EXTENSION
         self.assertEqual(self.grader.TIMEOUT_SECONDS, CPP_TIMEOUT_SECONDS)
         self.assertEqual(self.grader.COMPILE_ARGS, CPP_COMPILE_ARGS)
         self.assertEqual(self.grader.FILE_EXTENSION, CPP_FILE_EXTENSION)
@@ -444,7 +442,6 @@ class PythonGraderTests(TestCase):
         self.grader = PythonGrader(1, 'a')
 
     def test_static_variables(self):
-        from constants import PYTHON_TIMEOUT_SECONDS, PYTHON_FILE_EXTENSION, PYTHON_RUN_COMMAND
         self.assertEqual(self.grader.TIMEOUT_SECONDS, PYTHON_TIMEOUT_SECONDS)
         self.assertEqual(self.grader.FILE_EXTENSION, PYTHON_FILE_EXTENSION)
         self.assertEqual(self.grader.RUN_COMMAND, PYTHON_RUN_COMMAND)

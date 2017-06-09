@@ -1,12 +1,14 @@
 import json
+from collections import OrderedDict
+from unittest import skip
 
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
-from unittest import skip
+
 from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProficiency, Proficiency
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
-from challenges.tests.factories import ChallengeDescFactory, UserFactory
-from collections import OrderedDict
+from challenges.tests.factories import ChallengeDescFactory, UserFactory, MainCategoryFactory
+from challenges.tests.base import TestHelperMixin
 
 
 class CategoryModelTest(TestCase):
@@ -32,12 +34,11 @@ class CategoryModelTest(TestCase):
 
 class CategoryViewTest(TestCase):
     def setUp(self):
-        self.c1 = MainCategory(name='Test')
-        self.c2 = MainCategory(name='Data')
-        self.c3 = MainCategory(name='Structures')
-        self.c4 = MainCategory(name='Rustlang')
-        self.c5 = MainCategory(name='Others')
-        self.c1.save();self.c2.save();self.c3.save();self.c4.save();self.c5.save()
+        self.c1 = MainCategoryFactory()
+        self.c2 = MainCategoryFactory()
+        self.c3 = MainCategoryFactory()
+        self.c4 = MainCategoryFactory()
+        self.c5 = MainCategoryFactory()
 
     def test_view_all_should_return_all_categories(self):
         response = self.client.get('/challenges/categories/all')
@@ -47,21 +48,16 @@ class CategoryViewTest(TestCase):
 
 class SubCategoryModelTest(TestCase):
     def setUp(self):
-        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
-                                                output_format='something', constraints='some',
-                                                sample_input='input sample', sample_output='output sample',
-                                                explanation='gotta push it to the limit')
-        self.sample_desc.save()
+        self.sample_desc = ChallengeDescFactory()
         self.c1 = MainCategory.objects.create(name='Test')
-        self.sub1 = SubCategory(name='Unit', meta_category=self.c1)
-        self.sub2 = SubCategory(name='Mock', meta_category=self.c1)
-        self.sub3 = SubCategory(name='Patch', meta_category=self.c1)
-        self.sub1.save(); self.sub2.save(); self.sub3.save()
+        self.sub1 = SubCategory.objects.create(name='Unit', meta_category=self.c1)
+        self.sub2 = SubCategory.objects.create(name='Mock', meta_category=self.c1)
+        self.sub3 = SubCategory.objects.create(name='Patch', meta_category=self.c1)
 
     @skip  # serialization does not currently work correctly as we want to return max score for challenge
     def test_serialize(self):
         """ Ths Subcategory should show all its challenges"""
-        c = Challenge(name='TestThis', difficulty=5, score=10, description=self.sample_desc,
+        c = Challenge.objects.create(name='TestThis', difficulty=5, score=10, description=self.sample_desc,
                       test_case_count=5, category=self.sub1)
         c.save()
         expected_json = '{"name":"Unit","challenges":[{"id":1,"name":"TestThis","difficulty":5.0,"score":10,"category":"Unit"}]}'
@@ -71,8 +67,9 @@ class SubCategoryModelTest(TestCase):
     @skip  # need to find a better place for that logic, AppConfig does not do the job as it runs before migrations
     def test_subcategory_max_score_is_updated(self):
         """
-        The ChallengeConfig is called on every startup of the application
-        Test if it updates the Submission XP
+        Test if the SubCategory's max score is updated on server startup.
+        This is done to capture the fact that sometimes we'll have new challenges added or removed and
+        it needs to reflex the max score in a subcategory
         """
         from django.apps import apps
         c1 = Challenge(name='Sub1', difficulty=5, score=200, description=ChallengeDescFactory(),
@@ -94,7 +91,7 @@ class SubCategoryModelTest(TestCase):
         self.assertEqual(self.sub3.max_score, 0)
 
 
-class SubCategoryViewTest(TestCase):
+class SubCategoryViewTest(TestCase, TestHelperMixin):
     def setUp(self):
         self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
                                                 output_format='something', constraints='some',
@@ -106,16 +103,14 @@ class SubCategoryViewTest(TestCase):
         self.c1.save()
         self.sub1 = SubCategory(name='Unit Tests', meta_category=self.c1)
         self.sub1.save()
-        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
-        self.auth_user.save()
-        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
+        self.create_user_and_auth_token()
 
-        self.c = Challenge(name='TestThis', difficulty=5, score=10, description=self.sample_desc, test_case_count=5, category=self.sub1)
-        self.c.save()
+        self.c = Challenge.objects.create(name='TestThis', difficulty=5, score=10, description=self.sample_desc, test_case_count=5, category=self.sub1)
 
     def test_view_subcategory_detail_should_show(self):
         self.c.user_max_score = 0
         ser = LimitedChallengeSerializer(data=[self.c], many=True); ser.is_valid()
+        # Should attach the user's proficiency in the subcategory to the data
         subcat_prof = self.auth_user.fetch_subcategory_proficiency(self.sub1.id)
         subcat_prof.user_score = 5
         subcat_prof.save()

@@ -8,43 +8,17 @@ from challenges.models import (
     Challenge, MainCategory, ChallengeDescription, Submission, TestCase as TestCaseModel, SubCategory,
     Language, Proficiency)
 from challenges.serializers import TestCaseSerializer
+from challenges.tests.factories import ChallengeDescFactory
+from challenges.tests.base import TestHelperMixin
 from accounts.models import User
 
 
-class TestCaseViewTest(APITestCase):
+class TestCaseViewTest(APITestCase, TestHelperMixin):
     def setUp(self):
-        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
-                                                output_format='something', constraints='some',
-                                                sample_input='input sample', sample_output='output sample',
-                                                explanation='gotta push it to the limit')
-        self.python_language = Language.objects.create(name="Python"); self.python_language.save()
-        self.sample_desc.save()
-        challenge_cat = MainCategory.objects.create(name='Tests')
-        challenge_cat.save()
-        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
-        self.sub_cat.save()
-        Proficiency.objects.create(name='starter', needed_percentage=0)
-        self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_case_count=2,
-                                   category=self.sub_cat)
-        self.challenge.save()
-        self.challenge_name = self.challenge.name
-
-        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
-        self.auth_user.save()
-        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
-        self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
-            my_purchase = {
-                'apple': 1,
-                'banana': 6}
-            grocery_bill = sum(prices[fruit] * my_purchase[fruit]
-                               for fruit in my_purchase)
-            print 'I owe the grocer $%.2f' % grocery_bill"""
-        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
-        self.submission.save()
-        self.tc = TestCaseModel(submission=self.submission, pending=False, success=True, time=1.25)
-        self.tc_2 = TestCaseModel(submission=self.submission)
-        self.tc_3 = TestCaseModel(submission=self.submission, pending=False, success=False, time=0.2)
-        self.tc.save(); self.tc_2.save(); self.tc_3.save()
+        self.base_set_up()
+        self.tc = TestCaseModel.objects.create(submission=self.submission, pending=False, success=True, time=1.25)
+        self.tc_2 = TestCaseModel.objects.create(submission=self.submission)
+        self.tc_3 = TestCaseModel.objects.create(submission=self.submission, pending=False, success=False, time=0.2)
 
     def test_load_all_test_cases(self):
         response = self.client.get('/challenges/{}/submissions/{}/tests'.format(self.challenge.id, self.submission.id),
@@ -101,48 +75,19 @@ class TestCaseViewTest(APITestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class TestCaseModelTest(TestCase):
+class TestCaseModelTest(TestCase, TestHelperMixin):
     def setUp(self):
-        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
-                                                output_format='something', constraints='some',
-                                                sample_input='input sample', sample_output='output sample',
-                                                explanation='gotta push it to the limit')
-        self.python_language = Language.objects.create(name="Python"); self.python_language.save()
-        self.sample_desc.save()
-        challenge_cat = MainCategory.objects.create(name='Tests')
-        challenge_cat.save()
-        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
-        self.sub_cat.save()
-        Proficiency.objects.create(name='starter', needed_percentage=0)
-        self.challenge = Challenge(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_case_count=5,
-                                   category=self.sub_cat)
-        self.challenge.save()
-        self.challenge_name = self.challenge.name
-
-        self.auth_user = User(username='123', password='123', email='123@abv.bg', score=123)
-        self.auth_user.save()
-        self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
-        self.sample_code = """prices = {'apple': 0.40, 'banana': 0.50}
-            my_purchase = {
-                'apple': 1,
-                'banana': 6}
-            grocery_bill = sum(prices[fruit] * my_purchase[fruit]
-                               for fruit in my_purchase)
-            print 'I owe the grocer $%.2f' % grocery_bill"""
-        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.auth_user, code=self.sample_code)
-        self.submission.save()
+        self.base_set_up()
 
     def test_absolute_url(self):
-        tc = TestCaseModel(submission=self.submission)
-        tc.save()
+        tc = TestCaseModel.objects.create(submission=self.submission)
 
         self.assertEqual(tc.get_absolute_url(), '/challenges/{}/submissions/{}/test/{}'.format(
             tc.submission.challenge_id,tc.submission.id, tc.id))
 
     def test_can_have_multiple_testcases_per_submission(self):
         for _ in range(15):
-            tc = TestCaseModel(submission=self.submission)
-            tc.save()
+            TestCaseModel.objects.create(submission=self.submission)
 
         self.assertEqual(TestCaseModel.objects.count(), 15)
         # Assert they all point to the same submission
@@ -151,16 +96,14 @@ class TestCaseModelTest(TestCase):
 
     def test_field_defaults(self):
         """ Should have it time set to 0, pending to True, success to False"""
-        tc = TestCaseModel(submission=self.submission)
-        tc.save()
+        tc = TestCaseModel.objects.create(submission=self.submission)
 
         self.assertEqual(tc.time, 0)
         self.assertTrue(tc.pending)
         self.assertFalse(tc.success)
 
     def test_serialize(self):
-        tc = TestCaseModel(submission=self.submission, pending=False, success=True, time=1.25, description='Testing', traceback='You suck at coding', error_message="whatup", timed_out=True)
-        tc.save()
+        tc = TestCaseModel.objects.create(submission=self.submission, pending=False, success=True, time=1.25, description='Testing', traceback='You suck at coding', error_message="whatup", timed_out=True)
         expected_json = '{"submission":' + str(tc.submission.id) + ',"pending":false,"success":true,"time":"1.25","description":"Testing","traceback":"You suck at coding","error_message":"whatup","timed_out":true}'
         serialized_test_case: bytes = JSONRenderer().render(data=TestCaseSerializer(tc).data)
 

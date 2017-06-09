@@ -57,7 +57,7 @@ class TasksTests(TestCase):
         run_grader_task(test_case_count=test_case_count, test_folder_name=test_folder_name,
                         code=code, lang=lang, submission_id=submission_id)
 
-        # since we have a compile failure, the submission's compiled shold be set to false
+        # since we have a compile failure, the submission's compiled should be set to false
         submission.refresh_from_db()
         self.assertFalse(submission.compiled)
         self.assertFalse(submission.pending)

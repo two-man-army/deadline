@@ -6,34 +6,17 @@ from challenges.models import (
 
 from accounts.models import User
 from challenges.helper import grade_result, update_user_score
+from challenges.tests.factories import ChallengeDescFactory
+from challenges.tests.base import TestHelperMixin
 
 
-class GradeResultTests(TestCase):
+class GradeResultTests(TestCase, TestHelperMixin):
     """
     Test the grade_results function, which should update the submission's score in accordance to the passed tests
     """
 
     def setUp(self):
-        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
-                                                output_format='something', constraints='some',
-                                                sample_input='input sample', sample_output='output sample',
-                                                explanation='gotta push it to the limit')
-        self.python_language = Language.objects.create(name="Python")
-        self.sample_desc.save()
-        challenge_cat = MainCategory.objects.create(name='Tests')
-        challenge_cat.save()
-        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
-        self.sub_cat.save()
-        Proficiency.objects.create(name='starter', needed_percentage=0)
-        self.user = User(email="hello@abv.bg", password='123', username='me')
-        self.user.save()
-        self.challenge = Challenge(name='Hello World!', description=self.sample_desc,
-                                   difficulty=10, score=100, test_file_name='smth',
-                                   test_case_count=5, category=self.sub_cat)
-        self.challenge.save()
-        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
-                                     code='hack you', task_id='123', result_score=0)
-        self.submission.save()
+        self.base_set_up()
         # create the test cases
         self.test_cases = []
         for _ in range(self.challenge.test_case_count):
@@ -59,108 +42,82 @@ class GradeResultTests(TestCase):
         self.assertEqual(self.submission.elapsed_seconds, 1.1)
 
 
-class UpdateUserScoreTests(TestCase):
+class UpdateUserScoreTests(TestCase, TestHelperMixin):
     """
     the update_user_score function should update the user's overall score given a submission by him.
     It should also update the UserSubcategoryProgress model associated to it
     Note: It should only update it if the user has a previous submission (or none at all) which has a lower score.
     """
     def setUp(self):
-        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
-                                                output_format='something', constraints='some',
-                                                sample_input='input sample', sample_output='output sample',
-                                                explanation='gotta push it to the limit')
-        self.python_language = Language.objects.create(name="Python")
-        self.sample_desc.save()
-        challenge_cat = MainCategory.objects.create(name='Tests')
-        challenge_cat.save()
-        self.sub_cat = SubCategory(name='tests', meta_category=challenge_cat)
-        self.sub_cat.save()
-        Proficiency.objects.create(name='starter', needed_percentage=0)
-        self.user = User(email="hello@abv.bg", password='123', username='me')
-        self.user.save()
-
-        self.subcategory_progress = UserSubcategoryProficiency.objects.filter(subcategory=self.sub_cat, user=self.user).first()
-        self.challenge = Challenge(name='Hello World!', description=self.sample_desc,
-                                   difficulty=10, score=100, test_file_name='smth',
-                                   test_case_count=3, category=self.sub_cat)
-        self.challenge.save()
-        self.submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
-                                     code='hack you', task_id='123', result_score=20)
-        self.submission.save()
+        self.base_set_up()
+        self.submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
+                                                    author=self.auth_user, code="", result_score=20)
         self.subcategory_progress.user_score = 20
         self.subcategory_progress.save()
         # add this submisssions score to him
-        self.user.score = 20
-        self.user.save()
+        self.auth_user = self.auth_user
+        self.auth_user.score = 20
+        self.auth_user.save()
 
     def test_submission_with_lower_score_should_not_update(self):
-        lower_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
+        lower_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
                                      code='hack you', task_id='123', result_score=10)
-        lower_submission.save()
-        # subcategory_rprogress should not update either
+        # subcategory_progress should not update either
         old_sc_progress = self.subcategory_progress.user_score
 
-        result = update_user_score(user=self.user, submission=lower_submission)
+        result = update_user_score(user=self.auth_user, submission=lower_submission)
 
         self.subcategory_progress.refresh_from_db()
         self.assertEqual(self.subcategory_progress.user_score, old_sc_progress)
         self.assertFalse(result)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.score, 20)  # should not have changed
+        self.auth_user.refresh_from_db()
+        self.assertEqual(self.auth_user.score, 20)  # should not have changed
 
     def test_submission_with_higher_score_should_update_proficiency_score_and_user_score(self):
-        higher_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
-                                       code='hack you', task_id='123', result_score=30)
-        higher_submission.save()
+        higher_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                                                     code='hack you', task_id='123', result_score=30)
         old_sc_progress = self.subcategory_progress.user_score
 
-        result = update_user_score(user=self.user, submission=higher_submission)
+        result = update_user_score(user=self.auth_user, submission=higher_submission)
 
         self.subcategory_progress.refresh_from_db()
         # should have updated subcategory_progress as well
         self.assertNotEqual(self.subcategory_progress.user_score, old_sc_progress)
         self.assertEqual(self.subcategory_progress.user_score, 30)
         self.assertTrue(result)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.score, 30)  # should have changed
+        self.auth_user.refresh_from_db()
+        self.assertEqual(self.auth_user.score, 30)  # should have changed
 
     def test_submission_new_challenge_should_update(self):
         """ Since the user does not have a submission for this challenge, it should update his score """
-        sample_desc2 = ChallengeDescription(2, 'What Up', 'Ws', 's', 'some', 'input sample', 'output sample', 'gg')
-        sample_desc2.save()
-        new_challenge = Challenge(name='NEW MAN', description=sample_desc2,
-                                   difficulty=10, score=100, test_file_name='smth',
-                                   test_case_count=3, category=self.sub_cat)
-        new_challenge.save()
-        new_submission = Submission(language=self.python_language, challenge=new_challenge, author=self.user,
-                                    code='hack you', task_id='123', result_score=100)
-        new_submission.save()
+        sample_desc2 = ChallengeDescFactory()
+        new_challenge = Challenge.objects.create(name='NEW MAN', description=sample_desc2,
+                                                 difficulty=10, score=100, test_file_name='smth',
+                                                 test_case_count=3, category=self.sub_cat)
+        new_submission = Submission.objects.create(language=self.python_language, challenge=new_challenge, author=self.auth_user,
+                                                   code='hack you', task_id='123', result_score=100)
         old_sc_progress = self.subcategory_progress.user_score
 
-        result = update_user_score(user=self.user, submission=new_submission)
+        result = update_user_score(user=self.auth_user, submission=new_submission)
 
         # should also update his subcategory_progress by 100
         self.subcategory_progress.refresh_from_db()
         self.assertEqual(self.subcategory_progress.user_score, old_sc_progress + 100)
         self.assertTrue(result)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.score, 120)  # should have updated it
+        self.auth_user.refresh_from_db()
+        self.assertEqual(self.auth_user.score, 120)  # should have updated it
 
     def test_submission_jumping_to_new_proficiency_should_reach_it(self):
         next_prof = Proficiency.objects.create(name='mid', needed_percentage=10)
-        award = SubcategoryProficiencyAward.objects.create(subcategory=self.sub_cat, proficiency=next_prof, xp_reward=1000)
-        higher_submission = Submission(language=self.python_language, challenge=self.challenge, author=self.user,
-                                       code='hack you', task_id='123', result_score=30)
-        higher_submission.save()
+        SubcategoryProficiencyAward.objects.create(subcategory=self.sub_cat, proficiency=next_prof, xp_reward=1000)
+        higher_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                                                      code='hack you', task_id='123', result_score=30)
         expected_user_score = 1000 + 30  # proficiency award + submission
-        old_sc_progress = self.subcategory_progress.user_score
-        old_sc_proficiency = self.subcategory_progress.proficiency
         expected_prof = next_prof
 
-        result = update_user_score(user=self.user, submission=higher_submission)
+        update_user_score(user=self.auth_user, submission=higher_submission)
 
         self.subcategory_progress.refresh_from_db()
-        self.user.refresh_from_db()
-        self.assertEqual(expected_user_score, self.user.score)
+        self.auth_user.refresh_from_db()
+        self.assertEqual(expected_user_score, self.auth_user.score)
         self.assertEqual(self.subcategory_progress.proficiency, expected_prof)
