@@ -19,7 +19,7 @@ Supported languages:
 <img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="https://www.unixstickers.com/image/cache/data/stickers/golang/golang.sh-600x600.png" width="75" height="75">
 <img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="http://www.freeiconspng.com/uploads/c--logo-icon-0.png" width="75" height="75">
 <img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="https://upload.wikimedia.org/wikipedia/commons/b/b5/Kotlin-logo.png" width="75" height="75">
-<img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="https://cdn.tutsplus.com/net/uploads/legacy/417_ruby/images/ruby.png" width="75" height="75">
+<img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="https://upload.wikimedia.org/wikipedia/commons/f/f1/Ruby_logo.png" width="75" height="75">
 </div>
 
 Created using the Django REST Framework and React.js
