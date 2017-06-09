@@ -9,10 +9,10 @@ from challenges.helper import convert_to_normal_text
 from constants import (MAX_TEST_RUN_SECONDS, PYTHONLANG_NAME, RUSTLANG_NAME, CPPLANG_NAME, DOCKER_CLIENT,
                        DOCKER_IMAGE_PATH, TESTS_FOLDER_NAME, SITE_ROOT, CHALLENGES_APP_FOLDER_NAME, GRADER_FILE_NAME,
                        GOLANG_NAME, KOTLIN_NAME, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY,
-                       GRADER_TEST_RESULT_TIME_KEY)
+                       GRADER_TEST_RESULT_TIME_KEY, RUBY_NAME)
 from deadline.celery import app
 
-from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader, KotlinGrader
+from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader, KotlinGrader, RubyGrader
 from challenges.models import Submission
 from challenges.helper import delete_file, grade_result, update_user_score, update_test_cases
 
@@ -21,7 +21,8 @@ LANGUAGE_GRADERS = {
     RUSTLANG_NAME: RustGrader,
     CPPLANG_NAME: CppGrader,
     GOLANG_NAME: GoGrader,
-    KOTLIN_NAME: KotlinGrader
+    KOTLIN_NAME: KotlinGrader,
+    RUBY_NAME: RubyGrader
 }
 
 

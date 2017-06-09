@@ -16,6 +16,7 @@ PYTHONLANG_NAME = 'Python'
 CPPLANG_NAME = 'C++'
 GOLANG_NAME = 'Go'
 KOTLIN_NAME = 'Kotlin'
+RUBY_NAME = 'Ruby'
 
 SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE = 40  # the minimum percentage of timed out tests a submission needs to have for the whole submission to be considered 'timed_out'
 
@@ -45,6 +46,10 @@ CPP_RUN_ARGS = []
 PYTHON_TIMEOUT_SECONDS = 5
 PYTHON_FILE_EXTENSION = '.py'
 PYTHON_RUN_COMMAND = 'python3'
+
+RUBY_TIMEOUT_SECONDS = 5
+RUBY_FILE_EXTENSION = '.rb'
+RUBY_RUN_COMMAND = 'ruby'
 
 GO_TIMEOUT_SECONDS = 4
 GO_FILE_EXTENSION = '.go'

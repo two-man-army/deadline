@@ -28,6 +28,7 @@ PYTHONLANG_NAME = 'Python'
 CPPLANG_NAME = 'C++'
 GOLANG_NAME = 'Go'
 KOTLIN_NAME = 'Kotlin'
+RUBY_NAME = 'Ruby'
 
 # Keys for the object returned by the grader's AsyncResult function
 GRADER_TEST_RESULTS_RESULTS_KEY = 'results'
@@ -56,6 +57,10 @@ PYTHON_TIMEOUT_SECONDS = 5
 PYTHON_FILE_EXTENSION = '.py'
 PYTHON_RUN_COMMAND = 'python3'
 
+RUBY_TIMEOUT_SECONDS = 5
+RUBY_FILE_EXTENSION = '.rb'
+RUBY_RUN_COMMAND = 'ruby'
+
 GO_TIMEOUT_SECONDS = 4
 GO_FILE_EXTENSION = '.go'
 GO_COMPILE_ARGS = ['go', 'build']
@@ -78,7 +83,8 @@ def main():
         RUSTLANG_NAME: RustGrader,
         CPPLANG_NAME: CppGrader,
         GOLANG_NAME: GoGrader,
-        KOTLIN_NAME: KotlinGrader
+        KOTLIN_NAME: KotlinGrader,
+        RUBY_NAME: RubyGrader
     }
     solution_file = sys.argv[1]
     test_count = int(sys.argv[2])
@@ -442,6 +448,12 @@ class PythonGrader(InterpretableLangGrader):
     TIMEOUT_SECONDS = PYTHON_TIMEOUT_SECONDS
     FILE_EXTENSION = PYTHON_FILE_EXTENSION
     RUN_COMMAND = PYTHON_RUN_COMMAND
+
+
+class RubyGrader(InterpretableLangGrader):
+    TIMEOUT_SECONDS = RUBY_TIMEOUT_SECONDS
+    FILE_EXTENSION = RUBY_FILE_EXTENSION
+    RUN_COMMAND = RUBY_RUN_COMMAND
 
 
 if __name__ == '__main__':

@@ -5,6 +5,8 @@ Go: 2
 Rust: 3
 C++: 4
 Kotlin: 5
+Ruby: 6
+
 
 MainCategory:
 Algorithms: 1
