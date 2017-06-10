@@ -451,7 +451,7 @@
       }
     },
 
-  {
+    {
       "model": "challenges.challengedescription",
       "pk": 8,
       "fields": {
@@ -474,6 +474,34 @@
         "score": 20,
         "test_file_name": "rodger_rise_tests",
         "test_case_count": 10,
+        "category": 11,
+        "supported_languages": [1, 3, 4, 2, 5, 6]
+      }
+    },
+
+    {
+      "model": "challenges.challengedescription",
+      "pk": 9,
+      "fields": {
+        "content": "Jim owns the company UpSum, whose job is to constantly calculate sums. Today a new client presented themselves to UpSum and they wanted a similar service - one for multiplication. UpSum did not have any employees who could do the job and that is why they posted on Deadline in the hopes of having some skilled worker solve their problem. {{NPL}} The client wants, with the presence of a number **N** and a list of possible multipliers **MP**, to get the trail with which they got to the number **N**. {{NPL}} As multiple such trails exist, the client wants the lexicographically smallest one. {{NPL}}This is best explained with an example as follows:{{NPL}}Given **N** = 24 and **MP** = [2, 3, 4], then the following ways exist:{{NPL}}{{NPL}}1 (*3) = 3 (*4) = 12 (*2) = 24. [1, 3, 12, 24]{{NPL}}1 (*4) = 4 (*2) = 8 (*3) = 24. [1, 4, 8, 24]{{NPL}}1 (*2) = 2 (*2) = 4 (*2) = 8 (*3) = 24. [1, 2, 4, 8]{{NPL}}1 (*2) = 2 (*3) = 6 (*4) = 24 [1, 2, 6, 24]{{NPL}}{{NPL}}Others might also exist, but out of the four given, the fourth one is the smallest collection lexicographically.{{NPL}}If there is no way to reach **N** starting from 1, simply output -1.",
+        "input_format": "The first line contains two space separated integers, **N** and **M**, respectively denoting the number we want to reach and the amount of multipliers in the **MP** list.{{NPL}}The second line contains **M** space separated integers, denoting the **MP** collecion.",
+        "output_format": "Output a single line of spare separated integers, denoting the legicographically smallest path to reaching **N** from the number 1.{{NPL}}In case no such exists, output -1",
+        "constraints": "1 <= **N** <= 1000000000{{NPL}}1 <= **MP** <= 21000{{NPL}}1 <= **MP** element <= Sqrt( **N** )",
+        "sample_input": "",
+        "sample_output": ""
+      }
+    },
+
+    {
+      "model": "challenges.challenge",
+      "pk": 9,
+      "fields": {
+        "name": "Factory Factorization",
+        "description": 9,
+        "difficulty": 3.5,
+        "score": 24,
+        "test_file_name": "factory_factorization_tests",
+        "test_case_count": 17,
         "category": 11,
         "supported_languages": [1, 3, 4, 2, 5, 6]
       }
