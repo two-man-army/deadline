@@ -223,6 +223,12 @@ class InputParser
           puts 'Pick a number or variable that you want your array element to be a factor of'
           factor, = parse_variable_value
           element.factor_of = factor
+          puts 'Rougly what percentage of the numbers do you want to be factors? 1-100'
+          percentage = gets.chomp
+          if not percentage.is_number? or percentage.to_i < 0 or percentage.to_i > 100
+            raise Exception('INVALID PERCENTAGE')
+          end
+          element.factor_percentage = percentage.to_i
         end
         pair_structure << InputStructure.new(element_count, element)
       else
@@ -242,6 +248,7 @@ class InputParser
     puts 'Enter lower limit of the variable (variable name or number)'
     lower, was_dep = parse_variable_value
     puts 'Enter upper limit of the variable (variable name or number)'
+    # TODO: Add expression. i.e N-1
     upper, was_dep2 = parse_variable_value
     is_dependant |= was_dep | was_dep2
 
