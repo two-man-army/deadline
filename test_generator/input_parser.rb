@@ -245,9 +245,9 @@ class InputParser
   def parse_variable(varname)
     is_dependant = false # tracks if the variable is dependant on other vars
     puts "Building variable #{varname.upcase}"
-    puts 'Enter lower limit of the variable (variable name or number)'
+    puts 'Enter upper limit of the variable (variable name or number, or expression containing variable surrounded by space - e.g Math.sqrt( n )'
     lower, was_dep = parse_variable_value
-    puts 'Enter upper limit of the variable (variable name or number)'
+    puts 'Enter upper limit of the variable (variable name or number, or expression containing variable surrounded by space - e.g Math.sqrt( n )'
     # TODO: Add expression. i.e N-1
     upper, was_dep2 = parse_variable_value
     is_dependant |= was_dep | was_dep2
@@ -261,7 +261,7 @@ class InputParser
     if is_dependant
       DependantVariable.new(name, NIL, lower, upper, NIL)
     else
-      IndependantVariable.new(NIL, lower, upper, NIL)
+      IndependantVariable.new(name, NIL, lower, upper, NIL)
     end
   end
 
@@ -272,6 +272,22 @@ class InputParser
   def parse_variable_value
     variable = gets.chomp
     return variable.to_i, false if variable.is_number?
+
+    is_an_expression = variable.split(' ').length > 1
+    if is_an_expression
+      # find the variable
+      exp_var = NIL
+      variable.split(' ').each do |v|
+        if @variables.key?(v)
+          if !exp_var.nil? && exp_var != @variables[v]
+            raise Exception('Cannot have two different variables in the expression!')
+          end
+          exp_var = @variables[v]
+        end
+      end
+
+      return VariableExpression.new(exp_var, variable), true
+    end
 
     unless @variables.key?(variable)
       puts @variables

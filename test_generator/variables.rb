@@ -17,15 +17,16 @@ class Integer
 
 end
 
+
 class Variable
   # factor_of - a number we want this variable to be a factor of
   # factor_percentage - a percentage - the chance we want this to be a factor
-  attr_accessor :factor_of, :factor_percentage
+  attr_accessor :factor_of, :factor_percentage, :name
 
   def get_factor_of_value
     return NIL if @factor_of.nil?
     factor = @factor_of
-    if @factor_of.is_a? Variable
+    if @factor_of.respond_to? :value
       @factor_of.gen_value(Random.new) if @factor_of.value.nil?
       factor = @factor_of.value
     end
@@ -39,8 +40,8 @@ class Variable
   end
 
   def fetch_min_max_values
-    min_value = if @min.is_a? Variable then @min.value else @min end
-    max_value = if @max.is_a? Variable then @max.value else @max end
+    min_value = if @min.respond_to? :value then @min.value else @min end
+    max_value = if @max.respond_to? 'value' then @max.value else @max end
     [min_value, max_value]
   end
 
@@ -89,7 +90,7 @@ class Variable
 
     is_in_range = @value >= min_value && @value <= max_value
     divisible = true
-    factor = if @factor_of.is_a? Variable then @factor_of.value else @factor_of end
+    factor = if @factor_of.respond_to? :value then @factor_of.value else @factor_of end
     if to_be_a_factor
       divisible = factor % @value == 0
     end
@@ -100,8 +101,8 @@ end
 # Holds a constant variable which depends on constant values
 class IndependantVariable < Variable
   attr_accessor :value
-  def initialize(value = NIL, min = NIL, max = NIL, factor_of = NIL)
-    @name = NIL
+  def initialize(name = NIL, value = NIL, min = NIL, max = NIL, factor_of = NIL)
+    @name = name
     @value = value
     @min = min
     @max = max
@@ -125,5 +126,20 @@ class DependantVariable < Variable
     raise Exception("#{@name}'s value is not generated!") if @value.nil?
 
     @value
+  end
+end
+
+# Holds a variable and an expression with said variable
+# Once the variable is evaluated, the expression is applied
+class VariableExpression
+  # @param [String] expression - e.g "n - 1"
+  def initialize(var, expression)
+    @var = var
+    @expression = expression
+  end
+
+  def value
+    # parse the expression
+    Integer(eval(@expression.gsub(@var.name, @var.value.to_s)))
   end
 end
