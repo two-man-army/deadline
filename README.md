@@ -12,6 +12,7 @@ Supported languages:
 - Rust
 - Kotlin
 - C++
+- Ruby
 <br>
 <div style="display: flex; flex-direction: row;">
 <img style="display: inline; width: 200px; height: 200px; margin-right: 50px;" src="https://www.python.org/static/opengraph-icon-200x200.png" width="75" height="75">

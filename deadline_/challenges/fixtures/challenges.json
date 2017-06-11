@@ -505,5 +505,34 @@
         "category": 11,
         "supported_languages": [1, 3, 4, 2, 5, 6]
       }
+    },
+
+    {
+      "model": "challenges.challengedescription",
+      "pk": 10,
+      "fields": {
+        "content": "You have a pile of **P** toys that you want to split into multiple piles, as well as a list of positive integers **L** .{{NPL}}We define a split as follows:{{NPL}}    First, choose a pile of toys. Let's say the chosen pile contains **y** toys{{NPL}}    Next, look for some number **x** that is in **L** , is not equal to **y** and **y** is divisible by **x** . If such an **x** exists, you can split the pile into y/x equal smaller piles.{{NPL}}For the given pile, calculate the maximum possible number of moves you can perform and print it on a new line.",
+        "input_format": "First line contains two space separated integers,{{NPL}}    **P** - the number of toys in the initial pile{{NPL}}    **k** - the count of numbers in **L**{{NPL}}Second line contains **k** space separated positive integers, denoting **L**",
+        "output_format": "Output a single integer, denoting the maximum amount of splits possible for the given pile",
+        "constraints": "1 <= **P** <= 10^9{{NPL}}1 <= **k** <= 20000",
+        "sample_input": "12 2{{NPL}}3 6{{NPL}}3",
+        "sample_output": "3",
+        "explanation": "We split 12 by 3 equalling 2 piles of size 6. We split both piles separately with 3, equalling 4 piles of size 3. {{NPL}In total: 3 splits."
+      }
+    },
+
+   {
+      "model": "challenges.challenge",
+      "pk": 10,
+      "fields": {
+        "name": "Toys for the Boys",
+        "description": 10,
+        "difficulty": 4.5,
+        "score": 35,
+        "test_file_name": "toys_for_the_boys_tests",
+        "test_case_count": 11,
+        "category": 9,
+        "supported_languages": [1, 3, 4, 2, 5, 6]
+      }
     }
 ]
