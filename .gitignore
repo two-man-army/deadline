@@ -10,6 +10,9 @@ bundle.map.js
 bower_components/
 node_modules/
 .idea/
+
+# django's cache
+*.djcache
 # Distribution / packaging
 .Python
 env/
