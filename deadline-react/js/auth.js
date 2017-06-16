@@ -1,4 +1,5 @@
 const ID_TOKEN_KEY = 'authToken'
+const USERNAME_KEY = 'username'
 
 class Auth {
   /**
@@ -7,9 +8,10 @@ class Auth {
    * @param {string} token
    */
 
-  static authenticateUser (token) {
+  static authenticateUser (token, userName) {
     if (window.localStorage) {
       window.localStorage.setItem(ID_TOKEN_KEY, token)
+      window.localStorage.setItem(USERNAME_KEY, userName)
     }
   }
 
@@ -31,6 +33,7 @@ class Auth {
   static deauthenticateUser () {
     if (window.localStorage) {
       window.localStorage.removeItem(ID_TOKEN_KEY)
+      window.localStorage.removeItem(USERNAME_KEY)
     }
   }
 
@@ -42,6 +45,17 @@ class Auth {
   static getToken () {
     if (window.localStorage) {
       return window.localStorage.getItem(ID_TOKEN_KEY)
+    }
+  }
+
+  /**
+   * Gets the current user's username
+   *
+   * @returns {string}
+   */
+  static getCurrentUserUsername () {
+    if (window.localStorage) {
+      return window.localStorage.getItem(USERNAME_KEY)
     }
   }
 }

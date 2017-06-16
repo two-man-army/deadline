@@ -20,7 +20,8 @@ function getAxiosConfig () {
 function postLogIn (email, password) {
   return axios.post('http://localhost:8000/accounts/login/', {email, password}).then(resp => {
     let authToken = resp.data['user_token']
-    Auth.authenticateUser(authToken)
+    let userName = resp.data['username']
+    Auth.authenticateUser(authToken, userName)
     console.log(`Authenticated user with ${authToken}`)
   }).catch(err => {
     console.log(`Error while trying to log in: ${err}`)
@@ -37,7 +38,8 @@ function postRegister (email, password, username) {
     username, email, password
   }).then(resp => {
     let authToken = resp.data['user_token']
-    Auth.authenticateUser(authToken)
+    let userName = resp.data['username']
+    Auth.authenticateUser(authToken, userName)
     console.log(`Authenticated user (through register) with ${authToken}`)
   }).catch(err => {
     if (err.response && err.response.data) {
