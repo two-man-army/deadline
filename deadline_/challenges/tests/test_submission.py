@@ -441,7 +441,8 @@ class SubmissionVoteViewTest(APITestCase, TestHelperMixin):
         self.c1 = ChallengeFactory(category=self.sub_cat)
 
         self.create_user_and_auth_token()
-        self.submission = Submission.objects.create(language=self.python_language, challenge=self.c1, author=self.auth_user,
+        submission_user = UserFactory()
+        self.submission = Submission.objects.create(language=self.python_language, challenge=self.c1, author=submission_user,
                             code="")
 
     def test_cast_submission_vote_creates_vote(self):
@@ -485,6 +486,27 @@ class SubmissionVoteViewTest(APITestCase, TestHelperMixin):
                                     data={'is_upvote': True})
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.data['error'], 'A submission with ID 111 does not exist!')
+
+    def test_user_cannot_vote_on_his_own_submission(self):
+        own_subm = Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                                    author=self.auth_user,
+                                                    code="")
+
+        response = self.client.post(f'/challenges/submissions/{own_subm.id}/vote', HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'is_upvote': True})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'You cannot vote on your own submission!')
+
+    def test_user_remove_own_submission_returns_400(self):
+        own_subm = Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                                    author=self.auth_user,
+                                                    code="")
+
+        response = self.client.delete(f'/challenges/submissions/{own_subm.id}/removeVote', HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'is_upvote': True})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'You cannot vote on your own submission!')
 
     def test_remove_submission_vote_invalid_submission_id_returns_404(self):
         response = self.client.delete(f'/challenges/submissions/111/removeVote', HTTP_AUTHORIZATION=self.auth_token)

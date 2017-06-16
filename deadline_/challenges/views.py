@@ -206,6 +206,9 @@ class CastSubmissionVoteView(APIView):
         except Submission.DoesNotExist:
             return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
 
+        if submission.author_id == self.request.user.id:
+            return Response(status=400, data={'error': 'You cannot vote on your own submission!'})
+
         # try to find such a SubmissionVote first
         submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user, submission=submission).first()
         if submission_vote is None:
@@ -219,6 +222,7 @@ class CastSubmissionVoteView(APIView):
         return Response(status=201)
 
 
+# TODO: Move delete to the above url :)
 # /challenges/submissions/{submission_id}/removeVote
 class RemoveSubmissionVoteView(APIView):
     permission_classes = (IsAuthenticated, )
@@ -230,6 +234,9 @@ class RemoveSubmissionVoteView(APIView):
             submission = Submission.objects.get(id=submission_id)
         except Submission.DoesNotExist:
             return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
+
+        if submission.author_id == self.request.user.id:   # ...wtf?
+            return Response(status=400, data={'error': 'You cannot vote on your own submission!'})
 
         # see if such a Submission exists
         submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user,
