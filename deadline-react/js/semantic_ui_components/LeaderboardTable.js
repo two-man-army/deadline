@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { Dropdown, Input, Icon, Header, Image, Table } from 'semantic-ui-react'
 import TimeAgo from 'react-timeago'
 import { postCastSubmissionVote, deleteRemoveSubmissionVote } from '../requests.js'
+import Auth from '../auth.js'
 
 class LeaderboardTable extends React.Component {
   /**
@@ -99,6 +100,7 @@ class LeaderboardTable extends React.Component {
 
 /**
  * Return a table cell with a link to the given submission
+    import Auth from '../auth.js'
  * @param {boolean} toRender - bool indicating if we want to render the link
  * @param {*} submission
  */
@@ -111,7 +113,8 @@ class LeaderboardTable extends React.Component {
   }
 
   buildSubmissionVoteIcons (toRender, submission) {
-    if (!toRender) {
+    let currUserUsername = Auth.getCurrentUserUsername()
+    if (!toRender || submission.author === currUserUsername) {
       return
     }
     let upvoteStyle = submission.user_has_voted && submission.user_has_upvoted ? {color: '#ff4081'} : undefined
