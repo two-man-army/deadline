@@ -56,6 +56,9 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
     }
 }
+import sys
+if 'test' in sys.argv:
+    CACHES['default'] = {'BACKEND': 'django.core.cache.backends.dummy.DummyCache',}
 
 MIDDLEWARE = [
     'django.middleware.cache.UpdateCacheMiddleware',
