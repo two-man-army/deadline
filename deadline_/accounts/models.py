@@ -15,6 +15,10 @@ from django.db import models
 from django.dispatch import receiver
 
 
+class Role(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+
 class User(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     username = models.CharField(max_length=30, unique=True)
@@ -22,6 +26,7 @@ class User(AbstractBaseUser):
     password = models.CharField(max_length=30)
     score = models.IntegerField(default=0)
     salt = models.CharField(max_length=40)
+    role = models.ForeignKey(Role, default=1)
     last_submit_at = models.DateTimeField(auto_now_add=True)
 
     def __init__(self, *args, **kwargs):

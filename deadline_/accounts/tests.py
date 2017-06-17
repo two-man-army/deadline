@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-from accounts.models import User
+from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
 
@@ -15,6 +15,7 @@ from challenges.tests.factories import UserFactory, ChallengeDescFactory
 class UserModelTest(TestCase):
     def setUp(self):
         from challenges.models import MainCategory, SubCategory, Proficiency
+        self.base_role = Role.objects.create(name='User')
         self.main_cat = MainCategory.objects.create(name='tank')
         self.main_cat2 = MainCategory.objects.create(name='helicopter')
         self.sub1 = SubCategory.objects.create(name='AAX-190', meta_category=self.main_cat, max_score=250)
@@ -26,6 +27,10 @@ class UserModelTest(TestCase):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
         self.assertTrue(hasattr(us, 'auth_token'))
         self.assertIsNotNone(us.auth_token)
+
+    def test_user_register_assigns_default_user_role(self):
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        self.assertEqual(us.role, self.base_role)
 
     def test_user_register_creates_user_subcategory_proficiency(self):
         from challenges.models import UserSubcategoryProficiency
