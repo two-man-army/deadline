@@ -15,6 +15,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
     description = ChallengeDescriptionSerializer()
     category = serializers.StringRelatedField()
     supported_languages = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = Challenge
         fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count', 'category', 'supported_languages')
