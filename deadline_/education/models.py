@@ -21,3 +21,26 @@ class Course(models.Model):
         for teacher in self.teachers.all():
             if teacher.role != teacher_role:
                 raise ValidationError(f'The Teacher of a Course should have the appropriate Teacher role!')
+
+
+class Lesson(models.Model):
+    """
+    A single Lesson in a Course
+    """
+
+    # represents the number of the lesson in the Course, used for continuation
+    # e.g lesson #2 requires lesson #1 to have passed
+    lesson_number = models.IntegerField()
+    # Links to videos
+    video_link_1 = models.CharField(max_length=100, default='')
+    video_link_2 = models.CharField(max_length=100, default='')
+    video_link_3 = models.CharField(max_length=100, default='')
+    video_link_4 = models.CharField(max_length=100, default='')
+    video_link_5 = models.CharField(max_length=100, default='')
+
+    course = models.ForeignKey(Course, related_name='lessons')
+
+    intro = models.CharField(max_length=1000)
+    content = models.CharField(max_length=3000)
+    annexation = models.CharField(max_length=3000)
+    # TODO: homework = models.foreignKey(Homework)
