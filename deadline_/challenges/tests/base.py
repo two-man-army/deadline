@@ -18,6 +18,14 @@ class TestHelperMixin:
         self.auth_user = User.objects.create(username='123', password='123', email='123@abv.bg', score=123, role=base_role)
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
 
+    def create_teacher_user_and_auth_token(self):
+        teacher_role = Role.objects.filter(name='Teacher').first()
+        if teacher_role is None:
+            teacher_role = Role.objects.create(name='Teacher')
+        self.teacher_auth_user = User.objects.create(username='theTeach', password='123', email='TheTeach@abv.bg', score=123,
+                                                     role=teacher_role)
+        self.teacher_auth_token = 'Token {}'.format(self.teacher_auth_user.auth_token.key)
+
     def base_set_up(self):
         """
         Since a lot of tests use the same setUp code, namely creating:

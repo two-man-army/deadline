@@ -8,6 +8,8 @@ MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait betwee
 MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
 TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds tests for challenges
 
+TEACHER_ROLE_NAME = 'Teacher'
+
 CHALLENGES_APP_FOLDER_NAME = 'challenges'
 GRADER_FILE_NAME = 'grader.py'  # the file which is sent over to the docker container and executed there
 
