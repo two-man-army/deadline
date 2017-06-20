@@ -44,3 +44,28 @@ class Lesson(models.Model):
     content = models.CharField(max_length=3000)
     annexation = models.CharField(max_length=3000)
     # TODO: homework = models.foreignKey(Homework)
+
+
+class Homework(models.Model):
+    pass
+
+
+class HomeworkTask(models.Model):
+    homework = models.ForeignKey(Homework)
+    test_case_count = models.IntegerField()
+    supported_languages = models.ManyToManyField(Language)
+    description = models.OneToOneField('HomeworkTaskDescription')
+    is_mandatory = models.BooleanField()
+    consecutive_number = models.IntegerField(default=0)
+    difficulty = models.IntegerField()  # 1-10
+
+
+class HomeworkTaskDescription(models.Model):
+    """ Holds the description for a specific homework task """
+    content = models.CharField(max_length=3000, null=True)
+    input_format = models.CharField(max_length=500, null=True)
+    output_format = models.CharField(max_length=1000, null=True)
+    constraints = models.CharField(max_length=1000, null=True)
+    sample_input = models.CharField(max_length=1000, null=True)
+    sample_output = models.CharField(max_length=1000, null=True)
+    explanation = models.CharField(max_length=1000, null=True)
