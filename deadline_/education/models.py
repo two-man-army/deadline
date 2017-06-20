@@ -62,10 +62,10 @@ class HomeworkTask(models.Model):
 
 class HomeworkTaskDescription(models.Model):
     """ Holds the description for a specific homework task """
-    content = models.CharField(max_length=3000, null=True)
-    input_format = models.CharField(max_length=500, null=True)
-    output_format = models.CharField(max_length=1000, null=True)
-    constraints = models.CharField(max_length=1000, null=True)
-    sample_input = models.CharField(max_length=1000, null=True)
-    sample_output = models.CharField(max_length=1000, null=True)
-    explanation = models.CharField(max_length=1000, null=True)
+    content = models.CharField(max_length=3000, default='')
+    input_format = models.CharField(max_length=500, default='')
+    output_format = models.CharField(max_length=1000, default='')
+    constraints = models.CharField(max_length=1000, default='')
+    sample_input = models.CharField(max_length=1000, default='')
+    sample_output = models.CharField(max_length=1000, default='')
+    explanation = models.CharField(max_length=1000, default='')
