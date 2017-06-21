@@ -93,11 +93,9 @@ class UserLessonProgress(models.Model):
             raise Exception("Inconsistency between given User and CourseProgress' user")
 
         if self.course_progress.course.is_under_construction:
-            # TODO: Check what fields are changed
             raise Exception('Cannot create UserLessonProgress while Course is under construction!')
 
         if self.lesson.is_under_construction:
-            # TODO: Check what fields are changed
             raise Exception('Cannot create UserLessonProgress while Lesson is under construction!')
 
         return super().save(force_insert, force_update, using, update_fields)
@@ -107,3 +105,15 @@ class UserCourseProgress(models.Model):
     is_complete = models.BooleanField(default=False)
     user = models.ForeignKey(User)
     course = models.ForeignKey(Course)
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+
+        # validate that course and course's lessons are not under construction
+        if self.course.is_under_construction:
+            raise Exception('Cannot create UserCourseProgress while Course is under construction!')
+
+        if any([lesson.is_under_construction for lesson in self.course.lessons.all()]):
+            raise Exception("Cannot create UserCourseProgress while a Course's Lesson is under construction!")
+
+        return super().save(force_insert, force_update, using, update_fields)
