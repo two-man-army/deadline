@@ -6,14 +6,19 @@ from django.db.utils import IntegrityError
 from rest_framework.parsers import JSONParser
 
 from education.tests.factories import HomeworkTaskDescriptionFactory
-from education.models import Homework, HomeworkTask, HomeworkTaskDescription
+from education.models import Homework, HomeworkTask, HomeworkTaskDescription, Course, Lesson
 from education.serializers import HomeworkTaskSerializer
 from challenges.models import Language
+from challenges.tests.base import TestHelperMixin
 
 
-class HomeworkTaskModelTests(TestCase):
+class HomeworkTaskModelTests(TestCase, TestHelperMixin):
     def setUp(self):
-        self.hw = Homework.objects.create()
+        self.create_user_and_auth_token()
+        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False)
+        self.lesson = Lesson.objects.create(lesson_number=1, course=self.course, intro='', content='',
+                                            annexation='', is_under_construction=False)
+        self.hw = Homework.objects.create(is_mandatory=False, lesson=self.lesson)
         self.python_lang = Language.objects.create(name='Python')
 
     def test_cannot_create_task_without_assigning_homework(self):
@@ -37,13 +42,24 @@ class HomeworkTaskModelTests(TestCase):
         hw_task = serializer.save()
 
         self.assertEqual(hw_task.homework, self.hw)
-        self.assertEqual(hw_task.test_case_count, 5)
         self.assertEqual(hw_task.supported_languages.count(), 1)
         self.assertEqual(hw_task.supported_languages.first(), self.python_lang)
         self.assertEqual(hw_task.is_mandatory, True)
         self.assertEqual(hw_task.description, HomeworkTaskDescription.objects.first())
         self.assertEqual(hw_task.difficulty, 1)
         self.assertEqual(hw_task.consecutive_number, 1)
+
+    def test_deserialization_ignored_test_case_count(self):
+        json = b'{"homework": 1, "test_case_count": 5, "supported_languages": [1],' \
+               b'"description": {"content": "tank"}, "is_mandatory":true, "consecutive_number": 1,' \
+               b'"difficulty": 1}'
+        stream = BytesIO(json)
+        data = JSONParser().parse(stream)
+        serializer = HomeworkTaskSerializer(data=data)
+        serializer.is_valid()
+        hw_task = serializer.save()
+
+        self.assertEqual(hw_task.test_case_count, 0)
 
     def test_serialization(self):
         expected_json = {
@@ -61,5 +77,4 @@ class HomeworkTaskModelTests(TestCase):
         hw_task.supported_languages.add(self.python_lang)
         hw_task.refresh_from_db()
         ser = HomeworkTaskSerializer(instance=hw_task)
-        print(ser.data)
         self.assertEqual(ser.data, expected_json)

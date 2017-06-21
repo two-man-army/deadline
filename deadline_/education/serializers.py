@@ -22,7 +22,7 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HomeworkTask
-        fields = '__all__'
+        exclude = ('test_case_count', )
 
     def create(self, validated_data):
         description_data = validated_data.pop('description')
@@ -40,8 +40,11 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
             Attach the Language's name in the deserialization
              This is SQL-expensive and I will probably curse myself later on for adding this.
              You can always speed it up by building the language IDs and doing one SQL query
+            Also attach the test_case_count
         """
         loaded_data = super().data
+        hw_task = HomeworkTask.objects.get(id=loaded_data['id'])
         loaded_data['supported_languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['supported_languages']]
+        loaded_data['test_case_count'] = hw_task.test_case_count
 
         return loaded_data

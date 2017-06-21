@@ -54,7 +54,7 @@ class Homework(models.Model):
 
 class HomeworkTask(models.Model):
     homework = models.ForeignKey(Homework)
-    test_case_count = models.IntegerField()
+    test_case_count = models.IntegerField(default=0)
     supported_languages = models.ManyToManyField(Language)
     description = models.OneToOneField('HomeworkTaskDescription')
     is_mandatory = models.BooleanField()
