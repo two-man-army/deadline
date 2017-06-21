@@ -43,11 +43,11 @@ class Lesson(models.Model):
     intro = models.CharField(max_length=1000)
     content = models.CharField(max_length=3000)
     annexation = models.CharField(max_length=3000)
-    # TODO: homework = models.foreignKey(Homework)
 
 
 class Homework(models.Model):
-    pass
+    lesson = models.ForeignKey(Lesson)
+    is_mandatory = models.BooleanField()
 
 
 class HomeworkTask(models.Model):

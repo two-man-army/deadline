@@ -1,9 +1,7 @@
 from rest_framework import serializers
 
 from education.models import Course, HomeworkTaskDescription, HomeworkTask
-from challenges.models import User, Language
-from challenges.serializers import LanguageSerializer
-from accounts.serializers import UserSerializer
+from challenges.models import Language
 
 
 class CourseSerializer(serializers.ModelSerializer):
