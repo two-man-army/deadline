@@ -19,3 +19,4 @@ class CourseModelTests(TestCase):
         self.assertEqual(less.annexation, '')
         self.assertEqual(self.course.lessons.count(), 1)
         self.assertEqual(self.course.lessons.first(), less)
+        self.assertTrue(less.is_under_construction)

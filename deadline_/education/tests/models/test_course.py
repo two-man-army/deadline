@@ -10,6 +10,10 @@ from accounts.models import User, Role
 
 
 class CourseModelTests(TestCase):
+    def test_newly_created_course_is_under_construction(self):
+        c = Course.objects.create(name='Algo', difficulty=1)
+        self.assertTrue(c.is_under_construction)
+
     def test_cannot_have_three_digit_or_invalid_difficulty(self):
         test_difficulties = [1.11, 1.111, 1.55, 1.4999]  # should all raise
         for diff in test_difficulties:

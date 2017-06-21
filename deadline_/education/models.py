@@ -13,6 +13,7 @@ class Course(models.Model):
     difficulty = models.FloatField(
         validators=[MinValueValidator(1), MaxValueValidator(10), PossibleFloatDigitValidator(['0', '5'])])
     languages = models.ManyToManyField(to='challenges.Language')
+    is_under_construction = models.BooleanField(default=True)
 
     def clean(self):
         super().clean()
@@ -31,6 +32,7 @@ class Lesson(models.Model):
     # represents the number of the lesson in the Course, used for continuation
     # e.g lesson #2 requires lesson #1 to have passed
     lesson_number = models.IntegerField()
+    is_under_construction = models.BooleanField(default=True)
     # Links to videos
     video_link_1 = models.CharField(max_length=100, default='')
     video_link_2 = models.CharField(max_length=100, default='')
@@ -89,6 +91,14 @@ class UserLessonProgress(models.Model):
         cp_user_id = self.course_progress.user_id
         if self.user_id != cp_user_id:
             raise Exception("Inconsistency between given User and CourseProgress' user")
+
+        if self.course_progress.course.is_under_construction:
+            # TODO: Check what fields are changed
+            raise Exception('Cannot create UserLessonProgress while Course is under construction!')
+
+        if self.lesson.is_under_construction:
+            # TODO: Check what fields are changed
+            raise Exception('Cannot create UserLessonProgress while Lesson is under construction!')
 
         return super().save(force_insert, force_update, using, update_fields)
 
