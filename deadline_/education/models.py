@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from challenges.validators import PossibleFloatDigitValidator
-from challenges.models import Language
+from challenges.models import Language, User
 from accounts.models import Role
 
 
@@ -69,3 +69,31 @@ class HomeworkTaskDescription(models.Model):
     sample_input = models.CharField(max_length=1000, default='')
     sample_output = models.CharField(max_length=1000, default='')
     explanation = models.CharField(max_length=1000, default='')
+
+
+class UserLessonProgress(models.Model):
+    user = models.ForeignKey(User)
+    lesson = models.ForeignKey(Lesson)
+    is_complete = models.BooleanField()
+    course_progress = models.ForeignKey('UserCourseProgress')
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        # validate the courses
+        course_id = self.course_progress.course_id
+        lesson_course_id = self.lesson.course_id
+        if course_id != lesson_course_id:
+            raise Exception("Inconsistency between CourseProgress' course and Lesson's course")
+
+        # validate the current User and CourseProgress' User
+        cp_user_id = self.course_progress.user_id
+        if self.user_id != cp_user_id:
+            raise Exception("Inconsistency between given User and CourseProgress' user")
+
+        return super().save(force_insert, force_update, using, update_fields)
+
+
+class UserCourseProgress(models.Model):
+    is_complete = models.BooleanField(default=False)
+    user = models.ForeignKey(User)
+    course = models.ForeignKey(Course)
