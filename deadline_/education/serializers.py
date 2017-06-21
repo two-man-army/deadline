@@ -18,7 +18,6 @@ class HomeworkTaskDescriptionSerializer(serializers.ModelSerializer):
 
 class HomeworkTaskSerializer(serializers.ModelSerializer):
     description = HomeworkTaskDescriptionSerializer()
-    # supported_languages = LanguageSerializer(many=True)
 
     class Meta:
         model = HomeworkTask

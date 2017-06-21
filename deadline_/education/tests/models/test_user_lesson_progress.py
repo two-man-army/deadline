@@ -24,7 +24,7 @@ class UserLessonProgressModelTests(TestCase, TestHelperMixin):
 
     def test_cannot_create_with_course_progress_for_another_course(self):
         """ The CourseProgress and Lesson's Course must be about the same Course!"""
-        self.course_2 = Course.objects.create(name='tank2', difficulty=5)
+        self.course_2 = Course.objects.create(name='tank2', difficulty=5, is_under_construction=False)
         other_course_progress = UserCourseProgress.objects.create(user=self.auth_user, course=self.course_2)
 
         with self.assertRaises(Exception):

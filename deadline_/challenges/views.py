@@ -1,8 +1,6 @@
-import json
 from datetime import datetime
 
 from django.utils import timezone
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView

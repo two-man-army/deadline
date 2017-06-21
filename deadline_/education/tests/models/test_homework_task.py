@@ -22,7 +22,7 @@ class HomeworkTaskModelTests(TestCase, TestHelperMixin):
         self.python_lang = Language.objects.create(name='Python')
 
     def test_cannot_create_task_without_assigning_homework(self):
-        with self.assertRaises(IntegrityError) as e:
+        with self.assertRaises(IntegrityError):
             HomeworkTask.objects.create(test_case_count=1, description=HomeworkTaskDescriptionFactory(), is_mandatory=True, consecutive_number=1, difficulty=10)
 
     def test_creation_works(self):
