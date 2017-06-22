@@ -35,7 +35,6 @@ class ChallengeBoard extends React.Component {
     this.buildSolutionResults = this.buildSolutionResults.bind(this)
     this.displayLoadingTests = this.displayLoadingTests.bind(this)
     this.convertBold = this.parseTextIntoHTML.bind(this)
-    this.cleanArray = this.cleanArray.bind(this)
   }
 
   /**
@@ -86,16 +85,6 @@ class ChallengeBoard extends React.Component {
       </div>
     )
   }
- // Will remove all falsy values: undefined, null, 0, false, NaN and "" (empty string)
-  cleanArray (actual) {
-    let newArray = []
-    for (var i = 0; i < actual.length; i++) {
-      if (actual[i]) {
-        newArray.push(actual[i])
-      }
-    }
-    return newArray
-  }
 
   // Parses text into HTML, searching for certain placeholders like {{NPL}} and ** surroundings
   parseTextIntoHTML (str) {
@@ -114,7 +103,7 @@ class ChallengeBoard extends React.Component {
       str = str.replace(strToReplace, replacer)
     }
 
-    result = this.cleanArray(str.split('{{NPL}}')).join('<br>')  // format new line placeholders
+    result = str.split('{{NPL}}').join('<br>')  // format new line placeholders
 
     if (result.length === 0) {
       return ''
