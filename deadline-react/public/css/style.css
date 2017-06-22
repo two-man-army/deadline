@@ -297,7 +297,12 @@ div.lang-choice-select {
 }
 
 .editor-options {
-    margin-top: 50px;
+    margin: 50px 0 10px 0;
+}
+
+button.fluid.submit-solution-btn {
+    margin: 10px 0;
+    opacity: .9;
 }
 
 .solution-tests-container {
