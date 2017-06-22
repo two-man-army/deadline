@@ -64,4 +64,15 @@ class HomeworkTaskCreateView(CreateAPIView):
         if not any(teacher.id == self.request.user.id for teacher in course.teachers.all()):
             return Response(data={'error': 'You do not have permission to create Course Homework!'}, status=403)
 
+        if not course.is_under_construction:
+            # the course is finished and you cannot add further homework tasks
+            return Response(data={
+                'error': 'The course is no longer under construction and as such you cannot create a new HomeworkTask'},
+                status=400)
+        if not lesson.is_under_construction:
+            # the course is finished and you cannot add further homework tasks
+            return Response(data={
+                'error': 'The lesson is no longer under construction and as such you cannot create a new HomeworkTask'},
+                status=400)
+
         return course, lesson
