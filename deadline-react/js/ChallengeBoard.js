@@ -97,35 +97,24 @@ class ChallengeBoard extends React.Component {
     return newArray
   }
 
-  // Parses our text into HTML, searching for certain placeholders like {{NPL}} and ** surroundings
+  // Parses text into HTML, searching for certain placeholders like {{NPL}} and ** surroundings
   parseTextIntoHTML (str) {
     if (str === undefined) {
       return str
     }
 
-    var splitContent = str.split(/\s/)
-    for (var i = 0; i < splitContent.length; i++) {
-      let word = splitContent[i]
+    // a bold word markup is a word surrounded by **word**
+    let re = /\*\*(:?.+?)\*\*/g
+    let match
+    let result
 
-      // a bold word markup is a word surrounded by **word**
-      if (word.length > 4 && word.startsWith('**')) {
-        let lastThreeElements = word.substring(word.length - 3)
-
-        if (lastThreeElements.endsWith('**')) {
-          let wantedStr = word.substring(2, word.length - 2)
-          word = '<span class="variable-descriptor">' + wantedStr + '</span>'
-        } else if (lastThreeElements[0] === '*' && lastThreeElements[1] === '*') {
-          // word ends with a punctuation at the end. i.e **tank**.
-          var wantedStr = word.substring(2, word.length - 3)
-          let lastElement = lastThreeElements[2]
-          word = '<span class="variable-descriptor">' + wantedStr + '</span>' + lastElement
-        }
-      }
-
-      splitContent[i] = word
+    while ((match = re.exec(str)) !== null) {
+      let strToReplace = match[0]
+      let replacer = `<strong class=variable-descriptor>${match[1]}</strong>`
+      str = str.replace(strToReplace, replacer)
     }
-    var result = this.cleanArray(splitContent.join(' ')
-                  .split('{{NPL}}')).join('<br>')  // format new line placeholders
+
+    result = this.cleanArray(str.split('{{NPL}}')).join('<br>')  // format new line placeholders
 
     if (result.length === 0) {
       return ''
