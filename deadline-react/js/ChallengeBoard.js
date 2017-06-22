@@ -8,8 +8,8 @@ import MonacoEditor from 'react-monaco-editor'
 import {getLanguageDetail, postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
-import { themeOptions, requireConfig } from './editor_settings/editorSettings.js'
-import { Segment, Dimmer, Container } from 'semantic-ui-react'
+import { options, themeOptions, requireConfig } from './editor_settings/editorSettings.js'
+import { Button, Segment, Dimmer, Container } from 'semantic-ui-react'
 import { divideCollectionIntoPieces } from './helpers.js'
 
 class ChallengeBoard extends React.Component {
@@ -17,8 +17,10 @@ class ChallengeBoard extends React.Component {
     super(props)
     this.state = {
       code: '',
-      selectedLanguage: 'Python',
+      selectedLanguage: '',
       selectedTheme: 'vs-dark',
+      displayStyle: 'none',
+      showRedBorder: '',
       hasSubmitted: false,
       isGrading: false,
       loadedResults: false,
@@ -185,7 +187,11 @@ class ChallengeBoard extends React.Component {
       let defaultCode = lang.default_code
       this.setState({code: defaultCode})
     })
-    this.setState({selectedLanguage: languageName})
+    this.setState({
+      selectedLanguage: languageName,
+      displayStyle: 'none',
+      showRedBorder: ''
+    })
   }
 
   themeChangeHandler (event, theme) {
@@ -245,15 +251,22 @@ class ChallengeBoard extends React.Component {
   }
 
   submitSolution () {
-    postChallengeSolution(this.props.id, this.state.code, this.state.selectedLanguage).then(submission => {
-      this.setState({hasSubmitted: true, isGrading: true})
+    if (this.state.selectedLanguage) {
+      postChallengeSolution(this.props.id, this.state.code, this.state.selectedLanguage).then(submission => {
+        this.setState({hasSubmitted: true, isGrading: true})
 
-      this.displayLoadingTests()
+        this.displayLoadingTests()
 
-      this.getGradedSolution(this.props.id, submission.id)  // start querying for the updated solution
-    }).catch(err => {
-      throw err
-    })
+        this.getGradedSolution(this.props.id, submission.id)  // start querying for the updated solution
+      }).catch(err => {
+        throw err
+      })
+    } else {
+      this.setState({
+        displayStyle: 'block',
+        showRedBorder: '1px solid red'
+      })
+    }
   }
 
   render () {
@@ -267,7 +280,8 @@ class ChallengeBoard extends React.Component {
           <div className='editor-options'>
             <div className='lang-choice-select'>
               <span>Language</span>
-              <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
+              <div style={{color: 'red', display: this.state.displayStyle}}>Choose language</div>
+              <SelectionSearch options={this.buildLanguageSelectOptions()} style={{border: this.state.showRedBorder}} placeholder='Select Language' onChange={this.langChangeHandler} />
             </div>
             <div className='theme-select'>
               <span>Theme</span>
@@ -276,6 +290,7 @@ class ChallengeBoard extends React.Component {
           </div>
           <MonacoEditor
             height='600'
+            options={options}
             language={this.state.selectedLanguage.toLowerCase()}
             theme={this.state.selectedTheme}
             value={this.state.code}
@@ -283,7 +298,7 @@ class ChallengeBoard extends React.Component {
             editorDidMount={this.editorDidMount}
             requireConfig={requireConfig}
           />
-          <button onClick={this.submitSolution}>Submit</button>
+          <Button fluid className='submit-solution-btn' color='orange' onClick={this.submitSolution}>Submit solution</Button>
           {this.state.solutionResultsJSX}
           <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
         </div>
