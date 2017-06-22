@@ -8,15 +8,17 @@ import MonacoEditor from 'react-monaco-editor'
 import {getLanguageDetail, postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
+import { themeOptions, requireConfig } from './editor_settings/editorSettings.js'
 import { Segment, Dimmer, Container } from 'semantic-ui-react'
-import {divideCollectionIntoPieces} from './helpers.js'
+import { divideCollectionIntoPieces } from './helpers.js'
 
 class ChallengeBoard extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      code: '',  // TODO: Load sample code
-      chosenLanguage: 'Python',  // TODO: Change with drop down
+      code: '',
+      selectedLanguage: 'Python',
+      selectedTheme: 'vs-dark',
       hasSubmitted: false,
       isGrading: false,
       loadedResults: false,
@@ -28,6 +30,7 @@ class ChallengeBoard extends React.Component {
     this.editorDidMount = this.editorDidMount.bind(this)
     this.submitSolution = this.submitSolution.bind(this)
     this.langChangeHandler = this.langChangeHandler.bind(this)
+    this.themeChangeHandler = this.themeChangeHandler.bind(this)
     this.getGradedSolution = this.getGradedSolution.bind(this)
     this.buildSolutionResults = this.buildSolutionResults.bind(this)
     this.displayLoadingTests = this.displayLoadingTests.bind(this)
@@ -198,13 +201,18 @@ class ChallengeBoard extends React.Component {
     this.setState({code: newValue})
   }
 
-  langChangeHandler (event, e) {
-    let languageName = e.value
+  langChangeHandler (event, language) {
+    let languageName = language.value
     getLanguageDetail(languageName).then(lang => {
       let defaultCode = lang.default_code
       this.setState({code: defaultCode})
     })
-    this.setState({chosenLanguage: languageName})
+    this.setState({selectedLanguage: languageName})
+  }
+
+  themeChangeHandler (event, theme) {
+    this.setState({selectedTheme: theme.value})
+    console.log(theme.value)
   }
 
   /**
@@ -259,7 +267,7 @@ class ChallengeBoard extends React.Component {
   }
 
   submitSolution () {
-    postChallengeSolution(this.props.id, this.state.code, this.state.chosenLanguage).then(submission => {
+    postChallengeSolution(this.props.id, this.state.code, this.state.selectedLanguage).then(submission => {
       this.setState({hasSubmitted: true, isGrading: true})
 
       this.displayLoadingTests()
@@ -271,30 +279,32 @@ class ChallengeBoard extends React.Component {
   }
 
   render () {
-    const requireConfig = {
-      url: 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js',
-      paths: {
-        'vs': '/node_modules/monaco-editor/min/vs'
-      }
-    }
     // TODO: Show test results
+    // TODO: Create new component for editor options
     return (
       <Container>
         <div className='challenge-board'>
           <h1 className='challenge-board-title'>{this.props.name}</h1>
           {this.buildDescription()}
+          <div className='editor-options'>
+            <div className='lang-choice-select'>
+              <span>Language</span>
+              <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
+            </div>
+            <div className='theme-select'>
+              <span>Theme</span>
+              <SelectionSearch options={themeOptions} placeholder='Select Theme' onChange={this.themeChangeHandler} />
+            </div>
+          </div>
           <MonacoEditor
-            width='800'
             height='600'
-            language='javascript'
+            language={this.state.selectedLanguage.toLowerCase()}
+            theme={this.state.selectedTheme}
             value={this.state.code}
             onChange={this.onChange}
             editorDidMount={this.editorDidMount}
             requireConfig={requireConfig}
           />
-          <div className='lang-choice-select'>
-            <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
-          </div>
           <button onClick={this.submitSolution}>Submit</button>
           {this.state.solutionResultsJSX}
           <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
