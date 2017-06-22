@@ -73,6 +73,23 @@ class HomeworkTaskDescription(models.Model):
     explanation = models.CharField(max_length=1000, default='')
 
 
+class HomeworkTaskTest(models.Model):
+    task = models.ForeignKey(HomeworkTask)
+    input_file_path = models.CharField(max_length=150)
+    output_file_path = models.CharField(max_length=150)
+    consecutive_number = models.IntegerField()
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if not self.consecutiveness_is_valid():
+            raise Exception('Consecutiveness in HomeworkTaskTest is not valid!')
+
+        return super().save(force_insert, force_update, using, update_fields)
+
+    def consecutiveness_is_valid(self):
+        return self.consecutive_number == self.task.homeworktasktest_set.count() + 1
+
+
 class UserLessonProgress(models.Model):
     user = models.ForeignKey(User)
     lesson = models.ForeignKey(Lesson)
