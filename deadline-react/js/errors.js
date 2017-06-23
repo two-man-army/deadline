@@ -14,4 +14,13 @@ function SweetAlertError (title, message, field) {
 SweetAlertError.prototype = Object.create(Error.prototype)
 SweetAlertError.prototype.constructor = SweetAlertError
 
-export {SweetAlertError}
+function EmptySolutionError (title, message) {
+  this.name = 'EmptySolutionError'
+  this.title = title || 'Unknown Error'
+  this.message = message || 'Unknown Error'
+  this.stack = (new Error()).stack
+}
+EmptySolutionError.prototype = Object.create(Error.prototype)
+EmptySolutionError.prototype.constructor = EmptySolutionError
+
+export {SweetAlertError, EmptySolutionError}
