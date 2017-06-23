@@ -1,10 +1,12 @@
 from rest_framework.generics import CreateAPIView
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from education.permissions import IsTeacher
 from education.serializers import CourseSerializer, HomeworkTaskSerializer
-from education.models import Course, Lesson
+from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest
+from education.helpers import create_task_test_files
 
 
 # /education/course
@@ -76,3 +78,58 @@ class HomeworkTaskCreateView(CreateAPIView):
                 status=400)
 
         return course, lesson
+
+
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class HomeworkTaskTestCreateView(APIView):
+    permission_classes = (IsAuthenticated, IsTeacher, )
+
+    def post(self, request, *args, **kwargs):
+        course_id, lesson_id, task_id = (kwargs.get('course_pk', ''), kwargs.get('lesson_pk', ''), kwargs.get('task_pk', ''))
+        problematic_model, problematic_id = None, None
+        try:
+            course = Course.objects.get(id=course_id)
+            lesson = Lesson.objects.get(id=lesson_id)
+            task = HomeworkTask.objects.get(id=task_id)
+        except Course.DoesNotExist:
+            problematic_model = 'Course'
+            problematic_id = course_id
+        except Lesson.DoesNotExist:
+            problematic_model = 'Lesson'
+            problematic_id = lesson_id
+        except HomeworkTask.DoesNotExist:
+            problematic_model = 'Homework Task'
+            problematic_id = task_id
+
+        # TODO: move to validate method
+        if problematic_model is not None:  # error while fetching models
+            return Response(status=404, data={'error': f'No {problematic_model} with ID {problematic_id}'})
+        if self.request.user not in course.teachers.all():
+            return Response(status=403, data={'error': f'You do not have permission to create Homework Task Tests!'})
+        if not course.is_under_construction:
+            return Response(status=403, data={'error': f'You cannot add tests as the Course is not under construction'})
+        if not lesson.is_under_construction:
+            return Response(status=403, data={'error': f'You cannot add tests as the Lesson is not under construction'})
+        if lesson.course != course:
+            return Response(status=403, data={'error': f'Lesson {lesson.id} does not belong to Course {course.id}'})
+        if lesson != task.homework.lesson:
+            return Response(status=403, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
+        # if not task.is_under_construction:
+        #     return Response(status=403, data={'error': f'You cannot add tests as the Task is not under construction'})
+
+        test_input, test_output = request.data.get('input', ''), request.data.get('output', '')
+        input_file_path, output_file_path = create_task_test_files(
+            course_name=course.name, lesson_number=lesson.lesson_number,
+            task_number=task.consecutive_number, input=test_input, output=test_output
+        )
+
+        task_test = HomeworkTaskTest.objects.create(
+            input_file_path=input_file_path, output_file_path=output_file_path, task=task,
+            consecutive_number=task.test_case_count + 1
+        )
+        # TODO: Consecutive_number generation in helper method
+
+        task.test_case_count += 1
+        task.save()
+
+        return Response(status=201)
