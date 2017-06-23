@@ -5,6 +5,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import MonacoEditor from 'react-monaco-editor'
+import SweetAlert from 'sweetalert-react'
+import { EmptySolutionError } from './errors'
 import {getLanguageDetail, postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
@@ -21,6 +23,7 @@ class ChallengeBoard extends React.Component {
       selectedTheme: 'vs-dark',
       displayStyle: 'none',
       showRedBorder: '',
+      showAlert: false,
       hasSubmitted: false,
       isGrading: false,
       loadedResults: false,
@@ -259,6 +262,13 @@ class ChallengeBoard extends React.Component {
 
         this.getGradedSolution(this.props.id, submission.id)  // start querying for the updated solution
       }).catch(err => {
+        if (err instanceof EmptySolutionError) {
+          this.setState({
+            showAlert: true,
+            alertDesc: err.message,
+            alertTitle: err.title
+          })
+        }
         throw err
       })
     } else {
@@ -288,6 +298,13 @@ class ChallengeBoard extends React.Component {
               <SelectionSearch options={themeOptions} placeholder='Select Theme' onChange={this.themeChangeHandler} />
             </div>
           </div>
+          <SweetAlert
+            type='error'
+            show={this.state.showAlert}
+            title={this.state.alertTitle}
+            text={this.state.alertDesc}
+            onConfirm={() => this.setState({ showAlert: false })}
+          />
           <MonacoEditor
             height='600'
             options={options}
