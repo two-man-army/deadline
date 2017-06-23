@@ -30,6 +30,7 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
             raise Exception('Could not serialize the given description!')
         description = description_ser.save()
         validated_data['description'] = description
+        validated_data['is_under_construction'] = True  # always is_under_construction on creation
 
         return super().create(validated_data)
 

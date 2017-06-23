@@ -48,6 +48,19 @@ class HomeworkTaskModelTests(TestCase, TestHelperMixin):
         self.assertEqual(hw_task.description, HomeworkTaskDescription.objects.first())
         self.assertEqual(hw_task.difficulty, 1)
         self.assertEqual(hw_task.consecutive_number, 1)
+        self.assertTrue(hw_task.is_under_construction)
+
+    def test_deserialization_ignores_under_construction(self):
+        json = b'{"homework": 1, "test_case_count": 5, "supported_languages": [1],' \
+               b'"description": {"content": "tank"}, "is_mandatory":true, "consecutive_number": 1,' \
+               b'"difficulty": 1, "is_under_construction": false}'
+        stream = BytesIO(json)
+        data = JSONParser().parse(stream)
+        serializer = HomeworkTaskSerializer(data=data)
+        serializer.is_valid()
+        hw_task = serializer.save()
+
+        self.assertTrue(hw_task.is_under_construction)
 
     def test_deserialization_ignored_test_case_count(self):
         json = b'{"homework": 1, "test_case_count": 5, "supported_languages": [1],' \
@@ -67,7 +80,8 @@ class HomeworkTaskModelTests(TestCase, TestHelperMixin):
                                                  ('output_format', ''), ('constraints', ''), ('sample_input', ''),
                                                  ('sample_output', ''), ('explanation', '')]),
             'supported_languages': ['Python'],
-            'test_case_count': 5, 'is_mandatory': True, 'consecutive_number': 1, 'difficulty': 1, 'homework': 1}
+            'test_case_count': 5, 'is_mandatory': True, 'consecutive_number': 1, 'difficulty': 1, 'homework': 1,
+            'is_under_construction': True}
 
         hw_task = HomeworkTask.objects.create(homework=self.hw, test_case_count=5,
                                               description=HomeworkTaskDescription.objects.create(content='tank'),

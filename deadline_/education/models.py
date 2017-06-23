@@ -58,6 +58,7 @@ class HomeworkTask(models.Model):
     supported_languages = models.ManyToManyField(Language)
     description = models.OneToOneField('HomeworkTaskDescription')
     is_mandatory = models.BooleanField()
+    is_under_construction = models.BooleanField(default=True)
     consecutive_number = models.IntegerField(default=0)
     difficulty = models.IntegerField()  # 1-10
 

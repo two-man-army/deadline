@@ -110,12 +110,12 @@ class HomeworkTaskTestCreateView(APIView):
             return Response(status=403, data={'error': f'You cannot add tests as the Course is not under construction'})
         if not lesson.is_under_construction:
             return Response(status=403, data={'error': f'You cannot add tests as the Lesson is not under construction'})
+        if not task.is_under_construction:
+            return Response(status=403, data={'error': f'You cannot add tests as the Task is not under construction'})
         if lesson.course != course:
             return Response(status=403, data={'error': f'Lesson {lesson.id} does not belong to Course {course.id}'})
         if lesson != task.homework.lesson:
             return Response(status=403, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
-        # if not task.is_under_construction:
-        #     return Response(status=403, data={'error': f'You cannot add tests as the Task is not under construction'})
 
         test_input, test_output = request.data.get('input', ''), request.data.get('output', '')
         input_file_path, output_file_path = create_task_test_files(

@@ -93,7 +93,14 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 403)
 
     def test_create_test_fails_homework_task_that_is_not_under_construction(self, _):
-        raise NotImplementedError()
+        self.task.is_under_construction = False
+        self.task.save()
+
+        resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
+                                HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                data={"input": self.input, "output": self.output})
+
+        self.assertEqual(resp.status_code, 403)
 
     def test_create_test_fails_for_non_existent_course(self, _):
         resp = self.client.post(f'/education/course/12/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
