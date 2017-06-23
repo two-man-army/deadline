@@ -1,6 +1,6 @@
 import axios from 'axios'
 import Auth from './auth.js'
-import {SweetAlertError} from './errors.js'
+import {SweetAlertError, EmptySolutionError} from './errors.js'
 import {convertFromUrlToFriendlyText} from './helpers.js'
 
 /**
@@ -117,6 +117,9 @@ function postChallengeSolution (challengeId, code, language) {
     let submission = resp.data
     return submission
   }).catch(err => {
+    if (err.response && err.response.data) {
+      throw new EmptySolutionError('Error: ', err.response.data.error)
+    }
     console.log(`Err while submitting solution to challenge with ID ${challengeId}`)
     throw err
   })
