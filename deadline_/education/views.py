@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from education.permissions import IsTeacher
-from education.serializers import CourseSerializer, HomeworkTaskSerializer
+from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest
 from education.helpers import create_task_test_files
 
@@ -19,6 +19,46 @@ class CourseCreateView(CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(teachers=[self.request.user])
+
+
+# /education/course/{course_id}/lesson
+class LessonCreateView(CreateAPIView):
+    """
+    Creates a new Lesson for a given Course
+    """
+    serializer_class = LessonSerializer
+    permission_classes = (IsAuthenticated, IsTeacher, )
+
+    def create(self, request, *args, **kwargs):
+        validation = self.validate_data(course_pk=kwargs.get('course_pk'))
+        if isinstance(validation, Response):
+            return validation  # there has been an error in validation
+
+        self.request.data['course'] = kwargs.get('course_pk')
+        ser = self.get_serializer(data=self.request.data)
+        if not ser.is_valid():
+            return Response(data={'error': f'Error while creating Lesson: {ser.errors}'},
+                            status=400)
+        self.perform_create(ser)
+        headers = self.get_success_headers(ser.data)
+
+        return Response(ser.data, status=201, headers=headers)
+
+    def validate_data(self, course_pk) -> Response or Course:
+        """ Validate the given course_pk and the user's association to it"""
+        try:
+            course = Course.objects.get(id=course_pk)
+        except Course.DoesNotExist:
+            return Response(data={'error': 'Course with ID {} does not exist.'.format(course_pk)},
+                            status=400)
+
+        if not course.is_under_construction:
+            return Response(data={'error': 'Cannot create a Lesson in a Course that is not under construction!'},
+                            status=400)
+        if not any(teacher.id == self.request.user.id for teacher in course.teachers.all()):
+            return Response(data={'error': 'You do not have permission to create Course Lessons!'}, status=403)
+
+        return course
 
 
 # POST /education/course/{course_id}/lesson/{lesson_id}/homework_task
@@ -45,7 +85,7 @@ class HomeworkTaskCreateView(CreateAPIView):
         return Response(ser.data, status=201, headers=headers)
 
     def validate_data(self, course_pk, lesson_pk) -> Response or tuple():
-        """ Validate the given challenge_id, submission_id and their association """
+        """ Validate the given course_pk, lesson_pk and their association """
         try:
             course = Course.objects.get(id=course_pk)
         except Course.DoesNotExist:

@@ -20,7 +20,6 @@ class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = '__all__'
-        # exclude = ('lesson_number', )
 
     def create(self, validated_data):
         # TODO: move to helper method
