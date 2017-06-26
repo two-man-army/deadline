@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from education.models import Course, HomeworkTaskDescription, HomeworkTask
+from education.models import Course, HomeworkTaskDescription, HomeworkTask, Lesson
 from challenges.models import Language
 
 
@@ -14,6 +14,23 @@ class HomeworkTaskDescriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeworkTaskDescription
         exclude = ('id', )
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = '__all__'
+        # exclude = ('lesson_number', )
+
+    def create(self, validated_data):
+        # TODO: move to helper method
+        validated_data['lesson_number'] = validated_data['course'].lessons.count() + 1
+        validated_data['is_under_construction'] = True
+        return super().create(validated_data)
+
+    def is_valid(self, raise_exception=False):
+        self.initial_data['lesson_number'] = -1  # Temporary
+        return super().is_valid(raise_exception=raise_exception)
 
 
 class HomeworkTaskSerializer(serializers.ModelSerializer):
