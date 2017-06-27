@@ -1,5 +1,6 @@
 from unittest.mock import patch, MagicMock
 
+from django.http import HttpResponse
 from django.test import TestCase
 from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
@@ -8,6 +9,7 @@ from rest_framework.parsers import JSONParser
 
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
+from challenges.models import UserSubcategoryProficiency
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
 
 
@@ -53,8 +55,7 @@ class UserModelTest(TestCase):
         """ Should convert a user object to a json """
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
         # password should be hashed
-        expected_json = '{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123}' % (us.password)
-
+        expected_json = '{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123,"role":"User"}' % (us.password)
         content = JSONRenderer().render(UserSerializer(us).data)
         self.assertEqual(content.decode('utf-8'), expected_json)
 

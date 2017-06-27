@@ -14,6 +14,7 @@ from accounts.models import User
 from accounts.helpers import hash_password
 
 
+# GET accounts/user/{user_id}
 class UserDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
     serializer_class = UserSerializer
