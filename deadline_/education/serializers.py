@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from education.models import Course, HomeworkTaskDescription, HomeworkTask, Lesson
+from education.models import Course, HomeworkTaskDescription, HomeworkTask, Lesson, Homework
 from challenges.models import Language
 
 
@@ -62,5 +62,21 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
         hw_task = HomeworkTask.objects.get(id=loaded_data['id'])
         loaded_data['supported_languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['supported_languages']]
         loaded_data['test_case_count'] = hw_task.test_case_count
+
+        return loaded_data
+
+
+class HomeworkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = ('is_mandatory',)
+
+    @property
+    def data(self):
+        """
+            Attach the HomeworkTasks
+        """
+        loaded_data = super().data
+        loaded_data['tasks'] = [HomeworkTaskSerializer(hw).data for hw in self.instance.homeworktask_set.all()]
 
         return loaded_data
