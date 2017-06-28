@@ -1,8 +1,35 @@
+from unittest.mock import MagicMock
+
 from django.test import TestCase
+from django.http import HttpResponse
 
 from accounts.models import Role, User
 from challenges.tests.base import TestHelperMixin
 from education.models import Course, Lesson
+from education.views import LessonManageView, LessonCreateView
+
+
+class LessonManagerViewTests(TestCase):
+    def test_uses_expected_views_by_method(self):
+        self.assertEqual(LessonManageView.VIEWS_BY_METHOD['POST'], LessonCreateView.as_view)
+
+    def test_post_calls_expected_view(self):
+        _old_views = LessonManageView.VIEWS_BY_METHOD
+
+        post_view = MagicMock()
+        view_response = MagicMock()
+        view_response.return_value = HttpResponse()
+        post_view.return_value = view_response
+        LessonManageView.VIEWS_BY_METHOD = {'POST': post_view} # poor man's patch
+
+        self.client.post(f'/education/course/1/lesson/')
+
+        post_view.assert_called_once()
+        LessonManageView.VIEWS_BY_METHOD = _old_views
+
+    def returns_404_unsupported_method(self):
+        resp = self.client.trace(f'/education/course/1/lesson/')
+        self.assertEqual(resp.status_code, 404)
 
 
 class LessonCreateViewTests(TestCase, TestHelperMixin):

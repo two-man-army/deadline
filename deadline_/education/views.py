@@ -2,6 +2,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.http import HttpResponse
 
 from education.permissions import IsTeacher
 from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer
@@ -59,6 +60,22 @@ class LessonCreateView(CreateAPIView):
             return Response(data={'error': 'You do not have permission to create Course Lessons!'}, status=403)
 
         return course
+
+
+# /education/course/{course_id}/lesson
+class LessonManageView(APIView):
+    """
+        Manages different request methods for the given URL, sending them to the appropriate view class
+    """
+    VIEWS_BY_METHOD = {
+        'POST': LessonCreateView.as_view
+    }
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method in self.VIEWS_BY_METHOD:
+            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
+
+        return HttpResponse(status=404)
 
 
 # POST /education/course/{course_id}/lesson/{lesson_id}/homework_task
