@@ -8,10 +8,12 @@ class SideBarNav extends React.Component {
 
   render() {
     return (
-      <nav className='side-nav'>
-        <NavItem />
-        <NavProfile />
-      </nav>
+      <aside className='side-nav'>
+        <nav>
+          <NavItem />
+          <NavProfile />
+        </nav>
+      </aside>
     )
   }
 }
