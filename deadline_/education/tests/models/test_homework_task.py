@@ -30,6 +30,12 @@ class HomeworkTaskModelTests(TestCase, TestHelperMixin):
                                     consecutive_number=1, difficulty=10,
                                     homework=self.hw)
 
+    def test_get_course_returns_course(self):
+        received_course = HomeworkTask.objects.create(test_case_count=1, description=HomeworkTaskDescriptionFactory(), is_mandatory=True,
+                                    consecutive_number=1, difficulty=10,
+                                    homework=self.hw).get_course()
+        self.assertEqual(received_course, self.course)
+
     def test_deserialization_with_nested_description(self):
         """ Should create the description object as well """
         json = b'{"homework": 1, "test_case_count": 5, "supported_languages": [1],' \

@@ -46,10 +46,16 @@ class Lesson(models.Model):
     content = models.CharField(max_length=3000)
     annexation = models.CharField(max_length=3000)
 
+    def get_course(self):
+        return self.course
+
 
 class Homework(models.Model):
     lesson = models.ForeignKey(Lesson)
     is_mandatory = models.BooleanField()
+
+    def get_course(self):
+        return self.lesson.get_course()
 
 
 class HomeworkTask(models.Model):
@@ -61,6 +67,9 @@ class HomeworkTask(models.Model):
     is_under_construction = models.BooleanField(default=True)
     consecutive_number = models.IntegerField(default=0)
     difficulty = models.IntegerField()  # 1-10
+
+    def get_course(self):
+        return self.homework.get_course()
 
 
 class HomeworkTaskDescription(models.Model):

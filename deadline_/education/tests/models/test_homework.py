@@ -32,3 +32,7 @@ class HomeworkModelTests(TestCase, TestHelperMixin):
 
         received_data = HomeworkSerializer(hw).data
         self.assertEqual(received_data, expected_data)
+
+    def test_get_course_returns_course(self):
+        received_course = Homework.objects.create(is_mandatory=False, lesson=self.lesson).get_course()
+        self.assertEqual(received_course, self.course)

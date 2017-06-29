@@ -25,6 +25,13 @@ class CourseModelTests(TestCase):
         self.assertEqual(self.course.lessons.first(), less)
         self.assertTrue(less.is_under_construction)
 
+    def test_get_course_returns_course(self):
+        received_course = Lesson.objects.create(lesson_number=1,
+                              video_link_1='youtube.com/tank', course=self.course,
+                              intro='Today we will tank',
+                              content='Tank much').get_course()
+        self.assertEqual(received_course, self.course)
+
     def test_deserialization(self):
         json = b'{"video_link_1": "www.yt.com/aa", "course": 1,' \
                b'"intro": "Hello", "content": "I aint got much", "annexation": "Yo"}'
