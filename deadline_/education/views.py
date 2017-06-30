@@ -1,4 +1,4 @@
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -60,6 +60,13 @@ class LessonCreateView(CreateAPIView):
             return Response(data={'error': 'You do not have permission to create Course Lessons!'}, status=403)
 
         return course
+
+
+# /education/course/{course_id}/lesson/{lesson_id}
+class LessonDetailsView(RetrieveAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = (IsAuthenticated, )
 
 
 # /education/course/{course_id}/lesson

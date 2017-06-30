@@ -127,3 +127,15 @@ class LessonCreateViewTests(TestCase, TestHelperMixin):
         self.assertEqual(new_lesson.is_under_construction, True)
         self.assertEqual(new_lesson.lesson_number, 2)
         self.assertEqual(new_lesson.intro, 'Just Because')
+
+
+class LessonDetailViewTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.create_teacher_user_and_auth_token()
+        self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                            is_under_construction=True)
+        self.course.teachers.add(self.teacher_auth_user)
+
+    def test_tank(self):
+        print(self.client.get(f'/education/course/{self.course.id}/lesson', HTTP_AUTHORIZATION=self.auth_token))
