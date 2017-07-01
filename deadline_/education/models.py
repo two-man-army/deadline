@@ -14,6 +14,7 @@ class Course(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10), PossibleFloatDigitValidator(['0', '5'])])
     languages = models.ManyToManyField(to='challenges.Language')
     is_under_construction = models.BooleanField(default=True)
+    students = models.ManyToManyField(User, through='UserCourseProgress')
 
     def clean(self):
         super().clean()
@@ -131,7 +132,7 @@ class UserLessonProgress(models.Model):
 class UserCourseProgress(models.Model):
     is_complete = models.BooleanField(default=False)
     user = models.ForeignKey(User)
-    course = models.ForeignKey(Course)
+    course = models.ForeignKey(Course, related_name='student_progresses')
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
