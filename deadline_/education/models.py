@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from education.errors import StudentAlreadyEnrolledError, InvalidEnrollmentError
 from challenges.validators import PossibleFloatDigitValidator
 from challenges.models import Language, User
 from accounts.models import Role
@@ -23,6 +24,17 @@ class Course(models.Model):
         for teacher in self.teachers.all():
             if teacher.role != teacher_role:
                 raise ValidationError(f'The Teacher of a Course should have the appropriate Teacher role!')
+
+    def enroll_student(self, student: User):
+        if self.is_under_construction:
+            raise InvalidEnrollmentError('Cannot enroll a student while the course is under construction!')
+        if self.has_student(student):
+            raise StudentAlreadyEnrolledError()
+        # create a UserCourseProgress for the new student
+        ucp = UserCourseProgress.objects.create(user=student, course=self, is_complete=False)
+        # create a UserLessonProgress for each lesson
+        for lesson in self.lessons.all():
+            UserLessonProgress.objects.create(user=student, lesson=lesson, course_progress=ucp, is_complete=False)
 
     def has_teacher(self, us: User):
         return any(us.id == tch.id for tch in self.teachers.all())
