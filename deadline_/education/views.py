@@ -2,9 +2,10 @@ from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 from django.http import HttpResponse
 
-from education.permissions import IsTeacher
+from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher
 from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest
 from education.helpers import create_task_test_files
@@ -66,7 +67,22 @@ class LessonCreateView(CreateAPIView):
 class LessonDetailsView(RetrieveAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsEnrolledOnCourseOrIsTeacher)
+
+    def retrieve(self, request, *args, **kwargs):
+        """ Attach a couple of fields to the response
+            - A short object for the homework, homework: {task_count: 2}, denoting the number of homeworktasks
+            - is_completed - indicating if the current user has completed the lesson
+        """
+        lesson = self.get_object()
+        serializer = self.get_serializer(lesson)
+        response_data = serializer.data
+        lesson_homework = lesson.homework_set.first()
+        if lesson_homework is not None:
+            response_data['homework'] = {'task_count': lesson_homework.homeworktask_set.count()}
+        response_data['is_completed'] = lesson.is_completed_by(request.user)
+
+        return Response(response_data)
 
 
 # /education/course/{course_id}/lesson

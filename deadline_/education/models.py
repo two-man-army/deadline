@@ -65,8 +65,17 @@ class Lesson(models.Model):
     content = models.CharField(max_length=3000)
     annexation = models.CharField(max_length=3000)
 
-    def get_course(self):
+    def get_course(self) -> Course:
         return self.course
+
+    def is_completed_by(self, user: 'User') -> bool:
+        """
+        Returns a boolean, indicating if the Lesson is completed by the given user
+        """
+        user_lesson_progress = UserLessonProgress.objects.filter(user_id=user.id).first()
+        if user_lesson_progress is None:
+            return False
+        return user_lesson_progress.is_complete
 
 
 class Homework(models.Model):
