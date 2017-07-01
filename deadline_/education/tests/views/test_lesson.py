@@ -6,25 +6,25 @@ from django.http import HttpResponse
 from accounts.models import Role, User
 from challenges.tests.base import TestHelperMixin
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskDescription, Homework
-from education.views import LessonManageView, LessonCreateView
+from education.views import LessonManageView, LessonCreateView, LessonDetailsView
 
 
 class LessonManagerViewTests(TestCase):
     def test_uses_expected_views_by_method(self):
-        self.assertEqual(LessonManageView.VIEWS_BY_METHOD['POST'], LessonCreateView.as_view)
+        self.assertEqual(LessonManageView.VIEWS_BY_METHOD['GET'], LessonDetailsView.as_view)
 
-    def test_post_calls_expected_view(self):
+    def test_get_calls_expected_view(self):
         _old_views = LessonManageView.VIEWS_BY_METHOD
 
-        post_view = MagicMock()
+        get_view = MagicMock()
         view_response = MagicMock()
         view_response.return_value = HttpResponse()
-        post_view.return_value = view_response
-        LessonManageView.VIEWS_BY_METHOD = {'POST': post_view} # poor man's patch
+        get_view.return_value = view_response
+        LessonManageView.VIEWS_BY_METHOD = {'GET': get_view}  # poor man's @patch
 
-        self.client.post(f'/education/course/1/lesson/')
+        self.client.get(f'/education/course/1/lesson/1')
 
-        post_view.assert_called_once()
+        get_view.assert_called_once()
         LessonManageView.VIEWS_BY_METHOD = _old_views
 
     def returns_404_unsupported_method(self):
@@ -166,7 +166,7 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
 
     def test_is_forbidden_for_no_user(self):
         resp = self.client.get(f'/education/course/{self.course.id}/lesson/{self.lesson.id}')
-        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(resp.status_code, 401)
 
     def test_is_not_forbidden_for_teacher_or_user_part_of_course(self):
         self.course.enroll_student(self.auth_user)

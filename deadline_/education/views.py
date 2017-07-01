@@ -85,13 +85,13 @@ class LessonDetailsView(RetrieveAPIView):
         return Response(response_data)
 
 
-# /education/course/{course_id}/lesson
+# /education/course/{course_id}/lesson/{lesson_id}
 class LessonManageView(APIView):
     """
         Manages different request methods for the given URL, sending them to the appropriate view class
     """
     VIEWS_BY_METHOD = {
-        'POST': LessonCreateView.as_view
+        'GET': LessonDetailsView.as_view
     }
 
     def dispatch(self, request, *args, **kwargs):
