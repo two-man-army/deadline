@@ -10,6 +10,25 @@ from accounts.models import User, Role
 
 
 class CourseModelTests(TestCase):
+    def test_has_teacher(self):
+        teacher_role = Role.objects.create(name='teacher')
+        us = User.objects.create(username='tank', email='tank@abv.bg', password='tank0', role=teacher_role)
+        c = Course.objects.create(name='Algo', difficulty=1)
+
+        self.assertFalse(c.has_teacher(us))
+        c.teachers.add(us)
+        self.assertTrue(c.has_teacher(us))
+
+    def test_has_student(self):
+        from education.models import UserCourseProgress
+        us = User.objects.create(username='tank', email='tank@abv.bg', password='tank0')
+        c = Course.objects.create(name='Algo', difficulty=1)
+        c.is_under_construction = False
+
+        self.assertFalse(c.has_student(us))
+        UserCourseProgress.objects.create(course=c, user=us)
+        self.assertTrue(c.has_student(us))
+
     def test_newly_created_course_is_under_construction(self):
         c = Course.objects.create(name='Algo', difficulty=1)
         self.assertTrue(c.is_under_construction)
@@ -27,7 +46,7 @@ class CourseModelTests(TestCase):
 
     def test_cannot_have_base_user_as_teacher(self):
         base_role = Role.objects.create(name='base')
-        teacher_role = Role.objects.create(name='teacher')
+        teacher_role = Role.objects.create(name='Teacher')
         us = User.objects.create(username='123', password='1,23', email='123@abv.bg', role=base_role)
 
         c = Course.objects.create(name='Algo', difficulty=1)

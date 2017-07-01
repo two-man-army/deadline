@@ -9,12 +9,12 @@ from accounts.models import Role
 
 class Course(models.Model):
     name = models.CharField(max_length=200)
-    teachers = models.ManyToManyField(to='accounts.User')
+    teachers = models.ManyToManyField(to='accounts.User', related_name='courses')
     difficulty = models.FloatField(
         validators=[MinValueValidator(1), MaxValueValidator(10), PossibleFloatDigitValidator(['0', '5'])])
     languages = models.ManyToManyField(to='challenges.Language')
     is_under_construction = models.BooleanField(default=True)
-    students = models.ManyToManyField(User, through='UserCourseProgress')
+    students = models.ManyToManyField(User, through='UserCourseProgress', related_name='enrolled_courses')
 
     def clean(self):
         super().clean()
@@ -23,6 +23,12 @@ class Course(models.Model):
         for teacher in self.teachers.all():
             if teacher.role != teacher_role:
                 raise ValidationError(f'The Teacher of a Course should have the appropriate Teacher role!')
+
+    def has_teacher(self, us: User):
+        return any(us.id == tch.id for tch in self.teachers.all())
+
+    def has_student(self, us: User):
+        return any(us.id == st.id for st in self.students.all())
 
 
 class Lesson(models.Model):
