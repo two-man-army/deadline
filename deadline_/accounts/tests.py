@@ -200,6 +200,8 @@ class UserModelTest(TestCase):
 
 class RegisterViewTest(APITestCase):
     def test_register(self):
+        # need to create the default role before
+        Role.objects.create(name='User')
         # The user posts his username, email and password to the /accounts/register URL
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'Meredith',
                                                                                'password': 'mer19222',
@@ -232,6 +234,9 @@ class RegisterViewTest(APITestCase):
 
 class LoginViewTest(APITestCase):
     def test_logging_in_valid(self):
+        # Need to create a base role
+        Role.objects.create(name='User')
+
         # There is a user account
         User.objects.create(email='that_part@abv.bg', password='123')
         # And we try logging in to it
