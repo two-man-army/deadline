@@ -23,6 +23,27 @@ class CourseCreateView(CreateAPIView):
         serializer.save(teachers=[self.request.user])
 
 
+# /education/course/{course_id}
+class CourseDetailsView(RetrieveAPIView):
+    pass
+
+
+# /education/course/{course_id}
+class CourseManageView(APIView):
+    """
+        Manages different request methods for the given URL, sending them to the appropriate view class
+    """
+    VIEWS_BY_METHOD = {
+        'GET': CourseDetailsView.as_view
+    }
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method in self.VIEWS_BY_METHOD:
+            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
+
+        return HttpResponse(status=404)
+
+
 # /education/course/{course_id}/lesson
 class LessonCreateView(CreateAPIView):
     """
