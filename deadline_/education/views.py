@@ -25,7 +25,10 @@ class CourseCreateView(CreateAPIView):
 
 # /education/course/{course_id}
 class CourseDetailsView(RetrieveAPIView):
-    pass
+    serializer_class = CourseSerializer
+    permission_classes = (IsAuthenticated, IsEnrolledOnCourseOrIsTeacher)
+    queryset = Course.objects.all()
+    # TODO: Maybe add a LimitedCourseDetails view
 
 
 # /education/course/{course_id}

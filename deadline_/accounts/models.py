@@ -23,6 +23,7 @@ class Role(models.Model):
 
 
 class User(AbstractBaseUser):
+    # TODO: add First name and Last name (should be mandatory for teachers)
     USERNAME_FIELD = 'email'
     username = models.CharField(max_length=30, unique=True)
     email = models.EmailField(max_length=30, unique=True)

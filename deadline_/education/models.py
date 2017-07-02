@@ -47,7 +47,7 @@ class Lesson(models.Model):
     """
     A single Lesson in a Course
     """
-
+    # TODO: Add Name parameter
     # represents the number of the lesson in the Course, used for continuation
     # e.g lesson #2 requires lesson #1 to have passed
     lesson_number = models.IntegerField()

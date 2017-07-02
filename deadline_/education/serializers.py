@@ -9,6 +9,23 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ('name', 'difficulty', 'languages')
 
+    @property
+    def data(self):
+        """
+            Attach the Language's name in the deserialization
+             This is SQL-expensive and I will probably curse myself later on for adding this.
+             You can always speed it up by builsupported_ding the language IDs and doing one SQL query
+            Attach each teacher's name + id
+             Attach each lesson's name, consecutive_number and intro parameter
+        """
+        loaded_data = super().data
+
+        loaded_data['languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['languages']]
+        loaded_data['teachers'] = [{'name': teacher.username, 'id': teacher.id} for teacher in self.instance.teachers.all()]
+        loaded_data['lessons'] = [{'consecutive_number': lesson.lesson_number, 'short_description': lesson.intro} for lesson in self.instance.lessons.all()]
+
+        return loaded_data
+
 
 class HomeworkTaskDescriptionSerializer(serializers.ModelSerializer):
     class Meta:

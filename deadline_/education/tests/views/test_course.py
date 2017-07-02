@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.http import HttpResponse
 
 from challenges.tests.base import TestHelperMixin
-from education.models import Course
+from education.models import Course, Lesson
 from education.views import CourseManageView, CourseDetailsView
 from challenges.models import Language
 
@@ -60,3 +60,50 @@ class CourseManageViewTests(TestCase, TestHelperMixin):
     def returns_404_unsupported_method(self):
         resp = self.client.trace(f'/education/course/1')
         self.assertEqual(resp.status_code, 404)
+
+
+class CourseDetailsViewTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.python_lang = Language.objects.create(name='Python')
+        self.create_user_and_auth_token()
+        self.create_teacher_user_and_auth_token()
+        self.course = Course.objects.create(name='Python Fundamentals', difficulty=1,
+                                            is_under_construction=True)
+        self.course.teachers.add(self.teacher_auth_user)
+        self.course.languages.add(self.python_lang)
+        self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
+                                            intro='IFs', content='how are you', annexation='bye',
+                                            course=self.course)
+        self.lesson2 = Lesson.objects.create(lesson_number=2, is_under_construction=True,
+                                            intro='Loops', content='how are you', annexation='bye',
+                                            course=self.course)
+
+    def test_teacher_can_view(self):
+        resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertNotEqual(resp.status_code, 403)
+        self.assertEqual(resp.data['name'], 'Python Fundamentals')
+
+    def test_view_returns_data_as_expected(self):
+        expected_data = {'name': 'Python Fundamentals', 'difficulty': 1.0, 'languages': ['Python'], 'teachers': [{'name': 'theTeach', 'id': 2}], 'lessons': [{'consecutive_number': 1, 'short_description': 'IFs'}, {'consecutive_number': 2, 'short_description': 'Loops'}]}
+
+        resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(expected_data, resp.data)
+
+    def test_normal_user_cannot_view_course(self):
+        resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(resp.status_code, 403)
+
+    def test_enrolled_user_can_view_course(self):
+        self.lesson.is_under_construction = False
+        self.lesson.save()
+        self.lesson2.is_under_construction = False
+        self.lesson2.save()
+        self.course.is_under_construction = False
+        self.course.enroll_student(self.auth_user)
+        resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertNotEqual(resp.status_code, 403)
+        self.assertEqual(resp.data['name'], 'Python Fundamentals')
+
+    def test_unauthorized_cannot_view(self):
+        resp = self.client.get(f'/education/course/{self.course.id}')
+        self.assertEqual(resp.status_code, 401)
