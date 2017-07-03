@@ -4,6 +4,7 @@ DOCKER_CLIENT = docker.from_env()
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))  # this is where the constants.py file should be
 DOCKER_IMAGE_PATH = ROOT_PATH
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+EDUCATION_TEST_FILES_FOLDER = os.path.join(SITE_ROOT, 'education_tests')
 MIN_SUBMISSION_INTERVAL_SECONDS = 10  # the minimum time a user must wait between submissions
 MAX_TEST_RUN_SECONDS = 5  # the maximum time a Submission can run
 TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds tests for challenges
