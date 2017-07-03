@@ -166,6 +166,17 @@ class TaskSubmission(models.Model):
     timed_out = models.BooleanField(default=False)  # shows if any test failed for timeout rather than wrong answer
 
 
+class TaskTestCase(models.Model):
+    submission = models.ForeignKey(TaskSubmission)
+    time = models.FloatField(default=0)
+    success = models.BooleanField(default=False)
+    pending = models.BooleanField(default=True)
+    description = models.CharField(max_length=1000)
+    traceback = models.CharField(max_length=2000)
+    error_message = models.CharField(max_length=100)
+    timed_out = models.BooleanField(default=False)
+
+
 class UserLessonProgress(models.Model):
     user = models.ForeignKey(User)
     lesson = models.ForeignKey(Lesson)

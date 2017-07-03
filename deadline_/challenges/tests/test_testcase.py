@@ -104,7 +104,7 @@ class TestCaseModelTest(TestCase, TestHelperMixin):
 
     def test_serialize(self):
         tc = TestCaseModel.objects.create(submission=self.submission, pending=False, success=True, time=1.25, description='Testing', traceback='You suck at coding', error_message="whatup", timed_out=True)
-        expected_json = '{"submission":' + str(tc.submission.id) + ',"pending":false,"success":true,"time":"1.25","description":"Testing","traceback":"You suck at coding","error_message":"whatup","timed_out":true}'
+        expected_json = f'{{"submission":{tc.submission.id},"pending":false,"success":true,"time":"1.25","description":"Testing","traceback":"You suck at coding","error_message":"whatup","timed_out":true}}'
         serialized_test_case: bytes = JSONRenderer().render(data=TestCaseSerializer(tc).data)
 
         self.assertEqual(serialized_test_case.decode('utf-8'), expected_json)

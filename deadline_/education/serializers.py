@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from education.models import Course, HomeworkTaskDescription, HomeworkTask, Lesson, Homework, TaskSubmission
+from education.models import Course, HomeworkTaskDescription, HomeworkTask, Lesson, Homework, TaskSubmission, \
+    TaskTestCase
 from challenges.models import Language
 
 
@@ -103,3 +104,9 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskSubmission
         fields = ('task', 'code', 'language', 'author')
+
+
+class TaskTestCaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskTestCase
+        fields = '__all__'
