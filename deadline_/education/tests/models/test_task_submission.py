@@ -4,6 +4,7 @@ from education.models import TaskSubmission, HomeworkTask, Course, Lesson, Homew
 from challenges.models import Language
 from accounts.models import User
 from education.tests.factories import HomeworkTaskDescriptionFactory
+from education.serializers import TaskSubmissionSerializer
 
 
 class TaskSubmissionTests(TestCase):
@@ -32,3 +33,28 @@ class TaskSubmissionTests(TestCase):
         s = TaskSubmission(language=self.python_language, task=self.task, author=self.auth_user, code='')
         with self.assertRaises(Exception):
             s.full_clean()
+
+    def test_serialization(self):
+        data = {'task': self.task.id, 'language': self.python_language.id, 'code': 'tank', 'author': self.auth_user.id}
+        ser = TaskSubmissionSerializer(data=data)
+        self.assertTrue(ser.is_valid())
+        instance = ser.save()
+
+        self.assertEqual(instance.code, 'tank')
+        self.assertEqual(instance.language, self.python_language)
+        self.assertEqual(instance.task, self.task)
+        self.assertEqual(instance.author, self.auth_user)
+
+    def test_serialization_ignores_default_fields(self):
+        """
+        There are some fields, like is_solved which should be False regardless of what data is given
+        """
+        data = {'task': self.task.id, 'language': self.python_language.id, 'code': 'tank', 'author': self.auth_user.id,
+                'is_solved': True, 'grading_is_pending': False, 'timed_out': True}
+        ser = TaskSubmissionSerializer(data=data)
+        self.assertTrue(ser.is_valid())
+        instance = ser.save()
+
+        self.assertEqual(instance.is_solved, False)
+        self.assertEqual(instance.grading_is_pending, True)
+        self.assertEqual(instance.timed_out, False)
