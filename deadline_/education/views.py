@@ -68,7 +68,7 @@ class LessonCreateView(CreateAPIView):
         lesson = self.perform_create(ser)
         headers = self.get_success_headers(ser.data)
 
-        if request.data['create_homework']:
+        if request.data.get('create_homework', default=False):
             # create a Homework object for the given Lesson
             Homework.objects.create(lesson=lesson, is_mandatory=True)  # homework should be mandatory by default
 
