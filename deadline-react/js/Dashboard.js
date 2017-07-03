@@ -1,8 +1,13 @@
 import React from 'react'
 import { getLatestAttemptedChallenges } from './requests.js'
 import { Route, Switch } from 'react-router-dom'
-import DashboardHeader from './semantic_ui_components/DashboardHeader'
+// import DashboardHeader from './semantic_ui_components/DashboardHeader'
+import Header from './components/Header'
+import FollowSuggestions from './components/FollowSuggestions'
+import RanklistBox from './components/RanklistBox'
+import ActivityFeed from './components/ActivityFeed'
 import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
+import SidebarNav from './components/SidebarNav'
 import CategoryChallengeList from './CategoryChallengeList'
 import ChallengeDetails from './ChallengeDetails'
 import OverallLeaderboard from './semantic_ui_components/OverallLeaderboardTable'
@@ -35,29 +40,40 @@ class Dashboard extends React.Component {
    */
   getDefaultDashboardDOM () {
     return (
-      <div>
-        {this.state.challenges.map(challenge => {
-          return (
-            <DisplayMetaInfo key={challenge.id} {...challenge} userScore={challenge.user_max_score} />
-          )
-        })}
-      </div>
+      <main className='main'>
+        <div>
+          {this.state.challenges.map(challenge => {
+            return (
+              <DisplayMetaInfo key={challenge.id} {...challenge} userScore={challenge.user_max_score} />
+            )
+          })}
+        </div>
+      </main>
     )
   }
 
   render () {
     return (
-      <div className='dashboard'>
-        <DashboardHeader />
-        <Switch>
-          <Route exact path='/' render={() => { return this.getDefaultDashboardDOM() }} />
-          <Route exact path='/leaderboard' component={OverallLeaderboard} />
-          <Route exact path='/categories/:category' component={CategoryChallengeList} />
-          <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
-          <Route exact path='/accounts/password/change' component={Profile} />
-          <Route exact path='/accounts/edit' component={Profile} />
-          <Route path='*' component={RouteNotFound} />
-        </Switch>
+      <div>
+        <Header />
+        <section className='dashboard'>
+          <div className='columns'>
+            <SidebarNav />
+            <Switch>
+              <Route exact path='/' component={ActivityFeed} />
+              <Route exact path='/leaderboard' component={OverallLeaderboard} />
+              <Route exact path='/categories/:category' component={CategoryChallengeList} />
+              <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
+              <Route exact path='/accounts/password/change' component={Profile} />
+              <Route exact path='/accounts/edit' component={Profile} />
+              <Route path='*' component={RouteNotFound} />
+            </Switch>
+            <aside className='right-sidebar'>
+              <FollowSuggestions />
+              <RanklistBox />
+            </aside>
+          </div>
+        </section>
       </div>
     )
   }
