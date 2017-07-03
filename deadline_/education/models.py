@@ -158,7 +158,6 @@ class TaskSubmission(models.Model):
     code = models.CharField(max_length=4000, blank=False)
     celery_task_id = models.CharField(max_length=100, blank=False)  # FIXME: Unused?
     is_solved = models.BooleanField(default=False)
-    result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
     grading_is_pending = models.BooleanField(default=True)
     has_compiled = models.BooleanField(default=True)
     compile_error_message = models.CharField(max_length=1000, blank=False)
