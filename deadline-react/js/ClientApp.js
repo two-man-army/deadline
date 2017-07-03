@@ -1,6 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
-import Sidebar from './Sidebar.js'
+// import Sidebar from './Sidebar.js'
+// import SideBarNav from './components/SideBarNav'
 import LoginPage from './LoginPage.js'
 import Dashboard from './Dashboard.js'
 import {HashRouter as Router} from 'react-router-dom'
@@ -20,10 +21,7 @@ const muiTheme = getMuiTheme({
 
 const AuthenticatedApp = (props) => {
   return (
-    <div className='app'>
-      <Sidebar />
-      <Dashboard />
-    </div>
+    <Dashboard />
   )
 }
 
@@ -31,9 +29,7 @@ render(
   (
     <MuiThemeProvider muiTheme={muiTheme}>
       <Router>
-        <div className='app'>
-          <LoginPage authApp={AuthenticatedApp} />
-        </div>
+        <LoginPage authApp={AuthenticatedApp} />
       </Router>
     </MuiThemeProvider>
   )
