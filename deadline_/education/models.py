@@ -149,6 +149,24 @@ class HomeworkTaskTest(models.Model):
         return self.consecutive_number == self.task.homeworktasktest_set.count() + 1
 
 
+class TaskSubmission(models.Model):
+    """
+    A user's submission for a given HomeworkTask
+    """
+    task = models.ForeignKey(HomeworkTask)
+    author = models.ForeignKey(User)
+    code = models.CharField(max_length=4000, blank=False)
+    celery_task_id = models.CharField(max_length=100, blank=False)  # FIXME: Unused?
+    is_solved = models.BooleanField(default=False)
+    result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
+    grading_is_pending = models.BooleanField(default=True)
+    has_compiled = models.BooleanField(default=True)
+    compile_error_message = models.CharField(max_length=1000, blank=False)
+    language = models.ForeignKey(Language, blank=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    timed_out = models.BooleanField(default=False)  # shows if any test failed for timeout rather than wrong answer
+
+
 class UserLessonProgress(models.Model):
     user = models.ForeignKey(User)
     lesson = models.ForeignKey(Lesson)
