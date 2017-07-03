@@ -46,7 +46,8 @@ class LessonCreateViewTests(TestCase, TestHelperMixin):
                              'intro': 'Just Because',
                              'content': 'Just Because',
                              'annexation': 'Just Because',
-                             'video_link_1': 'best'
+                             'video_link_1': 'best',
+                             'create_homework': True
                          })
 
         self.assertEqual(resp.status_code, 201)
@@ -55,6 +56,7 @@ class LessonCreateViewTests(TestCase, TestHelperMixin):
         self.assertEqual(lesson.lesson_number, 1)
         self.assertEqual(lesson.is_under_construction, True)
         self.assertEqual(lesson.course, self.course)
+        self.assertIsNotNone(lesson.homework_set.first())
         self.assertEqual(lesson.annexation, 'Just Because')
         self.assertEqual(lesson.content, 'Just Because')
         self.assertEqual(lesson.intro, 'Just Because')

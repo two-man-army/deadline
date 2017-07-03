@@ -7,7 +7,7 @@ from django.http import HttpResponse
 
 from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher
 from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer
-from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest
+from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest, Homework
 from education.helpers import create_task_test_files
 
 
@@ -65,8 +65,12 @@ class LessonCreateView(CreateAPIView):
         if not ser.is_valid():
             return Response(data={'error': f'Error while creating Lesson: {ser.errors}'},
                             status=400)
-        self.perform_create(ser)
+        lesson = self.perform_create(ser)
         headers = self.get_success_headers(ser.data)
+
+        if request.data['create_homework']:
+            # create a Homework object for the given Lesson
+            Homework.objects.create(lesson=lesson, is_mandatory=True)  # homework should be mandatory by default
 
         return Response(ser.data, status=201, headers=headers)
 
@@ -85,6 +89,9 @@ class LessonCreateView(CreateAPIView):
             return Response(data={'error': 'You do not have permission to create Course Lessons!'}, status=403)
 
         return course
+
+    def perform_create(self, serializer):
+        return serializer.save()
 
 
 # /education/course/{course_id}/lesson/{lesson_id}
@@ -184,7 +191,7 @@ class HomeworkTaskCreateView(CreateAPIView):
         return course, lesson
 
 
-# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/
 class HomeworkTaskTestCreateView(APIView):
     permission_classes = (IsAuthenticated, IsTeacher, )
 
