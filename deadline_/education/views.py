@@ -231,13 +231,15 @@ class HomeworkTaskTestCreateView(APIView):
         test_input, test_output = request.data.get('input', ''), request.data.get('output', '')
         input_file_path, output_file_path = create_task_test_files(
             course_name=course.name, lesson_number=lesson.lesson_number,
-            task_number=task.consecutive_number, input=test_input, output=test_output
+            task_number=task.consecutive_number, test_number=task.test_case_count + 1,
+            input=test_input, output=test_output
         )
 
         task_test = HomeworkTaskTest.objects.create(
             input_file_path=input_file_path, output_file_path=output_file_path, task=task,
             consecutive_number=task.test_case_count + 1
         )
+        # TODO: task test path folder generation
         # TODO: Consecutive_number generation in helper method
 
         task.test_case_count += 1

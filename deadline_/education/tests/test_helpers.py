@@ -17,25 +17,32 @@ class HelperTests(unittest.TestCase):
     def test_create_task_test_files_creates_directories_if_not_exist(self):
         self.course_folder = os.path.join(EDUCATION_TEST_FILES_FOLDER, 'tank_course')
         self.lesson_folder = os.path.join(self.course_folder, '2')
+        self.task_hw_folder = os.path.join(self.lesson_folder, '2')
+
         self.assertFalse(os.path.exists(self.course_folder))
         self.assertFalse(os.path.exists(self.lesson_folder))
+        self.assertFalse(os.path.exists(self.task_hw_folder))
 
-        create_task_test_files('tank_course', 2, 2, "hello", "bye")
+        create_task_test_files('tank_course', 2, 2, 3, "hello", "bye")
 
         self.assertTrue(os.path.exists(self.course_folder))
         self.assertTrue(os.path.exists(self.lesson_folder))
+        self.assertTrue(os.path.exists(self.task_hw_folder))
 
     def test_create_task_test_files_creates_input_output_files(self):
         self.course_folder = os.path.join(EDUCATION_TEST_FILES_FOLDER, 'tank_course')
         self.lesson_folder = os.path.join(self.course_folder, '2')
+        self.task_hw_folder = os.path.join(self.lesson_folder, '2')
 
-        expected_input_file_name = 'input_02.txt'
-        input_dir = os.path.join(self.lesson_folder, expected_input_file_name)
-        expected_output_file_name = 'output_02.txt'
-        output_dir = os.path.join(self.lesson_folder, expected_output_file_name)
+        expected_input_file_name = 'input_03.txt'
+        input_dir = os.path.join(self.task_hw_folder, expected_input_file_name)
+        expected_output_file_name = 'output_03.txt'
+        output_dir = os.path.join(self.task_hw_folder, expected_output_file_name)
 
-        create_task_test_files('tank_course', 2, 2, "hello\n2", "bye\n2")
+        rec_inp_dir, rec_otp_dir = create_task_test_files('tank_course', 2, 2, 3, "hello\n2", "bye\n2")
 
+        self.assertEqual(rec_inp_dir, input_dir)
+        self.assertEqual(rec_otp_dir, output_dir)
         self.assertTrue(os.path.isfile(input_dir))
         self.assertTrue(os.path.isfile(output_dir))
         with open(input_dir) as f:
