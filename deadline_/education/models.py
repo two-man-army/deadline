@@ -1,7 +1,9 @@
+import os
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from constants import EDUCATION_TEST_FILES_FOLDER
 from education.errors import StudentAlreadyEnrolledError, InvalidEnrollmentError
 from challenges.validators import PossibleFloatDigitValidator
 from challenges.models import Language, User
@@ -98,6 +100,25 @@ class HomeworkTask(models.Model):
 
     def get_course(self):
         return self.homework.get_course()
+
+    def get_absolute_test_files_path(self):
+        """
+        Returns the absolute path to the input/output files for the given Task
+         e.g - /education_tests/{course_name}/{lesson_number}/{task_number}/
+        """
+        course_name = self.homework.lesson.course.name
+        task_number = self.consecutive_number
+        lesson_number = self.homework.lesson.lesson_number
+
+        task_tests_dir = os.path.join(
+            os.path.join(
+                os.path.join(EDUCATION_TEST_FILES_FOLDER, course_name),
+                str(lesson_number)
+            ),
+            str(task_number),
+        )
+
+        return task_tests_dir
 
 
 class HomeworkTaskDescription(models.Model):

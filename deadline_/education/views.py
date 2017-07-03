@@ -193,6 +193,9 @@ class HomeworkTaskCreateView(CreateAPIView):
 
 # POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/
 class HomeworkTaskTestCreateView(APIView):
+    """
+    Creates a Test case for a HomeworkTask
+    """
     permission_classes = (IsAuthenticated, IsTeacher, )
 
     def post(self, request, *args, **kwargs):
@@ -230,16 +233,15 @@ class HomeworkTaskTestCreateView(APIView):
 
         test_input, test_output = request.data.get('input', ''), request.data.get('output', '')
         input_file_path, output_file_path = create_task_test_files(
-            course_name=course.name, lesson_number=lesson.lesson_number,
-            task_number=task.consecutive_number, test_number=task.test_case_count + 1,
+            task_tests_dir=task.get_absolute_test_files_path(),
+            test_number=task.test_case_count + 1,
             input=test_input, output=test_output
         )
 
-        task_test = HomeworkTaskTest.objects.create(
+        HomeworkTaskTest.objects.create(
             input_file_path=input_file_path, output_file_path=output_file_path, task=task,
             consecutive_number=task.test_case_count + 1
         )
-        # TODO: task test path folder generation
         # TODO: Consecutive_number generation in helper method
 
         task.test_case_count += 1

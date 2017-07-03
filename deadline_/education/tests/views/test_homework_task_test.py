@@ -42,8 +42,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
 
         task_test: HomeworkTaskTest = HomeworkTaskTest.objects.first()
 
-        mock_create_task.assert_called_once_with(course_name=self.course.name, lesson_number=self.lesson.lesson_number,
-                                                 task_number=self.task.consecutive_number, test_number=self.task.test_case_count+1,
+        mock_create_task.assert_called_once_with(task_tests_dir=self.task.get_absolute_test_files_path(), test_number=self.task.test_case_count+1,
                                                  input=self.input, output=self.output)
         self.assertEqual(task_test.input_file_path, 'input_path/')
         self.assertEqual(task_test.output_file_path, 'output_path/')

@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from io import BytesIO
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.db.utils import IntegrityError
@@ -35,6 +36,15 @@ class HomeworkTaskModelTests(TestCase, TestHelperMixin):
                                     consecutive_number=1, difficulty=10,
                                     homework=self.hw).get_course()
         self.assertEqual(received_course, self.course)
+
+    @patch('education.models.EDUCATION_TEST_FILES_FOLDER', '/what')
+    def test_get_absolute_test_files_path(self):
+        """ Path should be EDUCATION_TESTS_PATH/course_name/lesson_num/task_num/"""
+        task = HomeworkTask.objects.create(test_case_count=1, description=HomeworkTaskDescriptionFactory(), is_mandatory=True,
+                                           consecutive_number=3, difficulty=10,
+                                           homework=self.hw)
+        expected_path = f'/what/{self.course.name}/{self.lesson.lesson_number}/{task.consecutive_number}'
+        self.assertEqual(expected_path, task.get_absolute_test_files_path())
 
     def test_deserialization_with_nested_description(self):
         """ Should create the description object as well """

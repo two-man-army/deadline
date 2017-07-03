@@ -23,7 +23,7 @@ class HelperTests(unittest.TestCase):
         self.assertFalse(os.path.exists(self.lesson_folder))
         self.assertFalse(os.path.exists(self.task_hw_folder))
 
-        create_task_test_files('tank_course', 2, 2, 3, "hello", "bye")
+        create_task_test_files(self.task_hw_folder, 3, "hello", "bye")
 
         self.assertTrue(os.path.exists(self.course_folder))
         self.assertTrue(os.path.exists(self.lesson_folder))
@@ -39,7 +39,7 @@ class HelperTests(unittest.TestCase):
         expected_output_file_name = 'output_03.txt'
         output_dir = os.path.join(self.task_hw_folder, expected_output_file_name)
 
-        rec_inp_dir, rec_otp_dir = create_task_test_files('tank_course', 2, 2, 3, "hello\n2", "bye\n2")
+        rec_inp_dir, rec_otp_dir = create_task_test_files(self.task_hw_folder, 3, "hello\n2", "bye\n2")
 
         self.assertEqual(rec_inp_dir, input_dir)
         self.assertEqual(rec_otp_dir, output_dir)
