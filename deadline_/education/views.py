@@ -5,10 +5,12 @@ from rest_framework.response import Response
 
 from django.http import HttpResponse
 
+from challenges.models import Language
 from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher
-from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer
+from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer, TaskSubmissionSerializer
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest, Homework
 from education.helpers import create_task_test_files
+from challenges.tasks import run_homework_grader_task
 
 
 # /education/course
@@ -248,3 +250,96 @@ class HomeworkTaskTestCreateView(APIView):
         task.save()
 
         return Response(status=201)
+
+
+class TaskSubmissionCreateView(CreateAPIView):
+    serializer_class = TaskSubmissionSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def create(self, request, *args, **kwargs):
+        objects, is_valid, response = self.validate_data(
+            user=request.user,
+            course_pk=kwargs.get('course_pk'),
+            lesson_pk=kwargs.get('lesson_pk'),
+            task_pk=kwargs.get('task_pk'),
+            language_pk=request.data.get('language', ''))
+
+        if not is_valid:
+            return response # there has been an error in validation
+        # TODO: Check supported languages
+        course, lesson, task, language = objects
+
+        self.request.data['author'] = self.request.user.id
+        self.request.data['task'] = task.id
+        ser = self.get_serializer(data=self.request.data)
+        if not ser.is_valid():
+            return Response(data={'error': f'Error while creating Homework Task: {ser.errors}'},
+                            status=400)
+        submission = self.perform_create(ser)
+
+        run_homework_grader_task(test_case_count=task.test_case_count,
+                                 abs_test_files_path=task.get_absolute_test_files_path(),
+                                 code=self.request.data['code'],
+                                 lang=language.name, submission_id=submission.id)
+
+        headers = self.get_success_headers(ser.data)
+
+        return Response(ser.data, status=201, headers=headers)
+
+    def validate_data(self, user, course_pk, lesson_pk, task_pk, language_pk) -> (['Models'], bool, Response):
+        # TODO: Try/catches can be refactored to a universal helper method
+        # TODO: Maybe even decorator to extract *_pk data from kwargs and return response :o
+        try:
+            course = Course.objects.get(id=course_pk)
+        except Course.DoesNotExist:
+            return [], False, Response(data={'error': f'Course with ID {course_pk} does not exist.'},
+                            status=400)
+        if not IsEnrolledOnCourseOrIsTeacher.can_access(course, user):
+            return [], False, Response(data={'error': f'You do not have permission to interact with that Course.'},
+                                       status=403)
+
+        try:
+            lesson = Lesson.objects.get(id=lesson_pk)
+        except Lesson.DoesNotExist:
+            return [], False, Response(data={'error': f'Lesson with ID {lesson_pk} does not exist.'},
+                            status=400)
+
+        try:
+            task = HomeworkTask.objects.get(id=task_pk)
+        except HomeworkTask.DoesNotExist:
+            return [], False, Response(data={'error': f'Task with ID {task_pk} does not exist.'},
+                            status=400)
+
+        try:
+            language = Language.objects.get(id=language_pk)
+        except Language.DoesNotExist:
+            return [], False, Response(data={'error': f'Language with ID {language_pk} does not exist.'},
+                            status=400)
+
+        if language not in task.supported_languages.all():
+            return [], False, Response(data={'error': f'HomeworkTask {task_pk} does not support Language {language_pk}.'},
+                            status=400)
+        if task.homework.lesson != lesson:
+            return [], False, Response(data={'error': f'Task with ID {task_pk} does not belong to Lesson with ID {lesson_pk}'},
+                            status=400)
+        if lesson.course != course:
+            return [], False, Response(data={'error': f'Lesson with ID {lesson_pk} does not belong to Course with ID {course_pk}.'},
+                            status=400)
+
+        # Everything below should not be able to happen for a normal user,
+        # as they would not be able to enroll on the Course to access this URL
+        # FIXME?: Maybe allow Teacher to submit while
+        if course.is_under_construction:
+            return [], False, Response(data={'error': f'Cannot submit HWSubmission while Course is under construction!.'},
+                            status=400)
+        if lesson.is_under_construction:
+            return [], False, Response(data={'error': f'Cannot submit HWSubmission while Lesson is under construction!.'},
+                            status=400)
+        if task.is_under_construction:
+            return [], False, Response(data={'error': f'Cannot submit HWSubmission while HWTask is under construction!.'},
+                            status=400)
+
+        return [course, lesson, task, language], True, None
+
+    def perform_create(self, serializer):
+        return serializer.save()

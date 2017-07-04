@@ -19,8 +19,10 @@ class IsEnrolledOnCourseOrIsTeacher(BasePermission):
         access the information
     """
 
+    @staticmethod
+    def can_access(course, user):
+        return course.has_teacher(user) or course.has_student(user)
+
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
         course = obj if isinstance(obj, Course) else obj.get_course()
-        return course.has_teacher(request.user) or course.has_student(request.user)
+        return self.can_access(course, request.user)

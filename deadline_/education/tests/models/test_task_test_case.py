@@ -6,6 +6,7 @@ from education.models import Course, Lesson, Homework, HomeworkTask, TaskSubmiss
 from education.tests.factories import HomeworkTaskDescriptionFactory
 from education.serializers import TaskTestCaseSerializer
 
+
 class TaskTestCaseTests(TestCase):
     def setUp(self):
         self.auth_user = User.objects.create(username='tank', email='tank@abv.bg', password='123')

@@ -123,3 +123,11 @@ def run_grader_task(test_case_count: int, test_folder_name: str, code: str, lang
         grade_result(submission, timed_out_percentage, submission_grade_result[GRADER_TEST_RESULT_TIME_KEY])
 
         update_user_score(user=submission.author, submission=submission)
+
+
+# TODO: Move @apptask to run_grader?
+@app.task
+def run_homework_grader_task():
+    # TODO: Refactor and look into absolute paths in run_grader(),
+    #   as you'd need to make it more general
+    return NotImplementedError()
