@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from education.models import TaskSubmission, HomeworkTask, Course, Lesson, Homework
+from education.models import TaskSubmission, HomeworkTask, Course, Lesson, Homework, TaskTestCase
 from challenges.models import Language
 from accounts.models import User
 from education.tests.factories import HomeworkTaskDescriptionFactory
@@ -18,7 +18,7 @@ class TaskSubmissionTests(TestCase):
                                             course=self.course)
         self.hw = Homework.objects.create(lesson=self.lesson, is_mandatory=True)
         self.task = HomeworkTask.objects.create(
-            homework=self.hw, test_case_count=0, description=HomeworkTaskDescriptionFactory(),
+            homework=self.hw, test_case_count=2, description=HomeworkTaskDescriptionFactory(),
             is_mandatory=True, consecutive_number=1, difficulty=5)
 
     def test_can_save_duplicate_submission(self):
@@ -35,6 +35,8 @@ class TaskSubmissionTests(TestCase):
             s.full_clean()
 
     def test_serialization(self):
+        self.assertEqual(TaskTestCase.objects.count(), 0)
+
         data = {'task': self.task.id, 'language': self.python_language.id, 'code': 'tank', 'author': self.auth_user.id}
         ser = TaskSubmissionSerializer(data=data)
         self.assertTrue(ser.is_valid())
@@ -44,6 +46,8 @@ class TaskSubmissionTests(TestCase):
         self.assertEqual(instance.language, self.python_language)
         self.assertEqual(instance.task, self.task)
         self.assertEqual(instance.author, self.auth_user)
+        # Assert that it creates the test cases as well
+        self.assertEqual(TaskTestCase.objects.count(), self.task.test_case_count)
 
     def test_serialization_ignores_default_fields(self):
         """

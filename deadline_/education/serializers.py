@@ -105,6 +105,13 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
         model = TaskSubmission
         fields = ('task', 'code', 'language', 'author')
 
+    def create(self, validated_data):
+        task_submission: TaskSubmission = super().create(validated_data)
+
+        TaskTestCase.objects.bulk_create([TaskTestCase(submission=task_submission) for _ in range(task_submission.task.test_case_count)])
+
+        return task_submission
+
 
 class TaskTestCaseSerializer(serializers.ModelSerializer):
     class Meta:
