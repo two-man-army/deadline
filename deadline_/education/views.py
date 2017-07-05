@@ -117,6 +117,24 @@ class LessonDetailsView(RetrieveAPIView):
         response_data['is_completed'] = lesson.is_completed_by(request.user)
 
         return Response(response_data)
+from rest_framework.generics import UpdateAPIView
+
+
+class LessonEditView(UpdateAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = (IsAuthenticated, IsEnrolledOnCourseOrIsTeacher)
+
+    def patch(self, request, *args, **kwargs):
+
+        # is_under_construction = request.data.get('is_under_construction', True)
+        # if is_under_construction:
+        #     # TODO: LOCK
+        #     pass
+        # del request.data['course']  # updating the course is not possible
+        # del request.data['is_under_construction']  # Can only be modified once
+        return super().patch(request, *args, **kwargs)
+
 
 
 # /education/course/{course_id}/lesson/{lesson_id}
@@ -125,7 +143,8 @@ class LessonManageView(APIView):
         Manages different request methods for the given URL, sending them to the appropriate view class
     """
     VIEWS_BY_METHOD = {
-        'GET': LessonDetailsView.as_view
+        'GET': LessonDetailsView.as_view,
+        'PATCH': LessonEditView.as_view
     }
 
     def dispatch(self, request, *args, **kwargs):

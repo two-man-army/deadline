@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+# TODO: Swap TestCase with APITestCase where applicable :)
+from rest_framework.test import APITestCase
 from django.test import TestCase
 from django.http import HttpResponse
 
@@ -178,3 +180,25 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
         resp = self.client.get(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
                                HTTP_AUTHORIZATION=self.teacher_auth_token)
         self.assertNotEqual(resp.status_code, 403)
+
+
+class LessonEditViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.create_teacher_user_and_auth_token()
+        self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                            is_under_construction=False)
+        self.course.teachers.add(self.teacher_auth_user)
+        self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=False,
+                                            intro='hello', content='how are yoou', annexation='bye',
+                                            course=self.course)
+
+    def test_normal_edit(self):
+        print(self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                        HTTP_AUTHORIZATION=self.teacher_auth_token,
+                        data={
+                            "intro": "hello20"
+                        }).data)
+        self.lesson.refresh_from_db()
+        print(self.lesson.intro)
+        pass
