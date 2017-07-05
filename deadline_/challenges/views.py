@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS
+from helpers import fetch_models_by_pks
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, LimitedSubmissionSerializer
 from challenges.tasks import run_grader_task
@@ -148,16 +149,15 @@ class SubmissionDetailView(RetrieveAPIView):
 
     def validate_data(self, challenge_pk, submission_pk) -> Response or tuple():
         """ Validate the given challenge_id, submission_id and their association """
-        try:
-            challenge = Challenge.objects.get(id=challenge_pk)
-        except Challenge.DoesNotExist:
-            return Response(data={'error': 'Challenge with ID {} does not exist.'.format(challenge_pk)},
-                            status=400)
-        try:
-            submission = Submission.objects.get(id=submission_pk)
-        except Submission.DoesNotExist:
-            return Response(data={'error': 'Submission with ID {} does not exist.'.format(submission_pk)},
-                            status=400)
+        objects, are_valid, err_msg = fetch_models_by_pks({
+            Challenge: challenge_pk,
+            Submission: submission_pk
+        })
+        if not are_valid:
+            return Response(data={'error': err_msg},
+                            status=404)
+
+        challenge, submission = objects
 
         if submission.challenge_id != challenge.id:
             return Response(data={'error': 'Submission with ID {} does not belong to Challenge with ID {}'

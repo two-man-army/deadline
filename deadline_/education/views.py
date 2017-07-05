@@ -160,16 +160,15 @@ class HomeworkTaskCreateView(CreateAPIView):
 
     def validate_data(self, course_pk, lesson_pk) -> Response or tuple():
         """ Validate the given course_pk, lesson_pk and their association """
-        try:
-            course = Course.objects.get(id=course_pk)
-        except Course.DoesNotExist:
-            return Response(data={'error': 'Course with ID {} does not exist.'.format(course_pk)},
-                            status=400)
-        try:
-            lesson = Lesson.objects.get(id=lesson_pk)
-        except Lesson.DoesNotExist:
-            return Response(data={'error': 'Lesson with ID {} does not exist.'.format(lesson_pk)},
-                            status=400)
+        objects, are_valid, err_msg = fetch_models_by_pks({
+            Course: course_pk,
+            Lesson: lesson_pk
+        })
+        if not are_valid:
+            return Response(data={'error': err_msg},
+                            status=404)
+
+        course, lesson = objects
 
         if lesson.course_id != course.id:
             return Response(data={'error': 'Lesson with ID {} does not belong to Course with ID {}'
@@ -202,25 +201,17 @@ class HomeworkTaskTestCreateView(APIView):
     permission_classes = (IsAuthenticated, IsTeacher, )
 
     def post(self, request, *args, **kwargs):
-        course_id, lesson_id, task_id = (kwargs.get('course_pk', ''), kwargs.get('lesson_pk', ''), kwargs.get('task_pk', ''))
-        problematic_model, problematic_id = None, None
-        try:
-            course = Course.objects.get(id=course_id)
-            lesson = Lesson.objects.get(id=lesson_id)
-            task = HomeworkTask.objects.get(id=task_id)
-        except Course.DoesNotExist:
-            problematic_model = 'Course'
-            problematic_id = course_id
-        except Lesson.DoesNotExist:
-            problematic_model = 'Lesson'
-            problematic_id = lesson_id
-        except HomeworkTask.DoesNotExist:
-            problematic_model = 'Homework Task'
-            problematic_id = task_id
+        objects, are_valid, err_msg = fetch_models_by_pks({
+            Course: kwargs.get('course_pk', ''),
+            Lesson: kwargs.get('lesson_pk', ''),
+            HomeworkTask: kwargs.get('task_pk', '')
+        })
+        if not are_valid:
+            return Response(status=404, data={'error': err_msg})
+
+        course, lesson, task = objects
 
         # TODO: move to validate method
-        if problematic_model is not None:  # error while fetching models
-            return Response(status=404, data={'error': f'No {problematic_model} with ID {problematic_id}'})
         if self.request.user not in course.teachers.all():
             return Response(status=403, data={'error': f'You do not have permission to create Homework Task Tests!'})
         if not course.is_under_construction:

@@ -132,7 +132,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
                                                  'supported_languages': [1]}),
                                 content_type='application/json')
 
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.data['error'], 'Course with ID 151 does not exist.')
 
     def test_create_task_fails_for_non_existent_lesson(self):
@@ -145,5 +145,5 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
                                                  'supported_languages': [1]}),
                                 content_type='application/json')
 
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.data['error'], 'Lesson with ID 151 does not exist.')
