@@ -1,7 +1,12 @@
 import React from 'react'
+import RanklistBoxData from './RanklistBoxData'
 
-const RanklistBox = () => (
-  <section className='ranklist' />
-)
+class RanklistBox extends React.Component {
+  render () {
+    return (
+      <RanklistBoxData />
+    )
+  }
+}
 
 export default RanklistBox
