@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from django.http import HttpResponse
 
+from helpers import fetch_models_by_pks
 from challenges.models import Language
 from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher
 from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer, TaskSubmissionSerializer
@@ -288,33 +289,19 @@ class TaskSubmissionCreateView(CreateAPIView):
 
     def validate_data(self, user, course_pk, lesson_pk, task_pk, language_pk) -> (['Models'], bool, Response):
         # TODO: Try/catches can be refactored to a universal helper method
-        # TODO: Maybe even decorator to extract *_pk data from kwargs and return response :o
-        try:
-            course = Course.objects.get(id=course_pk)
-        except Course.DoesNotExist:
-            return [], False, Response(data={'error': f'Course with ID {course_pk} does not exist.'},
-                            status=400)
+        fetched_objects, are_valid, err_msg = fetch_models_by_pks({
+            Course: course_pk,
+            Lesson: lesson_pk,
+            HomeworkTask: task_pk,
+            Language: language_pk
+        })
+        if not are_valid:
+            return [], False, Response(data={'error': err_msg},
+                                       status=400)
+        course, lesson, task, language = fetched_objects
         if not IsEnrolledOnCourseOrIsTeacher.can_access(course, user):
             return [], False, Response(data={'error': f'You do not have permission to interact with that Course.'},
                                        status=403)
-
-        try:
-            lesson = Lesson.objects.get(id=lesson_pk)
-        except Lesson.DoesNotExist:
-            return [], False, Response(data={'error': f'Lesson with ID {lesson_pk} does not exist.'},
-                            status=400)
-
-        try:
-            task = HomeworkTask.objects.get(id=task_pk)
-        except HomeworkTask.DoesNotExist:
-            return [], False, Response(data={'error': f'Task with ID {task_pk} does not exist.'},
-                            status=400)
-
-        try:
-            language = Language.objects.get(id=language_pk)
-        except Language.DoesNotExist:
-            return [], False, Response(data={'error': f'Language with ID {language_pk} does not exist.'},
-                            status=400)
 
         if language not in task.supported_languages.all():
             return [], False, Response(data={'error': f'HomeworkTask {task_pk} does not support Language {language_pk}.'},
