@@ -8,12 +8,14 @@ from django.http import HttpResponse
 from accounts.models import Role, User
 from challenges.tests.base import TestHelperMixin
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskDescription, Homework
-from education.views import LessonManageView, LessonCreateView, LessonDetailsView
+from education.views import LessonManageView, LessonCreateView, LessonDetailsView, LessonEditView
+from education.tests.factories import HomeworkTaskDescriptionFactory
 
 
 class LessonManagerViewTests(TestCase):
     def test_uses_expected_views_by_method(self):
         self.assertEqual(LessonManageView.VIEWS_BY_METHOD['GET'], LessonDetailsView.as_view)
+        self.assertEqual(LessonManageView.VIEWS_BY_METHOD['PATCH'], LessonEditView.as_view)
 
     def test_get_calls_expected_view(self):
         _old_views = LessonManageView.VIEWS_BY_METHOD
@@ -212,7 +214,7 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                         HTTP_AUTHORIZATION=self.teacher_auth_token,
                         data={
                             "intro": "hello20", "video_link_3": 'hit'
-                        })
+                        }, format='json')
         self.lesson.refresh_from_db()
         self.assertEqual(self.lesson.intro, 'hello20')
         self.assertEqual(self.lesson.video_link_3, 'hit')
@@ -225,7 +227,7 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={
                               "course": second_course.id, "lesson_number": 20
-                          })
+                          }, format='json')
         self.lesson.refresh_from_db()
         self.assertNotEqual(self.lesson.lesson_number, 20)
         self.assertEqual(self.lesson.course, self.course)
@@ -236,7 +238,7 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                                  HTTP_AUTHORIZATION=self.auth_token,
                                  data={
                                      "video_link_3": 20
-                                 })
+                                 }, format='json')
         self.assertEqual(resp.status_code, 403)
 
     def test_is_forbidden_for_other_teacher(self):
@@ -251,31 +253,35 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                                  HTTP_AUTHORIZATION=teacher_auth_token,
                                  data={
                                      "video_link_3": 20
-                                 })
+                                 }, format='json')
 
         self.assertEqual(resp.status_code, 403)
 
     def test_can_lock_lesson_and_is_exclusive(self):
         # We want the Lesson lock to be an exclusive request
+        self.lesson.is_under_construction = True
         self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={
                             "is_under_construction": False
-                          })
+                          }, format='json')
+        self.lesson.refresh_from_db()
         self.assertEqual(self.lesson.is_under_construction, False)
 
     def test_cannot_lock_lesson_twice(self):
+        self.lesson.is_under_construction = True
         self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={
                               "is_under_construction": False
-                          })
+                          }, format='json')
+        self.lesson.refresh_from_db()
         self.assertEqual(self.lesson.is_under_construction, False)
         resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={
                               "is_under_construction": False
-                          })
+                          }, format='json')
         self.assertEqual(resp.status_code, 400)
 
     def test_cannot_lock_lesson_with_other_fields(self):
@@ -284,7 +290,7 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={
                               "video_link_3": 20, "lesson_number": 20, "is_under_construction": False
-                          })
+                          }, format='json')
         self.assertEqual(resp.status_code, 400)
 
     def test_cannot_unlock_lesson(self):
@@ -293,7 +299,7 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                                  HTTP_AUTHORIZATION=self.teacher_auth_token,
                                  data={
                                      "is_under_construction": True
-                                 })
+                                 }, format='json')
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(self.lesson.is_under_construction, False)
 
@@ -303,5 +309,21 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                                  HTTP_AUTHORIZATION=self.teacher_auth_token,
                                  data={
                                      "is_under_construction": False
-                                 })
+                                 }, format='json')
+        self.assertEqual(resp.status_code, 400)
+
+    def test_cannot_lock_a_lesson_with_unlocked_hw_tasks(self):
+        self.lesson.is_under_construction = True
+        self.lesson.save()
+        hw = Homework.objects.create(lesson=self.lesson, is_mandatory=True)
+        HomeworkTask.objects.create(homework=hw, is_under_construction=False, is_mandatory=True, difficulty=1,
+                                    description=HomeworkTaskDescriptionFactory())
+        HomeworkTask.objects.create(homework=hw, is_under_construction=True, is_mandatory=True, difficulty=1,
+                                    description=HomeworkTaskDescriptionFactory())
+        resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                 data={
+                                     "is_under_construction": False,
+                                 }, format='json')
+
         self.assertEqual(resp.status_code, 400)

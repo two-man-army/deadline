@@ -70,6 +70,14 @@ class Lesson(models.Model):
     def get_course(self) -> Course:
         return self.course
 
+    def can_lock(self):
+        """ Returns true/false if the Lesson is available for locking """
+        for hw in self.homework_set.all():
+            for task in hw.homeworktask_set.all():
+                if task.is_under_construction:
+                    return False
+        return True
+
     def lock_for_construction(self):
         """
         'Locks' the Lesson, meaning no important information can be modified anymore.
@@ -81,9 +89,7 @@ class Lesson(models.Model):
         if not self.is_under_construction:
             raise AlreadyLockedError('Lesson is already locked.')
 
-        for hw in self.homework_set.all():
-            for task in hw.homeworktask_set.all():
-                if task.is_under_construction:
+        if not self.can_lock():
                     raise InvalidLockError('Cannot lock a Lesson while a HomeworkTask is under construction!')
         self.is_under_construction = False
         self.save()
