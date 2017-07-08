@@ -181,6 +181,19 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
                                HTTP_AUTHORIZATION=self.teacher_auth_token)
         self.assertNotEqual(resp.status_code, 403)
 
+    def test_is_forbidden_for_other_teacher(self):
+        # create another teacher, overriding ours
+        teacher_role = Role.objects.filter(name='Teacher').first()
+
+        teacher_auth_user = User.objects.create(username='theTeac3h', password='123', email='TheTeachRCheto@abv.bg',
+                                                     score=123,
+                                                     role=teacher_role)
+        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        resp = self.client.get(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                               HTTP_AUTHORIZATION=teacher_auth_token)
+
+        self.assertEqual(resp.status_code, 403)
+
 
 class LessonEditViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
@@ -194,11 +207,101 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
                                             course=self.course)
 
     def test_normal_edit(self):
-        print(self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+        self.assertEqual(self.lesson.intro, 'hello')
+        self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
                         HTTP_AUTHORIZATION=self.teacher_auth_token,
                         data={
-                            "intro": "hello20"
-                        }).data)
+                            "intro": "hello20", "video_link_3": 'hit'
+                        })
         self.lesson.refresh_from_db()
-        print(self.lesson.intro)
-        pass
+        self.assertEqual(self.lesson.intro, 'hello20')
+        self.assertEqual(self.lesson.video_link_3, 'hit')
+
+    def test_cannot_edit_uneditable_fields(self):
+        """ Fields like the Course and Lesson should not be editable """
+        second_course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                              is_under_construction=False)
+        self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                          HTTP_AUTHORIZATION=self.teacher_auth_token,
+                          data={
+                              "course": second_course.id, "lesson_number": 20
+                          })
+        self.lesson.refresh_from_db()
+        self.assertNotEqual(self.lesson.lesson_number, 20)
+        self.assertEqual(self.lesson.course, self.course)
+
+    def test_normal_user_cannot_edit(self):
+        self.course.enroll_student(self.auth_user)
+        resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                 HTTP_AUTHORIZATION=self.auth_token,
+                                 data={
+                                     "video_link_3": 20
+                                 })
+        self.assertEqual(resp.status_code, 403)
+
+    def test_is_forbidden_for_other_teacher(self):
+        # create another teacher, overriding ours
+        teacher_role = Role.objects.filter(name='Teacher').first()
+
+        teacher_auth_user = User.objects.create(username='theTeac3h', password='123', email='TheTeachRCheto@abv.bg',
+                                                     score=123,
+                                                     role=teacher_role)
+        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                 HTTP_AUTHORIZATION=teacher_auth_token,
+                                 data={
+                                     "video_link_3": 20
+                                 })
+
+        self.assertEqual(resp.status_code, 403)
+
+    def test_can_lock_lesson_and_is_exclusive(self):
+        # We want the Lesson lock to be an exclusive request
+        self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                          HTTP_AUTHORIZATION=self.teacher_auth_token,
+                          data={
+                            "is_under_construction": False
+                          })
+        self.assertEqual(self.lesson.is_under_construction, False)
+
+    def test_cannot_lock_lesson_twice(self):
+        self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                          HTTP_AUTHORIZATION=self.teacher_auth_token,
+                          data={
+                              "is_under_construction": False
+                          })
+        self.assertEqual(self.lesson.is_under_construction, False)
+        resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                          HTTP_AUTHORIZATION=self.teacher_auth_token,
+                          data={
+                              "is_under_construction": False
+                          })
+        self.assertEqual(resp.status_code, 400)
+
+    def test_cannot_lock_lesson_with_other_fields(self):
+        # Decline Lesson lock if more parameters are passed
+        resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                          HTTP_AUTHORIZATION=self.teacher_auth_token,
+                          data={
+                              "video_link_3": 20, "lesson_number": 20, "is_under_construction": False
+                          })
+        self.assertEqual(resp.status_code, 400)
+
+    def test_cannot_unlock_lesson(self):
+        self.assertEqual(self.lesson.is_under_construction, False)
+        resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                 data={
+                                     "is_under_construction": True
+                                 })
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(self.lesson.is_under_construction, False)
+
+    def test_cannot_lock_a_locked_lesson(self):
+        self.assertEqual(self.lesson.is_under_construction, False)
+        resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                 data={
+                                     "is_under_construction": False
+                                 })
+        self.assertEqual(resp.status_code, 400)

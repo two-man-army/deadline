@@ -1,4 +1,4 @@
-from rest_framework.generics import CreateAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,7 +7,7 @@ from django.http import HttpResponse
 
 from helpers import fetch_models_by_pks
 from challenges.models import Language
-from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher
+from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher, IsTeacherOfCourse
 from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer, TaskSubmissionSerializer
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest, Homework
 from education.helpers import create_task_test_files
@@ -117,24 +117,36 @@ class LessonDetailsView(RetrieveAPIView):
         response_data['is_completed'] = lesson.is_completed_by(request.user)
 
         return Response(response_data)
-from rest_framework.generics import UpdateAPIView
 
 
+# TODO: Add main Teacher to Course and Lesson, allow only those to Lock
 class LessonEditView(UpdateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-    permission_classes = (IsAuthenticated, IsEnrolledOnCourseOrIsTeacher)
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
 
     def patch(self, request, *args, **kwargs):
+        request.data.pop('course', None)  # updating the course is not possible
 
-        # is_under_construction = request.data.get('is_under_construction', True)
-        # if is_under_construction:
-        #     # TODO: LOCK
-        #     pass
-        # del request.data['course']  # updating the course is not possible
-        # del request.data['is_under_construction']  # Can only be modified once
+        if 'is_under_construction' in request.data:
+            is_under_construction = request.data['is_under_construction']
+            lesson = self.get_object()
+
+            if is_under_construction:  # Cannot unlock a Lesson
+                err_msg = 'Cannot unlock a Lesson'
+                if not lesson.is_under_construction:
+                    err_msg = 'Cannot unlock an already locked Lesson'
+                return Response(data={'error': err_msg}, status=400)
+
+            if not lesson.is_under_construction:  # Cannot lock a lesson twice
+                return Response(data={'error': 'Cannot lock an already locked Lesson'}, status=400)
+
+            # TODO: Assure that the user is the main Teacher before lock
+            lesson.lock_for_construction()
+            serializer = self.get_serializer(lesson)
+            return Response(serializer.data)
+
         return super().patch(request, *args, **kwargs)
-
 
 
 # /education/course/{course_id}/lesson/{lesson_id}
