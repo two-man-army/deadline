@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from constants import EDUCATION_TEST_FILES_FOLDER
-from education.errors import StudentAlreadyEnrolledError, InvalidEnrollmentError
+from education.errors import StudentAlreadyEnrolledError, InvalidEnrollmentError, InvalidLockError, AlreadyLockedError
 from challenges.validators import PossibleFloatDigitValidator
 from challenges.models import Language, User
 from accounts.models import Role
@@ -69,6 +69,24 @@ class Lesson(models.Model):
 
     def get_course(self) -> Course:
         return self.course
+
+    def lock_for_construction(self):
+        """
+        'Locks' the Lesson, meaning no important information can be modified anymore.
+        In the case of the Lesson model, this impacts everything below it.
+        Once a Lesson is locked, Homework and Homework tasks cannot be created any more.
+
+        For a Lesson to be locked, all HomeworkTasks must all be locked as well
+        """
+        if not self.is_under_construction:
+            raise AlreadyLockedError('Lesson is already locked.')
+
+        for hw in self.homework_set.all():
+            for task in hw.homeworktask_set.all():
+                if task.is_under_construction:
+                    raise InvalidLockError('Cannot lock a Lesson while a HomeworkTask is under construction!')
+        self.is_under_construction = False
+        self.save()
 
     def is_completed_by(self, user: 'User') -> bool:
         """

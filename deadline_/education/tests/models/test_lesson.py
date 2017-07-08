@@ -3,19 +3,24 @@ from io import BytesIO
 from django.test import TestCase
 from rest_framework.parsers import JSONParser
 
-from education.models import Course, Lesson
+from education.errors import AlreadyLockedError, InvalidLockError
+from education.models import Course, Lesson, Homework, HomeworkTask
 from education.serializers import LessonSerializer
+from education.tests.factories import HomeworkTaskDescriptionFactory
 
 
 class CourseModelTests(TestCase):
     def setUp(self):
         self.course = Course.objects.create(name='tank', difficulty=1)
 
-    def test_creation(self):
-        less = Lesson.objects.create(lesson_number=1,
+    def create_lesson(self):
+        return Lesson.objects.create(lesson_number=1,
                               video_link_1='youtube.com/tank', course=self.course,
                               intro='Today we will tank',
                               content='Tank much')
+
+    def test_creation(self):
+        less = self.create_lesson()
         self.course.refresh_from_db()
 
         self.assertEqual(less.course, self.course)
@@ -26,11 +31,28 @@ class CourseModelTests(TestCase):
         self.assertTrue(less.is_under_construction)
 
     def test_get_course_returns_course(self):
-        received_course = Lesson.objects.create(lesson_number=1,
-                              video_link_1='youtube.com/tank', course=self.course,
-                              intro='Today we will tank',
-                              content='Tank much').get_course()
+        received_course = self.create_lesson().get_course()
         self.assertEqual(received_course, self.course)
+
+    def test_lesson_lock_sets_under_construction_to_false(self):
+        less = self.create_lesson()
+        self.assertTrue(less.is_under_construction)
+        less.lock_for_construction()
+        self.assertFalse(less.is_under_construction)
+
+    def test_double_lesson_lock_raises_exception(self):
+        less = self.create_lesson()
+        less.lock_for_construction()
+        with self.assertRaises(AlreadyLockedError):
+            less.lock_for_construction()
+
+    def test_lock_raises_if_any_hwtask_is_not_locked(self):
+        less = self.create_lesson()
+        hw = Homework.objects.create(lesson=less, is_mandatory=True)
+        HomeworkTask.objects.create(homework=hw, is_under_construction=False, is_mandatory=True, difficulty=1, description=HomeworkTaskDescriptionFactory())
+        HomeworkTask.objects.create(homework=hw, is_under_construction=True, is_mandatory=True, difficulty=1, description=HomeworkTaskDescriptionFactory())
+        with self.assertRaises(InvalidLockError):
+            less.lock_for_construction()
 
     def test_deserialization(self):
         json = b'{"video_link_1": "www.yt.com/aa", "course": 1,' \
