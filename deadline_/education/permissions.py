@@ -16,7 +16,7 @@ class IsTeacher(BasePermission):
 class IsTeacherOfCourse(BasePermission):
     """
         Permissions that allows only people that are teachers of the associated Course
-        """
+    """
     @staticmethod
     def can_access(course, user):
         return course.has_teacher(user)

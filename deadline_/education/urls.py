@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from education.views import CourseCreateView, HomeworkTaskCreateView, HomeworkTaskTestCreateView, LessonManageView, \
-    LessonCreateView, CourseManageView, TaskSubmissionCreateView
+    LessonCreateView, CourseManageView, TaskSubmissionCreateView, CourseLanguageDeleteView
 
 # TODO: route only POSTs
 urlpatterns = [
@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^course/(?P<pk>\d+)$', CourseManageView.as_view()),
     url(r'^course/(?P<course_pk>\d+)/lesson/$', LessonCreateView.as_view()),
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<pk>\d+)$', LessonManageView.as_view()),
+    url(r'^course/(?P<course_pk>\d+)/language/(?P<pk>\d+)$', CourseLanguageDeleteView.as_view()),
     # TODO: Create Homework UR
     # TODO: Lock Course/lesson/hoemwork URL
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/$', HomeworkTaskCreateView.as_view()),

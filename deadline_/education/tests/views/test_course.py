@@ -212,3 +212,23 @@ class CourseEditViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(self.course.is_under_construction, False)  # assure not changed
         self.assertEqual(response.status_code, 400)
 
+
+class CourseLanguageDeleteViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.create_teacher_user_and_auth_token()
+        self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                            is_under_construction=True)
+        self.course.teachers.add(self.teacher_auth_user)
+        self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
+                                            intro='hello', content='how are yoou', annexation='bye',
+                                            course=self.course)
+        self.rust_lang = Language.objects.create(name='Rust')
+
+    def test_can_edit_name_and_difficulty_while_not_locked(self):
+        self.client.delete(f'/education/course/{self.course.id}/language/1',
+                          HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.name, 'A Man')
+
+# TODO: LessonDetailsView bug you can query with course/2/lesson/1 EVEN if lesson 1 is on course 1, you just have to enrolled for course 2 as well
