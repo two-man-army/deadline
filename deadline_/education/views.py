@@ -34,13 +34,53 @@ class CourseDetailsView(RetrieveAPIView):
     # TODO: Maybe add a LimitedCourseDetails view
 
 
+# PATCH /education/course/{course_id}
+class CourseEditView(UpdateAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+
+    def patch(self, request, *args, **kwargs):
+        request.data.pop('languages', None)  # you cannot edit the languages from here
+        course: Course = self.get_object()
+        if not course.is_under_construction:
+            return Response(data={'error': 'Cannot edit anything on a locked Course'}, status=400)
+
+        # TODO: add/remove language
+        if 'is_under_construction' in request.data:
+            is_under_construction = request.data['is_under_construction']
+
+            if is_under_construction:  # Cannot unlock a Lesson
+                err_msg = 'Cannot unlock a Course'
+                if not course.is_under_construction:
+                    err_msg = 'Cannot unlock an already locked Course'
+                return Response(data={'error': err_msg}, status=400)
+
+            if not course.is_under_construction:  # Cannot lock a course twice
+                return Response(data={'error': 'Cannot lock an already locked Course'}, status=400)
+
+            # TODO: Assure that the user is the main Teacher before lock
+            course.lock_for_construction()
+            serializer = self.get_serializer(course)
+            return Response(serializer.data)
+
+        return super().patch(request, *args, **kwargs)
+
+    def get_object(self):
+        """ Query for the object only once """
+        if not hasattr(self, 'obj'):
+            self.obj = super().get_object()
+        return self.obj
+
+
 # /education/course/{course_id}
 class CourseManageView(APIView):
     """
         Manages different request methods for the given URL, sending them to the appropriate view class
     """
     VIEWS_BY_METHOD = {
-        'GET': CourseDetailsView.as_view
+        'GET': CourseDetailsView.as_view,
+        'PATCH': CourseEditView.as_view
     }
 
     def dispatch(self, request, *args, **kwargs):
@@ -142,6 +182,9 @@ class LessonEditView(UpdateAPIView):
                 return Response(data={'error': 'Cannot lock an already locked Lesson'}, status=400)
 
             # TODO: Assure that the user is the main Teacher before lock
+            if not lesson.can_lock():
+                return Response(data={'error': 'Cannot lock the Lesson due to some reason.'}, status=400)
+
             lesson.lock_for_construction()
             serializer = self.get_serializer(lesson)
             return Response(serializer.data)
