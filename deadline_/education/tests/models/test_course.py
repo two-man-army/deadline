@@ -1,19 +1,20 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.utils.six import BytesIO
 from rest_framework.parsers import JSONParser
 
+from accounts.models import User, Role
+from challenges.models import Language
 from education.serializers import CourseSerializer
 from education.models import Course, UserLessonProgress, UserCourseProgress, Lesson
-from education.errors import StudentAlreadyEnrolledError, InvalidEnrollmentError
-
-from challenges.models import Language
-from accounts.models import User, Role
+from education.errors import StudentAlreadyEnrolledError, InvalidEnrollmentError, InvalidLockError, AlreadyLockedError
 
 
 class CourseModelTests(TestCase):
     def setUp(self):
-        self.c = Course.objects.create(name='Algo', difficulty=1)
+        self.c = Course.objects.create(name='Algo', difficulty=1, is_under_construction=True)
 
     def test_has_teacher(self):
         teacher_role = Role.objects.create(name='teacher')
@@ -126,3 +127,28 @@ class CourseModelTests(TestCase):
         self.c.is_under_construction = True
         with self.assertRaises(InvalidEnrollmentError):
             self.c.enroll_student(us)
+
+    def test_lock_can_lock(self):
+        self.c.lock_for_construction()
+        self.assertEqual(self.c.is_under_construction, False)
+
+    def test_lock_cannot_lock_twice(self):
+        self.c.lock_for_construction()
+        with self.assertRaises(AlreadyLockedError):
+            self.c.lock_for_construction()
+
+    @patch('education.models.Course.can_lock')
+    def test_lock_cannot_lock_when_not_eligible_for_lock(self, mock_can_lock):
+        mock_can_lock.return_value = False
+        with self.assertRaises(InvalidLockError):
+            self.c.lock_for_construction()
+
+    def test_can_lock_if_lessons_are_locked(self):
+        Lesson.objects.create(course=self.c, is_under_construction=False, lesson_number=1)
+        self.c.refresh_from_db()
+        self.assertTrue(self.c.can_lock())
+
+    def test_can_lock_cant_lock_if_lessons_are_not_locked(self):
+        Lesson.objects.create(course=self.c, is_under_construction=False, lesson_number=1)
+        Lesson.objects.create(course=self.c, is_under_construction=True, lesson_number=2)
+        self.assertFalse(self.c.can_lock())

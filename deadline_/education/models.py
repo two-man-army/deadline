@@ -44,6 +44,33 @@ class Course(models.Model):
     def has_student(self, us: User):
         return any(us.id == st.id for st in self.students.all())
 
+    def can_lock(self):
+        """
+            Returns true/false if the Course is available for locking
+            A course can only be locked if all of its lessons are locked
+        """
+        for less in self.lessons.all():
+            if less.is_under_construction:
+                return False
+        return True
+
+    def lock_for_construction(self):
+        """
+        'Locks' the Course, meaning no important information can be modified anymore.
+        In the case of the Course model, this impacts everything below it.
+        Once a Course is locked, you can no longer create more Lessons (and as all the lessons are locked, further limitations are in place),
+            you cannot edit anything
+
+        For a Course to be locked, all Lessons must all be locked as well
+        """
+        if not self.is_under_construction:
+            raise AlreadyLockedError('Course is already locked.')
+
+        if not self.can_lock():
+            raise InvalidLockError('Cannot lock a Course while a Lesson is under construction!')
+        self.is_under_construction = False
+        self.save()
+
 
 class Lesson(models.Model):
     """
@@ -90,7 +117,7 @@ class Lesson(models.Model):
             raise AlreadyLockedError('Lesson is already locked.')
 
         if not self.can_lock():
-                    raise InvalidLockError('Cannot lock a Lesson while a HomeworkTask is under construction!')
+            raise InvalidLockError('Cannot lock a Lesson while a HomeworkTask is under construction!')
         self.is_under_construction = False
         self.save()
 
