@@ -1,14 +1,5 @@
 import factory
-from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User
-
-
-class UserFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = User
-
-    username = factory.Faker('name')
-    email = factory.Sequence(lambda n: 'user{0}@somewhere.com'.format(n))
-    password = factory.Faker('password')
+from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission
 
 
 class MainCategoryFactory(factory.DjangoModelFactory):

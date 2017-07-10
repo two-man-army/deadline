@@ -10,7 +10,8 @@ from rest_framework.parsers import JSONParser
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.models import UserSubcategoryProficiency
-from challenges.tests.factories import UserFactory, ChallengeDescFactory
+from challenges.tests.factories import ChallengeDescFactory
+from accounts.tests.factories import UserFactory
 
 
 # Create your tests here.

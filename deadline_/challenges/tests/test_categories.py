@@ -1,4 +1,3 @@
-import json
 from collections import OrderedDict
 from unittest import skip
 
@@ -7,7 +6,8 @@ from rest_framework.renderers import JSONRenderer
 
 from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProficiency, Proficiency
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
-from challenges.tests.factories import ChallengeDescFactory, UserFactory, MainCategoryFactory
+from challenges.tests.factories import ChallengeDescFactory, MainCategoryFactory
+from accounts.tests.factories import UserFactory
 from challenges.tests.base import TestHelperMixin
 
 

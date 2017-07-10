@@ -1,6 +1,7 @@
 from django.test import TestCase
 from challenges.models import Proficiency, MainCategory, SubCategory, UserSubcategoryProficiency, User, Challenge, SubcategoryProficiencyAward
-from challenges.tests.factories import UserFactory, ChallengeFactory, ChallengeDescFactory
+from challenges.tests.factories import ChallengeFactory, ChallengeDescFactory
+from accounts.tests.factories import UserFactory
 
 
 class ProficiencyModelTests(TestCase):

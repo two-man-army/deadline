@@ -3,7 +3,8 @@ from unittest import TestCase
 
 from challenges.tests.helpers import get_mock_function_arguments
 from challenges.tasks import run_grader_task, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY
-from challenges.tests.factories import SubmissionFactory, UserFactory
+from challenges.tests.factories import SubmissionFactory
+from accounts.tests.factories import UserFactory
 from challenges.models import Proficiency
 
 

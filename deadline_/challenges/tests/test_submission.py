@@ -11,7 +11,8 @@ from rest_framework.renderers import JSONRenderer
 from challenges.models import (Challenge, Submission, SubCategory, MainCategory,
                                ChallengeDescription, Language, SubmissionVote, Proficiency)
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer
-from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
+from challenges.tests.factories import ChallengeFactory, SubmissionFactory, ChallengeDescFactory
+from accounts.tests.factories import UserFactory
 from challenges.tests.base import TestHelperMixin
 from accounts.models import User
 
