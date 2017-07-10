@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS
+from errors import FetchError
 from helpers import fetch_models_by_pks
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, LimitedSubmissionSerializer
@@ -149,13 +150,13 @@ class SubmissionDetailView(RetrieveAPIView):
 
     def validate_data(self, challenge_pk, submission_pk) -> Response or tuple():
         """ Validate the given challenge_id, submission_id and their association """
-        objects, are_valid, err_msg = fetch_models_by_pks({
-            Challenge: challenge_pk,
-            Submission: submission_pk
-        })
-        if not are_valid:
-            return Response(data={'error': err_msg},
-                            status=404)
+        try:
+            objects = fetch_models_by_pks({
+                Challenge: challenge_pk,
+                Submission: submission_pk
+            })
+        except FetchError as e:
+            return Response(data={'error': str(e)}, status=404)
 
         challenge, submission = objects
 
