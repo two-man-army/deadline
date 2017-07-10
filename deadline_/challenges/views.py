@@ -320,6 +320,13 @@ class LanguageDetailView(RetrieveAPIView):
         return super().retrieve(request, *args, **kwargs)
 
 
+# GET /challenges/languages
+class LanguageListView(ListAPIView):
+    queryset = Language.objects.all()
+    serializer_class = LanguageSerializer
+    permission_classes = (IsAuthenticated, )
+
+
 # /challenges/{challenge_id}/submissions/{submission_id}/test/{testcase_id}
 class TestCaseDetailView(RetrieveAPIView):
     """ Returns information about a specific TestCase """
