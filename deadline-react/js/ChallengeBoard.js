@@ -5,18 +5,25 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import MonacoEditor from 'react-monaco-editor'
+import SweetAlert from 'sweetalert-react'
+import { EmptySolutionError } from './errors'
 import {getLanguageDetail, postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
-import { Segment, Dimmer, Container } from 'semantic-ui-react'
-import {divideCollectionIntoPieces} from './helpers.js'
+import { options, themeOptions, requireConfig } from './editor_settings/editorSettings.js'
+import { Button, Segment, Dimmer, Container } from 'semantic-ui-react'
+import { divideCollectionIntoPieces } from './helpers.js'
 
 class ChallengeBoard extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      code: '',  // TODO: Load sample code
-      chosenLanguage: 'Python',  // TODO: Change with drop down
+      code: '',
+      selectedLanguage: '',
+      selectedTheme: 'vs-dark',
+      displayStyle: 'none',
+      showRedBorder: '',
+      showAlert: false,
       hasSubmitted: false,
       isGrading: false,
       loadedResults: false,
@@ -28,11 +35,11 @@ class ChallengeBoard extends React.Component {
     this.editorDidMount = this.editorDidMount.bind(this)
     this.submitSolution = this.submitSolution.bind(this)
     this.langChangeHandler = this.langChangeHandler.bind(this)
+    this.themeChangeHandler = this.themeChangeHandler.bind(this)
     this.getGradedSolution = this.getGradedSolution.bind(this)
     this.buildSolutionResults = this.buildSolutionResults.bind(this)
     this.displayLoadingTests = this.displayLoadingTests.bind(this)
     this.convertBold = this.parseTextIntoHTML.bind(this)
-    this.cleanArray = this.cleanArray.bind(this)
   }
 
   /**
@@ -83,46 +90,25 @@ class ChallengeBoard extends React.Component {
       </div>
     )
   }
- // Will remove all falsy values: undefined, null, 0, false, NaN and "" (empty string)
-  cleanArray (actual) {
-    let newArray = []
-    for (var i = 0; i < actual.length; i++) {
-      if (actual[i]) {
-        newArray.push(actual[i])
-      }
-    }
-    return newArray
-  }
 
-  // Parses our text into HTML, searching for certain placeholders like {{NPL}} and ** surroundings
+  // Parses text into HTML, searching for certain placeholders like {{NPL}} and ** surroundings
   parseTextIntoHTML (str) {
     if (str === undefined) {
       return str
     }
 
-    var splitContent = str.split(/\s/)
-    for (var i = 0; i < splitContent.length; i++) {
-      let word = splitContent[i]
+    // a bold word markup is a word surrounded by **word**
+    let re = /\*\*(:?.+?)\*\*/g
+    let match
+    let result
 
-      // a bold word markup is a word surrounded by **word**
-      if (word.length > 4 && word.startsWith('**')) {
-        let lastThreeElements = word.substring(word.length - 3)
-
-        if (lastThreeElements.endsWith('**')) {
-          let wantedStr = word.substring(2, word.length - 2)
-          word = '<span class="variable-descriptor">' + wantedStr + '</span>'
-        } else if (lastThreeElements[0] === '*' && lastThreeElements[1] === '*') {
-          // word ends with a punctuation at the end. i.e **tank**.
-          var wantedStr = word.substring(2, word.length - 3)
-          let lastElement = lastThreeElements[2]
-          word = '<span class="variable-descriptor">' + wantedStr + '</span>' + lastElement
-        }
-      }
-
-      splitContent[i] = word
+    while ((match = re.exec(str)) !== null) {
+      let strToReplace = match[0]
+      let replacer = `<strong class=variable-descriptor>${match[1]}</strong>`
+      str = str.replace(strToReplace, replacer)
     }
-    var result = this.cleanArray(splitContent.join(' ')
-                  .split('{{NPL}}')).join('<br>')  // format new line placeholders
+
+    result = str.split('{{NPL}}').join('<br>')  // format new line placeholders
 
     if (result.length === 0) {
       return ''
@@ -198,13 +184,22 @@ class ChallengeBoard extends React.Component {
     this.setState({code: newValue})
   }
 
-  langChangeHandler (event, e) {
-    let languageName = e.value
+  langChangeHandler (event, language) {
+    let languageName = language.value
     getLanguageDetail(languageName).then(lang => {
       let defaultCode = lang.default_code
       this.setState({code: defaultCode})
     })
-    this.setState({chosenLanguage: languageName})
+    this.setState({
+      selectedLanguage: languageName,
+      displayStyle: 'none',
+      showRedBorder: ''
+    })
+  }
+
+  themeChangeHandler (event, theme) {
+    this.setState({selectedTheme: theme.value})
+    console.log(theme.value)
   }
 
   /**
@@ -259,43 +254,68 @@ class ChallengeBoard extends React.Component {
   }
 
   submitSolution () {
-    postChallengeSolution(this.props.id, this.state.code, this.state.chosenLanguage).then(submission => {
-      this.setState({hasSubmitted: true, isGrading: true})
+    if (this.state.selectedLanguage) {
+      postChallengeSolution(this.props.id, this.state.code, this.state.selectedLanguage).then(submission => {
+        this.setState({hasSubmitted: true, isGrading: true})
 
-      this.displayLoadingTests()
+        this.displayLoadingTests()
 
-      this.getGradedSolution(this.props.id, submission.id)  // start querying for the updated solution
-    }).catch(err => {
-      throw err
-    })
+        this.getGradedSolution(this.props.id, submission.id)  // start querying for the updated solution
+      }).catch(err => {
+        if (err instanceof EmptySolutionError) {
+          this.setState({
+            showAlert: true,
+            alertDesc: err.message,
+            alertTitle: err.title
+          })
+        }
+        throw err
+      })
+    } else {
+      this.setState({
+        displayStyle: 'block',
+        showRedBorder: '1px solid red'
+      })
+    }
   }
 
   render () {
-    const requireConfig = {
-      url: 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js',
-      paths: {
-        'vs': '/node_modules/monaco-editor/min/vs'
-      }
-    }
     // TODO: Show test results
+    // TODO: Create new component for editor options
     return (
       <Container>
         <div className='challenge-board'>
           <h1 className='challenge-board-title'>{this.props.name}</h1>
           {this.buildDescription()}
+          <div className='editor-options'>
+            <div className='lang-choice-select'>
+              <span>Language</span>
+              <div style={{color: 'red', display: this.state.displayStyle}}>Choose language</div>
+              <SelectionSearch options={this.buildLanguageSelectOptions()} style={{border: this.state.showRedBorder}} placeholder='Select Language' onChange={this.langChangeHandler} />
+            </div>
+            <div className='theme-select'>
+              <span>Theme</span>
+              <SelectionSearch options={themeOptions} placeholder='Select Theme' onChange={this.themeChangeHandler} />
+            </div>
+          </div>
+          <SweetAlert
+            type='error'
+            show={this.state.showAlert}
+            title={this.state.alertTitle}
+            text={this.state.alertDesc}
+            onConfirm={() => this.setState({ showAlert: false })}
+          />
           <MonacoEditor
-            width='800'
             height='600'
-            language='javascript'
+            options={options}
+            language={this.state.selectedLanguage.toLowerCase()}
+            theme={this.state.selectedTheme}
             value={this.state.code}
             onChange={this.onChange}
             editorDidMount={this.editorDidMount}
             requireConfig={requireConfig}
           />
-          <div className='lang-choice-select'>
-            <SelectionSearch options={this.buildLanguageSelectOptions()} placeholder='Select Language' onChange={this.langChangeHandler} />
-          </div>
-          <button onClick={this.submitSolution}>Submit</button>
+          <Button fluid className='submit-solution-btn' color='orange' onClick={this.submitSolution}>Submit solution</Button>
           {this.state.solutionResultsJSX}
           <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
         </div>
