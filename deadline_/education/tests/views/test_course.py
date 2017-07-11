@@ -282,3 +282,88 @@ class CourseLanguageDeleteViewTests(APITestCase, TestHelperMixin):
 
 
 # TODO: LessonDetailsView bug you can query with course/2/lesson/1 EVEN if lesson 1 is on course 1, you just have to enrolled for course 2 as well
+
+
+class CourseLanguageAddViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.create_teacher_user_and_auth_token()
+        self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                            is_under_construction=True)
+        self.course.teachers.add(self.teacher_auth_user)
+        self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
+                                            intro='hello', content='how are yoou', annexation='bye',
+                                            course=self.course)
+        self.rust_lang = Language.objects.create(name='Rust')
+        self.python_lang = Language.objects.create(name='Python')
+        self.erlang_lang = Language.objects.create(name='Erlang')
+        self.coconut_lang = Language.objects.create(name='Coconut')
+        self.objective_c_lang = Language.objects.create(name='Objective-C')
+        self.course.languages.add(*[self.rust_lang, self.python_lang, self.erlang_lang])
+
+    def test_can_add_language(self):
+        self.assertEqual(self.course.languages.count(), 3)
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                    data={'language': self.coconut_lang.id})
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.course.languages.count(), 4)
+        self.assertIn(self.coconut_lang, self.course.languages.all())
+
+    def test_cannot_add_language_that_is_there(self):
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                    data={'language': self.python_lang.id})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.course.languages.count(), 3)
+
+    def test_cannot_add_language_when_course_locked(self):
+        self.lesson.lock_for_construction()
+        self.course.lock_for_construction()
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                    data={'language': self.coconut_lang.id})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.course.languages.count(), 3)
+
+    def test_non_teacher_cannot_add(self):
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'language': self.coconut_lang.id})
+        self.assertEqual(response.status_code, 403)
+
+    def test_unauth_cant_add(self):
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    data={'language': self.coconut_lang.id})
+        self.assertEqual(response.status_code, 401)
+
+    def test_invalid_course_returns_404(self):
+        response = self.client.post(f'/education/course/11/language/',
+                                    HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                    data={'language': self.coconut_lang.id})
+        self.assertEqual(response.status_code, 404)
+
+    def test_invalid_lang_returns_404(self):
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                    data={'language': 444})
+        self.assertEqual(response.status_code, 404)
+
+    def test_no_lang_provided_returns_400(self):
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(response.status_code, 404)
+
+    def test_teacher_on_other_course_cannot_add(self):
+        teacher_role = Role.objects.filter(name='Teacher').first()
+        teacher_auth_user = User.objects.create(username='theTeach2', password='123', email='TheTeac2h@abv.bg', score=123,
+                                                role=teacher_role)
+        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
+                                       is_under_construction=True)
+        course.teachers.add(teacher_auth_user)
+
+        response = self.client.post(f'/education/course/{self.course.id}/language/',
+                                    HTTP_AUTHORIZATION=teacher_auth_token,
+                                    data={'language': self.coconut_lang.id})
+        self.assertEqual(response.status_code, 403)

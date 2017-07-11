@@ -102,13 +102,36 @@ class CourseLanguageDeleteView(APIView):
 
     @fetch_models
     def delete(self, request, course: Course, language: Language, *args, **kwargs):
-        if language not in course.languages.all():
-            return Response(status=400, data={'error': f'Language {language.id} is not present in course {course.id}'})
         if not course.is_under_construction:
             return Response(status=400, data={'error': f'Cannot remove a Language from a Course when the Course is locked!'})
+        if language not in course.languages.all():
+            return Response(status=400, data={'error': f'Language {language.id} is not present in course {course.id}'})
 
         course.languages.remove(language)
         return Response(status=204)
+
+
+# POST /education/course/{course_id}/language
+class CourseLanguageAddView(APIView):
+    """ Adds a Language to a given Course """
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, )
+    main_class = Course
+
+    @fetch_models
+    def post(self, request, course: Course, *args, **kwargs):
+        try:
+            language, *_ = fetch_models_by_pks({Language: request.data.get('language', -1)})
+        except FetchError as e:
+            return Response(status=404, data={'error': str(e)})
+
+        if not course.is_under_construction:
+            return Response(status=400, data={'error': f'Cannot add a Language to a Course when the Course is locked!'})
+        if language in course.languages.all():
+            return Response(status=400, data={'error': f'Language {language.id} is already in course {course.id}'})
+
+        course.languages.add(language)
+        return Response(status=201)
 
 
 # /education/course/{course_id}/lesson
