@@ -281,9 +281,6 @@ class CourseLanguageDeleteViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 403)
 
 
-# TODO: LessonDetailsView bug you can query with course/2/lesson/1 EVEN if lesson 1 is on course 1, you just have to enrolled for course 2 as well
-
-
 class CourseLanguageAddViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()

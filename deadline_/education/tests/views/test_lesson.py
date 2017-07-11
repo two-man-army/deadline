@@ -196,6 +196,32 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
 
         self.assertEqual(resp.status_code, 403)
 
+    def test_is_forbidden_for_user_enrolled_on_other_course(self):
+        """
+        This is sort of an edge case, where we provide another course ID but the lesson ID from the original course
+        """
+        other_course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
+                                            is_under_construction=False)
+        other_course.enroll_student(self.auth_user)
+
+        response = self.client.get(f'/education/course/{other_course.id}/lesson/{self.lesson.id}',
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_returns_404_for_user_enrolled_on_other_course(self):
+        """
+        An edge case, assure we follow consistency of course_id - lesson_id.
+        Even if the user is enrolled to both courses, assure that we cannot get the lesson through another course id
+        """
+        other_course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
+                                             is_under_construction=False)
+        other_course.enroll_student(self.auth_user)
+        self.course.enroll_student(self.auth_user)
+
+        response = self.client.get(f'/education/course/{other_course.id}/lesson/{self.lesson.id}',
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 400)
+
 
 class LessonEditViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
