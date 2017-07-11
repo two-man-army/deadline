@@ -93,19 +93,22 @@ class CourseManageView(APIView):
         return HttpResponse(status=404)
 
 
-from rest_framework.generics import GenericAPIView
-
-
-
 # DELETE /education/course/{course_id}/language/{language_id}
 class CourseLanguageDeleteView(APIView):
     """ Removes a Language from a given Course """
     permission_classes = (IsAuthenticated, IsTeacherOfCourse)
     model_classes = (Course, Language)
+    main_class = Course
 
     @fetch_models
-    def delete(self, request, *args, **kwargs):
-        return Response()
+    def delete(self, request, course: Course, language: Language, *args, **kwargs):
+        if language not in course.languages.all():
+            return Response(status=400, data={'error': f'Language {language.id} is not present in course {course.id}'})
+        if not course.is_under_construction:
+            return Response(status=400, data={'error': f'Cannot remove a Language from a Course when the Course is locked!'})
+
+        course.languages.remove(language)
+        return Response(status=204)
 
 
 # /education/course/{course_id}/lesson

@@ -224,11 +224,61 @@ class CourseLanguageDeleteViewTests(APITestCase, TestHelperMixin):
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
         self.rust_lang = Language.objects.create(name='Rust')
+        self.python_lang = Language.objects.create(name='Python')
+        self.erlang_lang = Language.objects.create(name='Erlang')
+        self.course.languages.add(*[self.rust_lang, self.python_lang, self.erlang_lang])
 
-    def test_can_edit_name_and_difficulty_while_not_locked(self):
-        self.client.delete(f'/education/course/{self.course.id}/language/1',
-                          HTTP_AUTHORIZATION=self.teacher_auth_token)
-        self.course.refresh_from_db()
-        self.assertEqual(self.course.name, 'A Man')
+    def test_can_remove_language(self):
+        self.assertEqual(self.course.languages.count(), 3)
+        response = self.client.delete(f'/education/course/{self.course.id}/language/{self.python_lang.id}',
+                                      HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(self.course.languages.count(), 2)
+        self.assertNotIn(self.python_lang, self.course.languages.all())
+
+    def test_cannot_remove_language_when_course_locked(self):
+        self.lesson.lock_for_construction()
+        self.course.lock_for_construction()
+        self.assertEqual(self.course.languages.count(), 3)
+        response = self.client.delete(f'/education/course/{self.course.id}/language/{self.python_lang.id}',
+                                      HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.course.languages.count(), 3)
+
+    def test_remove_non_existant_language(self):
+        self.tank_lang = Language.objects.create(name='Tank')
+        response = self.client.delete(f'/education/course/{self.course.id}/language/{self.tank_lang.id}',
+                                      HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.course.languages.count(), 3)
+
+    def test_non_teacher_cannot_delete(self):
+        response = self.client.delete(f'/education/course/{self.course.id}/language/{self.python_lang.id}',
+                                      HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_non_existant_course_returns_404(self):
+        response = self.client.delete(f'/education/course/21/language/{self.python_lang.id}',
+                                      HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(response.status_code, 404)
+
+    def test_non_existant_language_returns_404(self):
+        response = self.client.delete(f'/education/course/{self.course.id}/language/444',
+                                      HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(response.status_code, 404)
+
+    def test_teacher_on_other_course_cannot_delete(self):
+        teacher_role = Role.objects.filter(name='Teacher').first()
+        teacher_auth_user = User.objects.create(username='theTeach2', password='123', email='TheTeac2h@abv.bg', score=123,
+                                                     role=teacher_role)
+        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
+                                            is_under_construction=True)
+        course.teachers.add(teacher_auth_user)
+
+        response = self.client.delete(f'/education/course/{self.course.id}/language/{self.python_lang.id}',
+                                      HTTP_AUTHORIZATION=teacher_auth_token)
+        self.assertEqual(response.status_code, 403)
+
 
 # TODO: LessonDetailsView bug you can query with course/2/lesson/1 EVEN if lesson 1 is on course 1, you just have to enrolled for course 2 as well
