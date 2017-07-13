@@ -23,7 +23,7 @@ class CourseCreateView(CreateAPIView):
     Creates a new Course
     """
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated, IsTeacher, )
+    permission_classes = (IsAuthenticated, )
 
     def perform_create(self, serializer):
         serializer.save(teachers=[self.request.user])
