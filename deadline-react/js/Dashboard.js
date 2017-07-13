@@ -5,6 +5,7 @@ import DashboardHeader from './semantic_ui_components/DashboardHeader'
 import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
 import CategoryChallengeList from './CategoryChallengeList'
 import ChallengeDetails from './ChallengeDetails'
+import CreateCourse from './CreateCourse'
 import OverallLeaderboard from './semantic_ui_components/OverallLeaderboardTable'
 import RouteNotFound from './RouteNotFound'
 import Profile from './Profile'
@@ -56,6 +57,7 @@ class Dashboard extends React.Component {
           <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
           <Route exact path='/accounts/password/change' component={Profile} />
           <Route exact path='/accounts/edit' component={Profile} />
+          <Route exact path='/education/course' component={CreateCourse} />
           <Route path='*' component={RouteNotFound} />
         </Switch>
       </div>
