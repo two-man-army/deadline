@@ -53,6 +53,16 @@ function postRegister (email, password, username) {
   })
 }
 
+function postCourse (name, languages, difficulty) {
+  return axios.post('http://localhost:8000/education/course',
+      {name, languages, difficulty}, getAxiosConfig())
+        .then(resp => {
+          console.log(resp.status, resp.statusText)
+          return resp.data
+        })
+      .catch(err => console.log(err))
+}
+
 /**
  * Queries the server for all the Challenge Categories and returns them in the following way:
  * @returns {Object} [{"name": "Main Category",
@@ -179,6 +189,7 @@ function getTopSolutions (challengeId) {
 /**
  * Queries the server for a Language object by its name
  * @param {Name} langName
+ * @returns {Array.<Object>}
  */
 function getLanguageDetail (langName) {
   return axios.get(`http://localhost:8000/challenges/languages/${langName}`, getAxiosConfig()).then(resp => {
@@ -187,6 +198,14 @@ function getLanguageDetail (langName) {
     console.log(`Error while fetching language details for language ${langName}`)
     throw err
   })
+}
+
+/**
+ * Queries the server for all languages object
+ */
+function getAllLanguages () {
+  return axios.get('http://localhost:8000/challenges/languages', getAxiosConfig())
+    .then(resp => resp.data)
 }
 
 /**
@@ -248,6 +267,5 @@ export {getAxiosConfig,
   postLogIn, postRegister, postChallengeSolution, postCastSubmissionVote,
   getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails, getCategoriesMetaInfo,
   getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, getSelfUserTopSubmission,
-  getOverallLeaderboard, getLanguageDetail,
-  deleteRemoveSubmissionVote
+  getOverallLeaderboard, getLanguageDetail, deleteRemoveSubmissionVote, postCourse, getAllLanguages
 }
