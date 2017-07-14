@@ -24,7 +24,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
-        fields = ('name', )
+        fields = ('id', 'name')
 
 
 class LimitedChallengeSerializer(serializers.ModelSerializer):
