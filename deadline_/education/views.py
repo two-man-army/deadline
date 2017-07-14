@@ -193,7 +193,7 @@ class LessonDetailsView(RetrieveAPIView):
             - is_completed - indicating if the current user has completed the lesson
         """
         lesson = self.get_object()
-        if lesson.course_id != kwargs.get('course_pk', -1):
+        if str(lesson.course_id) != kwargs.get('course_pk', -1):
             return Response(status=400)
 
         serializer = self.get_serializer(lesson)
