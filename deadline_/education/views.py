@@ -134,6 +134,24 @@ class CourseLanguageAddView(APIView):
         return Response(status=201)
 
 
+# DELETE /education/course/{course_id}/lessons/{lesson_id}
+class CourseLessonDeleteView(APIView):
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, Lesson)
+    main_class = Course
+
+    @fetch_models
+    def delete(self, request, course: Course, lesson: Lesson, *args, **kwargs):
+        if not course.is_under_construction:
+            return Response(status=400, data={'error': f'Cannot remove a Lesson from a Course when the Course is locked!'})
+        if lesson not in course.lessons.all():
+            return Response(status=404, data={'error': f'Lesson {lesson.id} is not present in course {course.id}'})
+
+        course.remove_lesson(lesson)
+
+        return Response(status=204)
+
+
 # /education/course/{course_id}/lesson
 class LessonCreateView(CreateAPIView):
     """
@@ -246,13 +264,13 @@ class LessonManageView(APIView):
     """
     VIEWS_BY_METHOD = {
         'GET': LessonDetailsView.as_view,
-        'PATCH': LessonEditView.as_view
+        'PATCH': LessonEditView.as_view,
+        'DELETE': CourseLessonDeleteView.as_view
     }
 
     def dispatch(self, request, *args, **kwargs):
         if request.method in self.VIEWS_BY_METHOD:
             return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
-
         return HttpResponse(status=404)
 
 

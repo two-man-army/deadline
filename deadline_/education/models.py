@@ -71,6 +71,21 @@ class Course(models.Model):
         self.is_under_construction = False
         self.save()
 
+    def remove_lesson(self, lesson):
+        """
+        Removes a Lesson from the Course's lessons
+        """
+        if lesson.course_id != self.id:
+            raise Exception(f'Lesson {lesson.id} does not belong to course {self.id}')
+
+        lesson.course_id = -1  # don't delete it, just make it invalid
+        lesson.save()
+        # fix the ordering of the other lessons
+        for old_lesson in self.lessons.all():
+            if old_lesson.lesson_number > lesson.lesson_number:
+                old_lesson.lesson_number -= 1
+                old_lesson.save()
+
 
 class Lesson(models.Model):
     """

@@ -364,3 +364,83 @@ class CourseLanguageAddViewTests(APITestCase, TestHelperMixin):
                                     HTTP_AUTHORIZATION=teacher_auth_token,
                                     data={'language': self.coconut_lang.id})
         self.assertEqual(response.status_code, 403)
+
+
+class CourseLessonDeleteViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.create_teacher_user_and_auth_token()
+        self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                            is_under_construction=True)
+        self.course.teachers.add(self.teacher_auth_user)
+        self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
+                                            intro='hello', content='how are yoou', annexation='bye',
+                                            course=self.course)
+        self.second_lesson = Lesson.objects.create(lesson_number=2, is_under_construction=True,
+                                            intro='hello', content='how are yoou', annexation='bye',
+                                            course=self.course)
+
+    def test_can_remove_lesson(self):
+        resp = self.client.delete(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                  HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 204)
+        self.course.refresh_from_db()
+        self.lesson.refresh_from_db()
+        self.second_lesson.refresh_from_db()
+        self.assertEqual(self.course.lessons.count(), 1)
+        self.assertNotIn(self.lesson, self.course.lessons.all())
+        self.assertEqual(self.second_lesson.lesson_number, 1)
+        # assert that the lesson is not deleted
+        self.assertEqual(Lesson.objects.count(), 2)
+
+    def test_cannot_remove_when_lesson_is_locked(self):
+        self.lesson.lock_for_construction()
+        self.second_lesson.lock_for_construction()
+        self.course.lock_for_construction()
+        resp = self.client.delete(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                  HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 400)
+
+    def test_normal_user_is_forbidden(self):
+        resp = self.client.delete(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                  HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(resp.status_code, 403)
+
+    def test_invalid_course_returns_404(self):
+        resp = self.client.delete(f'/education/course/111/lesson/{self.lesson.id}',
+                                  HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(resp.status_code, 404)
+
+    def test_invalid_lesson_returns_404(self):
+        resp = self.client.delete(f'/education/course/{self.course.id}/lesson/111',
+                                  HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(resp.status_code, 404)
+
+    def test_other_teacher_is_forbidden(self):
+        teacher_role = Role.objects.filter(name='Teacher').first()
+        second_teach = User.objects.create(username='theTeach2', password='123', email='TheTeach1@abv.bg',
+                                           score=123,
+                                           role=teacher_role)
+        second_teacher_auth_token = 'Token {}'.format(second_teach.auth_token.key)
+        resp = self.client.delete(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                  HTTP_AUTHORIZATION=second_teacher_auth_token)
+        self.assertEqual(resp.status_code, 403)
+
+    def test_requires_authentication(self):
+        resp = self.client.delete(f'/education/course/{self.course.id}/lesson/{self.lesson.id}')
+        self.assertEqual(resp.status_code, 401)
+
+    def test_cannot_remove_a_lesson_from_another_course(self):
+        new_course = Course.objects.create(name='Dark Cloud', difficulty=1,
+                                           is_under_construction=True)
+        new_course.teachers.add(self.teacher_auth_user)
+        new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
+                                            intro='hello', content='how are yoou', annexation='bye',
+                                            course=new_course)
+
+        resp = self.client.delete(f'/education/course/{self.course.id}/lesson/{new_lesson.id}',
+                                  HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 404)
+        resp = self.client.delete(f'/education/course/{new_course.id}/lesson/{self.lesson.id}',
+                                  HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 404)
