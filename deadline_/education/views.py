@@ -23,7 +23,7 @@ class CourseCreateView(CreateAPIView):
     Creates a new Course
     """
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, IsTeacher)
 
     def perform_create(self, serializer):
         serializer.save(teachers=[self.request.user])
@@ -274,7 +274,7 @@ class LessonManageView(APIView):
         return HttpResponse(status=404)
 
 
-# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/
 class HomeworkTaskCreateView(CreateAPIView):
     """ Creates a new HomeworkTask for the given Lesson of a Course """
     serializer_class = HomeworkTaskSerializer
@@ -333,7 +333,7 @@ class HomeworkTaskCreateView(CreateAPIView):
         return course, lesson
 
 
-# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
 class HomeworkTaskTestCreateView(APIView):
     """
     Creates a Test case for a HomeworkTask
@@ -383,6 +383,21 @@ class HomeworkTaskTestCreateView(APIView):
         task.save()
 
         return Response(status=201)
+
+
+# /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class HomeworkTaskManageView(APIView):
+    """
+          Manages different request methods for the given URL, sending them to the appropriate view class
+      """
+    VIEWS_BY_METHOD = {
+        'POST': HomeworkTaskTestCreateView.as_view
+    }
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method in self.VIEWS_BY_METHOD:
+            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
+        return HttpResponse(status=404)
 
 
 class TaskSubmissionCreateView(CreateAPIView):

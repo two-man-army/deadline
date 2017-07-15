@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from education.views import CourseCreateView, HomeworkTaskCreateView, HomeworkTaskTestCreateView, LessonManageView, \
+from education.views import CourseCreateView, HomeworkTaskCreateView, HomeworkTaskManageView, LessonManageView, \
     LessonCreateView, CourseManageView, TaskSubmissionCreateView, CourseLanguageDeleteView, CourseLanguageAddView
 
 # TODO: route only POSTs
@@ -16,5 +16,5 @@ urlpatterns = [
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/$', HomeworkTaskCreateView.as_view()),
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/(?P<task_pk>\d+)/submission', TaskSubmissionCreateView.as_view()),
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/(?P<task_pk>\d+)/test',
-        HomeworkTaskTestCreateView.as_view()),
+        HomeworkTaskManageView.as_view()),
 ]
