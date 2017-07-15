@@ -385,13 +385,36 @@ class HomeworkTaskTestCreateView(APIView):
         return Response(status=201)
 
 
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class LessonHomeworkTaskDeleteView(APIView):
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, Lesson, HomeworkTask)
+    main_class = Course
+
+    @fetch_models
+    def delete(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
+        if not lesson.is_under_construction:
+            return Response(status=400,
+                            data={'error': f'Cannot remove a HomeworkTask from a Lesson when the Lesson is locked!'})
+
+        if lesson not in course.lessons.all():
+            return Response(status=404, data={'error': f'Lesson {lesson.id} is not present in course {course.id}'})
+
+        if task not in [task for hw in lesson.homework_set.all() for task in hw.homeworktask_set.all()]:
+            return Response(status=404, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
+
+        lesson.homework_set.first().remove_task(task)
+
+        return Response(status=204)
+
+
 # /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
 class HomeworkTaskManageView(APIView):
     """
-          Manages different request methods for the given URL, sending them to the appropriate view class
-      """
+      Manages different request methods for the given URL, sending them to the appropriate view class
+    """
     VIEWS_BY_METHOD = {
-        'POST': HomeworkTaskTestCreateView.as_view
+        'DELETE': LessonHomeworkTaskDeleteView.as_view
     }
 
     def dispatch(self, request, *args, **kwargs):

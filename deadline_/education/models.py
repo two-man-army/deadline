@@ -153,6 +153,22 @@ class Homework(models.Model):
     def get_course(self):
         return self.lesson.get_course()
 
+    def remove_task(self, task):
+        """
+        Removes a HomeworkTask from this Homework
+        """
+        if task not in self.homeworktask_set.all():
+            raise Exception(f'HomeworkTask {task.id} does not belong to Homework {self.id}')
+
+        task.homework_id = -1
+        task.save()
+
+        # fix the ordering of the other tasks
+        for old_task in self.homeworktask_set.all():
+            if old_task.consecutive_number > task.consecutive_number:
+                old_task.consecutive_number -= 1
+                old_task.save()
+
 
 class HomeworkTask(models.Model):
     homework = models.ForeignKey(Homework)

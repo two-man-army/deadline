@@ -1,7 +1,8 @@
 from django.conf.urls import url
 
-from education.views import CourseCreateView, HomeworkTaskCreateView, HomeworkTaskManageView, LessonManageView, \
-    LessonCreateView, CourseManageView, TaskSubmissionCreateView, CourseLanguageDeleteView, CourseLanguageAddView
+from education.views import CourseCreateView, HomeworkTaskCreateView, HomeworkTaskTestCreateView, LessonManageView, \
+    LessonCreateView, CourseManageView, TaskSubmissionCreateView, CourseLanguageDeleteView, CourseLanguageAddView,  \
+    HomeworkTaskManageView
 
 # TODO: route only POSTs
 urlpatterns = [
@@ -14,7 +15,8 @@ urlpatterns = [
     # TODO: Create Homework UR
     # TODO: Lock Course/lesson/hoemwork URL
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/$', HomeworkTaskCreateView.as_view()),
+    url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/(?P<task_pk>\d+)$', HomeworkTaskManageView.as_view()),
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/(?P<task_pk>\d+)/submission', TaskSubmissionCreateView.as_view()),
     url(r'^course/(?P<course_pk>\d+)/lesson/(?P<lesson_pk>\d+)/homework_task/(?P<task_pk>\d+)/test',
-        HomeworkTaskManageView.as_view()),
+        HomeworkTaskTestCreateView.as_view()),
 ]

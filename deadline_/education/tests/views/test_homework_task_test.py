@@ -7,6 +7,12 @@ from challenges.tests.base import TestHelperMixin
 from challenges.models import Language
 from education.tests.factories import HomeworkTaskDescriptionFactory
 from education.models import Course, Lesson, Homework, HomeworkTask, HomeworkTaskTest
+from education.views import HomeworkTaskTestCreateView, LessonHomeworkTaskDeleteView, LessonManageView, HomeworkTaskManageView
+
+
+class LessonManagerViewTests(TestCase):
+    def test_uses_expected_views_by_method(self):
+        self.assertEqual(HomeworkTaskManageView.VIEWS_BY_METHOD['DELETE'], LessonHomeworkTaskDeleteView.as_view)
 
 
 @patch('education.helpers.create_task_test_files')
@@ -146,3 +152,121 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
                                 data={"input": self.input, "output": self.output})
 
         self.assertEqual(resp.status_code, 403)
+
+
+class LessonHomeworkTaskDeleteViewTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.create_teacher_user_and_auth_token()
+        self.python_language = Language.objects.create(name='Python')
+        self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                            is_under_construction=True)
+        self.course.teachers.add(self.teacher_auth_user)
+        self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
+                                            intro='hello', content='how are you', annexation='bye',
+                                            course=self.course)
+        self.hw = Homework.objects.create(lesson=self.lesson, is_mandatory=True)
+        self.task = HomeworkTask.objects.create(
+            homework=self.hw, test_case_count=0, description=HomeworkTaskDescriptionFactory(),
+            is_mandatory=True, consecutive_number=1, difficulty=5)
+
+    def test_delete_task(self):
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 204)
+        self.task.refresh_from_db()
+        # assert its not deleted
+        self.assertEqual(HomeworkTask.objects.count(), 1)
+        self.assertNotEqual(self.task.homework_id, self.hw.id)
+
+    def test_delete_re_orders_consecutive_number(self):
+        second_task = HomeworkTask.objects.create(
+            homework=self.hw, test_case_count=0, description=HomeworkTaskDescriptionFactory(),
+            is_mandatory=True, consecutive_number=2, difficulty=5)
+        third_task = HomeworkTask.objects.create(
+            homework=self.hw, test_case_count=0, description=HomeworkTaskDescriptionFactory(),
+            is_mandatory=True, consecutive_number=3, difficulty=5)
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 204)
+        second_task.refresh_from_db(); third_task.refresh_from_db()
+        self.assertEqual(second_task.consecutive_number, 1)
+        self.assertEqual(third_task.consecutive_number, 2)
+
+    def test_cannot_delete_from_a_locked_lesson(self):
+        self.task.is_under_construction = False
+        self.task.save()
+        self.lesson.lock_for_construction()
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(self.task.homework, self.hw)
+
+    def test_normal_user_cant_delete(self):
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(self.task.homework, self.hw)
+
+    def test_unauth_no_access(self):
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}')
+        self.assertEqual(resp.status_code, 401)
+
+    def test_other_teacher_cant_delete(self):
+        self.create_teacher_user_and_auth_token()
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.second_teacher_auth_token)
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(self.task.homework, self.hw)
+
+    def test_invalid_task_returns_404(self):
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/111',
+            HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 404)
+
+    def test_invalid_lesson_returns_404(self):
+        resp = self.client.delete(
+            f'/education/course/{self.course.id}/lesson/111/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 404)
+
+    def test_invalid_course_returns_404(self):
+        resp = self.client.delete(
+            f'/education/course/111/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.teacher_auth_token)
+        self.assertEqual(resp.status_code, 404)
+
+    def test_invalid_matching_returns_404(self):
+        # try various matcihngs, i.e course and invalid lesson and etc
+        self.create_teacher_user_and_auth_token()
+        new_course = Course.objects.create(name='teste fundamentals', difficulty=1,
+                                            is_under_construction=True)
+        new_course.teachers.add(self.second_teacher_auth_user)
+        new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
+                                            intro='hello', content='how are you', annexation='bye',
+                                            course=new_course)
+        new_hw = Homework.objects.create(lesson=new_lesson, is_mandatory=True)
+        new_task = HomeworkTask.objects.create(
+            homework=new_hw, test_case_count=0, description=HomeworkTaskDescriptionFactory(),
+            is_mandatory=True, consecutive_number=1, difficulty=5)
+
+        url_combinations = [
+            f'/education/course/{new_course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            f'/education/course/{self.course.id}/lesson/{new_lesson.id}/homework_task/{self.task.id}',
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{new_task.id}'
+        ]
+        for url_combination in url_combinations:
+            resp = self.client.delete(
+                url_combination,
+                HTTP_AUTHORIZATION=self.teacher_auth_token)
+            self.assertTrue(resp.status_code in [403, 404])
+            self.task.refresh_from_db()
+            self.assertEqual(self.task.homework, self.hw)
+
