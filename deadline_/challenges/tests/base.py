@@ -7,6 +7,18 @@ class TestHelperMixin:
     """
     A Mixin class providing some commonly used helper functions
     """
+    USER_CREATION_COUNT_NAMES = {
+        1: '',
+        2: 'second_',
+        3: 'third_',
+        4: 'fourth_',
+        5: 'fifth_',
+        6: 'sixth_',
+        7: 'seventh_',
+        8: 'eighth_',
+        9: 'ninth_'
+    }
+
     def create_user_and_auth_token(self):
         """
         Creates a user model and token, attaching them to self
@@ -19,12 +31,26 @@ class TestHelperMixin:
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
 
     def create_teacher_user_and_auth_token(self):
+        """
+        Method that creates a Teacher user and an auth token for him.
+            This can be used to create multiple such teachers
+        """
+        if not hasattr(self, 'teacher_count'):
+            self.teacher_count = 1
+
         teacher_role = Role.objects.filter(name='Teacher').first()
         if teacher_role is None:
             teacher_role = Role.objects.create(name='Teacher')
-        self.teacher_auth_user = User.objects.create(username='theTeach', password='123', email='TheTeach@abv.bg', score=123,
+
+        teacher_auth_user = User.objects.create(username=f'theTeach{self.teacher_count}', password='123', email=f'TheTeach{self.teacher_count}@abv.bg', score=123,
                                                      role=teacher_role)
-        self.teacher_auth_token = 'Token {}'.format(self.teacher_auth_user.auth_token.key)
+        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+
+        # create appropriate named variables
+        exec(f'self.{self.USER_CREATION_COUNT_NAMES[self.teacher_count]}teacher_auth_user = teacher_auth_user')
+        exec(f'self.{self.USER_CREATION_COUNT_NAMES[self.teacher_count]}teacher_auth_token = teacher_auth_token')
+
+        self.teacher_count += 1
 
     def base_set_up(self):
         """

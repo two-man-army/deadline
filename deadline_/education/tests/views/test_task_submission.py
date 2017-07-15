@@ -54,15 +54,11 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
             Creates and returns new Course by a new teacher, Lesson, HW and HWTask less boilerplate
             + enrolls self.auth_user to the course
         """
-        teacher_role = Role.objects.filter(name='Teacher').first()
-        if teacher_role is None:
-            teacher_role = Role.objects.create(name='Teacher')
-        self.new_teacher = User.objects.create(username='NewTeach', password='123', email='TheNewTeach@abv.bg', score=123,
-                                                     role=teacher_role)
-        self.new_teacher_auth_token = 'Token {}'.format(self.new_teacher.auth_token.key)
+        self.create_teacher_user_and_auth_token()
+
         new_course = Course.objects.create(name='Ruby Fundamentals', difficulty=1,
                                            is_under_construction=False)
-        new_course.teachers.add(self.new_teacher)
+        new_course.teachers.add(self.second_teacher_auth_user)
         new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=False,
                                            intro='New Lesson', content='Rly New', annexation='No Jokes',
                                            course=new_course)

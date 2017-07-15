@@ -78,8 +78,8 @@ class CourseDetailsViewTests(TestCase, TestHelperMixin):
                                             intro='IFs', content='how are you', annexation='bye',
                                             course=self.course)
         self.lesson2 = Lesson.objects.create(lesson_number=2, is_under_construction=True,
-                                            intro='Loops', content='how are you', annexation='bye',
-                                            course=self.course)
+                                             intro='Loops', content='how are you', annexation='bye',
+                                             course=self.course)
 
     def test_teacher_can_view(self):
         resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.teacher_auth_token)
@@ -87,7 +87,7 @@ class CourseDetailsViewTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.data['name'], 'Python Fundamentals')
 
     def test_view_returns_data_as_expected(self):
-        expected_data = {'name': 'Python Fundamentals', 'difficulty': 1.0, 'languages': ['Python'], 'teachers': [{'name': 'theTeach', 'id': 2}], 'lessons': [{'consecutive_number': 1, 'short_description': 'IFs'}, {'consecutive_number': 2, 'short_description': 'Loops'}]}
+        expected_data = {'name': 'Python Fundamentals', 'difficulty': 1.0, 'languages': ['Python'], 'teachers': [{'name': self.teacher_auth_user.username, 'id': 2}], 'lessons': [{'consecutive_number': 1, 'short_description': 'IFs'}, {'consecutive_number': 2, 'short_description': 'Loops'}]}
 
         resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.teacher_auth_token)
         self.assertEqual(expected_data, resp.data)
@@ -171,15 +171,9 @@ class CourseEditViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 403)
 
     def test_non_course_teacher_cant_edit(self):
-        teacher_role = Role.objects.filter(name='Teacher').first()
-        if teacher_role is None:
-            teacher_role = Role.objects.create(name='Teacher')
-        teacher_auth_user = User.objects.create(username='theTeach3', password='123', email='TheNewTeach@abv.bg',
-                                                     score=123,
-                                                     role=teacher_role)
-        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        self.create_teacher_user_and_auth_token()
         response = self.client.patch(f'/education/course/{self.course.id}',
-                                     HTTP_AUTHORIZATION=teacher_auth_token,
+                                     HTTP_AUTHORIZATION=self.second_teacher_auth_token,
                                      data={'name': 'Hello'})
         self.assertEqual(response.status_code, 403)
 
@@ -268,16 +262,13 @@ class CourseLanguageDeleteViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 404)
 
     def test_teacher_on_other_course_cannot_delete(self):
-        teacher_role = Role.objects.filter(name='Teacher').first()
-        teacher_auth_user = User.objects.create(username='theTeach2', password='123', email='TheTeac2h@abv.bg', score=123,
-                                                     role=teacher_role)
-        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
-        course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
-                                            is_under_construction=True)
-        course.teachers.add(teacher_auth_user)
+        self.create_teacher_user_and_auth_token()
+
+        course = Course.objects.create(name='teste fundamentals ||', difficulty=1, is_under_construction=True)
+        course.teachers.add(self.second_teacher_auth_user)
 
         response = self.client.delete(f'/education/course/{self.course.id}/language/{self.python_lang.id}',
-                                      HTTP_AUTHORIZATION=teacher_auth_token)
+                                      HTTP_AUTHORIZATION=self.second_teacher_auth_token)
         self.assertEqual(response.status_code, 403)
 
 
@@ -352,16 +343,14 @@ class CourseLanguageAddViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 404)
 
     def test_teacher_on_other_course_cannot_add(self):
-        teacher_role = Role.objects.filter(name='Teacher').first()
-        teacher_auth_user = User.objects.create(username='theTeach2', password='123', email='TheTeac2h@abv.bg', score=123,
-                                                role=teacher_role)
-        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        self.create_teacher_user_and_auth_token()
+
         course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
                                        is_under_construction=True)
-        course.teachers.add(teacher_auth_user)
+        course.teachers.add(self.second_teacher_auth_user)
 
         response = self.client.post(f'/education/course/{self.course.id}/language/',
-                                    HTTP_AUTHORIZATION=teacher_auth_token,
+                                    HTTP_AUTHORIZATION=self.second_teacher_auth_token,
                                     data={'language': self.coconut_lang.id})
         self.assertEqual(response.status_code, 403)
 
@@ -417,13 +406,9 @@ class CourseLessonDeleteViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 404)
 
     def test_other_teacher_is_forbidden(self):
-        teacher_role = Role.objects.filter(name='Teacher').first()
-        second_teach = User.objects.create(username='theTeach2', password='123', email='TheTeach1@abv.bg',
-                                           score=123,
-                                           role=teacher_role)
-        second_teacher_auth_token = 'Token {}'.format(second_teach.auth_token.key)
+        self.create_teacher_user_and_auth_token()
         resp = self.client.delete(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
-                                  HTTP_AUTHORIZATION=second_teacher_auth_token)
+                                  HTTP_AUTHORIZATION=self.second_teacher_auth_token)
         self.assertEqual(resp.status_code, 403)
 
     def test_requires_authentication(self):

@@ -53,12 +53,9 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 403)
 
     def test_create_task_fails_for_teacher_that_is_not_part_of_course(self):
-        teacher_role = Role.objects.filter(name='Teacher').first()
-        second_teacher = User.objects.create(username='theTeach2', password='123', email='TheTeach2@abv.bg', score=123,
-                                                     role=teacher_role)
-        second_teacher_token = 'Token {}'.format(second_teacher.auth_token.key)
+        self.create_teacher_user_and_auth_token()
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/',
-                                HTTP_AUTHORIZATION=second_teacher_token,
+                                HTTP_AUTHORIZATION=self.second_teacher_auth_token,
                                 data=json.dumps({'description': {'content': 'fix this'},
                                                  'is_mandatory': True,
                                                  'consecutive_number': 1,
