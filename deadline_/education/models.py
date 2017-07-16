@@ -171,6 +171,7 @@ class Homework(models.Model):
 
 
 class HomeworkTask(models.Model):
+    # TODO: Add some sort of requirement for Teacher to add an original solution and have him maintain it working
     homework = models.ForeignKey(Homework)
     test_case_count = models.IntegerField(default=0)
     supported_languages = models.ManyToManyField(Language)
@@ -201,6 +202,10 @@ class HomeworkTask(models.Model):
         )
 
         return task_tests_dir
+
+    def lock_for_construction(self):
+        self.is_under_construction = False
+        self.save()
 
 
 class HomeworkTaskDescription(models.Model):

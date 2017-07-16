@@ -10,11 +10,6 @@ from education.models import Course, Lesson, Homework, HomeworkTask, HomeworkTas
 from education.views import HomeworkTaskTestCreateView, LessonHomeworkTaskDeleteView, LessonManageView, HomeworkTaskManageView
 
 
-class LessonManagerViewTests(TestCase):
-    def test_uses_expected_views_by_method(self):
-        self.assertEqual(HomeworkTaskManageView.VIEWS_BY_METHOD['DELETE'], LessonHomeworkTaskDeleteView.as_view)
-
-
 @patch('education.helpers.create_task_test_files')
 class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
     def setUp(self):
