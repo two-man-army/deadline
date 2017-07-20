@@ -29,6 +29,7 @@ def fetch_models(response_function, *args, **kwargs):
     def view_decorator(class_view, *args, **kwargs):
         nonlocal response_function
         request = args[0]
+        args = args[1:]  # remove the request object
         if not hasattr(class_view, 'model_classes') and not isinstance(class_view.model_classes, collections.Iterable):
             raise Exception(f'Class {class_view} should have the model_classes iterable variable defined!')
         if len(class_view.model_classes) != len(kwargs.keys()):
