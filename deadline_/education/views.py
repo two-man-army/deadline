@@ -222,7 +222,6 @@ class LessonEditView(UpdateAPIView):
     serializer_class = LessonSerializer
     permission_classes = (IsAuthenticated, IsTeacherOfCourse)
 
-    # TODO: fetch_models?
     def patch(self, request, *args, **kwargs):
         request.data.pop('course', None)  # updating the course is not possible
 
@@ -236,13 +235,11 @@ class LessonEditView(UpdateAPIView):
                     err_msg = 'Cannot unlock an already locked Lesson'
                 return Response(data={'error': err_msg}, status=400)
 
-            if not lesson.is_under_construction:  # Cannot lock a lesson twice
-                return Response(data={'error': 'Cannot lock an already locked Lesson'}, status=400)
+            can_lock, err_msg = lesson.can_lock()
+            if not can_lock:
+                return Response(data={'error': err_msg}, status=400)
 
             # TODO: Assure that the user is the main Teacher before lock
-            if not lesson.can_lock():
-                return Response(data={'error': 'Cannot lock the Lesson due to some reason.'}, status=400)
-
             lesson.lock_for_construction()
             serializer = self.get_serializer(lesson)
             return Response(serializer.data)
