@@ -32,7 +32,6 @@ class CourseDetailsView(RetrieveAPIView):
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsEnrolledOnCourseOrIsTeacher)
     queryset = Course.objects.all()
-    # TODO: Maybe add a LimitedCourseDetails view
 
 
 # PATCH /education/course/{course_id}
@@ -149,42 +148,44 @@ class LessonCreateView(CreateAPIView):
     Creates a new Lesson for a given Course
     """
     serializer_class = LessonSerializer
-    permission_classes = (IsAuthenticated, IsTeacher, )
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse, )
+    model_classes = (Course, )
+    main_class = Course
 
-    def create(self, request, *args, **kwargs):
-        validation = self.validate_data(course_pk=kwargs.get('course_pk'))
-        if isinstance(validation, Response):
-            return validation  # there has been an error in validation
+    @fetch_models
+    def create(self, request, course, *args, **kwargs):
+        response = self.validate_data(course)
+        if response is not None:
+            return response  # there has been an error in validation
 
         self.request.data['course'] = kwargs.get('course_pk')
-        ser = self.get_serializer(data=self.request.data)
-        if not ser.is_valid():
-            return Response(data={'error': f'Error while creating Lesson: {ser.errors}'},
-                            status=400)
-        lesson = self.perform_create(ser)
-        headers = self.get_success_headers(ser.data)
+        ser_data, response = self.create_lesson_and_homework()
+        if response is not None:
+            return response
 
-        if request.data.get('create_homework', default=False):
-            # create a Homework object for the given Lesson
-            Homework.objects.create(lesson=lesson, is_mandatory=True)  # homework should be mandatory by default
+        return Response(ser_data, status=201, headers=self.get_success_headers(ser_data))
 
-        return Response(ser.data, status=201, headers=headers)
-
-    def validate_data(self, course_pk) -> Response or Course:
+    def validate_data(self, course) -> Response or None:
         """ Validate the given course_pk and the user's association to it"""
-        try:
-            course = Course.objects.get(id=course_pk)
-        except Course.DoesNotExist:
-            return Response(data={'error': 'Course with ID {} does not exist.'.format(course_pk)},
-                            status=400)
-
         if not course.is_under_construction:
             return Response(data={'error': 'Cannot create a Lesson in a Course that is not under construction!'},
                             status=400)
         if not any(teacher.id == self.request.user.id for teacher in course.teachers.all()):
             return Response(data={'error': 'You do not have permission to create Course Lessons!'}, status=403)
 
-        return course
+        return None
+
+    def create_lesson_and_homework(self):
+        ser = self.get_serializer(data=self.request.data)
+        if not ser.is_valid():
+            return None, Response(data={'error': f'Error while creating Lesson: {ser.errors}'}, status=400)
+        lesson = self.perform_create(ser)
+
+        if self.request.data.get('create_homework', default=False):
+            # create a Homework object for the given Lesson
+            Homework.objects.create(lesson=lesson, is_mandatory=True)  # homework should be mandatory by default
+
+        return ser.data, None
 
     def perform_create(self, serializer):
         return serializer.save()
