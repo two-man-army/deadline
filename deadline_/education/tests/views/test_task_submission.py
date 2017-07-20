@@ -27,9 +27,6 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
                                                    is_mandatory=True, consecutive_number=1, difficulty=10,
                                                    is_under_construction=False, homework=self.hw)
         self.hw_task.supported_languages.add(self.python_language)
-        # self.hw_task2 = HomeworkTask.objects.create(test_case_count=1, description=HomeworkTaskDescription.objects.create(input_format='Hello there', content='tank'),
-        #                                             is_mandatory=True, consecutive_number=2, difficulty=10,
-        #                                             homework=self.hw)
 
     def test_normal_submission_works(self, mock_grader_task):
         self.course.enroll_student(self.auth_user)
@@ -44,6 +41,38 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
         self.assertEqual(submission.code, 'print("im at the bottom")')
         self.assertEqual(submission.language, self.python_language)
         self.assertEqual(submission.author, self.auth_user)
+        self.assertEqual(submission.task, self.hw_task)
+        mock_grader_task.assert_called_once()
+        # assert that test cases are created
+        self.assertEqual(TaskTestCase.objects.count(), self.hw_task.test_case_count)
+
+    def test_submission_does_not_work_while_under_construction(self, mock_grader_task):
+        self.course.enroll_student(self.auth_user)
+        self.hw_task.is_under_construction = True
+        self.hw_task.save()
+        resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.hw_task.id}/submission',
+                                HTTP_AUTHORIZATION=self.auth_token,
+                                data={
+                                    'code': 'print("im at the bottom")',
+                                    'language': self.python_language.id
+                                })
+        self.assertEqual(resp.status_code, 400)
+        mock_grader_task.assert_not_called()
+
+    def test_submission_works_for_teacher_while_under_construction(self, mock_grader_task):
+        self.hw_task.is_under_construction = True
+        self.hw_task.save()
+        resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.hw_task.id}/submission',
+                                HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                data={
+                                    'code': 'print("im at the bottom")',
+                                    'language': self.python_language.id
+                                })
+        self.assertEqual(resp.status_code, 201)
+        submission = TaskSubmission.objects.first()
+        self.assertEqual(submission.code, 'print("im at the bottom")')
+        self.assertEqual(submission.language, self.python_language)
+        self.assertEqual(submission.author, self.teacher_auth_user)
         self.assertEqual(submission.task, self.hw_task)
         mock_grader_task.assert_called_once()
         # assert that test cases are created
@@ -140,7 +169,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
                                     'code': 'print("im at the bottom")',
                                     'language': 105
                                 })
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 404)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
     def test_invalid_course_doesnt_work(self, _):
@@ -152,7 +181,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
                                     'language': self.python_language.id
                                 })
 
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 404)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
     def test_invalid_lesson_doesnt_work(self, _):
@@ -164,7 +193,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
                                     'language': self.python_language.id
                                 })
 
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 404)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
     def test_invalid_task_doesnt_work(self, _):
@@ -176,7 +205,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
                                     'language': self.python_language.id
                                 })
 
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 404)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
     # TODO: Test lesson progress
