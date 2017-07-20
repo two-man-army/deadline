@@ -326,10 +326,7 @@ class HomeworkTaskTestCreateView(APIView):
             input=test_input, output=test_output
         )
 
-        HomeworkTaskTest.objects.create(
-            input_file_path=input_file_path, output_file_path=output_file_path, task=task,
-            consecutive_number=task.test_case_count + 1  # TODO: Consecutive_number generation in helper method
-        )
+        HomeworkTaskTest.objects.create(input_file_path=input_file_path, output_file_path=output_file_path, task=task)
 
         return Response(status=201)
 

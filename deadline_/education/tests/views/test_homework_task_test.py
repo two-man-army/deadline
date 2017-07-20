@@ -34,7 +34,6 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
 
     def test_create_normal_test(self, mock_create_task):
         mock_create_task.return_value = ('input_path/', 'output_path/')
-        old_test_case_count = self.task.test_case_count
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
                                 data={"input": self.input, "output": self.output})

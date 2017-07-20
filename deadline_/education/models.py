@@ -234,8 +234,8 @@ class HomeworkTaskTest(models.Model):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         created = self.pk is None
-        if created and not self.consecutiveness_is_valid():
-            raise Exception('Consecutiveness in HomeworkTaskTest is not valid!')
+        if created:
+            self.consecutive_number = self.task.homeworktasktest_set.count() + 1
 
         return super().save(force_insert, force_update, using, update_fields)
 
