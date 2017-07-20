@@ -73,21 +73,6 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
                                 content_type='application/json')
 
         self.assertEqual(resp.status_code, 403)
-        self.assertEqual(resp.data['error'], 'You do not have permission to create Course Homework!')
-
-    def test_create_task_fails_for_course_that_is_not_under_construction(self):
-        self.course.is_under_construction = False
-        self.course.save()
-        resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/',
-                                HTTP_AUTHORIZATION=self.teacher_auth_token,
-                                data=json.dumps({'description': {'content': 'fix this'},
-                                                 'is_mandatory': True,
-                                                 'consecutive_number': 1,
-                                                 'difficulty': 5,
-                                                 'supported_languages': [1]}),
-                                content_type='application/json')
-
-        self.assertEqual(resp.status_code, 400)
 
     def test_create_task_fails_for_lesson_that_is_not_under_construction(self):
         self.lesson.is_under_construction = False

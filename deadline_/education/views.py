@@ -1,5 +1,3 @@
-import collections
-
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -49,7 +47,6 @@ class CourseEditView(UpdateAPIView):
         if not course.is_under_construction:
             return Response(data={'error': 'Cannot edit anything on a locked Course'}, status=400)
 
-        # TODO: add/remove language
         if 'is_under_construction' in request.data:
             is_under_construction = request.data['is_under_construction']
 
@@ -268,16 +265,22 @@ class LessonManageView(BaseManageView):
 class HomeworkTaskCreateView(CreateAPIView):
     """ Creates a new HomeworkTask for the given Lesson of a Course """
     serializer_class = HomeworkTaskSerializer
-    permission_classes = (IsAuthenticated, IsTeacher, )
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse, )
+    model_classes = (Course, Lesson)
+    main_class = Course
 
-    def create(self, request, *args, **kwargs):
-        validation = self.validate_data(course_pk=kwargs.get('course_pk'),
-                                        lesson_pk=kwargs.get('lesson_pk'))
+    @fetch_models
+    def create(self, request, course, lesson, *args, **kwargs):
+        validation = self.validate_data(course, lesson)
         if isinstance(validation, Response):
             return validation  # there has been an error in validation
 
-        _, lesson = validation
-        self.request.data['homework'] = lesson.homework_set.first().id
+        serializer_task, headers = self.create_task(request.data, lesson.homework_set.first().id)
+
+        return Response(serializer_task, status=201, headers=headers)
+
+    def create_task(self, request_data, homework):
+        self.request.data['homework'] = homework
         ser = self.get_serializer(data=self.request.data)
         if not ser.is_valid():
             return Response(data={'error': f'Error while creating Homework Task: {ser.errors}'},
@@ -285,35 +288,15 @@ class HomeworkTaskCreateView(CreateAPIView):
         self.perform_create(ser)
         headers = self.get_success_headers(ser.data)
 
-        return Response(ser.data, status=201, headers=headers)
+        return ser.data, headers
 
-    def validate_data(self, course_pk, lesson_pk) -> Response or tuple():
-        """ Validate the given course_pk, lesson_pk and their association """
-        try:
-            objects = fetch_models_by_pks({
-                Course: course_pk,
-                Lesson: lesson_pk
-            })
-        except FetchError as e:
-            return Response(data={'error': str(e)},
-                            status=404)
-
-        course, lesson = objects
-
+    def validate_data(self, course, lesson) -> Response or tuple():
+        """ Validate the given course, lesson association """
         if lesson.course_id != course.id:
             return Response(data={'error': 'Lesson with ID {} does not belong to Course with ID {}'
-                            .format(lesson_pk, course_pk)},
+                            .format(lesson.id, course.id)},
                             status=400)
 
-        # validate that the current User is part of the teachers for the Course
-        if not any(teacher.id == self.request.user.id for teacher in course.teachers.all()):
-            return Response(data={'error': 'You do not have permission to create Course Homework!'}, status=403)
-
-        if not course.is_under_construction:
-            # the course is finished and you cannot add further homework tasks
-            return Response(data={
-                'error': 'The course is no longer under construction and as such you cannot create a new HomeworkTask'},
-                status=400)
         if not lesson.is_under_construction:
             # the course is finished and you cannot add further homework tasks
             return Response(data={
