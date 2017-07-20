@@ -328,11 +328,8 @@ class HomeworkTaskTestCreateView(APIView):
 
         HomeworkTaskTest.objects.create(
             input_file_path=input_file_path, output_file_path=output_file_path, task=task,
-            consecutive_number=task.test_case_count + 1
+            consecutive_number=task.test_case_count + 1  # TODO: Consecutive_number generation in helper method
         )
-        # TODO: Consecutive_number generation in helper method
-        task.test_case_count += 1
-        task.save()
 
         return Response(status=201)
 

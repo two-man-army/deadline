@@ -30,6 +30,28 @@ class CourseModelTests(TestCase):
         self.assertEqual(self.course.lessons.first(), less)
         self.assertTrue(less.is_under_construction)
 
+    def test_can_lock(self):
+        less = self.create_lesson()
+        can_lock, msg = less.can_lock()
+        self.assertTrue(can_lock)
+        self.assertEqual(msg, '')
+
+    def test_cant_lock_if_task_under_construction(self):
+        less = self.create_lesson()
+        hw = Homework.objects.create(lesson=less, is_mandatory=True)
+        HomeworkTask.objects.create(homework=hw, is_under_construction=True, is_mandatory=True, difficulty=1,
+                                    description=HomeworkTaskDescriptionFactory())
+        can_lock, msg = less.can_lock()
+        self.assertFalse(can_lock)
+        self.assertEqual(msg, 'Cannot lock the Lesson while a HomeworkTask is under construction')
+
+    def test_cant_lock_if_already_locked(self):
+        less = self.create_lesson()
+        less.is_under_construction = False
+        can_lock, msg = less.can_lock()
+        self.assertFalse(can_lock)
+        self.assertEqual(msg, 'Cannot lock an already locked Lesson')
+
     def test_get_course_returns_course(self):
         received_course = self.create_lesson().get_course()
         self.assertEqual(received_course, self.course)

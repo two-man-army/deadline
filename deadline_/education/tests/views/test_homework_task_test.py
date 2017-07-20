@@ -8,7 +8,7 @@ from education.tests.factories import HomeworkTaskDescriptionFactory
 from education.models import Course, Lesson, Homework, HomeworkTask, HomeworkTaskTest
 
 
-@patch('education.helpers.create_task_test_files')
+@patch('education.views.create_task_test_files')
 class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
@@ -34,13 +34,14 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
 
     def test_create_normal_test(self, mock_create_task):
         mock_create_task.return_value = ('input_path/', 'output_path/')
+        old_test_case_count = self.task.test_case_count
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
                                 data={"input": self.input, "output": self.output})
-
+        self.task.refresh_from_db()
         task_test: HomeworkTaskTest = HomeworkTaskTest.objects.first()
 
-        mock_create_task.assert_called_once_with(task_tests_dir=self.task.get_absolute_test_files_path(), test_number=self.task.test_case_count+1,
+        mock_create_task.assert_called_once_with(task_tests_dir=self.task.get_absolute_test_files_path(), test_number=self.task.test_case_count,
                                                  input=self.input, output=self.output)
         self.assertEqual(task_test.input_file_path, 'input_path/')
         self.assertEqual(task_test.output_file_path, 'output_path/')

@@ -23,3 +23,20 @@ class HomeworkTaskTestTests(TestCase):
         # there is already one test that is #1, as such we cannot put in another #1
         with self.assertRaises(Exception):
             HomeworkTaskTest.objects.create(input_file_path='hello', output_file_path='bye', consecutive_number=1, task=self.hw_task)
+
+    def test_creation_increments_task_test_case_count(self):
+        old_tc_count = self.hw_task.test_case_count
+        task_test = HomeworkTaskTest.objects.create(input_file_path='hello', output_file_path='bye', consecutive_number=1, task=self.hw_task)
+        self.hw_task.refresh_from_db()
+
+        self.assertEqual(self.hw_task.test_case_count, old_tc_count + 1)
+
+    def test_save_hook_does_not_increment_test_case_count(self):
+        task_test = HomeworkTaskTest.objects.create(input_file_path='hello', output_file_path='bye', consecutive_number=1, task=self.hw_task)
+        self.hw_task.refresh_from_db()
+        old_tc_count = self.hw_task.test_case_count
+        task_test.output_file_path = 'tank'
+        task_test.save()
+        self.hw_task.refresh_from_db()
+
+        self.assertEqual(old_tc_count, self.hw_task.test_case_count)
