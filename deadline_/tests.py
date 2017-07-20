@@ -2,6 +2,8 @@ from random import randint
 from unittest.mock import MagicMock
 
 from django.test import TestCase
+from unittest import TestCase as unittest_TestCase
+from unittest.mock import MagicMock
 from rest_framework.response import Response
 
 from challenges.models import MainCategory, SubCategory
@@ -9,7 +11,7 @@ from errors import FetchError
 from helpers import fetch_models_by_pks
 from decorators import fetch_models
 from challenges.tests.factories import MainCategoryFactory, SubCategoryFactory
-
+from views import BaseManageView
 
 class FetchModelsTest(TestCase):
     def setUp(self):
@@ -105,3 +107,35 @@ class FetchModelsDecoratorTest(TestCase):
         response = f_instance.get(0, main_cat_pk=self.main_cat.id, subcat_pk=self.sub_cat.id)
         self.assertTrue(isinstance(response, Response))
         self.assertEqual(response.status_code, 403)
+
+
+class BaseManageViewTests(unittest_TestCase):
+    def test_raises_error_when_no_views_by_method_defined(self):
+        with self.assertRaises(Exception):
+            BaseManageView().dispatch(None)
+
+    def test_calls_function_on_defined_method(self):
+        inner_function_mock = MagicMock()
+        inner_function_mock.return_value = 14
+        mock = MagicMock()
+        mock.return_value = inner_function_mock
+        BaseManageView.VIEWS_BY_METHOD = {
+            'GET': mock
+        }
+        request_mock = MagicMock(method='GET')
+        result = BaseManageView().dispatch(request_mock)
+
+        mock.assert_called_once_with()
+        inner_function_mock.assert_called_once_with(request_mock)
+        self.assertEqual(result, 14)
+
+    def test_returns_404_exception_if_method_not_defined(self):
+        BaseManageView.VIEWS_BY_METHOD = {
+            'GET': None
+        }
+        request_mock = MagicMock(method='PUT')
+        response = BaseManageView().dispatch(request_mock)
+
+        self.assertTrue(isinstance(response, Response))
+        self.assertEqual(response.status_code, 404)
+

@@ -4,10 +4,10 @@ from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIVie
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.http import HttpResponse
 
 from errors import FetchError
 from helpers import fetch_models_by_pks
+from views import BaseManageView
 from challenges.models import Language
 from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher, IsTeacherOfCourse
 from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer, TaskSubmissionSerializer
@@ -77,7 +77,7 @@ class CourseEditView(UpdateAPIView):
 
 
 # /education/course/{course_id}
-class CourseManageView(APIView):
+class CourseManageView(BaseManageView):
     """
         Manages different request methods for the given URL, sending them to the appropriate view class
     """
@@ -85,12 +85,6 @@ class CourseManageView(APIView):
         'GET': CourseDetailsView.as_view,
         'PATCH': CourseEditView.as_view
     }
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.method in self.VIEWS_BY_METHOD:
-            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
-
-        return HttpResponse(status=404)
 
 
 # DELETE /education/course/{course_id}/language/{language_id}
@@ -259,7 +253,7 @@ class LessonEditView(UpdateAPIView):
 
 
 # /education/course/{course_id}/lesson/{lesson_id}
-class LessonManageView(APIView):
+class LessonManageView(BaseManageView):
     """
         Manages different request methods for the given URL, sending them to the appropriate view class
     """
@@ -268,11 +262,6 @@ class LessonManageView(APIView):
         'PATCH': LessonEditView.as_view,
         'DELETE': CourseLessonDeleteView.as_view
     }
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.method in self.VIEWS_BY_METHOD:
-            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
-        return HttpResponse(status=404)
 
 
 # POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/
@@ -463,7 +452,7 @@ class LessonHomeworkTaskDeleteView(APIView):
 
 
 # /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
-class HomeworkTaskManageView(APIView):
+class HomeworkTaskManageView(BaseManageView):
     """
       Manages different request methods for the given URL, sending them to the appropriate view class
     """
@@ -471,11 +460,6 @@ class HomeworkTaskManageView(APIView):
         'DELETE': LessonHomeworkTaskDeleteView.as_view,
         'PATCH': HomeworkTaskEditView.as_view
     }
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.method in self.VIEWS_BY_METHOD:
-            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
-        return HttpResponse(status=404)
 
 
 class TaskSubmissionCreateView(CreateAPIView):
