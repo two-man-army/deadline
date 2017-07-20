@@ -56,6 +56,7 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeworkTask
         exclude = ('test_case_count', )
+        non_editable_fields = ('homework', 'supported_languages')
 
     def create(self, validated_data):
         description_data = validated_data.pop('description')
@@ -67,6 +68,26 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
         validated_data['is_under_construction'] = True  # always is_under_construction on creation
 
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        description = None
+        if 'description' in validated_data:
+            description = validated_data.pop('description')
+        # TODO: can be a decorator
+        for non_editable_field in self.Meta.non_editable_fields:
+            if non_editable_field in validated_data:
+                validated_data.pop(non_editable_field)
+
+        updated_task = super().update(instance, validated_data)
+
+        if description is not None:
+            # update the description as well
+            desc_serializer = HomeworkTaskDescriptionSerializer(updated_task.description, description)
+            if desc_serializer.is_valid():
+                desc_serializer.save()
+        # TESTME: Might update task but fail to update description? We might want atomic behavior here
+
+        return updated_task
 
     @property
     def data(self):

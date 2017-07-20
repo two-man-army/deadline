@@ -71,6 +71,21 @@ class Course(models.Model):
         self.is_under_construction = False
         self.save()
 
+    def remove_lesson(self, lesson):
+        """
+        Removes a Lesson from the Course's lessons
+        """
+        if lesson.course_id != self.id:
+            raise Exception(f'Lesson {lesson.id} does not belong to course {self.id}')
+
+        lesson.course_id = -1  # don't delete it, just make it invalid
+        lesson.save()
+        # fix the ordering of the other lessons
+        for old_lesson in self.lessons.all():
+            if old_lesson.lesson_number > lesson.lesson_number:
+                old_lesson.lesson_number -= 1
+                old_lesson.save()
+
 
 class Lesson(models.Model):
     """
@@ -138,8 +153,25 @@ class Homework(models.Model):
     def get_course(self):
         return self.lesson.get_course()
 
+    def remove_task(self, task):
+        """
+        Removes a HomeworkTask from this Homework
+        """
+        if task not in self.homeworktask_set.all():
+            raise Exception(f'HomeworkTask {task.id} does not belong to Homework {self.id}')
+
+        task.homework_id = -1
+        task.save()
+
+        # fix the ordering of the other tasks
+        for old_task in self.homeworktask_set.all():
+            if old_task.consecutive_number > task.consecutive_number:
+                old_task.consecutive_number -= 1
+                old_task.save()
+
 
 class HomeworkTask(models.Model):
+    # TODO: Add some sort of requirement for Teacher to add an original solution and have him maintain it working
     homework = models.ForeignKey(Homework)
     test_case_count = models.IntegerField(default=0)
     supported_languages = models.ManyToManyField(Language)
@@ -170,6 +202,10 @@ class HomeworkTask(models.Model):
         )
 
         return task_tests_dir
+
+    def lock_for_construction(self):
+        self.is_under_construction = False
+        self.save()
 
 
 class HomeworkTaskDescription(models.Model):

@@ -5,6 +5,7 @@ import collections
 from rest_framework.response import Response
 
 from helpers import fetch_models_by_pks
+from errors import FetchError
 
 
 def fetch_models(response_function, *args, **kwargs):
@@ -24,8 +25,6 @@ def fetch_models(response_function, *args, **kwargs):
             This is done to check for permissions easily.
              If it does not have the permission, the decorator outright returns a 403 Response
     """
-    # TODO: Test, a lot
-    from errors import FetchError
 
     def view_decorator(class_view, *args, **kwargs):
         nonlocal response_function

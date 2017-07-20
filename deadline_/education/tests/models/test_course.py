@@ -53,7 +53,6 @@ class CourseModelTests(TestCase):
         teacher_role = Role.objects.create(name='Teacher')
         us = User.objects.create(username='123', password='1,23', email='123@abv.bg', role=base_role)
 
-
         with self.assertRaises(ValidationError):
             self.c.teachers.add(us)
             self.c.full_clean()

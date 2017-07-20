@@ -23,7 +23,7 @@ class CourseCreateView(CreateAPIView):
     Creates a new Course
     """
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated, IsTeacher, )
+    permission_classes = (IsAuthenticated, IsTeacher)
 
     def perform_create(self, serializer):
         serializer.save(teachers=[self.request.user])
@@ -134,6 +134,24 @@ class CourseLanguageAddView(APIView):
         return Response(status=201)
 
 
+# DELETE /education/course/{course_id}/lessons/{lesson_id}
+class CourseLessonDeleteView(APIView):
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, Lesson)
+    main_class = Course
+
+    @fetch_models
+    def delete(self, request, course: Course, lesson: Lesson, *args, **kwargs):
+        if not course.is_under_construction:
+            return Response(status=400, data={'error': f'Cannot remove a Lesson from a Course when the Course is locked!'})
+        if lesson not in course.lessons.all():
+            return Response(status=404, data={'error': f'Lesson {lesson.id} is not present in course {course.id}'})
+
+        course.remove_lesson(lesson)
+
+        return Response(status=204)
+
+
 # /education/course/{course_id}/lesson
 class LessonCreateView(CreateAPIView):
     """
@@ -212,6 +230,7 @@ class LessonEditView(UpdateAPIView):
     serializer_class = LessonSerializer
     permission_classes = (IsAuthenticated, IsTeacherOfCourse)
 
+    # TODO: fetch_models?
     def patch(self, request, *args, **kwargs):
         request.data.pop('course', None)  # updating the course is not possible
 
@@ -246,17 +265,17 @@ class LessonManageView(APIView):
     """
     VIEWS_BY_METHOD = {
         'GET': LessonDetailsView.as_view,
-        'PATCH': LessonEditView.as_view
+        'PATCH': LessonEditView.as_view,
+        'DELETE': CourseLessonDeleteView.as_view
     }
 
     def dispatch(self, request, *args, **kwargs):
         if request.method in self.VIEWS_BY_METHOD:
             return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
-
         return HttpResponse(status=404)
 
 
-# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/
 class HomeworkTaskCreateView(CreateAPIView):
     """ Creates a new HomeworkTask for the given Lesson of a Course """
     serializer_class = HomeworkTaskSerializer
@@ -315,7 +334,7 @@ class HomeworkTaskCreateView(CreateAPIView):
         return course, lesson
 
 
-# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}/test
 class HomeworkTaskTestCreateView(APIView):
     """
     Creates a Test case for a HomeworkTask
@@ -365,6 +384,98 @@ class HomeworkTaskTestCreateView(APIView):
         task.save()
 
         return Response(status=201)
+
+
+# PATCH /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class HomeworkTaskEditView(UpdateAPIView):
+    queryset = HomeworkTask.objects.all()
+    serializer_class = HomeworkTaskSerializer
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, Lesson, HomeworkTask)
+    main_class = Course
+    non_editable_fields = ('homework', 'supported_languages')
+    locked_editable_fields = ('description', )  # the fields that are editable on a locked object only!
+
+    # TODO: Create own UPDATEAPIVIew
+    # problems with current one
+    # tries to fetch objects attached to Task before getting to the serializer, eliminating the ability to
+    # filter them editable fields in the serializer, as it reads the read_only_fields and filters them on its own.
+    # another way to fix that is to add editable=False in the models but that does not work for me either.
+
+    @fetch_models
+    def patch(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
+        # TODO: can be a decorator
+        if task.homework.lesson_id != lesson.id or lesson.course_id != course.id:
+            return Response(status=404)
+
+        for non_editable_field in self.non_editable_fields:
+            if non_editable_field in request.data:
+                return Response(status=400, data={'error': f'{non_editable_field} cannot be edited!'})
+
+        if 'is_under_construction' in request.data:
+            is_under_construction = request.data['is_under_construction']
+
+            if is_under_construction:  # Cannot unlock a Task
+                err_msg = 'Cannot unlock a Task'
+                if not task.is_under_construction:
+                    err_msg = 'Cannot unlock an already locked Task'
+                return Response(data={'error': err_msg}, status=400)
+
+            if not task.is_under_construction:  # Cannot lock a task twice
+                return Response(data={'error': 'Cannot lock an already locked Task'}, status=400)
+
+            # TODO: Assure that the user is the main Teacher before lock
+
+            task.lock_for_construction()
+            serializer = self.get_serializer(task)
+            return Response(serializer.data)
+
+        if not task.is_under_construction:
+            # task is locked, allow edits only on certain fields
+            for field in request.data.keys():
+                if field not in self.locked_editable_fields:
+                    return Response(status=400, data={'error': f'{field} is not editable once the Task is locked!'})
+
+        return super().patch(request, *args, **kwargs)
+
+
+# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class LessonHomeworkTaskDeleteView(APIView):
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, Lesson, HomeworkTask)
+    main_class = Course
+
+    @fetch_models
+    def delete(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
+        if not lesson.is_under_construction:
+            return Response(status=400,
+                            data={'error': f'Cannot remove a HomeworkTask from a Lesson when the Lesson is locked!'})
+
+        if lesson not in course.lessons.all():
+            return Response(status=404, data={'error': f'Lesson {lesson.id} is not present in course {course.id}'})
+
+        if task not in [task for hw in lesson.homework_set.all() for task in hw.homeworktask_set.all()]:
+            return Response(status=404, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
+
+        lesson.homework_set.first().remove_task(task)
+
+        return Response(status=204)
+
+
+# /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class HomeworkTaskManageView(APIView):
+    """
+      Manages different request methods for the given URL, sending them to the appropriate view class
+    """
+    VIEWS_BY_METHOD = {
+        'DELETE': LessonHomeworkTaskDeleteView.as_view,
+        'PATCH': HomeworkTaskEditView.as_view
+    }
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method in self.VIEWS_BY_METHOD:
+            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
+        return HttpResponse(status=404)
 
 
 class TaskSubmissionCreateView(CreateAPIView):

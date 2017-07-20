@@ -67,13 +67,8 @@ class LessonCreateViewTests(TestCase, TestHelperMixin):
         self.assertEqual(lesson.video_link_1, 'best')
 
     def test_forbidden_for_teacher_not_part_of_cours(self):
-        teacher_role = Role.objects.filter(name='Teacher').first()
-        if teacher_role is None:
-            teacher_role = Role.objects.create(name='Teacher')
-        sec_teacher = User.objects.create(username='theTeach2', password='123', email='TheTeach2@abv.bg', score=123,
-                                                     role=teacher_role)
-        sec_teacher_token = 'Token {}'.format(sec_teacher.auth_token.key)
-        resp = self.client.post(f'/education/course/{self.course.id}/lesson/', HTTP_AUTHORIZATION=sec_teacher_token,
+        self.create_teacher_user_and_auth_token()
+        resp = self.client.post(f'/education/course/{self.course.id}/lesson/', HTTP_AUTHORIZATION=self.second_teacher_auth_token,
                                 data={
                                     'intro': 'Just Because',
                                     'content': 'Just Because',
@@ -184,15 +179,9 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
         self.assertNotEqual(resp.status_code, 403)
 
     def test_is_forbidden_for_other_teacher(self):
-        # create another teacher, overriding ours
-        teacher_role = Role.objects.filter(name='Teacher').first()
-
-        teacher_auth_user = User.objects.create(username='theTeac3h', password='123', email='TheTeachRCheto@abv.bg',
-                                                     score=123,
-                                                     role=teacher_role)
-        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        self.create_teacher_user_and_auth_token()
         resp = self.client.get(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
-                               HTTP_AUTHORIZATION=teacher_auth_token)
+                               HTTP_AUTHORIZATION=self.second_teacher_auth_token)
 
         self.assertEqual(resp.status_code, 403)
 
@@ -268,15 +257,9 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 403)
 
     def test_is_forbidden_for_other_teacher(self):
-        # create another teacher, overriding ours
-        teacher_role = Role.objects.filter(name='Teacher').first()
-
-        teacher_auth_user = User.objects.create(username='theTeac3h', password='123', email='TheTeachRCheto@abv.bg',
-                                                     score=123,
-                                                     role=teacher_role)
-        teacher_auth_token = 'Token {}'.format(teacher_auth_user.auth_token.key)
+        self.create_teacher_user_and_auth_token()
         resp = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
-                                 HTTP_AUTHORIZATION=teacher_auth_token,
+                                 HTTP_AUTHORIZATION=self.second_teacher_auth_token,
                                  data={
                                      "video_link_3": 20
                                  }, format='json')
