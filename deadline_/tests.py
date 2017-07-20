@@ -9,9 +9,10 @@ from rest_framework.response import Response
 from challenges.models import MainCategory, SubCategory
 from errors import FetchError
 from helpers import fetch_models_by_pks
-from decorators import fetch_models
+from decorators import fetch_models, enforce_forbidden_fields
 from challenges.tests.factories import MainCategoryFactory, SubCategoryFactory
 from views import BaseManageView
+
 
 class FetchModelsTest(TestCase):
     def setUp(self):
@@ -107,6 +108,42 @@ class FetchModelsDecoratorTest(TestCase):
         response = f_instance.get(0, main_cat_pk=self.main_cat.id, subcat_pk=self.sub_cat.id)
         self.assertTrue(isinstance(response, Response))
         self.assertEqual(response.status_code, 403)
+
+
+class EnforceForbiddenFieldsDecoratorTest(TestCase):
+    def setUp(self):
+        class Tank:
+            forbidden_fields = ('gucci_jacket', 'secured')
+
+            @enforce_forbidden_fields
+            def get(self, request, *args, **kwargs):
+                return request
+
+        self.Tank = Tank
+
+    def test_returns_400_if_forbidden_field_is_present(self):
+        request_object = MagicMock(data={'gucci_jacket': '150 stack it'})
+        response = self.Tank().get(request_object)
+        self.assertTrue(isinstance(response, Response))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'gucci_jacket is a forbidden field in the request data!')
+
+    def test_raises_exception_if_forbidden_fields_not_defined(self):
+        delattr(self.Tank, 'forbidden_fields')
+        request_object = MagicMock(data={'gucci_jacket': '150 stack it'})
+        with self.assertRaises(Exception):
+            self.Tank().get(request_object)
+
+    def test_raises_exception_if_forbidden_fields_are_not_iterable(self):
+        self.Tank.forbidden_fields = 10
+        request_object = MagicMock(data={'gucci_jacket': '150 stack it'})
+        with self.assertRaises(Exception):
+            self.Tank().get(request_object)
+
+    def test_does_not_do_anything_if_no_field_is_present(self):
+        request_object = MagicMock(data={'non_gucci_jacket': '-150 pay it'})
+        request = self.Tank().get(request_object)
+        self.assertEqual(request_object, request)
 
 
 class BaseManageViewTests(unittest_TestCase):

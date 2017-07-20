@@ -12,7 +12,7 @@ from education.serializers import CourseSerializer, HomeworkTaskSerializer, Less
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest, Homework
 from education.helpers import create_task_test_files
 from challenges.tasks import run_homework_grader_task
-from decorators import fetch_models
+from decorators import fetch_models, enforce_forbidden_fields
 
 
 # /education/course
@@ -346,6 +346,7 @@ class HomeworkTaskTestCreateView(APIView):
         if lesson != task.homework.lesson:
             return Response(status=403, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
 
+
 # PATCH /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
 class HomeworkTaskEditView(UpdateAPIView):
     queryset = HomeworkTask.objects.all()
@@ -353,24 +354,14 @@ class HomeworkTaskEditView(UpdateAPIView):
     permission_classes = (IsAuthenticated, IsTeacherOfCourse)
     model_classes = (Course, Lesson, HomeworkTask)
     main_class = Course
-    non_editable_fields = ('homework', 'supported_languages')
+    forbidden_fields = ('homework', 'supported_languages')
     locked_editable_fields = ('description', )  # the fields that are editable on a locked object only!
 
-    # TODO: Create own UPDATEAPIVIew
-    # problems with current one
-    # tries to fetch objects attached to Task before getting to the serializer, eliminating the ability to
-    # filter them editable fields in the serializer, as it reads the read_only_fields and filters them on its own.
-    # another way to fix that is to add editable=False in the models but that does not work for me either.
-
+    @enforce_forbidden_fields
     @fetch_models
     def patch(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
-        # TODO: can be a decorator
         if task.homework.lesson_id != lesson.id or lesson.course_id != course.id:
             return Response(status=404)
-
-        for non_editable_field in self.non_editable_fields:
-            if non_editable_field in request.data:
-                return Response(status=400, data={'error': f'{non_editable_field} cannot be edited!'})
 
         if 'is_under_construction' in request.data:
             is_under_construction = request.data['is_under_construction']

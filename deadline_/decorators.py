@@ -49,3 +49,19 @@ def fetch_models(response_function, *args, **kwargs):
             return Response(status=404, data={'error': str(e)})
 
     return view_decorator
+
+
+def enforce_forbidden_fields(response_function, *args, **kwargs):
+    def view_decorator(class_view, *args, **kwargs):
+        request = args[0]
+        if not hasattr(class_view, 'forbidden_fields') and not isinstance(class_view.forbidden_fields, collections.Iterable):
+            raise Exception(f'Class {class_view} should have the forbidden_fields iterable variable defined!')
+
+        for forbidden_field in class_view.forbidden_fields:
+            if forbidden_field in request.data:
+                return Response(status=400,
+                                data={'error': f'{forbidden_field} is a forbidden field in the request data!'})
+
+        return response_function(class_view, *args, **kwargs)
+
+    return view_decorator
