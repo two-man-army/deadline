@@ -2,12 +2,10 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from accounts.models import Role, User
 from challenges.tests.base import TestHelperMixin
 from challenges.models import Language
 from education.tests.factories import HomeworkTaskDescriptionFactory
 from education.models import Course, Lesson, Homework, HomeworkTask, HomeworkTaskTest
-from education.views import HomeworkTaskTestCreateView, LessonHomeworkTaskDeleteView, LessonManageView, HomeworkTaskManageView
 
 
 @patch('education.helpers.create_task_test_files')
@@ -35,7 +33,6 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         """
 
     def test_create_normal_test(self, mock_create_task):
-
         mock_create_task.return_value = ('input_path/', 'output_path/')
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
@@ -52,6 +49,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         self.task.refresh_from_db()
         self.assertEqual(self.task.test_case_count, 1)
 
+
     def test_create_test_fails_for_non_teacher(self, _):
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
                                 HTTP_AUTHORIZATION=self.auth_token,
@@ -67,26 +65,6 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
 
         self.assertEqual(resp.status_code, 403)
         self.assertEqual(HomeworkTaskTest.objects.count(), 0)
-
-    def test_create_test_fails_course_that_is_not_under_construction(self, _):
-        self.course.is_under_construction = False
-        self.course.save()
-
-        resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
-                                HTTP_AUTHORIZATION=self.teacher_auth_token,
-                                data={"input": self.input, "output": self.output})
-
-        self.assertEqual(resp.status_code, 403)
-
-    def test_create_test_fails_lesson_that_is_not_under_construction(self, _):
-        self.lesson.is_under_construction = False
-        self.lesson.save()
-
-        resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
-                                HTTP_AUTHORIZATION=self.teacher_auth_token,
-                                data={"input": self.input, "output": self.output})
-
-        self.assertEqual(resp.status_code, 403)
 
     def test_create_test_fails_homework_task_that_is_not_under_construction(self, _):
         self.task.is_under_construction = False

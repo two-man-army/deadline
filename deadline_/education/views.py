@@ -311,33 +311,15 @@ class HomeworkTaskTestCreateView(APIView):
     """
     Creates a Test case for a HomeworkTask
     """
-    permission_classes = (IsAuthenticated, IsTeacher, )
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse, )
+    model_classes = (Course, Lesson, HomeworkTask)
+    main_class = Course
 
-    def post(self, request, *args, **kwargs):
-        try:
-            objects = fetch_models_by_pks({
-                Course: kwargs.get('course_pk', ''),
-                Lesson: kwargs.get('lesson_pk', ''),
-                HomeworkTask: kwargs.get('task_pk', '')
-            })
-        except FetchError as e:
-            return Response(status=404, data={'error': str(e)})
-
-        course, lesson, task = objects
-
-        # TODO: move to validate method
-        if self.request.user not in course.teachers.all():
-            return Response(status=403, data={'error': f'You do not have permission to create Homework Task Tests!'})
-        if not course.is_under_construction:
-            return Response(status=403, data={'error': f'You cannot add tests as the Course is not under construction'})
-        if not lesson.is_under_construction:
-            return Response(status=403, data={'error': f'You cannot add tests as the Lesson is not under construction'})
-        if not task.is_under_construction:
-            return Response(status=403, data={'error': f'You cannot add tests as the Task is not under construction'})
-        if lesson.course != course:
-            return Response(status=403, data={'error': f'Lesson {lesson.id} does not belong to Course {course.id}'})
-        if lesson != task.homework.lesson:
-            return Response(status=403, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
+    @fetch_models
+    def post(self, request, course, lesson, task, *args, **kwargs):
+        validation_result = self.validate(course, lesson, task)
+        if validation_result is not None:
+            return validation_result
 
         test_input, test_output = request.data.get('input', ''), request.data.get('output', '')
         input_file_path, output_file_path = create_task_test_files(
@@ -351,12 +333,18 @@ class HomeworkTaskTestCreateView(APIView):
             consecutive_number=task.test_case_count + 1
         )
         # TODO: Consecutive_number generation in helper method
-
         task.test_case_count += 1
         task.save()
 
         return Response(status=201)
 
+    def validate(self, course, lesson, task):
+        if not task.is_under_construction:
+            return Response(status=403, data={'error': f'You cannot add tests as the Task is not under construction'})
+        if lesson.course_id != course.id:
+            return Response(status=403, data={'error': f'Lesson {lesson.id} does not belong to Course {course.id}'})
+        if lesson != task.homework.lesson:
+            return Response(status=403, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
 
 # PATCH /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
 class HomeworkTaskEditView(UpdateAPIView):
