@@ -7,7 +7,7 @@ from education.models import Course, Lesson, UserLessonProgress, UserCourseProgr
 class UserLessonProgressModelTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
-        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False)
+        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False, main_teacher=self.auth_user)
         self.course_progress = UserCourseProgress.objects.create(user=self.auth_user, course=self.course)
         self.lesson = Lesson.objects.create(lesson_number=1, course=self.course, intro='', content='', annexation='', is_under_construction=False)
 
@@ -24,7 +24,7 @@ class UserLessonProgressModelTests(TestCase, TestHelperMixin):
 
     def test_cannot_create_with_course_progress_for_another_course(self):
         """ The CourseProgress and Lesson's Course must be about the same Course!"""
-        self.course_2 = Course.objects.create(name='tank2', difficulty=5, is_under_construction=False)
+        self.course_2 = Course.objects.create(name='tank2', difficulty=5, is_under_construction=False, main_teacher=self.auth_user)
         other_course_progress = UserCourseProgress.objects.create(user=self.auth_user, course=self.course_2)
 
         with self.assertRaises(Exception):

@@ -12,7 +12,7 @@ class TaskSubmissionTests(TestCase):
         self.auth_user = User.objects.create(username='tank', email='aa@abv.bg', password='123')
         self.python_language = Language.objects.create(name='Python')
         self.course = Course.objects.create(name='Rob Bailey', difficulty=1,
-                                            is_under_construction=True)
+                                            is_under_construction=True, main_teacher=self.auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are you', annexation='bye',
                                             course=self.course)

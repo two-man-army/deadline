@@ -15,6 +15,7 @@ from accounts.models import Role
 class Course(models.Model):
     name = models.CharField(max_length=200)
     teachers = models.ManyToManyField(to='accounts.User', related_name='courses')
+    main_teacher = models.ForeignKey(User)
     difficulty = models.FloatField(
         validators=[MinValueValidator(1), MaxValueValidator(10), PossibleFloatDigitValidator(['0', '5'])])
     languages = models.ManyToManyField(to='challenges.Language')
@@ -45,6 +46,9 @@ class Course(models.Model):
 
     def has_student(self, us: User):
         return any(us.id == st.id for st in self.students.all())
+
+    def is_main_teacher(self, us: User):
+        return self.main_teacher_id == us.id
 
     def can_lock(self):
         """
@@ -87,6 +91,15 @@ class Course(models.Model):
             if old_lesson.lesson_number > lesson.lesson_number:
                 old_lesson.lesson_number -= 1
                 old_lesson.save()
+
+
+@receiver(post_save, sender=Course)
+def course_post_save(sender, instance: Course, created, *args, **kwargs):
+    """
+        Add the main teacher to the teachers of the course
+    """
+    if created:
+        instance.teachers.add(instance.main_teacher)
 
 
 class Lesson(models.Model):

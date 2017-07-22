@@ -23,8 +23,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         self.create_teacher_user_and_auth_token()
         self.python_language = Language.objects.create(name='Python')
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -94,8 +93,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
             and try to add a Task to the new lesson by adding the OLD course_id
         """
         new_course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        new_course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=new_course)
@@ -146,8 +144,7 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
         self.create_teacher_user_and_auth_token()
         self.python_language = Language.objects.create(name='Python')
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -216,7 +213,7 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
             HTTP_AUTHORIZATION=self.teacher_auth_token,
             data={
                 'test_case_count': 100,
-                'homework': -1,
+                'homework': 1,
                 'supported_languages': [1, 2]
             },
             format='json')
@@ -294,8 +291,7 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
         # Mash up URLs with different courses
         self.create_teacher_user_and_auth_token()
         new_course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
-                                            is_under_construction=True)
-        new_course.teachers.add(self.second_teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.second_teacher_auth_user)
         new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=new_course)

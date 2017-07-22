@@ -14,7 +14,14 @@ from education.errors import StudentAlreadyEnrolledError, InvalidEnrollmentError
 
 class CourseModelTests(TestCase):
     def setUp(self):
-        self.c = Course.objects.create(name='Algo', difficulty=1, is_under_construction=True)
+        base_role = Role.objects.create(name='User')
+        self.teacher_role = Role.objects.create(name='Teacher')
+        self.main_teacher = User.objects.create(email='theteach@abv.bg', password='0123', role=self.teacher_role)
+        self.c = Course.objects.create(name='Algo', difficulty=1, is_under_construction=True,
+                                       main_teacher=self.main_teacher)
+
+    def test_main_teacher_added_to_teachers(self):
+        self.assertTrue(self.main_teacher in self.c.teachers.all())
 
     def test_has_teacher(self):
         teacher_role = Role.objects.create(name='teacher')
@@ -23,6 +30,9 @@ class CourseModelTests(TestCase):
         self.assertFalse(self.c.has_teacher(us))
         self.c.teachers.add(us)
         self.assertTrue(self.c.has_teacher(us))
+
+    def test_is_main_teacher(self):
+        self.assertTrue(self.c.is_main_teacher(self.main_teacher))
 
     def test_has_student(self):
         us = User.objects.create(username='tank', email='tank@abv.bg', password='tank0')
@@ -34,23 +44,25 @@ class CourseModelTests(TestCase):
         self.assertTrue(self.c.has_student(us))
 
     def test_newly_created_course_is_under_construction(self):
-
         self.assertTrue(self.c.is_under_construction)
 
     def test_cannot_have_three_digit_or_invalid_difficulty(self):
         test_difficulties = [1.11, 1.111, 1.55, 1.4999]  # should all raise
         for diff in test_difficulties:
-            c = Course.objects.create(name='Algo', difficulty=diff)
+            c = Course.objects.create(name='Algo', difficulty=diff,
+                                      main_teacher=User.objects.create(
+                                          username=f'theteach{diff}', email=f'theteach{diff}@abv.bg', password='0123'))
 
             with self.assertRaises(ValidationError):
                 c.full_clean()
 
-        c = Course.objects.create(name='Hello For The Last Time', difficulty=1.5)
-        self.c.full_clean()  # should not raise
+        c = Course.objects.create(name='Hello For The Last Time', difficulty=1.5,
+                                  main_teacher=User.objects.create(email='theteachlasttime@abv.bg', password='0123',
+                                                                   username='lastteach', role=self.teacher_role))
+        c.full_clean()  # should not raise
 
     def test_cannot_have_base_user_as_teacher(self):
         base_role = Role.objects.create(name='base')
-        teacher_role = Role.objects.create(name='Teacher')
         us = User.objects.create(username='123', password='1,23', email='123@abv.bg', role=base_role)
 
         with self.assertRaises(ValidationError):
@@ -59,7 +71,10 @@ class CourseModelTests(TestCase):
 
     def test_deserialization(self):
         takn_lang = Language.objects.create(name="takn")
-        json = b'{"name":"Deadline Test", "difficulty":5.5, "languages": [1]}'
+        user = User.objects.create(username='somebodyy', email='tankguy', password='what')
+        json = bytes(
+            '{{"name":"Deadline Test", "difficulty":5.5, "languages": [1], "main_teacher": {}}}'.format(user.id),
+            encoding='utf-8')
         stream = BytesIO(json)
         data = JSONParser().parse(stream)
         serializer = CourseSerializer(data=data)
@@ -68,23 +83,8 @@ class CourseModelTests(TestCase):
         course = serializer.save()
 
         self.assertEqual(course.name, 'Deadline Test')
+        self.assertEqual(course.main_teacher, user)
         self.assertEqual(course.difficulty, 5.5)
-        self.assertEqual(course.languages.first(), takn_lang)
-
-    def test_deserialization_with_user(self):
-        takn_lang = Language.objects.create(name="takn")
-        user = User.objects.create(username='tank', email='tank@abv.bg', password='1234')
-        json = b'{"name":"Deadline Test", "difficulty":5.5, "languages": [1]}'
-        stream = BytesIO(json)
-        data = JSONParser().parse(stream)
-        serializer = CourseSerializer(data=data)
-
-        self.assertTrue(serializer.is_valid())
-        course = serializer.save(teachers=[user])
-
-        self.assertEqual(course.name, 'Deadline Test')
-        self.assertEqual(course.difficulty, 5.5)
-        self.assertEqual(course.teachers.first(), user)
         self.assertEqual(course.languages.first(), takn_lang)
 
     def test_enroll_student_enrolls_student(self):

@@ -15,8 +15,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=False)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=False, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=False,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -86,8 +85,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
         self.create_teacher_user_and_auth_token()
 
         new_course = Course.objects.create(name='Ruby Fundamentals', difficulty=1,
-                                           is_under_construction=False)
-        new_course.teachers.add(self.second_teacher_auth_user)
+                                           is_under_construction=False, main_teacher=self.second_teacher_auth_user)
         new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=False,
                                            intro='New Lesson', content='Rly New', annexation='No Jokes',
                                            course=new_course)

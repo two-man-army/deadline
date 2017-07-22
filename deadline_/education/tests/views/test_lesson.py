@@ -41,8 +41,7 @@ class LessonCreateViewTests(TestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
 
     def test_creation(self):
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/', HTTP_AUTHORIZATION=self.teacher_auth_token,
@@ -135,8 +134,7 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=False)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=False, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=False,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -190,7 +188,7 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
         This is sort of an edge case, where we provide another course ID but the lesson ID from the original course
         """
         other_course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
-                                            is_under_construction=False)
+                                             is_under_construction=False, main_teacher=self.teacher_auth_user)
         other_course.enroll_student(self.auth_user)
 
         response = self.client.get(f'/education/course/{other_course.id}/lesson/{self.lesson.id}',
@@ -203,7 +201,7 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
         Even if the user is enrolled to both courses, assure that we cannot get the lesson through another course id
         """
         other_course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
-                                             is_under_construction=False)
+                                             is_under_construction=False, main_teacher=self.teacher_auth_user)
         other_course.enroll_student(self.auth_user)
         self.course.enroll_student(self.auth_user)
 
@@ -217,8 +215,7 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=False)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=False, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=False,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -237,7 +234,7 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
     def test_cannot_edit_uneditable_fields(self):
         """ Fields like the Course and Lesson should not be editable """
         second_course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                              is_under_construction=False)
+                                              is_under_construction=False, main_teacher=self.teacher_auth_user)
         self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={

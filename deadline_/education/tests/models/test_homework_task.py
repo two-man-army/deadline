@@ -16,7 +16,7 @@ from challenges.tests.base import TestHelperMixin
 class HomeworkTaskModelTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
-        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False)
+        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False, main_teacher=self.auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, course=self.course, intro='', content='',
                                             annexation='', is_under_construction=False)
         self.hw = Homework.objects.create(is_mandatory=False, lesson=self.lesson)

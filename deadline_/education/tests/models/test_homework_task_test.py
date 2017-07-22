@@ -1,12 +1,14 @@
 from django.test import TestCase
 
+from accounts.models import User
 from education.models import Course, Lesson, Homework, HomeworkTask, HomeworkTaskTest
 from education.tests.factories import HomeworkTaskDescriptionFactory
 
 
 class HomeworkTaskTestTests(TestCase):
     def setUp(self):
-        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False)
+        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False,
+                                            main_teacher=User.objects.create(email='tank@abv.bg', password='tank123'))
         self.lesson = Lesson.objects.create(lesson_number=1, course=self.course, intro='', content='',
                                             annexation='', is_under_construction=False)
         self.hw = Homework.objects.create(is_mandatory=False, lesson=self.lesson)

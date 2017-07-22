@@ -23,8 +23,9 @@ class CourseCreateView(CreateAPIView):
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, IsTeacher)
 
-    def perform_create(self, serializer):
-        serializer.save(teachers=[self.request.user])
+    def post(self, request, *args, **kwargs):
+        request.data['main_teacher'] = self.request.user.id
+        return super().post(request, *args, **kwargs)
 
 
 # /education/course/{course_id}
@@ -58,6 +59,8 @@ class CourseEditView(UpdateAPIView):
             if not course.is_under_construction:  # Cannot lock a course twice
                 return Response(data={'error': 'Cannot lock an already locked Course'}, status=400)
 
+            if not course.can_lock():
+                return Response(data={'error': 'Cannot lock the Course for some reason'}, status=400)
             # TODO: Assure that the user is the main Teacher before lock
             course.lock_for_construction()
             serializer = self.get_serializer(course)

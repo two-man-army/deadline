@@ -71,8 +71,7 @@ class CourseDetailsViewTests(TestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='Python Fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.course.languages.add(self.python_lang)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='IFs', content='how are you', annexation='bye',
@@ -87,7 +86,12 @@ class CourseDetailsViewTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.data['name'], 'Python Fundamentals')
 
     def test_view_returns_data_as_expected(self):
-        expected_data = {'name': 'Python Fundamentals', 'difficulty': 1.0, 'languages': ['Python'], 'teachers': [{'name': self.teacher_auth_user.username, 'id': 2}], 'lessons': [{'consecutive_number': 1, 'short_description': 'IFs'}, {'consecutive_number': 2, 'short_description': 'Loops'}]}
+        expected_data = {'name': 'Python Fundamentals', 'difficulty': 1.0, 'languages': ['Python'],
+                         'teachers': [{'name': self.teacher_auth_user.username, 'id': 2}],
+                         'lessons': [{'consecutive_number': 1, 'short_description': 'IFs'},
+                                     {'consecutive_number': 2, 'short_description': 'Loops'}],
+                         'main_teacher': {'name': self.course.main_teacher.username,
+                                          'id': self.course.main_teacher.id}}
 
         resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.teacher_auth_token)
         self.assertEqual(expected_data, resp.data)
@@ -117,8 +121,7 @@ class CourseEditViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -157,10 +160,18 @@ class CourseEditViewTests(APITestCase, TestHelperMixin):
         self.course.refresh_from_db()
         self.assertNotIn(self.rust_lang, self.course.languages.all())
 
+    def test_cannot_lock_course_while_lesson_not_locked(self):
+        resp = self.client.patch(f'/education/course/{self.course.id}',
+                          HTTP_AUTHORIZATION=self.teacher_auth_token,
+                          data={'is_under_construction': False}, format='json')
+        self.assertEqual(resp.status_code, 400)
+
     def test_can_lock_course(self):
+        self.lesson.lock_for_construction()
         self.client.patch(f'/education/course/{self.course.id}',
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
-                          data={'is_under_construction': False})
+                          data={'is_under_construction': False}, format='json')
+
         self.course.refresh_from_db()
         self.assertEqual(self.course.is_under_construction, False)
 
@@ -212,8 +223,7 @@ class CourseLanguageDeleteViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -264,8 +274,8 @@ class CourseLanguageDeleteViewTests(APITestCase, TestHelperMixin):
     def test_teacher_on_other_course_cannot_delete(self):
         self.create_teacher_user_and_auth_token()
 
-        course = Course.objects.create(name='teste fundamentals ||', difficulty=1, is_under_construction=True)
-        course.teachers.add(self.second_teacher_auth_user)
+        course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
+                                       is_under_construction=True, main_teacher=self.second_teacher_auth_user)
 
         response = self.client.delete(f'/education/course/{self.course.id}/language/{self.python_lang.id}',
                                       HTTP_AUTHORIZATION=self.second_teacher_auth_token)
@@ -277,8 +287,7 @@ class CourseLanguageAddViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -346,8 +355,7 @@ class CourseLanguageAddViewTests(APITestCase, TestHelperMixin):
         self.create_teacher_user_and_auth_token()
 
         course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
-                                       is_under_construction=True)
-        course.teachers.add(self.second_teacher_auth_user)
+                                       is_under_construction=True, main_teacher=self.second_teacher_auth_user)
 
         response = self.client.post(f'/education/course/{self.course.id}/language/',
                                     HTTP_AUTHORIZATION=self.second_teacher_auth_token,
@@ -360,8 +368,7 @@ class CourseLessonDeleteViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.create_teacher_user_and_auth_token()
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=self.course)
@@ -417,8 +424,7 @@ class CourseLessonDeleteViewTests(APITestCase, TestHelperMixin):
 
     def test_cannot_remove_a_lesson_from_another_course(self):
         new_course = Course.objects.create(name='Dark Cloud', difficulty=1,
-                                           is_under_construction=True)
-        new_course.teachers.add(self.teacher_auth_user)
+                                           is_under_construction=True, main_teacher=self.teacher_auth_user)
         new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are yoou', annexation='bye',
                                             course=new_course)

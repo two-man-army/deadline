@@ -15,8 +15,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         self.create_teacher_user_and_auth_token()
         self.python_language = Language.objects.create(name='Python')
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are you', annexation='bye',
                                             course=self.course)
@@ -97,8 +96,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
     def test_create_test_fails_for_lesson_that_is_not_part_of_course(self, _):
         # create a new course/lesson/hw/task
         course_two = Course.objects.create(name='teste fundamentals II', difficulty=1,
-                                            is_under_construction=True)
-        course_two.teachers.add(self.teacher_auth_user)
+                                           is_under_construction=True, main_teacher=self.teacher_auth_user)
         lesson_two = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are you', annexation='bye',
                                             course=course_two)
@@ -111,8 +109,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
     def test_create_test_fails_for_task_that_is_not_part_of_lesson(self, _):
         # create a new course/lesson/hw/task
         course_two = Course.objects.create(name='teste fundamentals II', difficulty=1,
-                                           is_under_construction=True)
-        course_two.teachers.add(self.teacher_auth_user)
+                                           is_under_construction=True, main_teacher=self.teacher_auth_user)
         lesson_two = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                            intro='hello', content='how are you', annexation='bye',
                                            course=course_two)
@@ -133,8 +130,7 @@ class LessonHomeworkTaskDeleteViewTests(TestCase, TestHelperMixin):
         self.create_teacher_user_and_auth_token()
         self.python_language = Language.objects.create(name='Python')
         self.course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        self.course.teachers.add(self.teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are you', annexation='bye',
                                             course=self.course)
@@ -220,8 +216,7 @@ class LessonHomeworkTaskDeleteViewTests(TestCase, TestHelperMixin):
         # try various matcihngs, i.e course and invalid lesson and etc
         self.create_teacher_user_and_auth_token()
         new_course = Course.objects.create(name='teste fundamentals', difficulty=1,
-                                            is_under_construction=True)
-        new_course.teachers.add(self.second_teacher_auth_user)
+                                            is_under_construction=True, main_teacher=self.second_teacher_auth_user)
         new_lesson = Lesson.objects.create(lesson_number=1, is_under_construction=True,
                                             intro='hello', content='how are you', annexation='bye',
                                             course=new_course)

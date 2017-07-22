@@ -8,7 +8,7 @@ from challenges.models import Language
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ('name', 'difficulty', 'languages')
+        fields = ('name', 'difficulty', 'languages', 'main_teacher')
 
     @property
     def data(self):
@@ -21,6 +21,7 @@ class CourseSerializer(serializers.ModelSerializer):
         """
         loaded_data = super().data
 
+        loaded_data['main_teacher'] = {'name': self.instance.main_teacher.username, 'id': self.instance.main_teacher.id}
         loaded_data['languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['languages']]
         loaded_data['teachers'] = [{'name': teacher.username, 'id': teacher.id} for teacher in self.instance.teachers.all()]
         loaded_data['lessons'] = [{'consecutive_number': lesson.lesson_number, 'short_description': lesson.intro} for lesson in self.instance.lessons.all()]

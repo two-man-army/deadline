@@ -11,7 +11,8 @@ from education.serializers import HomeworkSerializer
 class HomeworkModelTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_teacher_user_and_auth_token()
-        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False)
+        self.course = Course.objects.create(name='tank', difficulty=1, is_under_construction=False,
+                                            main_teacher=self.teacher_auth_user)
         self.lesson = Lesson.objects.create(lesson_number=1, course=self.course, intro='', content='',
                                             annexation='', is_under_construction=False)
         self.python_lang = Language.objects.create(name='Python')

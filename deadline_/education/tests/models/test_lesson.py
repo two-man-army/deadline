@@ -3,6 +3,7 @@ from io import BytesIO
 from django.test import TestCase
 from rest_framework.parsers import JSONParser
 
+from accounts.models import User
 from education.errors import AlreadyLockedError, InvalidLockError
 from education.models import Course, Lesson, Homework, HomeworkTask
 from education.serializers import LessonSerializer
@@ -11,7 +12,7 @@ from education.tests.factories import HomeworkTaskDescriptionFactory
 
 class CourseModelTests(TestCase):
     def setUp(self):
-        self.course = Course.objects.create(name='tank', difficulty=1)
+        self.course = Course.objects.create(name='tank', difficulty=1, main_teacher=User.objects.create(email='tank@abv.bg', password='tank0'))
 
     def create_lesson(self):
         return Lesson.objects.create(lesson_number=1,
