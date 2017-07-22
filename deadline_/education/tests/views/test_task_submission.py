@@ -151,12 +151,25 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
             base_role = Role.objects.create(name='User')
         self.new_user = User.objects.create(username='MnTupo', password='123', email='T{{{@abv.bg', score=123, role=base_role)
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.hw_task.id}/submission',
-                                HTTP_AUTHORIZATION=self.auth_token,
+                                HTTP_AUTHORIZATION=f'Token {self.new_user.auth_token}',
                                 data={
                                     'code': 'print("im at the bottom")',
                                     'language': self.python_language.id
                                 })
         self.assertEqual(resp.status_code, 403)
+        self.assertEqual(TaskSubmission.objects.count(), 0)
+
+    def test_non_supported_language_returns_400(self, _):
+        self.course.enroll_student(self.auth_user)
+        erlang = Language.objects.create(name="Erlang")
+
+        resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.hw_task.id}/submission',
+                                HTTP_AUTHORIZATION=self.auth_token,
+                                data={
+                                    'code': 'print("im at the bottom")',
+                                    'language': erlang.id
+                                })
+        self.assertEqual(resp.status_code, 400)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
     def test_invalid_language_doesnt_work(self, _):

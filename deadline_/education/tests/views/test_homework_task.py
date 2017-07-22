@@ -186,6 +186,19 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(self.task.is_under_construction, False)
         self.assertNotEqual(self.task.description.content, 'tank')
 
+    def test_non_main_teacher_cant_lock_task(self):
+        self.create_teacher_user_and_auth_token()
+        self.course.teachers.add(self.second_teacher_auth_user)
+        resp = self.client.patch(
+            f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',
+            HTTP_AUTHORIZATION=self.second_teacher_auth_token,
+            data={
+                'is_under_construction': False
+            }, format='json')
+        self.assertEqual(resp.status_code, 400)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.is_under_construction, True)
+
     def test_cannot_lock_twice(self):
         resp = self.client.patch(
             f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.task.id}',

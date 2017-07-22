@@ -3,16 +3,16 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from errors import FetchError
-from helpers import fetch_models_by_pks
-from views import BaseManageView
 from challenges.models import Language
+from challenges.tasks import run_homework_grader_task
+from decorators import fetch_models, enforce_forbidden_fields
 from education.permissions import IsTeacher, IsEnrolledOnCourseOrIsTeacher, IsTeacherOfCourse
 from education.serializers import CourseSerializer, HomeworkTaskSerializer, LessonSerializer, TaskSubmissionSerializer
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskTest, Homework
 from education.helpers import create_task_test_files
-from challenges.tasks import run_homework_grader_task
-from decorators import fetch_models, enforce_forbidden_fields
+from errors import FetchError
+from helpers import fetch_models_by_pks
+from views import BaseManageView
 
 
 # /education/course
@@ -314,6 +314,74 @@ class HomeworkTaskCreateView(CreateAPIView):
         return course, lesson
 
 
+# PATCH /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class HomeworkTaskEditView(UpdateAPIView):
+    queryset = HomeworkTask.objects.all()
+    serializer_class = HomeworkTaskSerializer
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, Lesson, HomeworkTask)
+    main_class = Course
+    forbidden_fields = ('homework', 'supported_languages')
+    locked_editable_fields = ('description', )  # the fields that are editable on a locked object only!
+
+    @enforce_forbidden_fields
+    @fetch_models
+    def patch(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
+        if task.homework.lesson_id != lesson.id or lesson.course_id != course.id:
+            return Response(status=404)
+
+        if 'is_under_construction' in request.data:
+            is_under_construction = request.data['is_under_construction']
+
+            if is_under_construction:  # Cannot unlock a Task
+                err_msg = 'Cannot unlock a Task'
+                if not task.is_under_construction:
+                    err_msg = 'Cannot unlock an already locked Task'
+                return Response(data={'error': err_msg}, status=400)
+
+            if not task.is_under_construction:  # Cannot lock a task twice
+                return Response(data={'error': 'Cannot lock an already locked Task'}, status=400)
+
+            if task.homework.lesson.course.main_teacher.id != request.user.id:
+                return Response(data={'error': 'Only the main teacher of a Course can lock a Task'}, status=400)
+
+            task.lock_for_construction()
+            serializer = self.get_serializer(task)
+            return Response(serializer.data)
+
+        if not task.is_under_construction:
+            # task is locked, allow edits only on certain fields
+            for field in request.data.keys():
+                if field not in self.locked_editable_fields:
+                    return Response(status=400, data={'error': f'{field} is not editable once the Task is locked!'})
+
+        return super().patch(request, *args, **kwargs)
+
+
+# DELETE /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
+class LessonHomeworkTaskDeleteView(APIView):
+    """ Remove a HWTask from a Homework object """
+    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
+    model_classes = (Course, Lesson, HomeworkTask)
+    main_class = Course
+
+    @fetch_models
+    def delete(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
+        if not lesson.is_under_construction:
+            return Response(status=400,
+                            data={'error': f'Cannot remove a HomeworkTask from a Lesson when the Lesson is locked!'})
+
+        if lesson not in course.lessons.all():
+            return Response(status=404, data={'error': f'Lesson {lesson.id} is not present in course {course.id}'})
+
+        if task not in [task for hw in lesson.homework_set.all() for task in hw.homeworktask_set.all()]:
+            return Response(status=404, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
+
+        lesson.homework_set.first().remove_task(task)
+
+        return Response(status=204)
+
+
 # POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}/test
 class HomeworkTaskTestCreateView(APIView):
     """
@@ -349,71 +417,6 @@ class HomeworkTaskTestCreateView(APIView):
             return Response(status=403, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
 
 
-# PATCH /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
-class HomeworkTaskEditView(UpdateAPIView):
-    queryset = HomeworkTask.objects.all()
-    serializer_class = HomeworkTaskSerializer
-    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
-    model_classes = (Course, Lesson, HomeworkTask)
-    main_class = Course
-    forbidden_fields = ('homework', 'supported_languages')
-    locked_editable_fields = ('description', )  # the fields that are editable on a locked object only!
-
-    @enforce_forbidden_fields
-    @fetch_models
-    def patch(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
-        if task.homework.lesson_id != lesson.id or lesson.course_id != course.id:
-            return Response(status=404)
-
-        if 'is_under_construction' in request.data:
-            is_under_construction = request.data['is_under_construction']
-
-            if is_under_construction:  # Cannot unlock a Task
-                err_msg = 'Cannot unlock a Task'
-                if not task.is_under_construction:
-                    err_msg = 'Cannot unlock an already locked Task'
-                return Response(data={'error': err_msg}, status=400)
-
-            if not task.is_under_construction:  # Cannot lock a task twice
-                return Response(data={'error': 'Cannot lock an already locked Task'}, status=400)
-
-            # TODO: Assure that the user is the main Teacher before lock
-            task.lock_for_construction()
-            serializer = self.get_serializer(task)
-            return Response(serializer.data)
-
-        if not task.is_under_construction:
-            # task is locked, allow edits only on certain fields
-            for field in request.data.keys():
-                if field not in self.locked_editable_fields:
-                    return Response(status=400, data={'error': f'{field} is not editable once the Task is locked!'})
-
-        return super().patch(request, *args, **kwargs)
-
-
-# POST /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
-class LessonHomeworkTaskDeleteView(APIView):
-    permission_classes = (IsAuthenticated, IsTeacherOfCourse)
-    model_classes = (Course, Lesson, HomeworkTask)
-    main_class = Course
-
-    @fetch_models
-    def delete(self, request, course: Course, lesson: Lesson, task: HomeworkTask, *args, **kwargs):
-        if not lesson.is_under_construction:
-            return Response(status=400,
-                            data={'error': f'Cannot remove a HomeworkTask from a Lesson when the Lesson is locked!'})
-
-        if lesson not in course.lessons.all():
-            return Response(status=404, data={'error': f'Lesson {lesson.id} is not present in course {course.id}'})
-
-        if task not in [task for hw in lesson.homework_set.all() for task in hw.homeworktask_set.all()]:
-            return Response(status=404, data={'error': f'Task {task.id} does not belong to Lesson {lesson.id}'})
-
-        lesson.homework_set.first().remove_task(task)
-
-        return Response(status=204)
-
-
 # /education/course/{course_id}/lesson/{lesson_id}/homework_task/{task_id}
 class HomeworkTaskManageView(BaseManageView):
     """
@@ -440,7 +443,6 @@ class TaskSubmissionCreateView(CreateAPIView):
 
         if not is_valid:
             return response  # there has been an error in validation
-        # TODO: Check supported languages
 
         submission, ser_data, response = self.create_submission(request.data, task)
         if response is not None:
