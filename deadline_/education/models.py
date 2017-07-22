@@ -2,7 +2,7 @@ import os
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from constants import EDUCATION_TEST_FILES_FOLDER
@@ -98,8 +98,7 @@ def course_post_save(sender, instance: Course, created, *args, **kwargs):
     """
         Add the main teacher to the teachers of the course
     """
-    if created:
-        instance.teachers.add(instance.main_teacher)
+    instance.teachers.add(instance.main_teacher)
 
 
 class Lesson(models.Model):

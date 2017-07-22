@@ -128,25 +128,29 @@ class CourseEditViewTests(APITestCase, TestHelperMixin):
         self.rust_lang = Language.objects.create(name='Rust')
 
     def test_can_edit_name_and_difficulty_while_not_locked(self):
+        self.create_teacher_user_and_auth_token()
         self.client.patch(f'/education/course/{self.course.id}',
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={
                               'name': 'A Man',
                               'difficulty': 8,
+                              'main_teacher': self.second_teacher_auth_user.id
                           }, format='json')
         self.course.refresh_from_db()
         self.assertEqual(self.course.difficulty, 8)
         self.assertEqual(self.course.name, 'A Man')
+        self.assertEqual(self.course.main_teacher, self.second_teacher_auth_user)
+        self.assertTrue(self.second_teacher_auth_user in self.course.teachers.all())
 
     def test_cannot_edit_while_locked(self):
         self.lesson.lock_for_construction()
         self.course.lock_for_construction()
         resp = self.client.patch(f'/education/course/{self.course.id}',
-                          HTTP_AUTHORIZATION=self.teacher_auth_token,
-                          data={
-                              'name': 'A Man',
-                              'difficulty': 8,
-                          }, format='json')
+                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
+                                 data={
+                                     'name': 'A Man',
+                                     'difficulty': 8,
+                                 }, format='json')
         self.assertNotEqual(self.course.difficulty, 8)
         self.assertNotEqual(self.course.name, 'A Man')
         self.assertEqual(resp.status_code, 400)
@@ -174,6 +178,30 @@ class CourseEditViewTests(APITestCase, TestHelperMixin):
 
         self.course.refresh_from_db()
         self.assertEqual(self.course.is_under_construction, False)
+
+    def test_only_main_teacher_can_lock_course(self):
+        self.lesson.lock_for_construction()
+        self.create_teacher_user_and_auth_token()
+        self.course.teachers.add(self.second_teacher_auth_user)
+        response = self.client.patch(f'/education/course/{self.course.id}',
+                                     HTTP_AUTHORIZATION=self.second_teacher_auth_token,
+                                     data={'is_under_construction': False}, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.course.is_under_construction, True)
+
+    def test_non_main_teacher_cannot_change_main_teacher(self):
+        self.create_teacher_user_and_auth_token()
+        self.course.teachers.add(self.second_teacher_auth_user)
+        response = self.client.patch(f'/education/course/{self.course.id}',
+                          HTTP_AUTHORIZATION=self.second_teacher_auth_token,
+                          data={
+                              'name': 'A Man',
+                              'difficulty': 8,
+                              'main_teacher': self.second_teacher_auth_user.id
+                          }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertNotEqual(self.course.main_teacher, self.second_teacher_auth_user)
+        self.assertNotEqual(self.course.name, 'A Man')
 
     def test_user_cant_edit(self):
         response = self.client.patch(f'/education/course/{self.course.id}',

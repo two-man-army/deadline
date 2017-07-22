@@ -61,10 +61,16 @@ class CourseEditView(UpdateAPIView):
 
             if not course.can_lock():
                 return Response(data={'error': 'Cannot lock the Course for some reason'}, status=400)
-            # TODO: Assure that the user is the main Teacher before lock
+
+            if not course.is_main_teacher(request.user):
+                return Response(data={'error': 'Only the main teacher can lock the Course'}, status=400)
+
             course.lock_for_construction()
             serializer = self.get_serializer(course)
             return Response(serializer.data)
+
+        if 'main_teacher' in request.data and request.user != course.main_teacher:
+            return Response(data={'error': 'Only the main teacher can set a new main teacher'}, status=400)
 
         return super().patch(request, *args, **kwargs)
 
