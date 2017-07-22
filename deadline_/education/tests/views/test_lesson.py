@@ -223,10 +223,10 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
     def test_normal_edit(self):
         self.assertEqual(self.lesson.intro, 'hello')
         self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
-                        HTTP_AUTHORIZATION=self.teacher_auth_token,
-                        data={
-                            "intro": "hello20", "video_link_3": 'hit'
-                        }, format='json')
+                          HTTP_AUTHORIZATION=self.teacher_auth_token,
+                          data={
+                              "intro": "hello20", "video_link_3": 'hit'
+                          }, format='json')
         self.lesson.refresh_from_db()
         self.assertEqual(self.lesson.intro, 'hello20')
         self.assertEqual(self.lesson.video_link_3, 'hit')
@@ -274,8 +274,23 @@ class LessonEditViewTests(APITestCase, TestHelperMixin):
         self.lesson.refresh_from_db()
         self.assertEqual(self.lesson.is_under_construction, False)
 
+    def test_non_course_main_teacher_cant_lock(self):
+        self.lesson.is_under_construction = True
+        self.lesson.save()
+        self.create_teacher_user_and_auth_token()
+        self.course.teachers.add(self.second_teacher_auth_user)
+        response = self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
+                                     HTTP_AUTHORIZATION=self.second_teacher_auth_token,
+                                     data={
+                                         "is_under_construction": False
+                                     }, format='json')
+        self.lesson.refresh_from_db()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.lesson.is_under_construction, True)
+
     def test_cannot_lock_lesson_twice(self):
         self.lesson.is_under_construction = True
+        self.lesson.save()
         self.client.patch(f'/education/course/{self.course.id}/lesson/{self.lesson.id}',
                           HTTP_AUTHORIZATION=self.teacher_auth_token,
                           data={

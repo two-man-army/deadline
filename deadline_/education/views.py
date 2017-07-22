@@ -225,7 +225,6 @@ class LessonDetailsView(RetrieveAPIView):
         return Response(response_data)
 
 
-# TODO: Add main Teacher to Course and Lesson, allow only those to Lock
 class LessonEditView(UpdateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
@@ -248,7 +247,9 @@ class LessonEditView(UpdateAPIView):
             if not can_lock:
                 return Response(data={'error': err_msg}, status=400)
 
-            # TODO: Assure that the user is the main Teacher before lock
+            if request.user != lesson.course.main_teacher:
+                return Response(data={'error': "Only the Course's main teacher can lock a course!"}, status=400)
+
             lesson.lock_for_construction()
             serializer = self.get_serializer(lesson)
             return Response(serializer.data)
