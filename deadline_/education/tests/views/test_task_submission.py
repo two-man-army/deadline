@@ -9,7 +9,7 @@ from education.models import HomeworkTaskDescription, Lesson, Course, Homework, 
     TaskTestCase
 
 
-@patch('education.views.run_homework_grader_task')
+@patch('education.views.homework_views.run_homework_grader_task')
 class TaskSubmissionTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()

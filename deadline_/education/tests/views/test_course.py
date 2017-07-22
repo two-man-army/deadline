@@ -6,9 +6,9 @@ from rest_framework.test import APITestCase
 
 from challenges.tests.base import TestHelperMixin
 from education.models import Course, Lesson
-from education.views import CourseManageView, CourseDetailsView, CourseEditView
 from challenges.models import Language
 from accounts.models import User, Role
+from education.views.course_views import CourseManageView, CourseEditView, CourseDetailsView
 
 
 class CourseCreateViewTests(TestCase, TestHelperMixin):

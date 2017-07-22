@@ -8,7 +8,7 @@ from education.tests.factories import HomeworkTaskDescriptionFactory
 from education.models import Course, Lesson, Homework, HomeworkTask, HomeworkTaskTest
 
 
-@patch('education.views.create_task_test_files')
+@patch('education.views.homework_views.create_task_test_files')
 class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()

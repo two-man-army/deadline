@@ -8,7 +8,7 @@ from challenges.tests.base import TestHelperMixin
 from challenges.models import Language
 from education.models import Course, Lesson, Homework, HomeworkTask, HomeworkTaskDescription
 from education.tests.factories import HomeworkTaskDescriptionFactory
-from education.views import HomeworkTaskManageView, HomeworkTaskEditView, HomeworkTaskTestCreateView, LessonHomeworkTaskDeleteView
+from education.views.homework_views import HomeworkTaskEditView, HomeworkTaskManageView, LessonHomeworkTaskDeleteView
 
 
 class HomeworkTaskManageViewTests(TestCase):

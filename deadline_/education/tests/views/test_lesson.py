@@ -8,8 +8,8 @@ from django.http import HttpResponse
 from accounts.models import Role, User
 from challenges.tests.base import TestHelperMixin
 from education.models import Course, Lesson, HomeworkTask, HomeworkTaskDescription, Homework
-from education.views import LessonManageView, LessonCreateView, LessonDetailsView, LessonEditView
 from education.tests.factories import HomeworkTaskDescriptionFactory
+from education.views.lesson_views import LessonManageView, LessonEditView, LessonDetailsView
 
 
 class LessonManagerViewTests(TestCase):

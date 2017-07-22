@@ -1,8 +1,11 @@
 from django.conf.urls import url
 
-from education.views import CourseCreateView, HomeworkTaskCreateView, HomeworkTaskTestCreateView, LessonManageView, \
-    LessonCreateView, CourseManageView, TaskSubmissionCreateView, CourseLanguageDeleteView, CourseLanguageAddView,  \
-    HomeworkTaskManageView
+
+from education.views.course_views import (
+    CourseCreateView, CourseManageView, CourseLanguageDeleteView, CourseLanguageAddView)
+from education.views.homework_views import (
+    HomeworkTaskCreateView, HomeworkTaskManageView, TaskSubmissionCreateView, HomeworkTaskTestCreateView)
+from education.views.lesson_views import LessonCreateView, LessonManageView
 
 # TODO: route only POSTs
 urlpatterns = [
