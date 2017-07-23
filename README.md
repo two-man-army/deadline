@@ -1,10 +1,9 @@
-# deadline
+Deadline is a web application for solving programming challenges
 ![Deadline Logo](http://i.imgur.com/dfZ5P8A.jpg)
 
-# CURRENTLY GOING THROUGH A RE-DESIGN, NEW STUFF TO COME
+# Currently going through a re-design. Here is a taste of things to come:
 ![Redesign Sample](http://i.imgur.com/vYst0CJ.jpg)
 
-Web App for solving programming challenges
 
 <img src="/sample.gif?raw=true" width="1000px">
 
