@@ -1,5 +1,8 @@
 # deadline
-![Deadline Logo](https://i.imgur.com/4htmJCt.png)
+![Deadline Logo](http://i.imgur.com/dfZ5P8A.jpg)
+
+# CURRENTLY GOING THROUGH A RE-DESIGN, NEW STUFF TO COME
+![Redesign Sample](http://i.imgur.com/vYst0CJ.jpg)
 
 Web App for solving programming challenges
 
