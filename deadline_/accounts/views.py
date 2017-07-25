@@ -46,6 +46,26 @@ class FollowUserView(APIView):
         return Response(status=204)
 
 
+class UnfollowUserView(APIView):
+    def post(self, request, *args, **kwargs):
+        if 'target' not in request.GET:
+            return Response(status=400, data={'error': f'Follow target missing'})
+        if not re.fullmatch(r'^\d+$', request.GET['target']):
+            return Response(status=400, data={'error': f'Target querystring must be an integer!'})
+
+        target_user_id = request.GET['target']
+        try:
+            user = User.objects.get(id=target_user_id)
+        except User.DoesNotExist:
+            return Response(status=404)
+
+        if user not in request.user.users_followed.all():
+            return Response(status=400, data={'error': f'You have not followed user {user.username}'})
+
+        request.user.unfollow(user)
+        return Response(status=204)
+
+
 @api_view(['POST'])
 @permission_classes([])
 def register(request: Request):
