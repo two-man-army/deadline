@@ -7,5 +7,6 @@ urlpatterns = [
     url(r'^register/', views.register, name='register'),
     url(r'^login/', views.login, name='login'),
     url(r'^user/(?P<pk>.+)', views.UserDetailView.as_view(), name='user_detail'),
+    url(r'^follow', views.FollowUserView.as_view(), name='user_follow'),
     url(r'^get_csrf/', views.index, name='get_csrf')
 ]

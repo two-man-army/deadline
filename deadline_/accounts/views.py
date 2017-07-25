@@ -1,3 +1,5 @@
+import re
+
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -5,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework import status
+from rest_framework.views import APIView
 
 from accounts.serializers import UserSerializer
 from accounts.models import User
@@ -21,6 +24,26 @@ class UserDetailView(RetrieveAPIView):
         serialized_data = self.get_serializer(instance).data
         serialized_data['follower_count'] = instance.users_followed.count()
         return Response(serialized_data)
+
+
+class FollowUserView(APIView):
+    def post(self, request, *args, **kwargs):
+        if 'target' not in request.GET:
+            return Response(status=400, data={'error': f'Follow target missing'})
+        if not re.fullmatch(r'^\d+$', request.GET['target']):
+            return Response(status=400, data={'error': f'Target querystring must be an integer!'})
+
+        target_user_id = request.GET['target']
+        try:
+            user = User.objects.get(id=target_user_id)
+        except User.DoesNotExist:
+            return Response(status=404)
+
+        if user in request.user.users_followed.all():
+            return Response(status=400, data={'error': f'You have already followed user {user.username}'})
+
+        request.user.follow(user)
+        return Response(status=204)
 
 
 @api_view(['POST'])

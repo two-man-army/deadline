@@ -344,3 +344,36 @@ class UserDetailsViewTest(APITestCase):
     def test_requires_authentication(self):
         response = self.client.get(f'/accounts/user/{self.user.id}')
         self.assertEqual(response.status_code, 401)
+
+
+class UserFollowViewTest(APITestCase):
+    def setUp(self):
+        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        self.first_user_auth_token = 'Token {}'.format(self.first_user.auth_token.key)
+        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
+        self.second_user_auth_token = 'Token {}'.format(self.second_user.auth_token.key)
+
+    def test_follows(self):
+        response = self.client.post(f'/accounts/follow?target={self.second_user.id}', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(self.second_user.followers.count(), 1)
+        self.assertEqual(self.first_user.users_followed.count(), 1)
+
+    def test_cannot_follow_same_person_twice(self):
+        self.client.post(f'/accounts/follow?target={self.second_user.id}', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        second_response = self.client.post(f'/accounts/follow?target={self.second_user.id}', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        self.assertEqual(second_response.status_code, 400)
+        self.assertEqual(self.second_user.followers.count(), 1)
+        self.assertEqual(self.first_user.users_followed.count(), 1)
+
+    def test_returns_400_if_invalid_querystring(self):
+        response = self.client.post(f'/accounts/follow?target=NINTENDO', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_400_if_querystring_missing(self):
+        response = self.client.post(f'/accounts/follow/', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_404_if_invalid_user(self):
+        response = self.client.post(f'/accounts/follow?target=111', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        self.assertEqual(response.status_code, 404)
