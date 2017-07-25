@@ -44,7 +44,7 @@ class UserModelTest(TestCase):
         received_sub2: UserSubcategoryProficiency = UserSubcategoryProficiency.objects.filter(user=us, subcategory=self.sub2).first()
         self.assertEqual(received_sub2.proficiency, self.starter_proficiency)
 
-    def test_user_register_requires_unique_username(self):
+    def test_returns_401_if_unauth(self):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
         us.save()
         with self.assertRaises(Exception):
@@ -386,12 +386,16 @@ class UserFollowViewTest(APITestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_returns_400_if_querystring_missing(self):
-        response = self.client.post(f'/accounts/follow/', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        response = self.client.post(f'/accounts/follow', HTTP_AUTHORIZATION=self.first_user_auth_token)
         self.assertEqual(response.status_code, 400)
 
     def test_returns_404_if_invalid_user(self):
         response = self.client.post(f'/accounts/follow?target=111', HTTP_AUTHORIZATION=self.first_user_auth_token)
         self.assertEqual(response.status_code, 404)
+
+    def test_requires_authentication(self):
+        response = self.client.post(f'/accounts/follow?target={self.second_user.id}')
+        self.assertEqual(response.status_code, 401)
 
 
 class UserUnfollowViewTest(APITestCase):
@@ -425,3 +429,7 @@ class UserUnfollowViewTest(APITestCase):
     def test_returns_404_if_invalid_user(self):
         response = self.client.post(f'/accounts/unfollow?target=111', HTTP_AUTHORIZATION=self.first_user_auth_token)
         self.assertEqual(response.status_code, 404)
+
+    def test_returns_401_if_unauth(self):
+        response = self.client.post(f'/accounts/unfollow?target={self.second_user.id}')
+        self.assertEqual(response.status_code, 401)

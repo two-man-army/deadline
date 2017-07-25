@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework import status
-from rest_framework.views import APIView
 
 from accounts.serializers import UserSerializer
 from accounts.models import User
@@ -26,8 +25,8 @@ class UserDetailView(RetrieveAPIView):
         return Response(serialized_data)
 
 
-class FollowUserView(APIView):
-    def post(self, request, *args, **kwargs):
+def follow_decorator(view_func, *args, **kwargs):
+    def _follow(request, *args, **kwargs):
         if 'target' not in request.GET:
             return Response(status=400, data={'error': f'Follow target missing'})
         if not re.fullmatch(r'^\d+$', request.GET['target']):
@@ -39,31 +38,30 @@ class FollowUserView(APIView):
         except User.DoesNotExist:
             return Response(status=404)
 
-        if user in request.user.users_followed.all():
-            return Response(status=400, data={'error': f'You have already followed user {user.username}'})
-
-        request.user.follow(user)
-        return Response(status=204)
+        return view_func(request, user, *args, **kwargs)
+    return _follow
 
 
-class UnfollowUserView(APIView):
-    def post(self, request, *args, **kwargs):
-        if 'target' not in request.GET:
-            return Response(status=400, data={'error': f'Follow target missing'})
-        if not re.fullmatch(r'^\d+$', request.GET['target']):
-            return Response(status=400, data={'error': f'Target querystring must be an integer!'})
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@follow_decorator
+def follow(request: Request, user: User):
+    if user in request.user.users_followed.all():
+        return Response(status=400, data={'error': f'You have already followed user {user.username}'})
 
-        target_user_id = request.GET['target']
-        try:
-            user = User.objects.get(id=target_user_id)
-        except User.DoesNotExist:
-            return Response(status=404)
+    request.user.follow(user)
+    return Response(status=204)
 
-        if user not in request.user.users_followed.all():
-            return Response(status=400, data={'error': f'You have not followed user {user.username}'})
 
-        request.user.unfollow(user)
-        return Response(status=204)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@follow_decorator
+def unfollow(request: Request, user: User):
+    if user not in request.user.users_followed.all():
+        return Response(status=400, data={'error': f'You have not followed user {user.username}'})
+
+    request.user.unfollow(user)
+    return Response(status=204)
 
 
 @api_view(['POST'])
