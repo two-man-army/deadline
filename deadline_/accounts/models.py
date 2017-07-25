@@ -10,6 +10,7 @@ from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
 
+from accounts.errors import UserAlreadyFollowedError
 from accounts.helpers import hash_password
 from django.db import models
 from django.dispatch import receiver
@@ -27,6 +28,7 @@ class User(AbstractBaseUser):
     score = models.IntegerField(default=0)
     salt = models.CharField(max_length=40)
     role = models.ForeignKey(Role, default=1)
+    users_followed = models.ManyToManyField(to='accounts.User', related_name='followers')
     last_submit_at = models.DateTimeField(auto_now_add=True)
 
     def __init__(self, *args, **kwargs):
@@ -39,6 +41,11 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+    def follow(self, user):
+        if user in self.users_followed.all():
+            raise UserAlreadyFollowedError(f'{self.username} has already followed {user.username}!')
+        self.users_followed.add(user)
 
     def fetch_max_score_for_challenge(self, challenge_id):
         """

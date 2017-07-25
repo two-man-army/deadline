@@ -1,11 +1,13 @@
 from unittest.mock import patch, MagicMock
 
+from django.http import HttpResponse
 from django.test import TestCase
 from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
+from accounts.errors import UserAlreadyFollowedError
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
@@ -72,6 +74,26 @@ class UserModelTest(TestCase):
         self.assertEqual(deser_user.email, 'me@abv.bg')
         self.assertNotEqual(deser_user.password, '123')  # should be hashed!
         self.assertEqual(deser_user.score, 123)
+
+    def test_user_can_follow_another_user(self):
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+
+        follower.follow(user_who_gets_followed)
+
+        self.assertEqual(follower.users_followed.count(), 1)
+        self.assertEqual(follower.followers.count(), 0)
+        self.assertIn(user_who_gets_followed, follower.users_followed.all())
+
+        self.assertEqual(user_who_gets_followed.followers.count(), 1)
+        self.assertEqual(user_who_gets_followed.users_followed.count(), 0)
+
+    def test_cannot_have_duplicate_follower(self):
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+        follower.follow(user_who_gets_followed)
+        with self.assertRaises(UserAlreadyFollowedError):
+            follower.follow(user_who_gets_followed)
 
     def test_get_vote_for_submission_returns_vote(self):
         from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language, \
@@ -303,3 +325,22 @@ class LeaderboardViewTest(APITestCase):
         for lead in received_leaderboard:
             user_name = lead['name']
             self.assertEqual(lead['position'], expected_positions[user_name])
+
+
+class UserDetailsViewTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        self.auth_token = 'Token {}'.format(self.user.auth_token.key)
+
+    def test_returns_expected_data(self):
+        response = self.client.get(f'/accounts/user/{self.user.id}', HTTP_AUTHORIZATION=self.auth_token)
+        expected_data = {'id': self.user.id, 'username': self.user.username, 'email': self.user.email,
+                 'password': self.user.password, 'score': self.user.score,
+                 'follower_count': self.user.followers.count()}
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, expected_data)
+
+    def test_requires_authentication(self):
+        response = self.client.get(f'/accounts/user/{self.user.id}')
+        self.assertEqual(response.status_code, 401)
