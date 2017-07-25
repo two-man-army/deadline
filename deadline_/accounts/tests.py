@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-from accounts.errors import UserAlreadyFollowedError
+from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
@@ -94,6 +94,21 @@ class UserModelTest(TestCase):
         follower.follow(user_who_gets_followed)
         with self.assertRaises(UserAlreadyFollowedError):
             follower.follow(user_who_gets_followed)
+
+    def test_user_can_unfollow_another_user(self):
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+        follower.follow(user_who_gets_followed)
+        self.assertEqual(follower.users_followed.count(), 1)
+
+        follower.unfollow(user_who_gets_followed)
+        self.assertEqual(follower.users_followed.count(), 0)
+
+    def test_unfollow_user_that_is_not_followed_raises_error(self):
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+        with self.assertRaises(UserNotFollowedError):
+            follower.unfollow(user_who_gets_followed)
 
     def test_get_vote_for_submission_returns_vote(self):
         from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language, \

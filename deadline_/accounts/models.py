@@ -10,7 +10,7 @@ from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
 
-from accounts.errors import UserAlreadyFollowedError
+from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.helpers import hash_password
 from django.db import models
 from django.dispatch import receiver
@@ -46,6 +46,11 @@ class User(AbstractBaseUser):
         if user in self.users_followed.all():
             raise UserAlreadyFollowedError(f'{self.username} has already followed {user.username}!')
         self.users_followed.add(user)
+
+    def unfollow(self, user):
+        if user not in self.users_followed.all():
+            raise UserNotFollowedError(f'{self.username} has not followed {user.username}!')
+        self.users_followed.remove(user)
 
     def fetch_max_score_for_challenge(self, challenge_id):
         """
