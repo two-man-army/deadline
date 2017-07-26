@@ -9,9 +9,9 @@ class SidebarNav extends React.Component {
         <nav>
           <NavProfile name='John Smith' path='assets/img/sidebar/profile.png' />
           <ul>
-            <NavItem name='Home' path='assets/img/sidebar/home.png' />
+            <NavItem name='Home' path='assets/img/sidebar/home.png' url='/' />
             <NavItem name='Dashboard' path='assets/img/sidebar/dashboard.png' />
-            <NavItem name='Challenges' path='assets/img/sidebar/challenges.png' />
+            <NavItem name='Challenges' path='assets/img/sidebar/challenges.png' url='challenges/categories' />
             <NavItem name='Ranklist' path='assets/img/sidebar/ranklist.png' />
           </ul>
         </nav>
