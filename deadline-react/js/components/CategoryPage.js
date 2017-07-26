@@ -1,6 +1,7 @@
 import React from 'react'
 import Category from './Category'
 import { getCategoriesMetaInfo } from '../requests.js'
+import { convertToUrlFriendlyText } from '../helpers.js'
 
 class CategoryPage extends React.Component {
   constructor (props) {
@@ -26,11 +27,25 @@ class CategoryPage extends React.Component {
 
   render () {
     return (
-      <section>
-        <ul>
+      <section className='category-page'>
+        <h2>Categories</h2>
+        <ul className='categories'>
           {this.state.categories.map(category => {
-            return <Category name={category.name} />
+            const categoryInURL = convertToUrlFriendlyText(category.name)
+            return <Category name={category.name} url={`/categories/${categoryInURL}`} />
           })}
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
+          <Category name='Test category' />
         </ul>
       </section>
     )
