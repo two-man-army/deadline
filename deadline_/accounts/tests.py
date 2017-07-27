@@ -24,17 +24,17 @@ class UserModelTest(TestCase):
         self.starter_proficiency = Proficiency.objects.create(name="scrub", needed_percentage=0)
 
     def test_user_register_creates_token(self):
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         self.assertTrue(hasattr(us, 'auth_token'))
         self.assertIsNotNone(us.auth_token)
 
     def test_user_register_assigns_default_user_role(self):
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         self.assertEqual(us.role, self.base_role)
 
     def test_user_register_creates_user_subcategory_proficiency(self):
         from challenges.models import UserSubcategoryProficiency
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.save()
 
         received: UserSubcategoryProficiency = UserSubcategoryProficiency.objects.filter(user=us, subcategory=self.sub1).first()
@@ -43,27 +43,26 @@ class UserModelTest(TestCase):
         self.assertEqual(received_sub2.proficiency, self.starter_proficiency)
 
     def test_user_register_requires_unique_username(self):
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.save()
         with self.assertRaises(Exception):
-            us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+            us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
             us.save()
 
     def test_serialization(self):
         """ Should convert a user object to a json """
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        # password should be hashed
-        expected_json = '{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123}' % (us.password)
-
-        content = JSONRenderer().render(UserSerializer(us).data)
-        self.assertEqual(content.decode('utf-8'), expected_json)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role_id=self.base_role.id)
+        expected_data = {'id': us.id, 'username': us.username, 'email': us.email,
+                         'score': us.score, 'role': {'id': us.role.id, 'name': us.role.name}}
+        self.assertEqual(UserSerializer(us).data, expected_data)
 
     def test_deserialization(self):
-        expected_json = b'{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"123","score":123}'
+        expected_json = bytes(
+            ('{"id":1,"username":"SomeGuy","email":"me@abv.bg",'
+            f'"password":"123","score":123, "role": {self.base_role.id}}}'), encoding='utf-8')
 
         data = JSONParser().parse(BytesIO(expected_json))
         serializer = UserSerializer(data=data)
-
         serializer.is_valid()
         deser_user = serializer.save()
 
@@ -199,7 +198,7 @@ class UserModelTest(TestCase):
 
 class RegisterViewTest(APITestCase):
     def setUp(self):
-        self.base_role = Role.objects.create(name='Base')
+        self.base_role = Role.objects.create(name='User')
 
     def test_register(self):
         # The user posts his username, email and password to the /accounts/register URL
@@ -211,7 +210,7 @@ class RegisterViewTest(APITestCase):
         self.assertTrue('user_token' in response.data)
 
     def test_register_existing_user_should_return_400(self):
-        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart')
+        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart', role=self.base_role)
 
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'Meredith',
                                                                                'password': 'mer19222',
@@ -222,7 +221,6 @@ class RegisterViewTest(APITestCase):
 
     def test_register_existing_username_should_return_400(self):
         User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart', role=self.base_role)
-        # User.objects.create(email='smthh_aa@abv.bg', password='123', username='ThatPart')
 
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'ThatPart',
                                                                                'password': 'mer19222',

@@ -233,12 +233,12 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
     @patch('challenges.views.run_grader_task.delay')
     def test_create_submission(self, mock_delay):
         mock_delay.return_value = 1
-        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+        response = self.client.post(f'/challenges/{self.challenge.id}/submissions/new',
                                     data={'code': 'print("Hello World")', 'language': self.python_language.name},
                                     HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Submission.objects.count(), 2)
-        submission = Submission.objects.get(id=2)
+        submission = Submission.objects.last()
         # assert that the task_id has been populated
         self.assertEqual(submission.task_id, '1')
         # assert that the test cases have been created
@@ -313,7 +313,7 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
         top_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=_s_user, code="", result_score=51)
 
         # Should return the two submissions, (both users' best submissions) ordered by score descending
-        response = self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
+        response = self.client.get(f'/challenges/{self.challenge.id}/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, LimitedSubmissionSerializer([top_submission, better_submission], many=True).data)
@@ -327,7 +327,7 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
     @patch('challenges.models.Submission.fetch_top_submissions_for_challenge')
     def test_get_top_submissions_calls_Submission_method(self, mock_top_submissions):
         """ Should call the submissions method for fetching the top challenges """
-        self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
+        self.client.get(f'/challenges/{self.challenge.id}/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
         mock_top_submissions.assert_called_once_with(challenge_id=str(self.challenge.id))
 
     def test_get_self_top_submission(self):
