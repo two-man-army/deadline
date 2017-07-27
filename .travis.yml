@@ -10,7 +10,7 @@ env:
     - BUILD_ON_TRAVIS=true
 
 before_script:
-  - psql -c 'create database travis_ci_test;' -U postgres
+  - psql -c 'create database travis_ci_db;' -U postgres
   - touch deadline_/deadline/.env && echo 'DB_USER=postgres\nDB_NAME=travis_ci_test\nDB_HOST=localhost\nDB_PASS=\n'
 # command to install dependencies
 install:
