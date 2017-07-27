@@ -3,11 +3,15 @@ python:
   - "3.6"
 services:
   - rabbitmq
+  - postgresql
 env:
   global:
     - DJANGO_SETTINGS_MODULE="deadline.settings"
     - BUILD_ON_TRAVIS=true
 
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+  - touch deadline/deadline_/deadline/.env && echo 'DB_USER=postgres\nDB_NAME=travis_ci_test\nDB_HOST=localhost\nDB_PASS=\n
 # command to install dependencies
 install:
   - "pip install -r deadline_/requirements.txt"
