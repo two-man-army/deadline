@@ -20,13 +20,16 @@ SUBMISSION_SELECT_TOP_SUBMISSION_FOR_CHALLENGE_BY_USER = ('SELECT id, result_sco
                                                           'FROM challenges_submission '
                                                           'WHERE challenge_id = %s AND '
                                                           'author_id = %s AND '
-                                                          'pending = 0 '
+                                                          'pending = FALSE '
                                                           'ORDER by result_score DESC '
                                                           'LIMIT 1;')
 
-SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR = ('SELECT * '
-                                                                        'FROM challenges_submission '
-                                                                        'WHERE author_id = %s '
-                                                                        'GROUP BY challenge_id '
-                                                                        'ORDER BY created_at DESC '
-                                                                        'LIMIT 10;')
+SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR = (
+    'SELECT * '
+    'FROM ('
+        'SELECT *, rank() OVER (PARTITION BY challenge_id ORDER BY created_at DESC) as rank '
+        'FROM challenges_submission '
+        'WHERE author_id = %s) as sub '
+    'WHERE sub.rank = 1 '
+    'ORDER BY created_at DESC '
+    'LIMIT 10;')

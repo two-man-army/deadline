@@ -23,7 +23,7 @@ class LimitedSubmissionSerializerTests(TestCase, TestHelperMixin):
     def test_serialize_attaches_expected_variables(self):
         req_mock = MagicMock(user=self.auth_user)
         submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
-                                                code="hust", result_score=10, pending=0)
+                                                code="hust", result_score=10, pending=False)
         sv = SubmissionVote.objects.create(is_upvote=True, submission_id=submission.id, author_id=self.auth_user.id); sv.save()
 
         received_submission = LimitedSubmissionSerializer(submission, context={'request': req_mock}).data
@@ -36,7 +36,7 @@ class LimitedSubmissionSerializerTests(TestCase, TestHelperMixin):
     def test_serialize_correctly_sets_user_has_upvoted(self):
         req_mock = MagicMock(user=self.auth_user)
         submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
-                                code="hust", result_score=10, pending=0)
+                                code="hust", result_score=10, pending=False)
         sv = SubmissionVote.objects.create(is_upvote=False, submission_id=submission.id, author_id=self.auth_user.id);
 
         received_submission = LimitedSubmissionSerializer(submission, context={'request': req_mock}).data
@@ -72,7 +72,7 @@ class SubmissionSerializerTests(TestCase, TestHelperMixin):
     def test_serialize_attaches_expected_variables(self):
         req_mock = MagicMock(user=self.auth_user)
         submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
-                                               code="hoola", result_score=10, pending=0)
+                                               code="hoola", result_score=10, pending=False)
         SubmissionVote.objects.create(is_upvote=True, submission_id=submission.id, author_id=self.auth_user.id)
 
         received_submission = SubmissionSerializer(submission, context={'request': req_mock}).data
@@ -85,7 +85,7 @@ class SubmissionSerializerTests(TestCase, TestHelperMixin):
     def test_serialize_correctly_sets_user_has_upvoted(self):
         req_mock = MagicMock(user=self.auth_user)
         submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
-                                code="", result_score=10, pending=0)
+                                code="", result_score=10, pending=False)
         sv = SubmissionVote.objects.create(is_upvote=False, submission_id=submission.id, author_id=self.auth_user.id);
 
         received_submission = SubmissionSerializer(submission, context={'request': req_mock}).data

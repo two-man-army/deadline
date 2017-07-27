@@ -408,6 +408,33 @@ class LatestSubmissionsViewTest(TestCase, TestHelperMixin):
         self.assertCountEqual(response.data, expected_data)
         self.assertEqual(response.data, expected_data)
 
+    def test_get_latest_challenge_submissions_from_user_hardcore_test(self):
+        """
+        As this gets the latest submissions by the user distinct by their challenges, at max 10, lets test it out more seriously
+        :return:
+        """
+        # create 30 challenges
+        for i in range(1, 31):
+            exec(f'self.c{i} = ChallengeFactory(category=self.sub_cat)')
+        # create 90 submissions, 3 for each challenge
+        submission_id = 1
+        for i in range(1, 31):
+            exec(f'self.s{submission_id} = SubmissionFactory(author=self.auth_user, challenge=self.c{i}, pending=False)')
+            exec(f'self.s{submission_id+1} = SubmissionFactory(author=self.auth_user, challenge=self.c{i}, pending=False)')
+            exec(f'self.s{submission_id+2} = SubmissionFactory(author=self.auth_user, challenge=self.c{i}, pending=False)')
+            submission_id += 3
+
+        # This should return the 20-30 challenges in reverse order
+        expected_data = LimitedChallengeSerializer(
+            [self.c30, self.c29, self.c28, self.c27, self.c26, self.c25, self.c24, self.c23, self.c22, self.c21],
+            many=True, context={'request': MagicMock(user=self.auth_user)}).data
+        response = self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        # Hack for serializing the category
+        self.assertCountEqual(response.data, expected_data)
+        self.assertEqual(response.data, expected_data)
+
     @patch('challenges.models.Submission.fetch_last_10_submissions_for_unique_challenges_by_user')
     def test_assert_called_submission_method(self, method_mock):
         """ Assert that the function calls the submission method"""
