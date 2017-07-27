@@ -24,6 +24,7 @@ class UserDetailView(RetrieveAPIView):
 @permission_classes([])
 def register(request: Request):
     """ Register a User"""
+    # TODO: Set role?
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
