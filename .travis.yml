@@ -11,7 +11,7 @@ env:
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
-  - touch deadline/deadline_/deadline/.env && echo 'DB_USER=postgres\nDB_NAME=travis_ci_test\nDB_HOST=localhost\nDB_PASS=\n'
+  - touch deadline_/deadline/.env && echo 'DB_USER=postgres\nDB_NAME=travis_ci_test\nDB_HOST=localhost\nDB_PASS=\n'
 # command to install dependencies
 install:
   - "pip install -r deadline_/requirements.txt"
