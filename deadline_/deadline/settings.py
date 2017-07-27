@@ -110,7 +110,6 @@ CELERY_RESULT_BACKEND = 'django-db'
 if os.getenv('BUILD_ON_TRAVIS', None):
     SECRET_KEY = "SecretKeyForUseOnTravis"
     DEBUG = False
-    TEMPLATE_DEBUG = True
 
     DATABASES = {
         'default': {
