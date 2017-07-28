@@ -77,6 +77,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
         result = super().to_representation(instance)
         user: User = getattr(self.context.get('request', None), 'user', None)
         # TODO: Move to helper
+
+        result['language'] = Language.objects.get(id=result['language']).name
         if user is None:
             result['user_has_voted'] = False
             result['user_has_upvoted'] = False
@@ -121,6 +123,8 @@ class LimitedSubmissionSerializer(serializers.ModelSerializer):
         result = super().to_representation(instance)
         user:User = getattr(self.context.get('request', None), 'user', None)
         # TODO: Move to helper
+
+        result['language'] = Language.objects.get(id=result['language']).name
         if user is None:
             result['user_has_voted'] = False
             result['user_has_upvoted'] = False

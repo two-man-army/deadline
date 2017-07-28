@@ -24,8 +24,8 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         challenge_cat = MainCategory.objects.create(name='Tests')
         self.sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
         Proficiency.objects.create(name='starter', needed_percentage=0)
-        self.challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=self.sample_desc, test_case_count=3,
-                                   category=self.sub_cat)
+        self.challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=self.sample_desc,
+                                                  test_case_count=3, category=self.sub_cat)
         self.challenge_name = self.challenge.name
 
         self.create_user_and_auth_token()
@@ -58,7 +58,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         f_submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
         # Second user with submissions
         s_user = UserFactory()
-        SubmissionFactory(author=s_user, challenge=self.challenge)
+        SubmissionFactory(author=s_user, challenge=self.challenge)  # should get ignored
         top_submission = SubmissionFactory(author=s_user, challenge=self.challenge, result_score=51)
         # Third user with equal to first submission
         t_user = UserFactory()
@@ -67,7 +67,6 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         expected_submissions = [top_submission, f_submission, tr_sub]  # ordered by score, then by date (oldest first)
 
         received_submissions = list(Submission.fetch_top_submissions_for_challenge(self.challenge.id))
-
         self.assertEqual(expected_submissions, received_submissions)
 
     def test_fetch_top_submissions_no_submissions_should_be_empty(self):
@@ -79,8 +78,8 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         self.assertIsNone(received_submission)
 
     def test_fetch_top_submission_for_challenge_and_user_ignores_pending_submissions(self):
-        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50, pending=1)
-        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=66, pending=1)
+        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50, pending=True)
+        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=66, pending=True)
 
         received_submission = Submission.fetch_top_submission_for_challenge_and_user(self.challenge.id,
                                                                                      self.auth_user.id)
@@ -88,11 +87,11 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         self.assertIsNone(received_submission)
 
     def test_fetch_top_submission_for_challenge_and_user_returns_bigger_score(self):
-        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50, pending=0)
-        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=66, pending=0)
+        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50, pending=False)
+        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=66, pending=False)
         # IS PENDING!
-        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=1000, pending=1)
-        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=100, pending=0)
+        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=1000, pending=True)
+        SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=100, pending=False)
 
         received_submission = Submission.fetch_top_submission_for_challenge_and_user(self.challenge.id,
                                                                                      self.auth_user.id)
@@ -170,7 +169,7 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
 
     def test_view_own_non_solved_user_submission_should_show(self):
         """ Even though the user hasn't solved the challenge fully, it is his own so he should be able to see it"""
-        aut_user2 = User.objects.create(username='user2', password='user2', email='user2@abv.bg', score=123)
+        aut_user2 = User.objects.create(username='user2', password='user2', email='user2@abv.bg', score=123, role=self.base_role)
         auth_token2 = 'Token {}'.format(aut_user2.auth_token.key)
         submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=aut_user2, pending=0,
                                                code="", result_score=3)  # user has not solved it perfectly
@@ -180,10 +179,11 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
         self.assertEqual(SubmissionSerializer(submission).data, response.data)
 
     def test_view_submission_non_solved_user_should_not_show(self):
-        aut_user2 = User.objects.create(username='user2', password='user2', email='user2@abv.bg', score=123)
+        aut_user2 = User.objects.create(username='user2', password='user2', email='user2@abv.bg', score=123,
+                                        role=self.base_role)
         auth_token2 = 'Token {}'.format(aut_user2.auth_token.key)
-        Submission.objects.create(language=self.python_language, challenge=self.challenge, author=aut_user2, pending=0,
-                                     code="", result_score=9)  # user has not solved it perfectly
+        Submission.objects.create(language=self.python_language, challenge=self.challenge, author=aut_user2,
+                                  pending=False, code="", result_score=9)  # user has not solved it perfectly
 
         response = self.client.get(path=self.submission.get_absolute_url(), HTTP_AUTHORIZATION=auth_token2)
 
@@ -191,10 +191,10 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
         self.assertEqual(response.data['error'], "You have not fully solved the challenge")
 
     def test_view_submission_solved_user_should_show(self):
-        aut_user2 = User.objects.create(username='user2', password='user2', email='user2@abv.bg', score=123)
+        aut_user2 = User.objects.create(username='user2', password='user2', email='user2@abv.bg', score=123, role=self.base_role)
         auth_token2 = 'Token {}'.format(aut_user2.auth_token.key)
-        Submission.objects.create(language=self.python_language, challenge=self.challenge, author=aut_user2, pending=0,
-                                code="", result_score=10)  # user has solved it perfectly
+        Submission.objects.create(language=self.python_language, challenge=self.challenge, author=aut_user2,
+                                  pending=False, code="", result_score=10)  # user has solved it perfectly
 
         response = self.client.get(path=self.submission.get_absolute_url(), HTTP_AUTHORIZATION=auth_token2)
 
@@ -233,12 +233,12 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
     @patch('challenges.views.run_grader_task.delay')
     def test_create_submission(self, mock_delay):
         mock_delay.return_value = 1
-        response = self.client.post('/challenges/{}/submissions/new'.format(self.challenge.id),
+        response = self.client.post(f'/challenges/{self.challenge.id}/submissions/new',
                                     data={'code': 'print("Hello World")', 'language': self.python_language.name},
                                     HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Submission.objects.count(), 2)
-        submission = Submission.objects.get(id=2)
+        submission = Submission.objects.last()
         # assert that the task_id has been populated
         self.assertEqual(submission.task_id, '1')
         # assert that the test cases have been created
@@ -308,12 +308,12 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
         better_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user, code="",
                                        result_score=50)
         # Second user with submissions
-        _s_user = User.objects.create(username='Seocnd user', password='123', email='EC@abv.bg', score=123)
+        _s_user = User.objects.create(username='Seocnd user', password='123', email='EC@abv.bg', score=123, role=self.base_role)
         _submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=_s_user, code="", result_score=50)
         top_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=_s_user, code="", result_score=51)
 
         # Should return the two submissions, (both users' best submissions) ordered by score descending
-        response = self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
+        response = self.client.get(f'/challenges/{self.challenge.id}/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, LimitedSubmissionSerializer([top_submission, better_submission], many=True).data)
@@ -327,19 +327,19 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
     @patch('challenges.models.Submission.fetch_top_submissions_for_challenge')
     def test_get_top_submissions_calls_Submission_method(self, mock_top_submissions):
         """ Should call the submissions method for fetching the top challenges """
-        self.client.get('/challenges/1/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
+        self.client.get(f'/challenges/{self.challenge.id}/submissions/top', HTTP_AUTHORIZATION=self.auth_token)
         mock_top_submissions.assert_called_once_with(challenge_id=str(self.challenge.id))
 
     def test_get_self_top_submission(self):
         """ Should return the user's top submission """
-        new_user = User.objects.create(username='1223', password='123', email='12223@abv.bg', score=123)
+        new_user = User.objects.create(username='1223', password='123', email='12223@abv.bg', score=123, role=self.base_role)
         new_auth_token = 'Token {}'.format(new_user.auth_token.key)
         submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=new_user,
-                                                code="", result_score=5, pending=0)
+                                                code="", result_score=5, pending=False)
         top_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=new_user,
-                                                    code="", result_score=6, pending=0)
+                                                    code="", result_score=6, pending=False)
         sec_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=new_user,
-                                                    code="", result_score=5, pending=0)
+                                                    code="", result_score=5, pending=False)
 
         response = self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop', HTTP_AUTHORIZATION=new_auth_token)
 
@@ -348,7 +348,7 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
 
     def test_get_self_top_submission_no_submission(self):
         """ Should return 404 """
-        new_user = User.objects.create(username='1223', password='123', email='12223@abv.bg', score=123)
+        new_user = User.objects.create(username='1223', password='123', email='12223@abv.bg', score=123, role=self.base_role)
         new_auth_token = 'Token {}'.format(new_user.auth_token.key)
 
         response = self.client.get(f'/challenges/{self.challenge.id}/submissions/selfTop', HTTP_AUTHORIZATION=new_auth_token)
@@ -389,10 +389,10 @@ class LatestSubmissionsViewTest(TestCase, TestHelperMixin):
 
     def test_get_latest_challenge_submissions_from_user(self):
         """ The get_latest_submissions view should return 3 the latest submissions by the user distinct by their challenges"""
-        s1 = SubmissionFactory(author=self.auth_user, challenge=self.c1, pending=0)
-        s2 = SubmissionFactory(author=self.auth_user, challenge=self.c2, pending=0)
-        s3 = SubmissionFactory(author=self.auth_user, challenge=self.c3, pending=0)
-        s4 = SubmissionFactory(author=self.auth_user, challenge=self.c2, pending=0)
+        s1 = SubmissionFactory(author=self.auth_user, challenge=self.c1, pending=False)
+        s2 = SubmissionFactory(author=self.auth_user, challenge=self.c2, pending=False)
+        s3 = SubmissionFactory(author=self.auth_user, challenge=self.c3, pending=False)
+        s4 = SubmissionFactory(author=self.auth_user, challenge=self.c2, pending=False)
 
         # view queries for the best submission
         self.c1.user_max_score = s1.result_score
@@ -401,6 +401,33 @@ class LatestSubmissionsViewTest(TestCase, TestHelperMixin):
         """ This should return a list with c2, c3, c1 ordered like that. """
         expected_data = LimitedChallengeSerializer([self.c2, self.c3, self.c1], many=True, context={'request': MagicMock(user=self.auth_user)}).data
 
+        response = self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        # Hack for serializing the category
+        self.assertCountEqual(response.data, expected_data)
+        self.assertEqual(response.data, expected_data)
+
+    def test_get_latest_challenge_submissions_from_user_hardcore_test(self):
+        """
+        As this gets the latest submissions by the user distinct by their challenges, at max 10, lets test it out more seriously
+        :return:
+        """
+        # create 30 challenges
+        for i in range(1, 31):
+            exec(f'self.c{i} = ChallengeFactory(category=self.sub_cat)')
+        # create 90 submissions, 3 for each challenge
+        submission_id = 1
+        for i in range(1, 31):
+            exec(f'self.s{submission_id} = SubmissionFactory(author=self.auth_user, challenge=self.c{i}, pending=False)')
+            exec(f'self.s{submission_id+1} = SubmissionFactory(author=self.auth_user, challenge=self.c{i}, pending=False)')
+            exec(f'self.s{submission_id+2} = SubmissionFactory(author=self.auth_user, challenge=self.c{i}, pending=False)')
+            submission_id += 3
+
+        # This should return the 20-30 challenges in reverse order
+        expected_data = LimitedChallengeSerializer(
+            [self.c30, self.c29, self.c28, self.c27, self.c26, self.c25, self.c24, self.c23, self.c22, self.c21],
+            many=True, context={'request': MagicMock(user=self.auth_user)}).data
         response = self.client.get('/challenges/latest_attempted', HTTP_AUTHORIZATION=self.auth_token)
 
         self.assertEqual(response.status_code, 200)
@@ -457,8 +484,7 @@ class SubmissionVoteViewTest(APITestCase, TestHelperMixin):
         self.assertEqual(self.submission.get_votes_count(), (1, 0))
 
     def test_cast_submission_vote_modifies_upvote_to_downvote(self):
-        SubmissionVote.objects.create(author_id=self.auth_user.id,
-                                                        submission_id=self.submission.id, is_upvote=True)
+        SubmissionVote.objects.create(author_id=self.auth_user.id, submission_id=self.submission.id, is_upvote=True)
         self.assertEqual(len(SubmissionVote.objects.all()), 1)
 
         response = self.client.post(f'/challenges/submissions/{self.submission.id}/vote', HTTP_AUTHORIZATION=self.auth_token,

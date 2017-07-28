@@ -24,17 +24,17 @@ class UserModelTest(TestCase):
         self.starter_proficiency = Proficiency.objects.create(name="scrub", needed_percentage=0)
 
     def test_user_register_creates_token(self):
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         self.assertTrue(hasattr(us, 'auth_token'))
         self.assertIsNotNone(us.auth_token)
 
     def test_user_register_assigns_default_user_role(self):
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         self.assertEqual(us.role, self.base_role)
 
     def test_user_register_creates_user_subcategory_proficiency(self):
         from challenges.models import UserSubcategoryProficiency
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.save()
 
         received: UserSubcategoryProficiency = UserSubcategoryProficiency.objects.filter(user=us, subcategory=self.sub1).first()
@@ -43,27 +43,26 @@ class UserModelTest(TestCase):
         self.assertEqual(received_sub2.proficiency, self.starter_proficiency)
 
     def test_user_register_requires_unique_username(self):
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.save()
         with self.assertRaises(Exception):
-            us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+            us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
             us.save()
 
     def test_serialization(self):
         """ Should convert a user object to a json """
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        # password should be hashed
-        expected_json = '{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123}' % (us.password)
-
-        content = JSONRenderer().render(UserSerializer(us).data)
-        self.assertEqual(content.decode('utf-8'), expected_json)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role_id=self.base_role.id)
+        expected_data = {'id': us.id, 'username': us.username, 'email': us.email,
+                         'score': us.score, 'role': {'id': us.role.id, 'name': us.role.name}}
+        self.assertEqual(UserSerializer(us).data, expected_data)
 
     def test_deserialization(self):
-        expected_json = b'{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"123","score":123}'
+        expected_json = bytes(
+            ('{"id":1,"username":"SomeGuy","email":"me@abv.bg",'
+            f'"password":"123","score":123, "role": {self.base_role.id}}}'), encoding='utf-8')
 
         data = JSONParser().parse(BytesIO(expected_json))
         serializer = UserSerializer(data=data)
-
         serializer.is_valid()
         deser_user = serializer.save()
 
@@ -100,7 +99,7 @@ class UserModelTest(TestCase):
     @patch('challenges.models.Submission.fetch_top_submission_for_challenge_and_user')
     def test_fetch_max_score_for_challenge(self, fetch_mock):
         """ Should call the submission's fetch_top_submission method"""
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.save()
         fetch_mock.return_value = MagicMock(maxscore=5)
 
@@ -113,7 +112,7 @@ class UserModelTest(TestCase):
     @patch('challenges.models.Submission.fetch_top_submission_for_challenge_and_user')
     def test_fetch_max_score_for_challenge_return_0_on_none_value(self, fetch_mock):
         """ Should return 0 if no such score exists"""
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.save()
         fetch_mock.return_value = None
 
@@ -174,11 +173,11 @@ class UserModelTest(TestCase):
 
     def test_fetch_overall_leaderboard_position(self):
         """ Should return the user's leaderboard position """
-        first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
-        second_user2 = User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122)
-        second_user3 = User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122)
-        fifth_user = User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121)
+        first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122, role=self.base_role)
+        second_user2 = User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122, role=self.base_role)
+        second_user3 = User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122, role=self.base_role)
+        fifth_user = User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121, role=self.base_role)
         fifth_user.save()
 
         self.assertEqual(fifth_user.fetch_overall_leaderboard_position(), 5)
@@ -188,16 +187,19 @@ class UserModelTest(TestCase):
         self.assertEqual(first_user.fetch_overall_leaderboard_position(), 1)
 
     def test_fetch_user_count(self):
-        User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
-        User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122)
-        User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122)
-        User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121)
+        User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122, role=self.base_role)
+        User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122, role=self.base_role)
+        User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122, role=self.base_role)
+        User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121, role=self.base_role)
 
         self.assertEqual(User.fetch_user_count(), 5)
 
 
 class RegisterViewTest(APITestCase):
+    def setUp(self):
+        self.base_role = Role.objects.create(name='User')
+
     def test_register(self):
         # The user posts his username, email and password to the /accounts/register URL
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'Meredith',
@@ -208,7 +210,7 @@ class RegisterViewTest(APITestCase):
         self.assertTrue('user_token' in response.data)
 
     def test_register_existing_user_should_return_400(self):
-        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart')
+        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart', role=self.base_role)
 
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'Meredith',
                                                                                'password': 'mer19222',
@@ -218,8 +220,7 @@ class RegisterViewTest(APITestCase):
         self.assertIn('email already exists', ''.join(response.data['email']))
 
     def test_register_existing_username_should_return_400(self):
-        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart')
-        # User.objects.create(email='smthh_aa@abv.bg', password='123', username='ThatPart')
+        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart', role=self.base_role)
 
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'ThatPart',
                                                                                'password': 'mer19222',
@@ -230,9 +231,12 @@ class RegisterViewTest(APITestCase):
 
 
 class LoginViewTest(APITestCase):
+    def setUp(self):
+        self.base_role = Role.objects.create(name='Base')
+
     def test_logging_in_valid(self):
         # There is a user account
-        User.objects.create(email='that_part@abv.bg', password='123')
+        User.objects.create(email='that_part@abv.bg', password='123', role=self.base_role)
         # And we try logging in to it
         response: HttpResponse = self.client.post('/accounts/login/', data={'email': 'that_part@abv.bg',
                                                                             'password': '123'})
@@ -241,7 +245,7 @@ class LoginViewTest(APITestCase):
 
     def test_logging_in_invalid_email(self):
         # There is a user account
-        User.objects.create(email='that_part@abv.bg', password='123')
+        User.objects.create(email='that_part@abv.bg', password='123', role=self.base_role)
         # And we try logging in to it
         response: HttpResponse = self.client.post('/accounts/login/', data={'email': 'INVALID_EMAIL',
                                                                             'password': '123'})
@@ -257,11 +261,12 @@ class LeaderboardViewTest(APITestCase):
         """
         Create users with expected positions
         """
-        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
-        self.second_user2 = User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122)
-        self.second_user3 = User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122)
-        self.fifth_user = User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121)
+        self.role = Role.objects.create(name='Basic')
+        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.role)
+        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122, role=self.role)
+        self.second_user2 = User.objects.create(username='dGumasky', email='molly@abv.bg', password='123', score=122, role=self.role)
+        self.second_user3 = User.objects.create(username='xdGumasky', email='xmolly@abv.bg', password='123', score=122, role=self.role)
+        self.fifth_user = User.objects.create(username='dbrr', email='dd@abv.bg', password='123', score=121, role=self.role)
 
     def test_view_returns_expected_position(self):
         auth_token = 'Token {}'.format(self.first_user.auth_token.key)

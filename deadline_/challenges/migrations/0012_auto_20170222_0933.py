@@ -11,18 +11,19 @@ class Migration(migrations.Migration):
     dependencies = [
         ('challenges', '0011_auto_20170221_1742'),
     ]
-
     operations = [
         migrations.CreateModel(
             name='ChallengeCategory',
             fields=[
-                ('name', models.CharField(max_length=100, primary_key=True, serialize=False, unique=True)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=100, serialize=False, unique=True)),
             ],
         ),
         migrations.CreateModel(
             name='SubCategory',
             fields=[
-                ('name', models.CharField(max_length=100, primary_key=True, serialize=False, unique=True)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=100, serialize=False, unique=True)),
                 ('meta_category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='challenges.ChallengeCategory')),
             ],
         ),

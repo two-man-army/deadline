@@ -16,13 +16,14 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Language',
             fields=[
-                ('name', models.CharField(max_length=30, primary_key=True, serialize=False, unique=True)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=30, serialize=False, unique=True)),
             ],
         ),
         migrations.AddField(
             model_name='submission',
             name='language',
-            field=models.ForeignKey(default='Python', on_delete=django.db.models.deletion.CASCADE, to='challenges.Language'),
+            field=models.ForeignKey(to='challenges.Language'),
             preserve_default=False,
         ),
     ]

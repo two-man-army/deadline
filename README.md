@@ -30,3 +30,25 @@ Created using the Django REST Framework and React.js
 Authors
 - Plamen https://github.com/nemalp
 - Stanislav https://github.com/Enether
+
+
+### How to get the backend working
+
+Install all the requirements
+`pip install -r requirements.txt`
+
+For Django to connect with the database you need to have a running PostgreSQL server. Start one and either hardcode the username, password, database name and host in settings.py or be a proper gentleman and create a .env file.
+Said `.env` file should be in `/deadline/deadline_/deadline/.env` _(what the fuck?)_, right beside the `settings.py` folder.
+Enter the following in it, replacing the values with your local ones.
+```
+DB_USER=root
+DB_NAME=deadline
+DB_HOST=localhost
+DB_PASS=iliketurtles
+```
+
+Then run the migrations
+`python manage.py migrate`
+
+You're done!
+`python manage.py runserver`

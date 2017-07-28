@@ -23,10 +23,10 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     username = models.CharField(max_length=30, unique=True)
     email = models.EmailField(max_length=30, unique=True)
-    password = models.CharField(max_length=30)
+    password = models.CharField(max_length=256)
     score = models.IntegerField(default=0)
     salt = models.CharField(max_length=40)
-    role = models.ForeignKey(Role, default=1)
+    role = models.ForeignKey(Role)
     last_submit_at = models.DateTimeField(auto_now_add=True)
 
     def __init__(self, *args, **kwargs):

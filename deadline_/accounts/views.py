@@ -10,8 +10,9 @@ from rest_framework.request import Request
 from rest_framework import status
 
 from accounts.serializers import UserSerializer
-from accounts.models import User
+from accounts.models import User, Role
 from accounts.helpers import hash_password
+from constants import BASE_USER_ROLE_NAME
 
 
 class UserDetailView(RetrieveAPIView):
@@ -24,6 +25,9 @@ class UserDetailView(RetrieveAPIView):
 @permission_classes([])
 def register(request: Request):
     """ Register a User"""
+    # Set the base role for a user
+    user_role = Role.objects.filter(name=BASE_USER_ROLE_NAME).first()
+    request.data['role'] = user_role.id
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()

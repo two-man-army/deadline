@@ -65,9 +65,10 @@ class ChallengesModelTest(TestCase):
         c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat,
                       description=self.sample_desc)
         c.supported_languages.add(lang_1)
-        with self.assertRaises(Exception):
-            c.supported_languages.add(lang_1)
-            c.save()
+        c.save()
+        c.supported_languages.add(lang_1)
+        c.save()
+        self.assertEqual(c.supported_languages.count(), 1)
 
     def test_cannot_save_blank_challenge(self):
         c = Challenge()
@@ -84,7 +85,7 @@ class ChallengesModelTest(TestCase):
                                     f'"output_format":"{self.sample_desc.output_format}","constraints":"{self.sample_desc.constraints}",' \
                                     f'"sample_input":"{self.sample_desc.sample_input}","sample_output":"{self.sample_desc.sample_output}",' \
                                     f'"explanation":"{self.sample_desc.explanation}"}}'
-        expected_json = ('{"id":1,"name":"Hello","difficulty":5.0,"score":10,"description":'
+        expected_json = (f'{{"id":{c.id},"name":"Hello","difficulty":5.0,"score":10,"description":'
                          + expected_description_json
                          + ',"test_case_count":5,"category":"tests","supported_languages":["Rust","Python","C"]}')
         content = JSONRenderer().render(ChallengeSerializer(c).data)

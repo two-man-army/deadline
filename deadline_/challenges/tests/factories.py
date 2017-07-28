@@ -1,5 +1,13 @@
 import factory
+
+from accounts.models import Role
 from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User
+
+
+class RoleFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Role
+    name = factory.Faker('name')
 
 
 class UserFactory(factory.DjangoModelFactory):
@@ -9,6 +17,7 @@ class UserFactory(factory.DjangoModelFactory):
     username = factory.Faker('name')
     email = factory.Sequence(lambda n: 'user{0}@somewhere.com'.format(n))
     password = factory.Faker('password')
+    role = factory.SubFactory(RoleFactory)
 
 
 class MainCategoryFactory(factory.DjangoModelFactory):
