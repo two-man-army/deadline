@@ -6,10 +6,22 @@ const Category = ({name, url}) => (
   <li className='category'>
     <Link to={{pathname: url}}>
       <section>
-        <h3 className='category-header'>{name}</h3>
+        <header>
+          <h3 className='category-header'>{name}</h3>
+        </header>
         <div className='category-info'>
-          <div className='progress-subcategories'>.</div>
-          <div className='progress-challenges'>.</div>
+          <div className='completed-subcategories'>
+            <div className='subcat-progress'>
+              5/7
+            </div>
+            <div className='subcat-text'>Subcategories</div>
+          </div>
+          <div className='completed-challenges'>
+            <div className='challenges-progress'>
+              511/700
+            </div>
+            <div className='status-text'>Completed</div>
+          </div>
         </div>
       </section>
     </Link>
