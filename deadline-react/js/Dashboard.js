@@ -9,7 +9,7 @@ import ActivityFeed from './components/ActivityFeed'
 import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
 import SidebarNav from './components/SidebarNav'
 import CategoryPage from './components/CategoryPage'
-import CategoryChallengeList from './CategoryChallengeList'
+// import CategoryChallengeList from './CategoryChallengeList'
 import ChallengeDetails from './ChallengeDetails'
 import OverallLeaderboard from './semantic_ui_components/OverallLeaderboardTable'
 import RouteNotFound from './RouteNotFound'
@@ -24,7 +24,7 @@ class Dashboard extends React.Component {
 
     this.loadLatestAttemptedChallenges = this.loadLatestAttemptedChallenges.bind(this)
     this.getDefaultDashboardDOM = this.getDefaultDashboardDOM.bind(this)
-    this.loadLatestAttemptedChallenges()
+    // this.loadLatestAttemptedChallenges()
   }
 
   loadLatestAttemptedChallenges () {
