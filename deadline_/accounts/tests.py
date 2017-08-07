@@ -75,8 +75,8 @@ class UserModelTest(TestCase):
         self.assertEqual(deser_user.score, 123)
 
     def test_user_can_follow_another_user(self):
-        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
-        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)
 
         follower.follow(user_who_gets_followed)
 
@@ -88,15 +88,15 @@ class UserModelTest(TestCase):
         self.assertEqual(user_who_gets_followed.users_followed.count(), 0)
 
     def test_cannot_have_duplicate_follower(self):
-        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
-        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)
         follower.follow(user_who_gets_followed)
         with self.assertRaises(UserAlreadyFollowedError):
             follower.follow(user_who_gets_followed)
 
     def test_user_can_unfollow_another_user(self):
-        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
-        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)
         follower.follow(user_who_gets_followed)
         self.assertEqual(follower.users_followed.count(), 1)
 
@@ -104,8 +104,8 @@ class UserModelTest(TestCase):
         self.assertEqual(follower.users_followed.count(), 0)
 
     def test_unfollow_user_that_is_not_followed_raises_error(self):
-        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123)
-        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123)
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)
         with self.assertRaises(UserNotFollowedError):
             follower.unfollow(user_who_gets_followed)
 
@@ -349,14 +349,16 @@ class LeaderboardViewTest(APITestCase):
 
 class UserDetailsViewTest(APITestCase):
     def setUp(self):
-        self.user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        self.base_role = Role.objects.create(name='User')
+        self.user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         self.auth_token = 'Token {}'.format(self.user.auth_token.key)
 
     def test_returns_expected_data(self):
         response = self.client.get(f'/accounts/user/{self.user.id}', HTTP_AUTHORIZATION=self.auth_token)
         expected_data = {'id': self.user.id, 'username': self.user.username, 'email': self.user.email,
-                 'password': self.user.password, 'score': self.user.score,
-                 'follower_count': self.user.followers.count()}
+                 'score': self.user.score,
+                 'follower_count': self.user.followers.count(),
+                 'role': {'id': self.user.role.id, 'name': self.user.role.name}}
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected_data)
@@ -368,9 +370,12 @@ class UserDetailsViewTest(APITestCase):
 
 class UserFollowViewTest(APITestCase):
     def setUp(self):
-        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        self.base_role = Role.objects.create(name='User')
+        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123,
+                                              role=self.base_role)
         self.first_user_auth_token = 'Token {}'.format(self.first_user.auth_token.key)
-        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
+        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122,
+                                               role=self.base_role)
         self.second_user_auth_token = 'Token {}'.format(self.second_user.auth_token.key)
 
     def test_follows(self):
@@ -405,9 +410,12 @@ class UserFollowViewTest(APITestCase):
 
 class UserUnfollowViewTest(APITestCase):
     def setUp(self):
-        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
+        self.base_role = Role.objects.create(name='User')
+        self.first_user = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123,
+                                              role=self.base_role)
         self.first_user_auth_token = 'Token {}'.format(self.first_user.auth_token.key)
-        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122)
+        self.second_user = User.objects.create(username='dGuy', email='d@abv.dg', password='123', score=122,
+                                               role=self.base_role)
         self.second_user_auth_token = 'Token {}'.format(self.second_user.auth_token.key)
 
     def test_follows(self):
