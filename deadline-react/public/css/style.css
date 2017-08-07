@@ -682,7 +682,8 @@ button.fluid.submit-solution-btn {
     margin: 0 auto 15px;
 }
 
-.activity-feed {
+.activity-feed,
+.category-page {
     padding: 20px 30px 18px 30px;
     margin: 30px 20px 20px 30px;
     background: #ffffff;
@@ -907,6 +908,29 @@ button.fluid.submit-solution-btn {
     color: #ff8606;
 }
 
+/* categories page */
+.category-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
 
+.categories {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.category {
+    margin: 5px;
+    border: 1px solid gray;
+    width: 200px;
+    height: 200px;
+}
+
+.category-header {
+    height: 50px;
+    background: #31043d;
+    color: #ffffff;
+}
 
 

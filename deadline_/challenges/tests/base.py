@@ -12,10 +12,11 @@ class TestHelperMixin:
         Creates a user model and token, attaching them to self
         """
         # check if role exists
-        base_role = Role.objects.filter(name='User').first()
-        if base_role is None:
-            base_role = Role.objects.create(name='User')
-        self.auth_user = User.objects.create(username='123', password='123', email='123@abv.bg', score=123, role=base_role)
+        self.base_role = Role.objects.filter(name='User').first()
+        if self.base_role is None:
+            self.base_role = Role.objects.create(name='User')
+
+        self.auth_user = User.objects.create(username='123', password='123', email='123@abv.bg', score=123, role=self.base_role)
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
 
     def base_set_up(self):

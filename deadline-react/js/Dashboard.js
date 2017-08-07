@@ -8,6 +8,7 @@ import RanklistBox from './components/RanklistBox'
 import ActivityFeed from './components/ActivityFeed'
 import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
 import SidebarNav from './components/SidebarNav'
+import CategoryPage from './components/CategoryPage'
 import CategoryChallengeList from './CategoryChallengeList'
 import ChallengeDetails from './ChallengeDetails'
 import OverallLeaderboard from './semantic_ui_components/OverallLeaderboardTable'
@@ -54,6 +55,7 @@ class Dashboard extends React.Component {
 
   render () {
     return (
+      // <Route exact path='/categories/:category' component={CategoryChallengeList} />
       <div>
         <Header />
         <section className='dashboard'>
@@ -62,7 +64,7 @@ class Dashboard extends React.Component {
             <Switch>
               <Route exact path='/' component={ActivityFeed} />
               <Route exact path='/leaderboard' component={OverallLeaderboard} />
-              <Route exact path='/categories/:category' component={CategoryChallengeList} />
+              <Route exact path='/categories' component={CategoryPage} />
               <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
               <Route exact path='/accounts/password/change' component={Profile} />
               <Route exact path='/accounts/edit' component={Profile} />

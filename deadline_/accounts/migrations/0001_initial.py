@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
                 ('username', models.CharField(max_length=30)),
                 ('email', models.EmailField(max_length=30)),
-                ('password', models.CharField(max_length=30)),
+                ('password', models.CharField(max_length=256)),
                 ('confirm_email', models.CharField(blank=True, max_length=100)),
                 ('score', models.IntegerField()),
                 ('auth_token', models.CharField(max_length=100)),

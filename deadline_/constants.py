@@ -11,6 +11,8 @@ TESTS_FOLDER_NAME = 'challenge_tests'  # the name of the folder which holds test
 CHALLENGES_APP_FOLDER_NAME = 'challenges'
 GRADER_FILE_NAME = 'grader.py'  # the file which is sent over to the docker container and executed there
 
+BASE_USER_ROLE_NAME = 'User'
+
 RUSTLANG_NAME = 'Rust'
 PYTHONLANG_NAME = 'Python'
 CPPLANG_NAME = 'C++'

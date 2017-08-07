@@ -12,18 +12,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='maincategory',
-            name='id',
-            field=models.AutoField(auto_created=True, default=1, primary_key=True, serialize=False, verbose_name='ID'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='subcategory',
-            name='id',
-            field=models.AutoField(auto_created=True, default=1, primary_key=True, serialize=False, verbose_name='ID'),
-            preserve_default=False,
-        ),
         migrations.AlterField(
             model_name='maincategory',
             name='name',
@@ -33,5 +21,5 @@ class Migration(migrations.Migration):
             model_name='subcategory',
             name='name',
             field=models.CharField(max_length=100, unique=True),
-        ),
+        )
     ]
