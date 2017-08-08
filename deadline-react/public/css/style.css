@@ -27,24 +27,6 @@ article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
   display: block; }
 
-body {
-  line-height: 1; }
-
-ol, ul {
-  list-style: none; }
-
-blockquote, q {
-  quotes: none; }
-
-blockquote:before, blockquote:after,
-q:before, q:after {
-  content: '';
-  content: none; }
-
-table {
-  border-collapse: collapse;
-  border-spacing: 0; }
-
 @font-face {
   font-family: "Poppins Regular";
   src: url("fonts/Poppins-Regular.ttf"); }
@@ -54,6 +36,21 @@ table {
 @font-face {
   font-family: "Poppins Medium";
   src: url("fonts/Poppins-Medium.ttf"); }
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none; }
+
+body {
+  line-height: 1; }
+
+ol, ul {
+  list-style: none; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0; }
+
 html,
 body {
   height: 100%; }
@@ -62,25 +59,8 @@ video {
   width: 100%;
   position: absolute; }
 
-div.lang-choice-select,
-div.theme-select {
-  /* A wrapper for the Select choice for submission language */
-  display: inline-block;
-  width: 200px; }
-
-div.lang-choice-select {
-  margin-right: 5px; }
-
-.editor-options {
-  margin: 50px 0 10px 0; }
-
-button.fluid.submit-solution-btn {
-  margin: 10px 0;
-  opacity: .9; }
-
-.leaderboard-search i.dropdown.icon {
-  /* Slight space for the triangle icon in the dropdown*/
-  margin-left: 10px !important; }
+.landing {
+  position: relative; }
 
 /*
 Copyright (c) 2017 by Mohan Khadka (http://codepen.io/khadkamhn/pen/ZGvPLo)
@@ -277,14 +257,36 @@ div.login-html input:focus {
   outline: none;
   box-shadow: 0 0 20px #5686ff; }
 
+div.lang-choice-select,
+div.theme-select {
+  /* A wrapper for the Select choice for submission language */
+  display: inline-block;
+  width: 200px; }
+
+div.lang-choice-select {
+  margin-right: 5px; }
+
+.editor-options {
+  margin: 50px 0 10px 0; }
+
+button.fluid.submit-solution-btn {
+  margin: 10px 0;
+  opacity: .9; }
+
 .page-not-found {
   margin-top: -20px;
   padding: 20px;
   background: peru; }
-  .page-not-found h3 {
-    display: inline-block; }
-  .page-not-found p {
-    margin-top: 20px; }
+
+.page-not-found h3 {
+  display: inline-block; }
+
+.page-not-found p {
+  margin-top: 20px; }
+
+.leaderboard-search i.dropdown.icon {
+  /* Slight space for the triangle icon in the dropdown*/
+  margin-left: 10px !important; }
 
 .page-header {
   display: flex;
@@ -726,18 +728,15 @@ div.login-html input:focus {
       justify-content: center;
       align-items: center;
       font-family: "Poppins Regular";
-      font-weight: normal;
-      /*
-      &:after {
-          box-shadow: 15px 0 10px -15px inset;
-          content: " ";
-          height: 100%;
-          position: absolute;
-          top: 0;
-          right: -15px;
-          width: 15px;
-      }
-      */ }
+      font-weight: normal; }
+      .category section .category-info:after {
+        box-shadow: 15px 0 10px -15px inset;
+        content: " ";
+        height: 100%;
+        position: absolute;
+        top: 0;
+        right: -15px;
+        width: 15px; }
 
 .completed-subcategories, .completed-challenges {
   display: flex;
