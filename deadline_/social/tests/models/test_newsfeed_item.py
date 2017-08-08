@@ -1,8 +1,14 @@
-from django.test import TestCase
+from collections import OrderedDict
 
+from django.test import TestCase
+from rest_framework.renderers import JSONRenderer
+
+from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
-from social.models import NewsfeedItem
+from errors import DisabledSerializerError
+from social.models import NewsfeedItem, NewsfeedItemComment
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField
+from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 
 
 class NewsfeedItemTests(TestCase, TestHelperMixin):
@@ -18,6 +24,32 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.is_private, False)
         self.assertIsNotNone(nw_item.created_at)
         self.assertIsNotNone(nw_item.updated_at)
+
+    def test_serialiation(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+                                              content={'content': 'Hello I like turtles'})
+        NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
+        NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
+        NewsfeedItemComment.objects.create(author=self.auth_user, content='Drop the top', newsfeed_item=nw_item)
+        serializer = NewsfeedItemSerializer(instance=nw_item)
+
+        expected_data = {
+            'id': nw_item.id,
+            'author': UserSerializer().to_representation(instance=self.auth_user),
+            'type': nw_item.type,
+            'comments': NewsfeedItemCommentSerializer(many=True).to_representation(nw_item.comments.all()),
+            'content': nw_item.content,
+            'is_private': nw_item.is_private,
+            'created_at': nw_item.created_at.isoformat().replace('+00:00', 'Z'),
+            'updated_at': nw_item.updated_at.isoformat().replace('+00:00', 'Z')
+        }
+        received_data = serializer.data
+
+        self.assertEqual(received_data, expected_data)
+
+    def test_deserialization_disabled(self):
+        with self.assertRaises(DisabledSerializerError):
+            NewsfeedItemSerializer(data={}).save()
 
     def test_model_save_raises_if_invalid_newsfeed_type(self):
         """ An error should be raised if we enter an invalid newsfeeditem type """
