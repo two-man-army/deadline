@@ -1,0 +1,78 @@
+.right-sidebar {
+    margin: 30px 25px 20px 0;
+}
+
+.follow-box {
+    margin-bottom: 20px;
+    padding: 8px 19px 15px 19px;
+    width: 343px;
+    height: 330px;
+    background: #fff;
+}
+
+.follow-box-header {
+    display: flex;
+    border-bottom: 1px solid #dedede;
+}
+
+.follow-box-header h4 {
+    font-family: "Poppins Medium";
+    font-weight: normal;
+    font-size: 16px;
+    color: #32053d;
+    flex: 1;
+    margin-bottom: 11px; /* override semantic ui styles */
+}
+
+.follow-box-header button {
+    background: #30043d;
+    border-radius: 18px;
+    width: 25px;
+    height: 25px;
+    border: none;
+}
+
+.follow-box-header button img {
+    width: 10px;
+}
+
+.follow-box ul {
+    margin-top: 20px;
+}
+
+.follow-box .view-more-btn {
+    float: right;
+    font-family: "Poppins Regular";
+    font-size: 11px;
+    background: none;
+    border: none;
+    color: #600538;
+}
+
+.suggestion-content {
+    flex: 1;
+}
+
+.suggestion-item {
+    display: flex;
+    padding-bottom: 17px;
+}
+
+.suggestion-item img {
+    width: 40px;
+    height: 45px;
+    border-radius: 50%;
+}
+
+.suggestion-item h3 {
+    font-family: "Poppins Regular";
+    font-size: 14px;
+    font-weight: normal;
+    color: #2d2d2d;
+    opacity: .7;
+    margin-bottom: -7px;
+}
+
+.suggestion-item .cancel-suggestion {
+    width: 10px;
+}

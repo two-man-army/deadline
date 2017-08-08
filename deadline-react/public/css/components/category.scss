@@ -1,0 +1,83 @@
+.categories {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.category {
+    margin-right: 30px;
+    margin-bottom: 30px;
+    border: 1px solid #b7b7b7;
+}
+
+.category a section {
+    width: 330px;
+    height: 251px;
+    display: flex;
+    flex-direction: column;
+}
+
+.category-header {
+    margin: 0; /* override semantic ui */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 94px;
+    font-family: "Poppins Light";
+    font-size: 24px;
+    font-weight: normal;
+    background: #460a40;
+    color: #ffffff;
+}
+
+.category-info {
+    position: relative;
+    display: flex;
+    height: 100%;
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+    font-family: "Poppins Regular";
+    font-weight: normal;
+}
+
+.category-info:after {
+    box-shadow: 15px 0 10px -15px inset;
+    content: " ";
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: -15px;
+    width: 15px;
+}
+
+.completed-subcategories {
+    padding-right: 30px;
+    border-right: 1px solid #e1e1e1;
+}
+
+.completed-challenges {
+    padding-left: 30px;
+}
+
+.completed-subcategories,
+.completed-challenges {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.subcat-progress,
+.challenges-progress {
+    font-size: 30px;
+    color: #e83b36; /* hardcoded for testing, should be removed later*/
+    padding-bottom: 7px;
+}
+
+.subcat-text,
+.status-text {
+    font-size: 14px;
+    color: #555555;
+}
+

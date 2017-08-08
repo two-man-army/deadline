@@ -1,0 +1,85 @@
+// Page header
+
+.page-header {
+    display: flex;
+    height: 60px;
+}
+
+.page-header nav {
+    display: flex;
+    flex: 1;
+    background: #fff;
+}
+
+.page-header .logo-container {
+    display: flex;
+    flex-basis: 200px;
+    align-items: center;
+    height: 100%;
+    background: #30043d;
+}
+
+.page-header .logo-container a {
+    display: block;
+    margin: 0 auto;
+}
+
+.page-header .nav-container {
+    background: #fff;
+    padding-left: 60px; /* if margin is used logo container grows */
+    height: 100%;
+}
+
+.page-header .logo {
+    width: 150px;
+}
+
+.search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.search input {
+    border: none;
+    border: 1px solid #b7a7bb;
+    border-radius: 18px;
+    width: 200px;
+    height: 25px;
+    padding: 8px 0 10px 17px;
+}
+
+.search button {
+    position: absolute;
+    right: 1px;
+    background: #30043d;
+    border-radius: 18px;
+    width: 25px;
+    height: 25px;
+    border: none;
+}
+
+.search button img {
+    width: 10px;
+}
+
+.nav-icons {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+}
+
+.nav-icons img {
+    width: 20px;
+    height: 20px;
+    margin-left: 25px;
+}
+
+.nav-icons img:last-of-type {
+    margin-left: 52px;
+    margin-right: 33px;
+}
+

@@ -101,3 +101,6 @@ test_generator/**/input_*.txt
 test_generator/**/output_*.txt
 # test gen solutions
 test_generator/**/*.py
+
+.sass-cache/
+style.css.map
