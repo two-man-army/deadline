@@ -1,14 +1,23 @@
-/* categories page */
+// Put all categories' page styles here
+
 .category-page {
+    padding: 20px 30px 18px 30px;
+    margin: 30px 20px 20px 30px;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
     flex: 1;
-}
 
-.category-page h2 {
-    margin: 10px 0 20px 0;
-    font-family: "Poppins Light";
-    font-size: 24px;
-    font-weight: normal;
-    color: #333333;
+    h2  {
+        margin: 10px 0 20px 0;
+        font-family: "Poppins Light";
+        font-size: 24px;
+        font-weight: normal;
+        color: #333333;
+    }
+
+    .categories {
+        display: flex;
+        flex-wrap: wrap;
+    }
 }

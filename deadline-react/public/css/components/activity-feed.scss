@@ -1,70 +1,70 @@
-.activity-feed,
-.category-page {
+// Activity feed styles go here
+
+.activity-feed {
     padding: 20px 30px 18px 30px;
     margin: 30px 20px 20px 30px;
     background: #ffffff;
+
+    .activity-feed-header {
+        margin-bottom: 0; /* override semantic ui styles */
+        font-family: "Poppins Light";
+        font-size: 22px;
+        font-weight: normal;
+        color: #555555;
+    }
+
+    .activity-item {
+        display: flex;
+        padding: 20px 0;
+        border-bottom: 1px solid #e1cee3;
+
+        &:last-of-type {
+            border-bottom: none;
+        }
+
+        img {
+            border-radius: 50%;
+            align-self: center;
+            width: 40px;
+            height: 45px;
+        }
+
+        h3  {
+            margin-bottom: -7px;
+            color: #2d2d2d;
+            font-family: "Poppins Medium";
+            font-size: 16px;
+            font-weight: normal;
+        }
+    }
 }
 
-.activity-feed-header {
-    margin-bottom: 0; /* override semantic ui styles */
-    font-family: "Poppins Light";
-    font-size: 22px;
-    font-weight: normal;
-    color: #555555;
-}
-
-.activity-item {
-    display: flex;
-    padding: 20px 0;
-    border-bottom: 1px solid #e1cee3;
-}
-
-.activity-item:last-of-type {
-    border-bottom: none;
-}
-
-.activity-item img {
-    border-radius: 50%;
-    align-self: center;
-    width: 40px;
-    height: 45px;
-}
-
-.activity-item h3 {
-    margin-bottom: -7px;
-    color: #2d2d2d;
-    font-family: "Poppins Medium";
-    font-size: 16px;
-    font-weight: normal;
-}
-
-.activity-item-lvl,
-.activity-msg,
-.activity-timeago,
-.suggestion-item-lvl {
+// could be replaced with more appropriate name
+%activity-msg {
     color: #2d2d2d;
     opacity: .6;
     font-weight: normal;
 }
 
-.activity-item-lvl,
-.suggestion-item-lvl {
-    font-family: "Poppins Regular";
-    font-size: 11px;
-}
-
 .activity-content {
     flex: 1;
-}
 
-.activity-msg {
-    display: block;
-    margin-top: -3px;
-    font-family: "Poppins Light";
-    font-size: 13px;
+    .activity-msg {
+        @extend %activity-msg;
+        display: block;
+        margin-top: -3px;
+        font-family: "Poppins Light";
+        font-size: 13px;
+    }
+
+    .activity-item-lvl {
+        @extend .activity-msg;
+        font-size: 11px;
+    }
 }
 
 .activity-timeago {
+    @extend %activity-msg;
     font-family: "Poppins Regular";
     font-size: 10px;
 }

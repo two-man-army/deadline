@@ -2,15 +2,15 @@
     display: flex;
     flex: 1;
     height: 100vh;
-}
 
-.columns {
-    display: flex;
-    flex: 1;
-}
+    .columns {
+        display: flex;
+        flex: 1;
+    }
 
-.main {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+    .main {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
 }
