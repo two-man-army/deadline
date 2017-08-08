@@ -39,8 +39,6 @@ class CategoryPage extends React.Component {
           <Category name='Test category' />
           <Category name='Test category' />
           <Category name='Test category' />
-          <Category name='Test category' />
-          <Category name='Test category' />
         </ul>
       </section>
     )
