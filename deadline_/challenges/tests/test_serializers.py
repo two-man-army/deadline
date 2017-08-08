@@ -102,6 +102,6 @@ class SubmissionSerializerTests(TestCase, TestHelperMixin):
         expected_json = (f'{{"id":{s.id},"challenge":{self.challenge.id},"author":"{self.auth_user.username}",'
                          f'"code":"{"DMV"}","result_score":0,"pending":true,"created_at":"{created_at_date}",'
                          f'"compiled":true,"compile_error_message":"","language":"Python","timed_out":false,'
-                         f'"user_has_voted":true,"user_has_upvoted":false,"upvote_count":0,"downvote_count":1}}')
+                         f'"upvote_count":0,"downvote_count":1,"user_has_voted":true,"user_has_upvoted":false}}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)

@@ -386,7 +386,6 @@ class LatestSubmissionsViewTest(TestCase, TestHelperMixin):
 
         self.create_user_and_auth_token()
 
-
     def test_get_latest_challenge_submissions_from_user(self):
         """ The get_latest_submissions view should return 3 the latest submissions by the user distinct by their challenges"""
         s1 = SubmissionFactory(author=self.auth_user, challenge=self.c1, pending=False)

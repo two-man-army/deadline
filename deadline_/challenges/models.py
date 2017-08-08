@@ -52,6 +52,7 @@ class Submission(models.Model):
         Returns the amount of upvote and downvotes this submission has
         :return: (int, int) - (upvote, downvote)
         """
+        # TODO: Cache it in a model field
         upvote_count, downvote_count = 0, 0
 
         for vote in self.votes.all():
