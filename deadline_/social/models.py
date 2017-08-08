@@ -57,3 +57,11 @@ def nw_item_validation(sender, instance, *args, **kwargs):
             if field not in required_fields:
                 raise InvalidNewsfeedItemContentField(
                     f'The field {field} is not part of the expected content for {instance.type} and is unnecessary!')
+
+
+class NewsfeedItemComment(models.Model):
+    newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='comments')
+    author = models.ForeignKey(User)
+    content = models.CharField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
