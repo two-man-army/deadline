@@ -1,11 +1,7 @@
-from collections import OrderedDict
-
 from django.test import TestCase
-from rest_framework.renderers import JSONRenderer
 
 from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
-from errors import DisabledSerializerError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
@@ -46,10 +42,6 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         received_data = serializer.data
 
         self.assertEqual(received_data, expected_data)
-
-    def test_deserialization_disabled(self):
-        with self.assertRaises(DisabledSerializerError):
-            NewsfeedItemSerializer(data={}).save()
 
     def test_model_save_raises_if_invalid_newsfeed_type(self):
         """ An error should be raised if we enter an invalid newsfeeditem type """

@@ -48,7 +48,7 @@ def nw_item_validation(sender, instance, *args, **kwargs):
     for field in required_fields:
         if field not in instance.content:
             raise MissingNewsfeedItemContentField(
-                f'The field {instance.content} must be in the content of NewsfeedItem of type {instance.type}.')
+                f'The field {field} must be in the content of NewsfeedItem of type {instance.type}.')
 
     # Assert that no other unnecessary fields are present
     if len(required_fields) < len(instance.content.keys()):
