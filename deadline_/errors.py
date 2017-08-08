@@ -1,0 +1,2 @@
+class DisabledSerializerError(Exception):
+    pass
