@@ -1,19 +1,73 @@
+from datetime import timedelta, datetime
 from unittest.mock import patch, MagicMock
 
 from django.http import HttpResponse
 from django.test import TestCase
 from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
-from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
+from social.models import NewsfeedItem
 
 
-# Create your tests here.
+class UserModelNewsfeedTest(TestCase):
+    def setUp(self):
+        self.base_role = Role.objects.create(name='User')
+        self.main_user = User.objects.create(username='main_user', password='123', email='main_user@abv.bg', score=123, role=self.base_role)
+
+        self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us2_2 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+
+        self.user3 = User.objects.create(username='user3', password='123', email='user3@abv.bg', score=123, role=self.base_role)
+        self.nw_item_us3_1 = NewsfeedItem.objects.create(author=self.user3, type='TEXT_POST', content={'content': 'Hi'})
+
+        self.user4 = User.objects.create(username='user4', password='123', email='user4@abv.bg', score=123, role=self.base_role)
+        self.nw_item_us4_1 = NewsfeedItem.objects.create(author=self.user4, type='TEXT_POST', content={'content': 'Hi'})
+
+    def test_fetch_newsfeed(self):
+        # Should return all the people the user has followed's items, sorted by date
+        self.main_user.follow(self.user2)
+        self.main_user.follow(self.user4)
+
+        expected_items = NewsfeedItem.objects \
+            .filter(author_id__in=[us.id for us in self.main_user.users_followed.all()] + [self.main_user.id]) \
+            .order_by('-created_at')
+
+        received_items = self.main_user.fetch_newsfeed()
+
+        self.assertEqual(len(received_items), 3)
+        self.assertEqual(len(received_items), len(expected_items))
+        for i in range(3):
+            self.assertEqual(expected_items[i], received_items[i])
+
+    def test_fetch_newsfeed_receives_own_items_as_well(self):
+        nw_item1 = NewsfeedItem.objects.create(author=self.main_user, type='TEXT_POST', content={'content': 'Hi'})
+        nw_item2 = NewsfeedItem.objects.create(author=self.main_user, type='TEXT_POST', content={'content': 'Hi'})
+
+        received_items = self.main_user.fetch_newsfeed()
+
+        self.assertEqual(len(received_items), 2)
+        self.assertEqual([nw_item2, nw_item1], list(received_items))
+
+    def test_fetch_newsfeed_receives_items_ordered_by_date(self):
+        self.user5 = User.objects.create(username='user5', password='123', email='user5@abv.bg', score=123, role=self.base_role)
+        self.main_user.follow(self.user5)
+        self.latest_item = NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+        self.latest_item.created_at = datetime.now() + timedelta(days=1)
+        self.oldest_item = NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+        self.oldest_item.created_at = datetime.now() - timedelta(days=1)
+        self.mid_item = NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+        self.oldest_item.save(); self.latest_item.save()
+
+        received_items = self.main_user.fetch_newsfeed()
+        self.assertEqual(list(received_items), [self.latest_item, self.mid_item, self.oldest_item])
+
+
 class UserModelTest(TestCase):
     def setUp(self):
         from challenges.models import MainCategory, SubCategory, Proficiency

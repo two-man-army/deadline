@@ -42,6 +42,19 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username
 
+    def fetch_newsfeed(self):
+        """
+        Returns all the NewsfeedItems this user should see
+        They are a collection of all the NewsfeedItems
+            of which the authors are people he has followed
+        """
+        from social.models import NewsfeedItem
+        # TODO: Add pagination
+
+        return NewsfeedItem.objects\
+            .filter(author_id__in=[us.id for us in self.users_followed.all()] + [self.id])\
+            .order_by('-created_at')
+
     def follow(self, user):
         if user in self.users_followed.all():
             raise UserAlreadyFollowedError(f'{self.username} has already followed {user.username}!')
