@@ -19,6 +19,7 @@ class NewsfeedItemCommentSerializer(serializers.ModelSerializer):
 
 
 class NewsfeedItemSerializer(serializers.ModelSerializer):
+    like_count = serializers.SerializerMethodField()
     author = UserSerializer(read_only=True)
     comments = NewsfeedItemCommentSerializer(many=True, read_only=True)
     content = HStoreField()
@@ -26,3 +27,7 @@ class NewsfeedItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsfeedItem
         fields = '__all__'
+
+    def get_like_count(self, obj):
+        return obj.likes.count()
+    

@@ -38,13 +38,13 @@ class NewsfeedItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def like(self, user: User):
-        if NewsfeedLike.objects.filter(newsfeed_item=self, author=user).exists():
+        if NewsfeedItemLike.objects.filter(newsfeed_item=self, author=user).exists():
             raise LikeAlreadyExistsError(f'The Like from User {user.id} for Item {self.id} does already exists!')
 
-        return NewsfeedLike.objects.create(author=user, newsfeed_item=self)
+        return NewsfeedItemLike.objects.create(author=user, newsfeed_item=self)
 
     def remove_like(self, user: User):
-        like = NewsfeedLike.objects.filter(newsfeed_item=self, author=user).first()
+        like = NewsfeedItemLike.objects.filter(newsfeed_item=self, author=user).first()
         if like is None:
             raise NonExistentLikeError(f'The Like from User {user.id} for Item {self.id} does not exist!')
 
@@ -81,7 +81,7 @@ class NewsfeedItemComment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-class NewsfeedLike(models.Model):
+class NewsfeedItemLike(models.Model):
     newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='likes')
     author = models.ForeignKey(User)
     unique_together = ('newsfeed_item', 'author')

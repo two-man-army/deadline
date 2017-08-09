@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
-from social.models import NewsfeedItem, NewsfeedItemComment
+from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
@@ -28,6 +28,7 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
         NewsfeedItemComment.objects.create(author=self.auth_user, content='Drop the top', newsfeed_item=nw_item)
+        NewsfeedItemLike.objects.create(author=self.auth_user, newsfeed_item=nw_item)
         serializer = NewsfeedItemSerializer(instance=nw_item)
 
         expected_data = {
@@ -38,7 +39,8 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
             'content': nw_item.content,
             'is_private': nw_item.is_private,
             'created_at': nw_item.created_at.isoformat().replace('+00:00', 'Z'),
-            'updated_at': nw_item.updated_at.isoformat().replace('+00:00', 'Z')
+            'updated_at': nw_item.updated_at.isoformat().replace('+00:00', 'Z'),
+            'like_count': 1
         }
         received_data = serializer.data
 

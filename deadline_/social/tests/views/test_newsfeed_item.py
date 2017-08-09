@@ -40,6 +40,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
                              'type': 'TANK_POST',
                              'created_at': 'Someday',
                              'updated_at': 'Some other day',
+                             'like_count': 200,
                              'comments': [
                                  {
                                      'author_id': 1,
