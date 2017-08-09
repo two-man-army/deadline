@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from accounts.models import User
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
+from social.constants import NEWSFEED_ITEMS_PER_PAGE
 
 
 def follow_decorator(view_func, *args, **kwargs):
@@ -80,13 +81,18 @@ class NewsfeedContentView(APIView):
     """
     This view returns all the content (NewsfeedItems) that a user should see
     """
-    # TODO: Some pagination
     permission_classes = (IsAuthenticated, )
 
     def get(self, request, *args, **kwargs):
+        try:
+            page = int(request.GET.get('page', 1)) - 1
+        except ValueError:
+            page = 0
+
         serializer = NewsfeedItemSerializer(many=True)
 
-        nw_items: [NewsfeedItem] = request.user.fetch_newsfeed()
+        start_offset = page * NEWSFEED_ITEMS_PER_PAGE
+        nw_items: [NewsfeedItem] = request.user.fetch_newsfeed(start_offset=start_offset, end_limit=start_offset + NEWSFEED_ITEMS_PER_PAGE)
 
         return Response(
             data={

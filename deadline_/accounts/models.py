@@ -42,18 +42,17 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username
 
-    def fetch_newsfeed(self):
+    def fetch_newsfeed(self, start_offset=0, end_limit=None):
         """
         Returns all the NewsfeedItems this user should see
         They are a collection of all the NewsfeedItems
             of which the authors are people he has followed
         """
         from social.models import NewsfeedItem
-        # TODO: Add pagination
 
         return NewsfeedItem.objects\
             .filter(author_id__in=[us.id for us in self.users_followed.all()] + [self.id])\
-            .order_by('-created_at')
+            .order_by('-created_at')[start_offset:end_limit]
 
     def follow(self, user):
         if user in self.users_followed.all():

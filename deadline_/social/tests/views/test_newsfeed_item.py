@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase
 
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
+from social.constants import NEWSFEED_ITEMS_PER_PAGE
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
 
@@ -104,3 +105,40 @@ class NewsfeedGetViewTests(APITestCase, TestHelperMixin):
     def test_requires_auth(self):
         response = self.client.get('/social/feed')
         self.assertEqual(response.status_code, 401)
+
+    def test_pagination_works(self):
+        self.user5 = User.objects.create(username='user5', password='123', email='user5@abv.bg', score=123, role=self.base_role)
+        self.auth_user.follow(self.user5)
+        # Create 2 more than what will be shown in the first page and query for the second page
+
+        first_two_items = [NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'}), NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})]
+        for i in range(NEWSFEED_ITEMS_PER_PAGE):
+            NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+        expected_items = NewsfeedItemSerializer(many=True).to_representation(reversed(first_two_items))
+
+        response = self.client.get('/social/feed?page=2', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['items'], expected_items)
+
+    def test_pagination_with_invalid_page(self):
+        """ Should just give him the first page """
+        self.auth_user.follow(self.user2)
+
+        response = self.client.get('/social/feed?page=TANK', HTTP_AUTHORIZATION=self.auth_token)
+        normal_data = self.client.get('/social/feed?page=1', HTTP_AUTHORIZATION=self.auth_token).data
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, normal_data)
+
+    def test_returns_first_page_if_no_querystring(self):
+        # Create twice as much posts and assert only the first half is shown
+        self.user5 = User.objects.create(username='user5', password='123', email='user5@abv.bg', score=123, role=self.base_role)
+        self.auth_user.follow(self.user5)
+        for i in range(NEWSFEED_ITEMS_PER_PAGE * 2):
+            NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+
+        response = self.client.get('/social/feed', HTTP_AUTHORIZATION=self.auth_token)
+        expected_data = self.client.get('/social/feed?page=1', HTTP_AUTHORIZATION=self.auth_token).data
+
+        self.assertEqual(len(response.data['items']), NEWSFEED_ITEMS_PER_PAGE)
+        self.assertEqual(response.data, expected_data)

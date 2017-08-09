@@ -67,6 +67,21 @@ class UserModelNewsfeedTest(TestCase):
         received_items = self.main_user.fetch_newsfeed()
         self.assertEqual(list(received_items), [self.latest_item, self.mid_item, self.oldest_item])
 
+    def test_fetch_newsfeed_supports_pagination(self):
+        self.main_user.follow(self.user2)
+        self.main_user.follow(self.user3)
+        self.main_user.follow(self.user4)
+
+        expected_items = NewsfeedItem.objects \
+            .filter(author_id__in=[us.id for us in self.main_user.users_followed.all()] + [self.main_user.id]) \
+            .order_by('-created_at')[2:3]
+
+        received_items = self.main_user.fetch_newsfeed(2, 3)
+
+        self.assertEqual(len(received_items), len(expected_items))
+        for i in range(len(expected_items)):
+            self.assertEqual(expected_items[i], received_items[i])
+
 
 class UserModelTest(TestCase):
     def setUp(self):
