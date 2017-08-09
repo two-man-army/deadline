@@ -15,9 +15,11 @@ class ChallengeSerializer(serializers.ModelSerializer):
     description = ChallengeDescriptionSerializer()
     category = serializers.StringRelatedField()
     supported_languages = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = Challenge
-        fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count', 'category', 'supported_languages')
+        fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count', 'category',
+                  'supported_languages')
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -33,24 +35,19 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
     Used, for example, when listing challenges.
     """
     category = serializers.StringRelatedField()
+    user_max_score = serializers.SerializerMethodField()
 
     class Meta:
         model = Challenge
-        fields = ('id', 'name', 'difficulty', 'score', 'category')  # user_max_score is added as well but more implicitly
+        fields = ('id', 'name', 'difficulty', 'score', 'category', 'user_max_score')
 
-    def to_representation(self, instance):
-        """
-        Modification to add the user_max_score to the serialized data
-        """
-        result = super().to_representation(instance)
-
+    def get_user_max_score(self, obj):
+        # TODO: get User from __init__, not request
         user = getattr(self.context.get('request', None), 'user', None)
         if user is None:
-            result['user_max_score'] = 0
+            return 0
         else:
-            result['user_max_score'] = user.fetch_max_score_for_challenge(challenge_id=instance.id)
-
-        return result
+            return user.fetch_max_score_for_challenge(challenge_id=obj.id)
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
@@ -90,7 +87,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         from accounts.models import User
         result = super().to_representation(instance)
         user: User = getattr(self.context.get('request', None), 'user', None)
-        # TODO: This is View logic, serializer should not care about the current (request) user
+        # TODO: Make user be passed in __init__
         if user is None:
             result['user_has_voted'] = False
             result['user_has_upvoted'] = False
@@ -113,11 +110,15 @@ class LimitedSubmissionSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
     result_score = serializers.IntegerField(read_only=True)
     pending = serializers.BooleanField(read_only=True)
+    language = serializers.SerializerMethodField()
 
     class Meta:
         model = Submission
         fields = ('id', 'challenge', 'author', 'result_score', 'pending', 'created_at',
                   'compiled', 'compile_error_message', 'language', 'timed_out')
+
+    def get_language(self, obj):
+        return obj.language.name
 
     def to_representation(self, instance: Submission):
         """
@@ -131,8 +132,7 @@ class LimitedSubmissionSerializer(serializers.ModelSerializer):
         result = super().to_representation(instance)
         user:User = getattr(self.context.get('request', None), 'user', None)
         # TODO: Move to helper
-
-        result['language'] = Language.objects.get(id=result['language']).name
+        # TODO: Make user be passed in __init__
         if user is None:
             result['user_has_voted'] = False
             result['user_has_upvoted'] = False
@@ -176,21 +176,19 @@ class MainCategorySerializer(serializers.ModelSerializer):
 
 class SubCategorySerializer(serializers.ModelSerializer):
     challenges = LimitedChallengeSerializer(many=True)
+    proficiency = serializers.SerializerMethodField()
 
     class Meta:
         model = SubCategory
-        fields = ('name', 'challenges', 'max_score')
+        fields = ('name', 'challenges', 'max_score', 'proficiency')
 
-    def to_representation(self, instance):
-        result = super().to_representation(instance)
-
+    def get_proficiency(self, obj):
         # attach the current user's proficiency
         user: User = getattr(self.context.get('request', None), 'user', None)
-        user_proficiency: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=instance.id)
+        user_proficiency: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=obj.id)
         proficiency_object = OrderedDict()
         proficiency_object['name'] = user_proficiency.proficiency.name
-        max_score = sum(ch.score for ch in instance.challenges.all())  # TODO: Store somewhere
+        max_score = sum(ch.score for ch in obj.challenges.all())  # TODO: Store somewhere
         proficiency_object['percentage_progress'] = int((user_proficiency.user_score / max_score) * 100)
-        result['proficiency'] = proficiency_object
 
-        return result
+        return proficiency_object
