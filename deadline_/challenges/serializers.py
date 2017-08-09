@@ -59,11 +59,25 @@ class SubmissionSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
     result_score = serializers.IntegerField(read_only=True)
     pending = serializers.BooleanField(read_only=True)
+    language = serializers.SerializerMethodField()
+    upvote_count = serializers.SerializerMethodField()
+    downvote_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Submission
         fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at',
-                  'compiled', 'compile_error_message', 'language', 'timed_out')
+                  'compiled', 'compile_error_message', 'language', 'timed_out', 'upvote_count', 'downvote_count')
+
+    def get_language(self, obj):
+        return obj.language.name
+
+    def get_upvote_count(self, obj):
+        upvote_count, _ = obj.get_votes_count()
+        return upvote_count
+
+    def get_downvote_count(self, obj):
+        _, downvote_count = obj.get_votes_count()
+        return downvote_count
 
     def to_representation(self, instance: Submission):
         """
@@ -76,9 +90,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
         from accounts.models import User
         result = super().to_representation(instance)
         user: User = getattr(self.context.get('request', None), 'user', None)
-        # TODO: Move to helper
-
-        result['language'] = Language.objects.get(id=result['language']).name
+        # TODO: This is View logic, serializer should not care about the current (request) user
         if user is None:
             result['user_has_voted'] = False
             result['user_has_upvoted'] = False
@@ -90,10 +102,6 @@ class SubmissionSerializer(serializers.ModelSerializer):
             else:
                 result['user_has_voted'] = True
                 result['user_has_upvoted'] = user_vote.is_upvote
-
-        upvote_count, downvote_count = instance.get_votes_count()
-        result['upvote_count'] = upvote_count
-        result['downvote_count'] = downvote_count
 
         return result
 
