@@ -91,7 +91,8 @@ class NewsfeedGetViewTests(APITestCase, TestHelperMixin):
         newest_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST', content={'content': 'Hi'},
                                                   created_at=datetime.now() + timedelta(days=1))
 
-        expected_items = NewsfeedItemSerializer(many=True).to_representation([newest_item, self.nw_item_us2_2, self.nw_item_us2_1])
+        expected_items = NewsfeedItemSerializer(many=True)\
+            .to_representation([newest_item, self.nw_item_us2_2, self.nw_item_us2_1], user=self.auth_user)
 
         response = self.client.get('/social/feed', HTTP_AUTHORIZATION=self.auth_token)
 
@@ -115,7 +116,8 @@ class NewsfeedGetViewTests(APITestCase, TestHelperMixin):
         first_two_items = [NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'}), NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})]
         for i in range(NEWSFEED_ITEMS_PER_PAGE):
             NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
-        expected_items = NewsfeedItemSerializer(many=True).to_representation(reversed(first_two_items))
+        expected_items = NewsfeedItemSerializer(many=True)\
+            .to_representation(reversed(first_two_items), user=self.auth_user)
 
         response = self.client.get('/social/feed?page=2', HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 200)
