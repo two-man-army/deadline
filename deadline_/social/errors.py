@@ -12,3 +12,13 @@ class InvalidNewsfeedItemContentField(Exception):
     """ Used for when a field which is not part of the NewsfeedItem's expected content fields
         is added to it regardless """
     pass
+
+
+class LikeAlreadyExistsError(Exception):
+    """ Used for when a User tries to create a Like but it already exists """
+    pass
+
+
+class NonExistentLikeError(Exception):
+    """ Used for when a User tries to delete a Like but it does not exist in the first place """
+    pass

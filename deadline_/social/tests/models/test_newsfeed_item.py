@@ -3,7 +3,8 @@ from django.test import TestCase
 from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
 from social.models import NewsfeedItem, NewsfeedItemComment
-from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField
+from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
+    LikeAlreadyExistsError, NonExistentLikeError
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 
 
@@ -61,3 +62,37 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         with self.assertRaises(InvalidNewsfeedItemContentField):
             NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
                                         content={'content': 'Hello I like turtles', 'tank': 'yo'})
+
+    def test_like_should_add_to_likes(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+                                              content={'content': 'Hello I like turtles'})
+        nw_item.like(self.auth_user)
+
+        self.assertEqual(nw_item.likes.count(), 1)
+        self.assertEqual(nw_item.likes.first().author, self.auth_user)
+
+    def test_duplicate_like_raises_error(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+                                              content={'content': 'Hello I like turtles'})
+        nw_item.like(self.auth_user)
+
+        with self.assertRaises(LikeAlreadyExistsError):
+            nw_item.like(self.auth_user)
+
+        self.assertEqual(nw_item.likes.count(), 1)
+        self.assertEqual(nw_item.likes.first().author, self.auth_user)
+
+    def test_remove_like_removes_like(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+                                              content={'content': 'Hello I like turtles'})
+        nw_item.like(self.auth_user)
+        self.assertEqual(nw_item.likes.count(), 1)
+
+        nw_item.remove_like(self.auth_user)
+        self.assertEqual(nw_item.likes.count(), 0)
+
+    def test_remove_non_existent_like_raises(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+                                              content={'content': 'Hello I like turtles'})
+        with self.assertRaises(NonExistentLikeError):
+            nw_item.remove_like(self.auth_user)

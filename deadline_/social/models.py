@@ -5,7 +5,8 @@ from django.dispatch import receiver
 
 from accounts.models import User
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES
-from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField
+from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
+    LikeAlreadyExistsError, NonExistentLikeError
 
 
 class NewsfeedItem(models.Model):
@@ -36,6 +37,19 @@ class NewsfeedItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def like(self, user: User):
+        if NewsfeedLike.objects.filter(newsfeed_item=self, author=user).exists():
+            raise LikeAlreadyExistsError(f'The Like from User {user.id} for Item {self.id} does already exists!')
+
+        return NewsfeedLike.objects.create(author=user, newsfeed_item=self)
+
+    def remove_like(self, user: User):
+        like = NewsfeedLike.objects.filter(newsfeed_item=self, author=user).first()
+        if like is None:
+            raise NonExistentLikeError(f'The Like from User {user.id} for Item {self.id} does not exist!')
+
+        like.delete()
+
 
 @receiver(pre_save, sender=NewsfeedItem)
 def nw_item_validation(sender, instance, *args, **kwargs):
@@ -65,3 +79,9 @@ class NewsfeedItemComment(models.Model):
     content = models.CharField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class NewsfeedLike(models.Model):
+    newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='likes')
+    author = models.ForeignKey(User)
+    unique_together = ('newsfeed_item', 'author')
