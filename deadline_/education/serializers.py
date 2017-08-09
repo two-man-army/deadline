@@ -6,9 +6,18 @@ from challenges.models import Language
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    teachers = serializers.SerializerMethodField()
+    lessons = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
-        fields = ('name', 'difficulty', 'languages', 'main_teacher')
+        fields = ('name', 'difficulty', 'languages', 'main_teacher', 'teachers', 'lessons')
+
+    def get_teachers(self, obj):
+        return [{'name': teacher.username, 'id': teacher.id} for teacher in obj.teachers.all()]
+
+    def get_lessons(self, obj):
+        return [{'consecutive_number': lesson.lesson_number, 'short_description': lesson.intro} for lesson in obj.lessons.all()]
 
     @property
     def data(self):
@@ -16,15 +25,11 @@ class CourseSerializer(serializers.ModelSerializer):
             Attach the Language's name in the deserialization
              This is SQL-expensive and I will probably curse myself later on for adding this.
              You can always speed it up by builsupported_ding the language IDs and doing one SQL query
-            Attach each teacher's name + id
-             Attach each lesson's name, consecutive_number and intro parameter
         """
         loaded_data = super().data
 
-        loaded_data['main_teacher'] = {'name': self.instance.main_teacher.username, 'id': self.instance.main_teacher.id}
         loaded_data['languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['languages']]
-        loaded_data['teachers'] = [{'name': teacher.username, 'id': teacher.id} for teacher in self.instance.teachers.all()]
-        loaded_data['lessons'] = [{'consecutive_number': lesson.lesson_number, 'short_description': lesson.intro} for lesson in self.instance.lessons.all()]
+        loaded_data['main_teacher'] = {'name': self.instance.main_teacher.username, 'id': self.instance.main_teacher.id}
 
         return loaded_data
 
@@ -53,10 +58,11 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class HomeworkTaskSerializer(serializers.ModelSerializer):
     description = HomeworkTaskDescriptionSerializer()
+    test_case_count = serializers.SerializerMethodField()
 
     class Meta:
         model = HomeworkTask
-        exclude = ('test_case_count', )
+        fields = '__all__'
         non_editable_fields = ('homework', 'supported_languages')
 
     def create(self, validated_data):
@@ -90,6 +96,9 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
 
         return updated_task
 
+    def get_test_case_count(self, obj):
+        return obj.test_case_count
+
     @property
     def data(self):
         """
@@ -99,9 +108,7 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
             Also attach the test_case_count
         """
         loaded_data = super().data
-        hw_task = HomeworkTask.objects.get(id=loaded_data['id'])
         loaded_data['supported_languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['supported_languages']]
-        loaded_data['test_case_count'] = hw_task.test_case_count
 
         return loaded_data
 
