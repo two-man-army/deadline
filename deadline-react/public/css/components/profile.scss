@@ -1,0 +1,46 @@
+/* profile page */
+.profile-page {
+    margin: 0 auto;
+    border: 1px solid #dbdbdb;
+    height: 700px;
+    max-width: 935px;
+    width: 100%;
+}
+
+.profile-page ul, article {
+    height: 700px;
+}
+
+.profile-page ul {
+    float: left;
+    padding: 10px;
+    border-right: 1px solid #dbdbdb;
+    width: 100%;
+    max-width: 230px;
+}
+
+.profile-page article {
+    float: right;
+    padding: 10px;
+    width: 100%;
+    max-width: 700px;
+}
+
+/* Account options */
+.account-options ul {
+    width: 80%;
+    text-align: center;
+}
+
+.account-options ul li {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.account-options ul li:first-of-type {
+    border-top: 1px solid #ccc;
+}
+
+.description.account-dialog {
+    width: 100% !important;
+}

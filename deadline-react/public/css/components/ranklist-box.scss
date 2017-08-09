@@ -1,0 +1,81 @@
+// Styles for ranklist component in the right sidebar
+//
+.ranklist {
+    padding: 0 20px 30px 18px;
+    width: 343px;
+    height: 290px;
+    color: #e0dde1;
+    background: #30043d; /* Old browsers */
+    background: -moz-linear-gradient(top, #30043d 0%, #460a40 50%, #600538 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #30043d 0%,#460a40 50%,#600538 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #30043d 0%,#460a40 50%,#600538 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#30043d', endColorstr='#600538',GradientType=0 ); /* IE6-9 */
+
+    table {
+        margin-top: 5px;
+        width: 100%;
+    }
+
+    tbody {
+        td {
+            font-family: "Poppins Light";
+            font-size: 14px;
+            padding-bottom: 10px;
+            color: #ab96a9;
+
+            &:last-of-type {
+                text-align: right;
+            }
+        }
+
+        tr:first-of-type td {
+            padding-top: 20px;
+        }
+
+        thead {
+            font-family: "Poppins Light";
+            font-size: 10px;
+            text-align: left;
+            border-bottom: 1px solid #613966;
+            color: #e1dee2;
+
+            th {
+                padding-bottom: 5px;
+
+                &:last-of-type {
+                    text-align: right;
+                }
+            }
+        }
+    }
+}
+
+.ranklist-box-header {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    background: #31043d;
+
+    h4 {
+        font-family: "Poppins Regular";
+        font-size: 16px;
+        margin: 0; /* override semantic ui styles */
+    }
+
+    div {
+        display: flex;
+        flex: 1;
+        justify-content: flex-end;
+        font-family: "Poppins Regular";
+        font-size: 11px;
+    }
+
+    .users-to-follow {
+        color: #999999;
+        margin-right: 15px;
+    }
+
+    .all-users {
+        color: #ff8606;
+    }
+}

@@ -10,7 +10,7 @@ const Header = () => (
           <img className='logo' src={'assets/img/header/logo.png'} alt='' />
         </Link>
       </div>
-      <div className='nav-container'>
+      <div className='nav-search'>
         <Search />
       </div>
       <div className='nav-icons'>

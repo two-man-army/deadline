@@ -1,0 +1,84 @@
+// Page header
+
+.page-header {
+    display: flex;
+    height: 60px;
+
+    nav {
+        display: flex;
+        flex: 1;
+        background: #fff;
+
+        .nav-search {
+            background: #fff;
+            padding-left: 60px; /* if margin is used logo container grows */
+            height: 100%;
+        }
+    }
+}
+
+.logo-container {
+    display: flex;
+    flex-basis: 200px;
+    align-items: center;
+    height: 100%;
+    background: #30043d;
+
+    a {
+        display: block;
+        margin: 0 auto;
+    }
+
+    .logo {
+        width: 150px;
+    }
+}
+
+.search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    input {
+        border: none;
+        border: 1px solid #b7a7bb;
+        border-radius: 18px;
+        width: 200px;
+        height: 25px;
+        padding: 8px 0 10px 17px;
+    }
+
+    button {
+        position: absolute;
+        right: 1px;
+        background: #30043d;
+        border-radius: 18px;
+        width: 25px;
+        height: 25px;
+        border: none;
+
+        img {
+            width: 10px;
+        }
+    }
+}
+
+.nav-icons {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+
+    img {
+        width: 20px;
+        height: 20px;
+        margin-left: 25px;
+
+        &:last-of-type {
+            margin-left: 52px;
+            margin-right: 33px;
+        }
+    }
+}

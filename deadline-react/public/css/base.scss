@@ -1,0 +1,33 @@
+html,
+body {
+    height: 100%;
+}
+
+video {
+    width: 100%;
+    position: absolute;
+}
+
+div.lang-choice-select,
+div.theme-select {  /* A wrapper for the Select choice for submission language */
+    display: inline-block;
+    width: 200px;
+}
+
+div.lang-choice-select {
+    margin-right: 5px;
+}
+
+.editor-options {
+    margin: 50px 0 10px 0;
+}
+
+button.fluid.submit-solution-btn {
+    margin: 10px 0;
+    opacity: .9;
+}
+
+.leaderboard-search i.dropdown.icon {
+    /* Slight space for the triangle icon in the dropdown*/
+    margin-left: 10px !important;
+}
