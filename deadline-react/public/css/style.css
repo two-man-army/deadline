@@ -412,6 +412,9 @@ div.login-html input:focus {
     display: flex;
     flex: 1; }
   .dashboard .main {
+    padding: 20px 30px 18px 30px;
+    margin: 30px 20px 20px 30px;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
     flex: 1; }
@@ -491,34 +494,30 @@ div.login-html input:focus {
     font-family: 'Poppins Regular';
     font-size: 12px; }
 
-.activity-feed {
-  padding: 20px 30px 18px 30px;
-  margin: 30px 20px 20px 30px;
-  background: #ffffff; }
-  .activity-feed .activity-feed-header {
-    margin-bottom: 0;
-    /* override semantic ui styles */
-    font-family: "Poppins Light";
-    font-size: 22px;
-    font-weight: normal;
-    color: #555555; }
-  .activity-feed .activity-item {
-    display: flex;
-    padding: 20px 0;
-    border-bottom: 1px solid #e1cee3; }
-    .activity-feed .activity-item:last-of-type {
-      border-bottom: none; }
-    .activity-feed .activity-item img {
-      border-radius: 50%;
-      align-self: center;
-      width: 40px;
-      height: 45px; }
-    .activity-feed .activity-item h3 {
-      margin-bottom: -7px;
-      color: #2d2d2d;
-      font-family: "Poppins Medium";
-      font-size: 16px;
-      font-weight: normal; }
+.activity-feed .activity-feed-header {
+  margin-bottom: 0;
+  /* override semantic ui styles */
+  font-family: "Poppins Light";
+  font-size: 22px;
+  font-weight: normal;
+  color: #555555; }
+.activity-feed .activity-item {
+  display: flex;
+  padding: 20px 0;
+  border-bottom: 1px solid #e1cee3; }
+  .activity-feed .activity-item:last-of-type {
+    border-bottom: none; }
+  .activity-feed .activity-item img {
+    border-radius: 50%;
+    align-self: center;
+    width: 40px;
+    height: 45px; }
+  .activity-feed .activity-item h3 {
+    margin-bottom: -7px;
+    color: #2d2d2d;
+    font-family: "Poppins Medium";
+    font-size: 16px;
+    font-weight: normal; }
 
 .activity-content .activity-msg, .activity-content .activity-item-lvl, .activity-timeago {
   color: #2d2d2d;
@@ -661,22 +660,15 @@ div.login-html input:focus {
   .ranklist-box-header .all-users {
     color: #ff8606; }
 
-.category-page {
-  padding: 20px 30px 18px 30px;
-  margin: 30px 20px 20px 30px;
-  background: #ffffff;
+.category-page h2 {
+  margin: 10px 0 20px 0;
+  font-family: "Poppins Light";
+  font-size: 24px;
+  font-weight: normal;
+  color: #333333; }
+.category-page .categories {
   display: flex;
-  flex-direction: column;
-  flex: 1; }
-  .category-page h2 {
-    margin: 10px 0 20px 0;
-    font-family: "Poppins Light";
-    font-size: 24px;
-    font-weight: normal;
-    color: #333333; }
-  .category-page .categories {
-    display: flex;
-    flex-wrap: wrap; }
+  flex-wrap: wrap; }
 
 .category {
   margin-right: 30px;
@@ -745,5 +737,16 @@ div.login-html input:focus {
 .status-text {
   font-size: 14px;
   color: #555555; }
+
+.subcategories {
+  display: flex;
+  flex-wrap: wrap; }
+
+.subcategory {
+  margin-right: 30px;
+  margin-bottom: 30px;
+  width: 300px;
+  height: 150px;
+  background: antiquewhite; }
 
 /*# sourceMappingURL=style.css.map */
