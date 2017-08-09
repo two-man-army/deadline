@@ -102,7 +102,9 @@ class FetchModelsDecoratorTest(TestCase):
 
     def test_calls_permissions_and_returns_403_if_permission_returns_false(self):
         # TODO: Might want to test that its called as we want it
-        self.Tank.permission_classes = (MagicMock(has_object_permission = lambda x, y, z: False), )
+        mock_wrapper = MagicMock()
+        mock_wrapper.return_value = MagicMock(has_object_permission=lambda x, y, z: False)
+        self.Tank.permission_classes = (mock_wrapper, )
         f_instance = self.Tank()
 
         response = f_instance.get(0, main_cat_pk=self.main_cat.id, subcat_pk=self.sub_cat.id)
