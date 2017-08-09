@@ -5,8 +5,10 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from accounts.models import User
+from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
 
 
@@ -72,3 +74,22 @@ class TextPostCreateView(CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(author_id=self.author_id)
+
+
+class NewsfeedContentView(APIView):
+    """
+    This view returns all the content (NewsfeedItems) that a user should see
+    """
+    # TODO: Some pagination
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, *args, **kwargs):
+        serializer = NewsfeedItemSerializer(many=True)
+
+        nw_items: [NewsfeedItem] = request.user.fetch_newsfeed()
+
+        return Response(
+            data={
+                'items': serializer.to_representation(nw_items)
+            }
+        )
