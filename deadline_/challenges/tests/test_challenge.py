@@ -45,7 +45,7 @@ class ChallengesModelTest(TestCase):
         c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
         c.save()
         with self.assertRaises(ValidationError):
-            c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+            c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
             c.full_clean()
 
     def test_cannot_have_three_digit_or_invalid_difficulty(self):
