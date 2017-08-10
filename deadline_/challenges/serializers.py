@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from rest_framework import serializers
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, \
-    Language, UserSubcategoryProficiency, SubmissionComment
+    Language, UserSubcategoryProficiency, SubmissionComment, ChallengeComment
 from challenges.models import User
 
 
@@ -10,6 +10,15 @@ class ChallengeDescriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeDescription
         exclude = ('id', )
+
+
+class ChallengeCommentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    author = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = ChallengeComment
+        fields = ('id', 'author', 'content')
 
 
 class ChallengeSerializer(serializers.ModelSerializer):

@@ -3,9 +3,10 @@ from unittest.mock import MagicMock
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer, SubmissionCommentSerializer
+from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer, SubmissionCommentSerializer, \
+    ChallengeCommentSerializer
 from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, \
-    Challenge, Proficiency, SubmissionComment
+    Challenge, Proficiency, SubmissionComment, ChallengeComment
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import ChallengeDescFactory
 from accounts.models import User
@@ -124,10 +125,25 @@ class SubmissionCommentSerializerTests(TestCase, TestHelperMixin):
         self.base_set_up()
 
     def test_serialization(self):
-        submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user, code="DMV")
-        subm_comment = SubmissionComment.objects.create(submission=submission, author=self.auth_user, content="Hello World")
+        subm_comment = SubmissionComment.objects.create(submission=self.submission,
+                                                        author=self.auth_user, content="Hello World")
 
-        expected_data = {'id': 1, 'author': '123', 'content': 'Hello World'}
+        expected_data = {'id': subm_comment.id, 'author': subm_comment.author.username, 'content': subm_comment.content}
         received_data = SubmissionCommentSerializer(instance=subm_comment).data
 
         self.assertEqual(expected_data, received_data)
+
+
+class ChallengeCommentSerializerTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.base_set_up()
+
+    def test_serialization(self):
+        challenge_comment = ChallengeComment.objects.create(challenge=self.challenge,
+                                                            author=self.auth_user, content='Hello World')
+        expected_data = {'id': challenge_comment.id, 'author': challenge_comment.author.username, 'content': challenge_comment.content}
+        received_data = ChallengeCommentSerializer(instance=challenge_comment).data
+
+        self.assertEqual(expected_data, received_data)
+
+
