@@ -16,6 +16,10 @@ from challenges.tasks import run_grader_task
 
 
 # /challenges/{challenge_id}
+from decorators import fetch_models
+from views import BaseManageView
+
+
 class ChallengeDetailView(RetrieveAPIView):
     """ Returns information about a specific Challenge """
     queryset = Challenge.objects.all()
@@ -188,6 +192,60 @@ class SubmissionListView(ListAPIView):
                                                          .filter(challenge=challenge_pk, author=request.user)
                                                          .order_by('-created_at')  # newest first
                                                          .all(), many=True).data)
+
+
+# POST /challenges/{challenge_id}/submissions/{submission_id}/comments
+class SubmissionCommentCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    model_classes = (Challenge, Submission)
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, submission: Submission, *args, **kwargs):
+        comment_content = request.data.get('content', None)
+        result = self.validate_data(current_user=request.user,
+                                    comment_content=comment_content,
+                                    challenge=challenge, submission=submission)
+        if isinstance(result, Response):
+            return result  # validation error
+
+        submission.add_comment(author=request.user, content=comment_content)
+        return Response(status=201)
+
+    def validate_data(self, current_user, comment_content, challenge, submission):
+        """
+        Validate that the comment content is OK and that the
+
+            a) the user is the author of the submission
+            b) the user has solved the associated challenge with max score
+        """
+        if not isinstance(comment_content, str):
+            return Response(status=401, data={'error': 'Invalid comment content!'})
+        if len(comment_content) < 5 or len(comment_content) > 500:
+            return Response(status=401, data={'error': 'Comment must be between 5 and 500 characters!'})
+
+        if submission.challenge_id != challenge.id:
+            return Response(
+                status=400,
+                data={'error':
+                      f'Submission with ID {submission.id} does not belong to Challenge with ID {challenge.id}'}
+            )
+
+        # validate that the current User is either the author or has solved it perfectly
+        if submission.author_id != current_user.id:
+            top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge.id, current_user.id)
+            if top_user_submission is None or top_user_submission.result_score != challenge.score:
+                # User has not fully solved this and as such does not have access to the solution
+                return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+
+
+# /challenges/{challenge_id}/submissions/{submission_id}/comments
+class SubmissionCommentManageView(BaseManageView):
+    """
+        Manages different request methods for the given URL, sending them to the appropriate view class
+    """
+    VIEWS_BY_METHOD = {
+        'POST': SubmissionCommentCreateView.as_view
+    }
 
 
 # /challenges/submissions/{submission_id}/vote

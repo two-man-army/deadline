@@ -8,6 +8,9 @@ class BaseManageView(APIView):
         A ManageView is a view which is used to dispatch the requests to the appropriate views
         This is done so that we can use one URL with different methods (GET, PUT, etc)
     """
+    # TODO: Play around with the @fetch_models decorator on a base view, as it encompasses the logic
+    # but it might be too abstract
+
     def dispatch(self, request, *args, **kwargs):
         if not hasattr(self, 'VIEWS_BY_METHOD'):
             raise Exception('VIEWS_BY_METHOD static dictionary variable must be defined on a ManageView class!')

@@ -561,3 +561,127 @@ class SubmissionVoteViewTest(APITestCase, TestHelperMixin):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(SubmissionVote.objects.all()), 0)
+
+
+class SubmissionCommentViewTest(APITestCase, TestHelperMixin):
+    def setUp(self):
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        self.python_language = Language.objects.create(name="Python")
+
+        self.sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        self.c1 = ChallengeFactory(category=self.sub_cat)
+
+        self.create_user_and_auth_token()
+        submission_user = UserFactory()
+        self.submission = Submission.objects.create(language=self.python_language, challenge=self.c1, author=submission_user,
+                                                    code="", pending=False)
+
+    # Comment Create Tests
+
+    def test_create_comment(self):
+        # create a solved submission for auth_user to give him access
+        Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                  author=self.auth_user, code="", result_score=self.c1.score, pending=False)
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/{self.submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'})
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.submission.comments.count(), 1)
+        self.assertEqual(self.submission.comments.first().author, self.auth_user)
+        self.assertEqual(self.submission.comments.first().content, 'Hello World')
+
+    def test_user_cannot_comment_on_submission_he_has_not_solved(self):
+        """ The user cannot comment on a submission he does not have access to """
+        # incomplete submission
+        Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                  author=self.auth_user, code="", result_score=self.c1.score-1)
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/{self.submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'})
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(self.submission.comments.count(), 0)
+
+    def test_author_can_comment_on_own_submission_even_if_not_solved(self):
+        user_submission = Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                                    author=self.auth_user, code="", result_score=0)
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/{user_submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'})
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(user_submission.comments.count(), 1)
+        self.assertEqual(user_submission.comments.first().author, self.auth_user)
+        self.assertEqual(user_submission.comments.first().content, 'Hello World')
+
+    def test_returns_400_in_non_matching_challenge_submission(self):
+        c2 = ChallengeFactory(category=self.sub_cat)
+
+        response = self.client.post(f'/challenges/{c2.id}/submissions/{self.submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'})
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_400_in_non_matching_challenge_submission_2(self):
+        c2 = ChallengeFactory(category=self.sub_cat)
+        c2_submission = Submission.objects.create(language=self.python_language, challenge=c2,
+                                                  author=self.auth_user, code="", pending=False)
+
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/{c2_submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'})
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_400_if_comment_is_not_str(self):
+        # create a solved submission for auth_user to give him access
+        Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                  author=self.auth_user, code="", result_score=self.c1.score, pending=False)
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/{self.submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 123456}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_400_if_comment_is_too_short(self):
+        # create a solved submission for auth_user to give him access
+        Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                  author=self.auth_user, code="", result_score=self.c1.score, pending=False)
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/{self.submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'wh'}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_400_if_comment_is_too_long(self):
+        # create a solved submission for auth_user to give him access
+        Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                  author=self.auth_user, code="", result_score=self.c1.score, pending=False)
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/{self.submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'wh'*500}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_non_existent_challenge_returns_404(self):
+        # create a solved submission for auth_user to give him access
+        Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                  author=self.auth_user, code="", result_score=self.c1.score, pending=False)
+        response = self.client.post(f'/challenges/1342/submissions/{self.submission.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'yoyoyoyo'}, content_type='application/json')
+        self.assertEqual(response.status_code, 404)
+
+    def test_non_existent_submission_returns_404(self):
+        # create a solved submission for auth_user to give him access
+        Submission.objects.create(language=self.python_language, challenge=self.c1,
+                                  author=self.auth_user, code="", result_score=self.c1.score, pending=False)
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/1234/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'what'}, content_type='application/json')
+        self.assertEqual(response.status_code, 404)
+
+    def test_requires_authentication(self):
+        response = self.client.post(f'/challenges/{self.c1.id}/submissions/1234/comments',
+                                    data={'content': 'what'}, content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+
+    # Comment Create Tests
