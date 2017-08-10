@@ -105,3 +105,16 @@ class SubmissionSerializerTests(TestCase, TestHelperMixin):
                          f'"user_has_voted":true,"user_has_upvoted":false,"upvote_count":0,"downvote_count":1}}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
+
+class SubmissionCommentSerializerTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.base_set_up()
+
+    def test_serialization(self):
+        submission = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user, code="DMV")
+        subm_comment = SubmissionComment.objects.create(submission=submission, author=self.auth_user, content="Hello World")
+
+        expected_data = {'id': 1, 'author': '123', 'content': 'Hello World'}
+        received_data = SubmissionCommentSerializer(instance=subm_comment).data
+        
+        self.assertEqual(expected_data, received_data)

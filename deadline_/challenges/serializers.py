@@ -1,7 +1,8 @@
 from collections import OrderedDict
 
 from rest_framework import serializers
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, Language, UserSubcategoryProficiency
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, \
+    Language, UserSubcategoryProficiency, SubmissionComment
 from challenges.models import User
 
 
@@ -51,6 +52,15 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
             result['user_max_score'] = user.fetch_max_score_for_challenge(challenge_id=instance.id)
 
         return result
+
+
+class SubmissionCommentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    author = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = SubmissionComment
+        fields = ('id', 'author', 'content')
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
