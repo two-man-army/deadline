@@ -89,22 +89,6 @@ class ChallengesModelTest(TestCase):
         with self.assertRaises(Exception):
             c.full_clean()
 
-    def test_serialization(self):
-        rust_lang = Language.objects.create(name='Rust'); rust_lang.save()
-        python_lang = Language.objects.create(name='Python'); python_lang.save()
-        c_lang = Language.objects.create(name='C'); c_lang.save()
-        c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
-        c.supported_languages.add(*[rust_lang, c_lang, python_lang])
-        expected_description_json = f'{{"content":"{self.sample_desc.content}","input_format":"{self.sample_desc.input_format}",' \
-                                    f'"output_format":"{self.sample_desc.output_format}","constraints":"{self.sample_desc.constraints}",' \
-                                    f'"sample_input":"{self.sample_desc.sample_input}","sample_output":"{self.sample_desc.sample_output}",' \
-                                    f'"explanation":"{self.sample_desc.explanation}"}}'
-        expected_json = (f'{{"id":{c.id},"name":"Hello","difficulty":5.0,"score":10,"description":'
-                         + expected_description_json
-                         + ',"test_case_count":5,"category":"tests","supported_languages":["Rust","Python","C"]}')
-        content = JSONRenderer().render(ChallengeSerializer(c).data)
-        self.assertEqual(content.decode('utf-8'), expected_json)
-
     @skip
     def test_deserialization(self):
         self.fail("Implement deserialization somewhere down the line, with the ability to create a description object from the challenge serialization. You're gonna need to override the serializer's create method")

@@ -4,7 +4,7 @@ from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer, SubmissionCommentSerializer, \
-    ChallengeCommentSerializer
+    ChallengeCommentSerializer, ChallengeSerializer, ChallengeDescriptionSerializer
 from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, \
     Challenge, Proficiency, SubmissionComment, ChallengeComment
 from challenges.tests.base import TestHelperMixin
@@ -132,6 +132,44 @@ class SubmissionCommentSerializerTests(TestCase, TestHelperMixin):
         received_data = SubmissionCommentSerializer(instance=subm_comment).data
 
         self.assertEqual(expected_data, received_data)
+
+
+class ChallengeSerializerTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        self.sample_desc = ChallengeDescFactory()
+        self.sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        self.rust_lang = Language.objects.create(name='Rust')
+        self.python_lang = Language.objects.create(name='Python')
+        self.c_lang = Language.objects.create(name='C')
+
+    def test_serialization(self):
+        c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat,
+                                     description=self.sample_desc)
+        c.supported_languages.add(*[self.rust_lang, self.c_lang, self.python_lang])
+
+        expected_description_data = ChallengeDescriptionSerializer(instance=self.sample_desc).data
+        expected_data = {
+            'id': c.id, 'name': c.name, 'difficulty': c.difficulty, 'score': c.score,
+            'description': expected_description_data, 'test_case_count': c.test_case_count,
+            'category': c.category.name, 'supported_languages': [lang.name for lang in c.supported_languages.all()],
+            'comments': []
+        }
+
+        received_data = ChallengeSerializer(c).data
+        self.assertEqual(received_data, expected_data)
+
+    def test_serializes_comments_and_sorts_by_creation_date(self):
+        c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat,
+                                     description=self.sample_desc)
+        c.add_comment(author=self.auth_user, content='1Hello :)')
+        c.add_comment(author=self.auth_user, content='Hello 2')
+        serializer = ChallengeSerializer(c)
+        comments = ChallengeComment.objects.all().order_by('-created_at')
+
+        expected_data = ChallengeCommentSerializer(many=True, instance=comments).data
+        self.assertEqual(expected_data, serializer.data['comments'])
 
 
 class ChallengeCommentSerializerTests(TestCase, TestHelperMixin):
