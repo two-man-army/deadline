@@ -246,9 +246,9 @@ class SubmissionCommentCreateView(APIView):
             b) the user has solved the associated challenge with max score
         """
         if not isinstance(comment_content, str):
-            return Response(status=401, data={'error': 'Invalid comment content!'})
+            return Response(status=400, data={'error': 'Invalid comment content!'})
         if len(comment_content) < 5 or len(comment_content) > 500:
-            return Response(status=401, data={'error': 'Comment must be between 5 and 500 characters!'})
+            return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
 
         if submission.challenge_id != challenge.id:
             return Response(
