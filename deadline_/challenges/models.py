@@ -94,6 +94,10 @@ class SubmissionComment(models.Model):
     submission = models.ForeignKey(Submission, related_name='comments')
     author = models.ForeignKey(User)
     content = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at', )
 
 
 class SubmissionVote(models.Model):
