@@ -79,6 +79,10 @@ class NewsfeedItemComment(models.Model):
     content = models.CharField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
+
+    def add_reply(self, author, content):
+        return NewsfeedItemComment.objects.create(newsfeed_item=self.newsfeed_item, parent=self, author=author, content=content)
 
 
 class NewsfeedItemLike(models.Model):
