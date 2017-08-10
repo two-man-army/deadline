@@ -86,6 +86,15 @@ class Submission(models.Model):
         return Submission.objects.raw(SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR,
                                       params=[user_id])
 
+    def add_comment(self, author, content):
+        SubmissionComment.objects.create(submission=self, author=author, content=content)
+
+
+class SubmissionComment(models.Model):
+    submission = models.ForeignKey(Submission, related_name='comments')
+    author = models.ForeignKey(User)
+    content = models.CharField(max_length=500)
+
 
 class SubmissionVote(models.Model):
     is_upvote = models.BooleanField()

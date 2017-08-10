@@ -151,6 +151,14 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         sv1.delete()
         self.assertEqual((0, 0), s.get_votes_count())
 
+    def test_add_comment_adds_comment(self):
+        f_submission: Submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
+        f_submission.add_comment(author=self.auth_user, content='Hello')
+
+        self.assertEqual(f_submission.comments.count(), 1)
+        self.assertEqual(f_submission.comments.first().author, self.auth_user)
+        self.assertEqual(f_submission.comments.first().content, 'Hello')
+
 
 # TODO: Split tests to test the function validate_data() instead of issuing a request
 # TODO:     + a mock ot assure its called when issuing a request
