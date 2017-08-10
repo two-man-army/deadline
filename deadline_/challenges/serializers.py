@@ -69,11 +69,12 @@ class SubmissionSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
     result_score = serializers.IntegerField(read_only=True)
     pending = serializers.BooleanField(read_only=True)
+    comments = SubmissionCommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Submission
         fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at',
-                  'compiled', 'compile_error_message', 'language', 'timed_out')
+                  'compiled', 'compile_error_message', 'language', 'timed_out', 'comments')
 
     def to_representation(self, instance: Submission):
         """

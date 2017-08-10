@@ -3,8 +3,9 @@ from unittest.mock import MagicMock
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer
-from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, Challenge, Proficiency
+from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer, SubmissionCommentSerializer
+from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, \
+    Challenge, Proficiency, SubmissionComment
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import ChallengeDescFactory
 from accounts.models import User
@@ -98,13 +99,25 @@ class SubmissionSerializerTests(TestCase, TestHelperMixin):
         s = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user, code="DMV")
         sv = SubmissionVote.objects.create(submission_id=s.id, author_id=self.auth_user.id, is_upvote=False); sv.save()
         serializer = SubmissionSerializer(s, context={'request': MagicMock(user=self.auth_user)})
-        created_at_date = s.created_at.isoformat()[:-6] + 'Z'
-        expected_json = (f'{{"id":{s.id},"challenge":{self.challenge.id},"author":"{self.auth_user.username}",'
-                         f'"code":"{"DMV"}","result_score":0,"pending":true,"created_at":"{created_at_date}",'
-                         f'"compiled":true,"compile_error_message":"","language":"Python","timed_out":false,'
-                         f'"user_has_voted":true,"user_has_upvoted":false,"upvote_count":0,"downvote_count":1}}')
-        content = JSONRenderer().render(serializer.data)
-        self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
+        expected_data = {'id': s.id, 'challenge': s.challenge.id, 'author': s.author.username, 'code': s.code,
+                         'result_score': s.result_score, 'pending': s.pending,
+                         'created_at': s.created_at.isoformat()[:-6] + 'Z', 'compiled': s.compiled,
+                         'compile_error_message': s.compile_error_message, 'language': s.language.name,
+                         'timed_out': s.timed_out, 'comments': [], 'user_has_voted': True, 'user_has_upvoted': False,
+                         'upvote_count': 0, 'downvote_count': 1}
+
+        self.assertEqual(expected_data, serializer.data)
+
+    def test_serializes_comments_and_sorts_by_order_date(self):
+        s = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user, code="DMV")
+        s.add_comment(author=self.auth_user, content='1Hello :)')
+        s.add_comment(author=self.auth_user, content='Hello 2')
+        serializer = SubmissionSerializer(s, context={'request': MagicMock(user=self.auth_user)})
+        comments = SubmissionComment.objects.all().order_by('-created_at')
+        expected_data = SubmissionCommentSerializer(many=True, instance=comments).data
+
+        self.assertEqual(expected_data, serializer.data['comments'])
+
 
 class SubmissionCommentSerializerTests(TestCase, TestHelperMixin):
     def setUp(self):
@@ -116,5 +129,5 @@ class SubmissionCommentSerializerTests(TestCase, TestHelperMixin):
 
         expected_data = {'id': 1, 'author': '123', 'content': 'Hello World'}
         received_data = SubmissionCommentSerializer(instance=subm_comment).data
-        
+
         self.assertEqual(expected_data, received_data)
