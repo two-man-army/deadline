@@ -10,7 +10,7 @@ from rest_framework.parsers import JSONParser
 
 from challenges.models import Challenge, MainCategory, SubCategory, ChallengeDescription, Language, Proficiency
 from challenges.serializers import ChallengeSerializer, ChallengeDescriptionSerializer
-from challenges.tests.factories import ChallengeDescFactory, UserFactory
+from challenges.tests.factories import ChallengeDescFactory, UserFactory, ChallengeFactory
 from challenges.tests.base import TestHelperMixin
 from accounts.models import User, Role
 
@@ -153,3 +153,56 @@ class ChallengesViewsTest(APITestCase, TestHelperMixin):
         response = self.client.get(f'/challenges/{self.c.id}')
 
         self.assertEqual(response.status_code, 401)
+
+
+class ChallengeCommentViewTest(APITestCase, TestHelperMixin):
+    def setUp(self):
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        self.python_language = Language.objects.create(name="Python")
+
+        self.sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        self.c1 = ChallengeFactory(category=self.sub_cat)
+        self.create_user_and_auth_token()
+
+    # Comment Create Tests
+    def test_create_comment(self):
+        response = self.client.post(f'/challenges/{self.c1.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'})
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.c1.comments.count(), 1)
+        self.assertEqual(self.c1.comments.first().author, self.auth_user)
+        self.assertEqual(self.c1.comments.first().content, 'Hello World')
+
+    def test_returns_400_if_comment_is_not_str(self):
+        response = self.client.post(f'/challenges/{self.c1.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 123456}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_400_if_comment_is_too_short(self):
+        response = self.client.post(f'/challenges/{self.c1.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'wh'})
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_400_if_comment_is_too_long(self):
+        response = self.client.post(f'/challenges/{self.c1.id}/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'*500})
+        self.assertEqual(response.status_code, 400)
+
+    def test_non_existent_challenge_returns_404(self):
+        response = self.client.post(f'/challenges/111/comments',
+                                    HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'content': 'Hello World'})
+        self.assertEqual(response.status_code, 404)
+
+    def test_requires_authentication(self):
+        response = self.client.post(f'/challenges/111/comments',
+                                    data={'content': 'Hello World'})
+        self.assertEqual(response.status_code, 401)
+
+        # Comment Create Tests

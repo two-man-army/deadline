@@ -27,6 +27,33 @@ class ChallengeDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
 
 
+# POST /challenges/{challenge_id}/comments
+class ChallengeCommentCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    model_classes = (Challenge, )
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, *args, **kwargs):
+        comment_content = request.data.get('content', None)
+        if not isinstance(comment_content, str):
+            return Response(status=400, data={'error': 'Invalid comment content!'})
+        if len(comment_content) < 5 or len(comment_content) > 500:
+            return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
+
+        challenge.add_comment(author=request.user, content=comment_content)
+        return Response(status=201)
+
+
+# /challenges/{challenge_id}/comments
+class ChallengeCommentManageView(BaseManageView):
+    """
+        Manages different request methods for the given URL, sending them to the appropriate view class
+    """
+    VIEWS_BY_METHOD = {
+        'POST': ChallengeCommentCreateView.as_view
+    }
+
+
 # /challenges/latest_attempted
 class LatestAttemptedChallengesListView(ListAPIView):
     """
