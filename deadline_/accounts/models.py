@@ -127,5 +127,5 @@ def user_post_save(sender, instance, created, *args, **kwargs):
 
     # create a UserSubcategoryProgress for each subcategory and a UserSubcategoryProficiency
     for subcat in SubCategory.objects.all():
-        # UserSubcategoryProgress.objects.create(user=instance, subcategory=subcat, user_score=0)
-        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency, user_score=0)
+        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency,
+                                                  user_score=0)

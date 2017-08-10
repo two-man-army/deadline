@@ -10,9 +10,9 @@ from rest_framework.parsers import JSONParser
 
 from challenges.models import Challenge, MainCategory, SubCategory, ChallengeDescription, Language, Proficiency
 from challenges.serializers import ChallengeSerializer, ChallengeDescriptionSerializer
-from challenges.tests.factories import ChallengeDescFactory
+from challenges.tests.factories import ChallengeDescFactory, UserFactory
 from challenges.tests.base import TestHelperMixin
-from accounts.models import User
+from accounts.models import User, Role
 
 
 # TODO: Add supported languages to tests
@@ -23,15 +23,29 @@ class ChallengesModelTest(TestCase):
         self.sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
 
     def test_absolute_url(self):
-        c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+        c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
         expected_url = '/challenges/{}'.format(c.id)
         self.assertEqual(c.get_absolute_url(), expected_url)
 
+    def test_can_create_comment(self):
+        self.base_role = Role.objects.create(name='User')
+        self.main_cat = MainCategory.objects.create(name='tank')
+        self.starter_proficiency = Proficiency.objects.create(name="scrub", needed_percentage=0)
+        us = UserFactory()
+        c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+        comment = c.add_comment(author=us, content='Hello, how are you :)')
+
+        self.assertEqual(c.comments.count(), 1)
+        self.assertEqual(c.comments.first(), comment)
+        self.assertEqual(comment.author, us)
+        self.assertEqual(comment.content, 'Hello, how are you :)')
+        self.assertIsNotNone(comment.created_at)
+
     def test_cannot_save_duplicate_challenge(self):
-        c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+        c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
         c.save()
         with self.assertRaises(ValidationError):
-            c = Challenge(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
+            c = Challenge.objects.create(name='Hello', difficulty=5, score=10, test_case_count=5, category=self.sub_cat, description=self.sample_desc)
             c.full_clean()
 
     def test_cannot_have_three_digit_or_invalid_difficulty(self):

@@ -29,6 +29,19 @@ class Challenge(models.Model):
     def get_absolute_url(self):
         return '/challenges/{}'.format(self.id)
 
+    def add_comment(self, author: User, content: str):
+        return ChallengeComment.objects.create(author=author, content=content, challenge=self)
+
+
+class ChallengeComment(models.Model):
+    challenge = models.ForeignKey(Challenge, related_name='comments')
+    author = models.ForeignKey(User)
+    content = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at', )
+
 
 class Submission(models.Model):
     challenge = models.ForeignKey(Challenge)
