@@ -83,14 +83,12 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
 
         self.assertEqual(received_data, expected_data)
 
-    @skip  # need to find a better place for that logic, AppConfig does not do the job as it runs before migrations
     def test_subcategory_max_score_is_updated(self):
         """
-        Test if the SubCategory's max score is updated on server startup.
+        Test if the SubCategory's max score is updated on Challenge creation
         This is done to capture the fact that sometimes we'll have new challenges added or removed and
         it needs to reflex the max score in a subcategory
         """
-        from django.apps import apps
         c1 = Challenge(name='Sub1', difficulty=5, score=200, description=ChallengeDescFactory(),
                       test_case_count=5, category=self.sub1)
         c2 = Challenge(name='Sub1_2', difficulty=5, score=200, description=ChallengeDescFactory(),
@@ -98,9 +96,6 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
         c3 = Challenge(name='Sub2', difficulty=5, score=200, description=ChallengeDescFactory(),
                        test_case_count=5, category=self.sub2)
         c1.save(); c2.save(); c3.save()
-
-        challenge_config = apps.get_app_config('challenges')
-        challenge_config.ready()
 
         self.sub1.refresh_from_db()
         self.sub2.refresh_from_db()

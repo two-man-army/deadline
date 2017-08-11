@@ -119,3 +119,15 @@ class UserSubcategoryProficiencyModelTest(TestCase):
         # should update the user's score and proficiency
         self.assertEqual(self.user.score, 199)
         self.assertEqual(subcat_proficiency.proficiency, self.starter_prof)
+
+    def test_proficiency_user_score_is_updated_onsubmission_creation(self):
+        raise NotImplementedError()
+
+    def test_proficiency_user_score_is_not_updated_on_lesser_submission_score(self):
+        raise NotImplementedError()
+
+    def test_proficiency_user_score_update_is_not_overwritten_on_multiple_varied_submissions(self):
+        raise NotImplementedError()
+
+    def test_proficiency_user_score_update_is_incremented_on_multiple_different_challenge_submissions(self):
+        raise NotImplementedError()
