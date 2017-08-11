@@ -54,7 +54,10 @@ class User(AbstractBaseUser):
 
         # temporary hacky solution
         cursor = connection.cursor()
-        cursor.execute(USER_SELECT_COUNT_OF_SOLVED_CHALLENGES_FOR_SUB_CATEGORY.format(challenge_ids=', '.join(str(p) for p in challenge_ids_for_category)),
+        challenge_id_string = ', '.join(str(p) for p in challenge_ids_for_category)
+        if not challenge_id_string:  # EXTREME HACK
+            challenge_id_string = '-1'
+        cursor.execute(USER_SELECT_COUNT_OF_SOLVED_CHALLENGES_FOR_SUB_CATEGORY.format(challenge_ids=challenge_id_string),
                        (self.id, ))
         solved_challenges_count = cursor.fetchone()[0]
 
