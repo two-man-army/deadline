@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from decorators import fetch_models
-from social.models import NewsfeedItem
+from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE
 
@@ -122,10 +122,32 @@ class NewsfeedItemCommentCreateView(CreateAPIView):
     model_classes = (NewsfeedItem, )
 
     @fetch_models
-    def post(self, request, nw_item: NewsfeedItemSerializer, *args, **kwargs):
+    def post(self, request, nw_item: NewsfeedItem, *args, **kwargs):
         self.nw_item = nw_item
         self.req_user = request.user
         return super().post(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         return serializer.save(author_id=self.req_user.id, newsfeed_item_id=self.nw_item.id)
+
+
+# POST /feed/items/{newsfeed_item_id}/comments/{comment_id}
+class NewsfeedItemCommentReplyCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = NewsfeedItemCommentSerializer
+    model_classes = (NewsfeedItem, NewsfeedItemComment)
+
+    @fetch_models
+    def post(self, request, nw_item: NewsfeedItem, nw_item_comment: NewsfeedItemComment, *args, **kwargs):
+        if nw_item_comment.newsfeed_item_id != nw_item.id:
+            return Response(
+                status=400, data={'error': f'Comment {nw_item_comment.id} does not belong to NewsfeedItem {nw_item.id}'}
+            )
+
+        self.nw_item = nw_item
+        self.user = request.user
+        self.comment = nw_item_comment
+        return super().post(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        return serializer.save(author_id=self.user.id, newsfeed_item_id=self.nw_item.id, parent=self.comment)
