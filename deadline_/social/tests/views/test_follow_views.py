@@ -71,7 +71,7 @@ class UserUnfollowViewTest(APITestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_returns_400_if_querystring_missing(self):
-        response = self.client.post(f'/social/unfollow/', HTTP_AUTHORIZATION=self.first_user_auth_token)
+        response = self.client.post(f'/social/unfollow', HTTP_AUTHORIZATION=self.first_user_auth_token)
         self.assertEqual(response.status_code, 400)
 
     def test_returns_404_if_invalid_user(self):

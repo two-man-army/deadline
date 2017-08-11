@@ -1,13 +1,14 @@
 import re
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
+from decorators import fetch_models
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE
@@ -99,3 +100,13 @@ class NewsfeedContentView(APIView):
                 'items': serializer.to_representation(nw_items, user=request.user)
             }
         )
+
+
+# GET /feed/items/{newsfeed_item_id}
+class NewsfeedItemDetailView(RetrieveAPIView):
+    """
+        Returns information about a specific NewsfeedItem
+    """
+    permission_classes = (IsAuthenticated, )
+    queryset = NewsfeedItem.objects.all()
+    serializer_class = NewsfeedItemSerializer

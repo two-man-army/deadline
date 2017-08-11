@@ -22,6 +22,11 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertIsNotNone(nw_item.created_at)
         self.assertIsNotNone(nw_item.updated_at)
 
+    def test_get_absolute_url(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+                                              content={'content': 'Hello I like turtles'})
+        self.assertEqual(nw_item.get_absolute_url(), f'/social/feed/items/{nw_item.id}')
+
     def test_serialiation(self):
         nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
                                               content={'content': 'Hello I like turtles'})

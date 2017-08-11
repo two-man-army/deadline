@@ -37,6 +37,9 @@ class NewsfeedItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def get_absolute_url(self):
+        return f'/social/feed/items/{self.id}'
+
     def like(self, user: User):
         if NewsfeedItemLike.objects.filter(newsfeed_item=self, author=user).exists():
             raise LikeAlreadyExistsError(f'The Like from User {user.id} for Item {self.id} does already exists!')

@@ -69,7 +69,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(NewsfeedItem.objects.count(), 0)
 
 
-class NewsfeedGetViewTests(APITestCase, TestHelperMixin):
+class NewsfeedContentViewTests(APITestCase, TestHelperMixin):
     """
     The newsfeed of a User should show NewsfeedItems
         by people he has followed + his
@@ -145,3 +145,28 @@ class NewsfeedGetViewTests(APITestCase, TestHelperMixin):
 
         self.assertEqual(len(response.data['items']), NEWSFEED_ITEMS_PER_PAGE)
         self.assertEqual(response.data, expected_data)
+
+
+class NewsfeedItemDetailViewTests(APITestCase, TestHelperMixin):
+    """
+    Should simply return information about a specific NewsfeedItem
+    """
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+
+    def test_returns_serialized_nw_item(self):
+        response = self.client.get(self.nw_item_us2_1.get_absolute_url(), HTTP_AUTHORIZATION=self.auth_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, NewsfeedItemSerializer(self.nw_item_us2_1).data)
+
+    def test_requires_authentication(self):
+        response = self.client.get(self.nw_item_us2_1.get_absolute_url())
+        self.assertEqual(response.status_code, 401)
+
+    def test_no_item_returns_404(self):
+        response = self.client.get('/social/feed/items/111', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+

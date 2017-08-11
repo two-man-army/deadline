@@ -9,6 +9,7 @@ from accounts.serializers import UserSerializer
 from errors import DisabledSerializerError
 from social.models import NewsfeedItemComment, NewsfeedItem, NewsfeedItemLike
 
+
 class NewsfeedItemCommentSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     replies = RecursiveField(many=True, read_only=True)
