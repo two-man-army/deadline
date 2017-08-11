@@ -188,7 +188,6 @@ class SubCategorySerializer(serializers.ModelSerializer):
         user_proficiency: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=obj.id)
         proficiency_object = OrderedDict()
         proficiency_object['name'] = user_proficiency.proficiency.name
-        max_score = sum(ch.score for ch in obj.challenges.all())  # TODO: Store somewhere
-        proficiency_object['percentage_progress'] = int((user_proficiency.user_score / max_score) * 100)
+        proficiency_object['user_score'] = user_proficiency.user_score
 
         return proficiency_object

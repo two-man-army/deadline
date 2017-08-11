@@ -1,11 +1,13 @@
 import json
 from collections import OrderedDict
 from unittest import skip
+from unittest.mock import MagicMock
 
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, UserSubcategoryProficiency, Proficiency
+from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, \
+    UserSubcategoryProficiency, Proficiency, Submission, Language
 from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
 from challenges.tests.factories import ChallengeDescFactory, UserFactory, MainCategoryFactory
 from challenges.tests.base import TestHelperMixin
@@ -46,23 +48,40 @@ class CategoryViewTest(TestCase):
                                                                many=True).data)
 
 
-class SubCategoryModelTest(TestCase):
+class SubCategoryModelTest(TestCase, TestHelperMixin):
     def setUp(self):
-        self.sample_desc = ChallengeDescFactory()
         self.c1 = MainCategory.objects.create(name='Test')
         self.sub1 = SubCategory.objects.create(name='Unit', meta_category=self.c1)
         self.sub2 = SubCategory.objects.create(name='Mock', meta_category=self.c1)
         self.sub3 = SubCategory.objects.create(name='Patch', meta_category=self.c1)
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        self.create_user_and_auth_token()
+        self.sample_desc = ChallengeDescFactory()
 
-    @skip  # serialization does not currently work correctly as we want to return max score for challenge
+    # @skip  # serialization does not currently work correctly as we want to return max score for challenge
     def test_serialize(self):
         """ Ths Subcategory should show all its challenges"""
+        self.subcategory_progress = UserSubcategoryProficiency.objects.filter(subcategory=self.sub1,
+                                                                              user=self.auth_user).first()
+        print(self.sub1.id)
         c = Challenge.objects.create(name='TestThis', difficulty=5, score=10, description=self.sample_desc,
-                      test_case_count=5, category=self.sub1)
+                                     test_case_count=5, category=self.sub1)
         c.save()
-        expected_json = '{"name":"Unit","challenges":[{"id":1,"name":"TestThis","difficulty":5.0,"score":10,"category":"Unit"}]}'
-        received_data = JSONRenderer().render(SubCategorySerializer(self.sub1).data)
-        self.assertEqual(received_data.decode('utf-8'), expected_json)
+        python_language = Language.objects.create(name="Python")
+        self.subcategory_progress.user_score = 5
+        self.subcategory_progress.save()
+        self.sub1.max_score = c.score
+        req_mock = MagicMock(user=self.auth_user)
+        expected_data = {'name': 'Unit',
+                         'challenges': LimitedChallengeSerializer(many=True).to_representation(self.sub1.challenges.all()),
+                         'max_score': self.sub1.max_score,
+                         'proficiency': {'name': self.subcategory_progress.proficiency.name,
+                                         'user_score': self.subcategory_progress.user_score}
+                         }
+
+        received_data = SubCategorySerializer(self.sub1, context={'request': req_mock}).data
+
+        self.assertEqual(received_data, expected_data)
 
     @skip  # need to find a better place for that logic, AppConfig does not do the job as it runs before migrations
     def test_subcategory_max_score_is_updated(self):
@@ -116,7 +135,7 @@ class SubCategoryViewTest(TestCase, TestHelperMixin):
         subcat_prof.save()
         prof_obj = OrderedDict()
         prof_obj['name'] = 'starter'
-        prof_obj['percentage_progress'] = 50
+        prof_obj['user_score'] = 5
         expected_data = {"name": self.sub1.name, "challenges": ser.data, 'max_score': self.sub1.max_score, 'proficiency': prof_obj}
 
         response = self.client.get('/challenges/subcategories/{}'.format(self.sub1.name),
