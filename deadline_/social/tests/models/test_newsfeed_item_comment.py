@@ -4,7 +4,6 @@ from django.test import TestCase
 
 from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
-from errors import DisabledSerializerError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemCommentSerializer
 
@@ -32,6 +31,23 @@ class NewsfeedItemCommentTests(TestCase, TestHelperMixin):
         self.assertEqual(reply.author, self.auth_user)
         self.assertEqual(reply.newsfeed_item, self.comment_1.newsfeed_item)
         self.assertEqual(reply.content, 'whats UP :)')
+
+    def test_deserialization(self):
+        ser = NewsfeedItemCommentSerializer(data={'content': 'Tankkk'})
+        self.assertTrue(ser.is_valid())
+        nw_comment = ser.save(author_id=self.auth_user.id, newsfeed_item_id=self.nw_item.id)
+        self.assertEqual(nw_comment.author, self.auth_user)
+        self.assertEqual(nw_comment.content, 'Tankkk')
+        self.assertEqual(nw_comment.newsfeed_item, self.nw_item)
+
+    def test_deserialization_uneditable_fields(self):
+        """ author and newsfeed_item should not be editable"""
+        ser = NewsfeedItemCommentSerializer(data={'content': 'Tankkk', 'author_id': self.auth_user.id,
+                                                  'author': self.auth_user.id, 'newsfeed_item_id': self.nw_item.id,
+                                                  'newsfeed_item': self.nw_item.id})
+        self.assertTrue(ser.is_valid())
+        with self.assertRaises(Exception):
+            ser.save()
 
     def test_serialization(self):
         expected_data = {
@@ -87,8 +103,3 @@ class NewsfeedItemCommentTests(TestCase, TestHelperMixin):
         }
         received_data = NewsfeedItemCommentSerializer(instance=self.comment_1).data
         self.assertEqual(expected_data, received_data)
-
-    def test_deserialization_does_not_work(self):
-        received_data = NewsfeedItemCommentSerializer(data={'author': self.auth_user.id, 'content': 'tank'})
-        with self.assertRaises(DisabledSerializerError):
-            received_data.save()
