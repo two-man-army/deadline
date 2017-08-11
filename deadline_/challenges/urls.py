@@ -5,13 +5,16 @@ from challenges.views import (
     SubmissionCreateView, SubmissionListView, TopSubmissionListView, MainCategoryListView, SubCategoryDetailView,
     LatestAttemptedChallengesListView, LanguageDetailView, SelfTopSubmissionDetailView,
     CastSubmissionVoteView, RemoveSubmissionVoteView, SelfGetLeaderboardPositionView,
-    GetLeaderboardView, LanguageListView)
+    GetLeaderboardView, LanguageListView, CategorySubcategoriesListView)
 from django.views.decorators.cache import cache_page, never_cache
 
 urlpatterns = [
     url(r'^latest_attempted$', cache_page(60)(LatestAttemptedChallengesListView.as_view()), name='latest_challenges'),
 
+    url(r'^categories/(?P<category_pk>\d+)/subcategories$',
+        cache_page(20)(CategorySubcategoriesListView.as_view()), name='subcategories_list'),
     url(r'^categories/all$', cache_page(60*60)(MainCategoryListView.as_view()), name='category_list'),
+
     url(r'^subcategories/(?P<name>[^/]+)$', cache_page(60*60)(SubCategoryDetailView.as_view()), name='subcategory_detail'),
     url(r'^languages/(?P<name>[^/]+)$', cache_page(60*60)(LanguageDetailView.as_view()), name='language_detail'),
     url(r'^languages$', LanguageListView.as_view(), name='language_list'),

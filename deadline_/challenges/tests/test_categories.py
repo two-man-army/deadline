@@ -8,7 +8,8 @@ from rest_framework.renderers import JSONRenderer
 
 from challenges.models import Challenge, MainCategory, ChallengeDescription, SubCategory, User, \
     UserSubcategoryProficiency, Proficiency, Submission, Language
-from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer
+from challenges.serializers import MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, \
+    LimitedSubCategorySerializer
 from challenges.tests.factories import ChallengeDescFactory, UserFactory, MainCategoryFactory
 from challenges.tests.base import TestHelperMixin
 
@@ -83,13 +84,13 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
         self.assertEqual(received_data, expected_data)
 
     def test_serialize_shows_next_proficiency(self):
-        req_mock = MagicMock(user=self.auth_user)
-        received_data = SubCategorySerializer(self.sub1, context={'request': req_mock}).data
         Proficiency.objects.create(name='starter3', needed_percentage=50)
         next_prof = Proficiency.objects.create(name='starter2', needed_percentage=30)
+        req_mock = MagicMock(user=self.auth_user)
+        received_data = SubCategorySerializer(self.sub1, context={'request': req_mock}).data
 
         expected_prof = {'name': next_prof.name, 'needed_percentage': next_prof.needed_percentage}
-        self.assertEqual(received_data['next_proficiency'], {})
+        self.assertEqual(received_data['next_proficiency'], expected_prof)
 
     def test_subcategory_max_score_is_updated(self):
         """
@@ -131,15 +132,8 @@ class SubCategoryViewTest(TestCase, TestHelperMixin):
 
     def test_view_subcategory_detail_should_show(self):
         self.c.user_max_score = 0
-        ser = LimitedChallengeSerializer(data=[self.c], many=True); ser.is_valid()
-        # Should attach the user's proficiency in the subcategory to the data
-        subcat_prof = self.auth_user.fetch_subcategory_proficiency(self.sub1.id)
-        subcat_prof.user_score = 5
-        subcat_prof.save()
-        prof_obj = OrderedDict()
-        prof_obj['name'] = 'starter'
-        prof_obj['user_score'] = 5
-        expected_data = {"name": self.sub1.name, "challenges": ser.data, 'max_score': self.sub1.max_score, 'proficiency': prof_obj}
+        req_mock = MagicMock(user=self.auth_user)
+        expected_data = SubCategorySerializer(instance=self.sub1, context={'request': req_mock}).data
 
         response = self.client.get('/challenges/subcategories/{}'.format(self.sub1.name),
                                    HTTP_AUTHORIZATION=self.auth_token)
@@ -157,3 +151,44 @@ class SubCategoryViewTest(TestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 404)
 
 
+class CategorySubcategoriesListView(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
+                                                output_format='something', constraints='some',
+                                                sample_input='input sample', sample_output='output sample',
+                                                explanation='gotta push it to the limit')
+        self.sample_desc.save()
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        Proficiency.objects.create(name='starter 2', needed_percentage=50)
+        self.c1 = MainCategory.objects.create(name='Test')
+        self.c2 = MainCategory.objects.create(name='TANK')
+        self.sub1 = SubCategory.objects.create(name='Unit Tests', meta_category=self.c1)
+        self.sub2 = SubCategory.objects.create(name='Unit Tests II', meta_category=self.c1)
+        self.sub4 = SubCategory.objects.create(name='TANK 2', meta_category=self.c2)
+        self.create_user_and_auth_token()
+        self.c = Challenge.objects.create(name='TestThis', difficulty=5, score=10, description=self.sample_desc, test_case_count=5, category=self.sub1)
+
+    def test_returns_serialized_data(self):
+        req_mock = MagicMock(user=self.auth_user)
+        response = self.client.get(f'/challenges/categories/{self.c1.id}/subcategories',
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, LimitedSubCategorySerializer(many=True,
+                                                                     instance=[self.sub1, self.sub2],
+                                                                     context={'request': req_mock}).data)
+
+    def test_invalid_category_id_returns_404(self):
+        response = self.client.get(f'/challenges/categories/111/subcategories',
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+
+    def test_returns_empty_data_if_no_subcategories(self):
+        c3 = MainCategory.objects.create(name='TANK 3')
+        response = self.client.get(f'/challenges/categories/{c3.id}/subcategories',
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [])
+
+    def test_requires_authentication(self):
+        response = self.client.get(f'/challenges/categories/{self.c1.id}/subcategories')
+        self.assertEqual(response.status_code, 401)

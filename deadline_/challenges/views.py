@@ -11,8 +11,12 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, LimitedSubmissionSerializer
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, \
+    MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, \
+    LimitedSubmissionSerializer, LimitedSubCategorySerializer
 from challenges.tasks import run_grader_task
+
+# TODO: Fix URLs to be more RESTful
 
 
 # /challenges/{challenge_id}
@@ -45,6 +49,28 @@ class MainCategoryListView(ListAPIView):
     """ Returns information about all Categories """
     serializer_class = MainCategorySerializer
     queryset = MainCategory.objects.all()
+
+
+# /challenges/categories/{category_id}/subcategories
+class CategorySubcategoriesListView(APIView):
+    """
+        Returns all the subcategories for the given category along with
+            - user's current proficiency on the subcategory
+            - experience required to reach next proficiency
+            - number of completed (by the user) and total challenges
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, *args, **kwargs):
+        category_pk = kwargs.get('category_pk', None)
+        try:
+            category = MainCategory.objects.get(id=category_pk)
+        except MainCategory.DoesNotExist:
+            return Response(data={'error': 'Maincategory with ID {} does not exist.'.format(category_pk)},
+                            status=404)
+        return Response(status=200,
+                        data=LimitedSubCategorySerializer(instance=list(category.sub_categories.all()),
+                                                          many=True, context={'request': request}).data)
 
 
 # /challenges/subcategories/{subcategory_id}
