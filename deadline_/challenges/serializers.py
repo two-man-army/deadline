@@ -191,3 +191,41 @@ class SubCategorySerializer(serializers.ModelSerializer):
         proficiency_object['user_score'] = user_proficiency.user_score
 
         return proficiency_object
+
+
+class LimitedSubCategorySerializer(serializers.ModelSerializer):
+    """
+        Show more limited information on a SubCategory,
+            namely,
+            - count of challenges user has solved
+            - count of subcategory challenges
+            - user proficiency
+            - experience required for user to reach next proficiency
+    """
+    proficiency = serializers.SerializerMethodField()
+    challenge_count = serializers.SerializerMethodField()
+    solved_challenges_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SubCategory
+        fields = ('name', 'proficiency', 'max_score', 'challenge_count', 'solved_challenges_count')
+
+    def get_proficiency(self, obj):
+        # TODO: Create proficiency serializer
+        user: User = getattr(self.context.get('request', None), 'user', None)
+        user_proficiency: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=obj.id)
+        proficiency_object = OrderedDict()
+        proficiency_object['name'] = user_proficiency.proficiency.name
+        proficiency_object['user_score'] = user_proficiency.user_score
+
+        return proficiency_object
+
+    def get_challenge_count(self, obj):
+        return obj.challenges.count()
+
+    def get_solved_challenges_count(self, obj: SubCategory):
+        user: User = getattr(self.context.get('request', None), 'user', None)
+        if user is None:
+            raise Exception(f'User is None in {self.__class__}')
+
+        return user.fetch_count_of_solved_challenges_for_subcategory(obj)

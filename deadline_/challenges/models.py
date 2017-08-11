@@ -17,6 +17,7 @@ class Language(models.Model):
 
 
 class Challenge(models.Model):
+    # TODO: Figure out how to increment SubCategory's maxscore field, maybe a post-save here?
     name = models.CharField(unique=True, max_length=30)
     description = models.OneToOneField('ChallengeDescription')
     difficulty = models.FloatField(validators=[MinValueValidator(1), MaxValueValidator(10), PossibleFloatDigitValidator(['0', '5'])])
@@ -31,6 +32,7 @@ class Challenge(models.Model):
 
 
 class Submission(models.Model):
+    # TODO: Figure out how to increment SubCategoryProficiency's user score
     challenge = models.ForeignKey(Challenge)
     author = models.ForeignKey(User)
     code = models.CharField(max_length=4000, blank=False)

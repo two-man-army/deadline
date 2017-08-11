@@ -1,10 +1,11 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
-from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer
-from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, Challenge, Proficiency
+from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer, LimitedSubCategorySerializer
+from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, \
+    Challenge, Proficiency, UserSubcategoryProficiency
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import ChallengeDescFactory
 from accounts.models import User
@@ -105,3 +106,43 @@ class SubmissionSerializerTests(TestCase, TestHelperMixin):
                          f'"upvote_count":0,"downvote_count":1,"user_has_voted":true,"user_has_upvoted":false}}')
         content = JSONRenderer().render(serializer.data)
         self.assertEqual(content.decode('utf-8').replace('\\n', '\n'), expected_json)
+
+
+class LimitedSubCategorySerializerTests(TestCase, TestHelperMixin):
+    """
+    Show more limited information on a SubCategory,
+        namely,
+        - count of challenges user has solved
+        - count of subcategory challenges
+        - user proficiency
+        - experience required for user to reach next proficiency
+    """
+    def setUp(self):
+        self.c1 = MainCategory.objects.create(name='Test')
+        self.sub1 = SubCategory.objects.create(name='Unit', meta_category=self.c1)
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        self.create_user_and_auth_token()
+        self.sample_desc = ChallengeDescFactory()
+        self.req_mock = MagicMock(user=self.auth_user)
+        self.subcategory_progress = UserSubcategoryProficiency.objects.filter(subcategory=self.sub1,
+                                                                              user=self.auth_user).first()
+
+    def test_serializes_as_expected(self):
+        # create three challenges for said category
+        for i in range(3):
+            Challenge.objects.create(name=f'Hello{i}', difficulty=5, score=10, description=ChallengeDescFactory(),
+                                     test_case_count=3, category=self.sub1)
+        expected_data = {'name': self.sub1.name,
+                         'proficiency': {'name': self.subcategory_progress.proficiency.name,
+                                         'user_score': self.subcategory_progress.user_score},
+                         'max_score': self.sub1.max_score, 'challenge_count': 3, 'solved_challenges_count': 0}
+        received_data = LimitedSubCategorySerializer(self.sub1, context={'request': self.req_mock}).data
+
+        self.assertEqual(expected_data, received_data)
+
+    @patch('accounts.models.User.fetch_count_of_solved_challenges_for_subcategory')
+    def test_solved_challenges_count_calls_user_fetch_challenge_count(self, mock_fetch):
+        mock_fetch.return_value = 200
+        received_data = LimitedSubCategorySerializer(self.sub1, context={'request': self.req_mock}).data
+        mock_fetch.assert_called_once()
+        self.assertEqual(received_data['solved_challenges_count'], 200)
