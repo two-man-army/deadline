@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^posts$', views.TextPostCreateView.as_view(), name='create_text_post'),
     url(r'^feed$', views.NewsfeedContentView.as_view(), name='newsfeed'),
     url(r'^feed/items/(?P<pk>\d+)$', views.NewsfeedItemDetailView.as_view(), name='newsfeed_item_detail'),
+    url(r'^feed/items/(?P<pk>\d+)/comments$', views.NewsfeedItemCommentCreateView.as_view(), name='newsfeed_item_detail'),
 ]

@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from accounts.models import User
 from decorators import fetch_models
 from social.models import NewsfeedItem
-from social.serializers import NewsfeedItemSerializer
+from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE
 
 
@@ -110,3 +110,22 @@ class NewsfeedItemDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
     queryset = NewsfeedItem.objects.all()
     serializer_class = NewsfeedItemSerializer
+
+
+# POST /feed/items/{newsfeed_item_id}/comments
+class NewsfeedItemCommentCreateView(CreateAPIView):
+    """
+        Creates a comment for a NewsfeedItem
+    """
+    permission_classes = (IsAuthenticated, )
+    serializer_class = NewsfeedItemCommentSerializer
+    model_classes = (NewsfeedItem, )
+
+    @fetch_models
+    def post(self, request, nw_item: NewsfeedItemSerializer, *args, **kwargs):
+        self.nw_item = nw_item
+        self.req_user = request.user
+        return super().post(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        return serializer.save(author_id=self.req_user.id, newsfeed_item_id=self.nw_item.id)
