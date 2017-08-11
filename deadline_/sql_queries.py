@@ -33,3 +33,17 @@ SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR = (
     'WHERE sub.rank = 1 '
     'ORDER BY created_at DESC '
     'LIMIT 10;')
+
+USER_SELECT_COUNT_OF_SOLVED_CHALLENGES_FOR_SUB_CATEGORY = (
+    """
+SELECT COUNT(*) as count
+FROM (
+    SELECT COUNT(*) as count
+    FROM (
+        SELECT result_score, challenge_id, challenges_submission  
+        FROM challenges_submission 
+        JOIN challenges_challenge ON challenges_submission.challenge_id = challenges_challenge.id
+        WHERE challenge_id IN ({challenge_ids}) AND author_id = %s AND result_score = challenges_challenge.score) as subm
+    GROUP BY challenge_id) as m;
+    """
+)

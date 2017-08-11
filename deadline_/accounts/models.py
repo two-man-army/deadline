@@ -14,6 +14,8 @@ from accounts.helpers import hash_password
 from django.db import models
 from django.dispatch import receiver
 
+from sql_queries import USER_SELECT_COUNT_OF_SOLVED_CHALLENGES_FOR_SUB_CATEGORY
+
 
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -39,6 +41,24 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+    def fetch_count_of_solved_challenges_for_subcategory(self, sub_category):
+        """
+        Given a SubCategory object,
+            find the number of challenges the user has fully solved from that SubCategory
+        """
+        from django.db import connection
+        from challenges.models import Submission
+        challenge_ids_for_category = [c.id for c in sub_category.challenges.all()]
+        # TODO: Implement a table to store this logic as calculating it is expensive!
+
+        # temporary hacky solution
+        cursor = connection.cursor()
+        cursor.execute(USER_SELECT_COUNT_OF_SOLVED_CHALLENGES_FOR_SUB_CATEGORY.format(challenge_ids=', '.join(str(p) for p in challenge_ids_for_category)),
+                       (self.id, ))
+        solved_challenges_count = cursor.fetchone()[0]
+
+        return solved_challenges_count
 
     def fetch_max_score_for_challenge(self, challenge_id):
         """

@@ -195,6 +195,85 @@ class UserModelTest(TestCase):
 
         self.assertEqual(User.fetch_user_count(), 5)
 
+    def test_fetch_count_of_solved_challenges_for_subcategory(self):
+        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+
+        python_language = Language.objects.create(name="Python")
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
+                                             test_case_count=3, category=sub_cat)
+        Submission.objects.create(language=python_language, challenge=challenge,
+                                  author=us, result_score=challenge.score, code="")
+
+        expected_count = 1
+        received_count = us.fetch_count_of_solved_challenges_for_subcategory(sub_cat)
+        self.assertEqual(expected_count, received_count)
+
+    def test_fetch_count_of_solved_challenges_for_subcategory_returns_0_for_none_solved(self):
+        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+
+        Language.objects.create(name="Python")
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
+                                 test_case_count=3, category=sub_cat)
+
+        expected_count = 0
+        received_count = us.fetch_count_of_solved_challenges_for_subcategory(sub_cat)
+        self.assertEqual(expected_count, received_count)
+
+    def test_fetch_count_of_solved_challenges_for_subcategory_returns_0_for_one_partially_solved(self):
+        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+
+        python_language = Language.objects.create(name="Python")
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
+                                             test_case_count=3, category=sub_cat)
+
+        Submission.objects.create(language=python_language, challenge=challenge,
+                                  author=us, result_score=challenge.score-1, code="")
+
+        expected_count = 0
+        received_count = us.fetch_count_of_solved_challenges_for_subcategory(sub_cat)
+        self.assertEqual(expected_count, received_count)
+
+    def test_fetch_count_of_solved_challenges_for_subcategory_returns_appropriate_number_for_mixed_submissions(self):
+        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+
+        python_language = Language.objects.create(name="Python")
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        # Create 10 challenges, the first 3 of which have passing submissions, others incomplete
+        for i in range(10):
+            challenge = Challenge.objects.create(name=f'Hello{i}', difficulty=5, score=10,
+                                                 description=ChallengeDescFactory(), test_case_count=3, category=sub_cat)
+            if i < 3:
+                # Create one passing submission and some failing
+                Submission.objects.create(language=python_language, challenge=challenge,
+                                          author=us, result_score=challenge.score-1, code="")
+                Submission.objects.create(language=python_language, challenge=challenge,
+                                          author=us, result_score=challenge.score, code="")
+                Submission.objects.create(language=python_language, challenge=challenge,
+                                          author=us, result_score=challenge.score, code="")
+            else:
+                # Create multiple non passing
+                Submission.objects.create(language=python_language, challenge=challenge,
+                                          author=us, result_score=challenge.score-1, code="")
+                Submission.objects.create(language=python_language, challenge=challenge,
+                                          author=us, result_score=0, code="")
+                Submission.objects.create(language=python_language, challenge=challenge,
+                                          author=us, result_score=2, code="")
+
+        expected_count = 3
+        received_count = us.fetch_count_of_solved_challenges_for_subcategory(sub_cat)
+        self.assertEqual(expected_count, received_count)
+
 
 class RegisterViewTest(APITestCase):
     def setUp(self):
