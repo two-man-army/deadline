@@ -14,7 +14,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
 
     def test_create_post(self):
-        self.client.post('/social/posts/', HTTP_AUTHORIZATION=self.auth_token,
+        self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                          data={
                              'content': 'Training hard',
                              'is_private': False
@@ -31,7 +31,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
         """
         There are some fields that should not be changed regardless what request is given
         """
-        self.client.post('/social/posts/', HTTP_AUTHORIZATION=self.auth_token,
+        self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                          data={
                              'content': 'Training hard',
                              'is_private': False,
@@ -60,7 +60,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertNotEqual(nw_item.updated_at, 'Some other day')
 
     def test_requires_auth(self):
-        resp = self.client.post('/social/posts/',
+        resp = self.client.post('/social/posts',
                                 data={
                                     'content': 'Training hard',
                                     'is_private': False
