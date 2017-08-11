@@ -63,11 +63,10 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
         """ Ths Subcategory should show all its challenges"""
         self.subcategory_progress = UserSubcategoryProficiency.objects.filter(subcategory=self.sub1,
                                                                               user=self.auth_user).first()
-        print(self.sub1.id)
         c = Challenge.objects.create(name='TestThis', difficulty=5, score=10, description=self.sample_desc,
                                      test_case_count=5, category=self.sub1)
         c.save()
-        python_language = Language.objects.create(name="Python")
+        Language.objects.create(name="Python")
         self.subcategory_progress.user_score = 5
         self.subcategory_progress.save()
         self.sub1.max_score = c.score
@@ -76,12 +75,21 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
                          'challenges': LimitedChallengeSerializer(many=True).to_representation(self.sub1.challenges.all()),
                          'max_score': self.sub1.max_score,
                          'proficiency': {'name': self.subcategory_progress.proficiency.name,
-                                         'user_score': self.subcategory_progress.user_score}
+                                         'user_score': self.subcategory_progress.user_score},
+                         'next_proficiency': None
                          }
 
         received_data = SubCategorySerializer(self.sub1, context={'request': req_mock}).data
-
         self.assertEqual(received_data, expected_data)
+
+    def test_serialize_shows_next_proficiency(self):
+        req_mock = MagicMock(user=self.auth_user)
+        received_data = SubCategorySerializer(self.sub1, context={'request': req_mock}).data
+        Proficiency.objects.create(name='starter3', needed_percentage=50)
+        next_prof = Proficiency.objects.create(name='starter2', needed_percentage=30)
+
+        expected_prof = {'name': next_prof.name, 'needed_percentage': next_prof.needed_percentage}
+        self.assertEqual(received_data['next_proficiency'], {})
 
     def test_subcategory_max_score_is_updated(self):
         """

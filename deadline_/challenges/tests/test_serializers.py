@@ -120,7 +120,8 @@ class LimitedSubCategorySerializerTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.c1 = MainCategory.objects.create(name='Test')
         self.sub1 = SubCategory.objects.create(name='Unit', meta_category=self.c1)
-        Proficiency.objects.create(name='starter', needed_percentage=0)
+        self.first_prof = Proficiency.objects.create(name='starter', needed_percentage=0)
+        self.second_prof = Proficiency.objects.create(name='master', needed_percentage=90)
         self.create_user_and_auth_token()
         self.sample_desc = ChallengeDescFactory()
         self.req_mock = MagicMock(user=self.auth_user)
@@ -132,13 +133,21 @@ class LimitedSubCategorySerializerTests(TestCase, TestHelperMixin):
         for i in range(3):
             Challenge.objects.create(name=f'Hello{i}', difficulty=5, score=10, description=ChallengeDescFactory(),
                                      test_case_count=3, category=self.sub1)
+
         expected_data = {'name': self.sub1.name,
                          'proficiency': {'name': self.subcategory_progress.proficiency.name,
                                          'user_score': self.subcategory_progress.user_score},
+                         'next_proficiency': {'name': self.second_prof.name,
+                                              'needed_percentage': self.second_prof.needed_percentage},
                          'max_score': self.sub1.max_score, 'challenge_count': 3, 'solved_challenges_count': 0}
         received_data = LimitedSubCategorySerializer(self.sub1, context={'request': self.req_mock}).data
-
         self.assertEqual(expected_data, received_data)
+
+    def test_serializes_no_next_proficiency_when_none_exists(self):
+        self.subcategory_progress.proficiency = self.second_prof
+        self.subcategory_progress.save()
+        received_data = LimitedSubCategorySerializer(self.sub1, context={'request': self.req_mock}).data
+        self.assertEqual({}, received_data['next_proficiency'])
 
     @patch('accounts.models.User.fetch_count_of_solved_challenges_for_subcategory')
     def test_solved_challenges_count_calls_user_fetch_challenge_count(self, mock_fetch):

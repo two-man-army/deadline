@@ -177,18 +177,33 @@ class MainCategorySerializer(serializers.ModelSerializer):
 class SubCategorySerializer(serializers.ModelSerializer):
     challenges = LimitedChallengeSerializer(many=True)
     proficiency = serializers.SerializerMethodField()
+    next_proficiency = serializers.SerializerMethodField()
 
     class Meta:
         model = SubCategory
-        fields = ('name', 'challenges', 'max_score', 'proficiency')
+        fields = ('name', 'challenges', 'max_score', 'proficiency', 'next_proficiency')
 
     def get_proficiency(self, obj):
         # attach the current user's proficiency
         user: User = getattr(self.context.get('request', None), 'user', None)
         user_proficiency: UserSubcategoryProficiency = user.fetch_subcategory_proficiency(subcategory_id=obj.id)
         proficiency_object = OrderedDict()
+
         proficiency_object['name'] = user_proficiency.proficiency.name
         proficiency_object['user_score'] = user_proficiency.user_score
+
+        return proficiency_object
+
+    def get_next_proficiency(self, obj):
+        # TODO: Add serializer
+        user: User = getattr(self.context.get('request', None), 'user', None)
+        next_proficiency: 'Proficiency' = (user
+                                           .fetch_subcategory_proficiency(subcategory_id=obj.id)
+                                           .proficiency.fetch_next_proficiency())
+        proficiency_object = OrderedDict()
+        if next_proficiency is not None:
+            proficiency_object['name'] = next_proficiency.name
+            proficiency_object['needed_percentage'] = next_proficiency.needed_percentage
 
         return proficiency_object
 
@@ -203,12 +218,13 @@ class LimitedSubCategorySerializer(serializers.ModelSerializer):
             - experience required for user to reach next proficiency
     """
     proficiency = serializers.SerializerMethodField()
+    next_proficiency = serializers.SerializerMethodField()
     challenge_count = serializers.SerializerMethodField()
     solved_challenges_count = serializers.SerializerMethodField()
 
     class Meta:
         model = SubCategory
-        fields = ('name', 'proficiency', 'max_score', 'challenge_count', 'solved_challenges_count')
+        fields = ('name', 'proficiency', 'max_score', 'challenge_count', 'solved_challenges_count', 'next_proficiency')
 
     def get_proficiency(self, obj):
         # TODO: Create proficiency serializer
@@ -218,6 +234,18 @@ class LimitedSubCategorySerializer(serializers.ModelSerializer):
         proficiency_object['name'] = user_proficiency.proficiency.name
         proficiency_object['user_score'] = user_proficiency.user_score
 
+        return proficiency_object
+
+    def get_next_proficiency(self, obj):
+        # TODO: Add serializer
+        user: User = getattr(self.context.get('request', None), 'user', None)
+        next_proficiency: 'Proficiency' = (user
+                                                        .fetch_subcategory_proficiency(subcategory_id=obj.id)
+                                                        .proficiency.fetch_next_proficiency())
+        proficiency_object = OrderedDict()
+        if next_proficiency is not None:
+            proficiency_object['name'] = next_proficiency.name
+            proficiency_object['needed_percentage'] = next_proficiency.needed_percentage
         return proficiency_object
 
     def get_challenge_count(self, obj):
