@@ -76,6 +76,27 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
 
         self.assertEqual(received_data, expected_data)
 
+    def test_serialization_with_share_newsfeed_item(self):
+        """ A NewsfeedItem that is a share should have the item it shares be serialized as well"""
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                              content={'content': 'Hello I like turtles'})
+        share_item = NewsfeedItem.objects.create_share_post(author=self.auth_user, shared_item=nw_item)
+        expected_data = {
+            'id': share_item.id,
+            'author': UserSerializer().to_representation(instance=self.auth_user),
+            'type': share_item.type,
+            'comments': NewsfeedItemCommentSerializer(many=True).to_representation(share_item.comments.all()),
+            'content': share_item.content,
+            'shared_item': NewsfeedItemSerializer().to_representation(instance=nw_item),  # this is attached
+            'is_private': share_item.is_private,
+            'created_at': share_item.created_at.isoformat().replace('+00:00', 'Z'),
+            'updated_at': share_item.updated_at.isoformat().replace('+00:00', 'Z'),
+            'like_count': 0
+        }
+        received_data = NewsfeedItemSerializer(instance=share_item).data
+
+        self.assertEqual(received_data, expected_data)
+
     def test_serializer_with_user_variable(self):
         # If we pass a User to the to_representation call, a 'user_has_liked' field should appear
         nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,

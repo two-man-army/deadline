@@ -6,6 +6,7 @@ from rest_framework_hstore.fields import HStoreField
 
 from serializers import RecursiveField
 from accounts.serializers import UserSerializer
+from social.constants import NW_ITEM_SHARE_POST
 from social.models import NewsfeedItemComment, NewsfeedItem, NewsfeedItemLike
 
 
@@ -54,8 +55,27 @@ class NewsfeedItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance, user=None):
         result: OrderedDict = super().to_representation(instance)
 
-        # add a user_has_liked field to those who want it
+        if instance.type == NW_ITEM_SHARE_POST:
+            self._handle_share_serialization(data=result, instance=instance)
+
+        # add a user_has_liked field
         if user is not None:
             result['user_has_liked'] = NewsfeedItemLike.objects.filter(author=user, newsfeed_item=instance).exists()
 
         return result
+
+    def _handle_share_serialization(self, data: OrderedDict, instance: NewsfeedItem):
+        """
+        If this NewsfeedItem is a share, serialize the Item it shares and attach it to our data
+        """
+        shared_item_id = instance.content['newsfeed_item_id']
+        data['shared_item'] = OrderedDict()
+
+        try:
+            shared_item = NewsfeedItem.objects.get(id=shared_item_id)
+            shared_item_data = self.__class__(instance=shared_item).data
+            for field_key, field_value in shared_item_data.items():
+                data['shared_item'][field_key] = field_value
+        except NewsfeedItem.DoesNotExist:
+            raise Exception(f'Newsfeed Item {instance.id} has shared a NewsfeedItem (ID: '
+                            f'{shared_item_id}) that does not exist!')
