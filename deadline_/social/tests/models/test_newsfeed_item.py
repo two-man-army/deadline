@@ -3,6 +3,7 @@ from django.test import TestCase
 from accounts.serializers import UserSerializer
 from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcategoryProficiency
 from challenges.tests.base import TestHelperMixin
+from social.constants import NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
@@ -14,10 +15,10 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.create_user_and_auth_token()
 
     def test_text_post_creation(self):
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         self.assertEqual(nw_item.author, self.auth_user)
-        self.assertEqual(nw_item.type, 'TEXT_POST')
+        self.assertEqual(nw_item.type, NW_ITEM_TEXT_POST)
         self.assertEqual(nw_item.content, {'content': 'Hello I like turtles'})
         self.assertEqual(nw_item.is_private, False)
         self.assertIsNotNone(nw_item.created_at)
@@ -37,12 +38,12 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.content['proficiency_name'], prof.name)
 
     def test_get_absolute_url(self):
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         self.assertEqual(nw_item.get_absolute_url(), f'/social/feed/items/{nw_item.id}')
 
     def test_serialiation(self):
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
@@ -67,7 +68,7 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
 
     def test_serializer_with_user_variable(self):
         # If we pass a User to the to_representation call, a 'user_has_liked' field should appear
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
@@ -100,7 +101,7 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         """
         This tests our custom ListSerializer class and assures it attaches the user_has_liked variable
         """
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
         NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=nw_item)
@@ -135,18 +136,18 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
     def test_model_save_raises_if_missing_newsfeed_content_field(self):
         """ Given a valid Newsfeed Type, an error should be raised if a required field is missing """
         with self.assertRaises(MissingNewsfeedItemContentField):
-            NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+            NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                         content={})
 
     def test_model_save_raises_if_invalid_newsfeed_content_field(self):
         """ Given a valid Newsfeed Type, an error should be raised if an invalid field is added,
                 regardless if all the right ones are supplied (memory is expensive) """
         with self.assertRaises(InvalidNewsfeedItemContentField):
-            NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+            NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                         content={'content': 'Hello I like turtles', 'tank': 'yo'})
 
     def test_like_should_add_to_likes(self):
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         nw_item.like(self.auth_user)
 
@@ -154,7 +155,7 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.likes.first().author, self.auth_user)
 
     def test_duplicate_like_raises_error(self):
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         nw_item.like(self.auth_user)
 
@@ -165,7 +166,7 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.likes.first().author, self.auth_user)
 
     def test_remove_like_removes_like(self):
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         nw_item.like(self.auth_user)
         self.assertEqual(nw_item.likes.count(), 1)
@@ -174,7 +175,7 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.likes.count(), 0)
 
     def test_remove_non_existent_like_raises(self):
-        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                               content={'content': 'Hello I like turtles'})
         with self.assertRaises(NonExistentLikeError):
             nw_item.remove_like(self.auth_user)

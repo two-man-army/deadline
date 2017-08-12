@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
+from social.constants import NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemCommentSerializer
 
@@ -11,8 +12,8 @@ from social.serializers import NewsfeedItemCommentSerializer
 class NewsfeedItemCommentTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
-        self.nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
-                                              content={'content': 'Hello I like turtles'})
+        self.nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                                   content={'content': 'Hello I like turtles'})
         self.comment_1 = NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=self.nw_item)
         self.comment_2 = NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=self.nw_item)
         self.comment_3 = NewsfeedItemComment.objects.create(author=self.auth_user, content='Drop the top', newsfeed_item=self.nw_item)

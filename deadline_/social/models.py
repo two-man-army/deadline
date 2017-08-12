@@ -5,7 +5,8 @@ from django.dispatch import receiver
 
 from accounts.models import User
 from challenges.models import SubCategory, UserSubcategoryProficiency
-from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES
+from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
+    NW_ITEM_SUBCATEGORY_BADGE_POST
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
 
@@ -26,7 +27,7 @@ class NewsfeedItemManager(models.Manager):
 
         ex: Stanislav just earned the Master badge for Graph Algorithms!
         """
-        return self.create(author_id=user_subcat_prof.user_id, type='SUBCATEGORY_BADGE_POST',
+        return self.create(author_id=user_subcat_prof.user_id, type=NW_ITEM_SUBCATEGORY_BADGE_POST,
                            content={
                                'proficiency_name': user_subcat_prof.proficiency.name,
                                'subcategory_name': user_subcat_prof.subcategory.name,

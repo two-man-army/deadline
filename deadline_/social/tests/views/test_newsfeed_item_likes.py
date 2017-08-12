@@ -2,6 +2,7 @@ from rest_framework.test import APITestCase
 
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
+from social.constants import NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem, NewsfeedItemLike
 from social.views import NewsfeedItemLikeManageView, NewsfeedItemLikeCreateView, NewsfeedItemLikeDeleteView
 
@@ -22,7 +23,7 @@ class NewsfeedItemLikeCreateViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
         self.user2_token = 'Token {}'.format(self.user2.auth_token.key)
-        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
     def test_like(self):
         response = self.client.post(f'/social/feed/items/{self.nw_item_us2_1.id}/likes', HTTP_AUTHORIZATION=self.user2_token)
@@ -53,7 +54,7 @@ class NewsfeedItemLikeCreateViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
         self.user2_token = 'Token {}'.format(self.user2.auth_token.key)
-        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
     def test_remove_like(self):
         self.nw_item_us2_1.like(self.user2)

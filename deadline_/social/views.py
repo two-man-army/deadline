@@ -12,7 +12,7 @@ from decorators import fetch_models
 from social.errors import LikeAlreadyExistsError, NonExistentLikeError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
-from social.constants import NEWSFEED_ITEMS_PER_PAGE
+from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST
 from views import BaseManageView
 
 
@@ -67,7 +67,7 @@ class TextPostCreateView(CreateAPIView):
         """
         self.author_id = request.user.id
 
-        request.data['type'] = 'TEXT_POST'
+        request.data['type'] = NW_ITEM_TEXT_POST
         request.data['content'] = {
             'content': request.data['content']
         }

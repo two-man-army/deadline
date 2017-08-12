@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
-from social.constants import NEWSFEED_ITEMS_PER_PAGE
+from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
 
@@ -77,18 +77,18 @@ class NewsfeedContentViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
-        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
-        self.nw_item_us2_2 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
+        self.nw_item_us2_2 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
         self.user3 = User.objects.create(username='user3', password='123', email='user3@abv.bg', score=123, role=self.base_role)
-        self.nw_item_us3_1 = NewsfeedItem.objects.create(author=self.user3, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us3_1 = NewsfeedItem.objects.create(author=self.user3, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
         self.user4 = User.objects.create(username='user4', password='123', email='user4@abv.bg', score=123, role=self.base_role)
-        self.nw_item_us4_1 = NewsfeedItem.objects.create(author=self.user4, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us4_1 = NewsfeedItem.objects.create(author=self.user4, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
     def test_should_see_all_items_including_his(self):
         self.auth_user.follow(self.user2)
-        newest_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST', content={'content': 'Hi'},
+        newest_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'},
                                                   created_at=datetime.now() + timedelta(days=1))
 
         expected_items = NewsfeedItemSerializer(many=True)\
@@ -113,9 +113,9 @@ class NewsfeedContentViewTests(APITestCase, TestHelperMixin):
         self.auth_user.follow(self.user5)
         # Create 2 more than what will be shown in the first page and query for the second page
 
-        first_two_items = [NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'}), NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})]
+        first_two_items = [NewsfeedItem.objects.create(author=self.user5, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'}), NewsfeedItem.objects.create(author=self.user5, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})]
         for i in range(NEWSFEED_ITEMS_PER_PAGE):
-            NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+            NewsfeedItem.objects.create(author=self.user5, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         expected_items = NewsfeedItemSerializer(many=True)\
             .to_representation(reversed(first_two_items), user=self.auth_user)
 
@@ -138,7 +138,7 @@ class NewsfeedContentViewTests(APITestCase, TestHelperMixin):
         self.user5 = User.objects.create(username='user5', password='123', email='user5@abv.bg', score=123, role=self.base_role)
         self.auth_user.follow(self.user5)
         for i in range(NEWSFEED_ITEMS_PER_PAGE * 2):
-            NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+            NewsfeedItem.objects.create(author=self.user5, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
         response = self.client.get('/social/feed', HTTP_AUTHORIZATION=self.auth_token)
         expected_data = self.client.get('/social/feed?page=1', HTTP_AUTHORIZATION=self.auth_token).data
@@ -154,7 +154,7 @@ class NewsfeedItemDetailViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
-        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
     def test_returns_serialized_nw_item(self):
         response = self.client.get(self.nw_item_us2_1.get_absolute_url(), HTTP_AUTHORIZATION=self.auth_token)

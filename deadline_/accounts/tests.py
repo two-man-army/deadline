@@ -11,6 +11,7 @@ from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
+from social.constants import NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem
 
 
@@ -20,14 +21,14 @@ class UserModelNewsfeedTest(TestCase):
         self.main_user = User.objects.create(username='main_user', password='123', email='main_user@abv.bg', score=123, role=self.base_role)
 
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
-        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
-        self.nw_item_us2_2 = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
+        self.nw_item_us2_2 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
         self.user3 = User.objects.create(username='user3', password='123', email='user3@abv.bg', score=123, role=self.base_role)
-        self.nw_item_us3_1 = NewsfeedItem.objects.create(author=self.user3, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us3_1 = NewsfeedItem.objects.create(author=self.user3, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
         self.user4 = User.objects.create(username='user4', password='123', email='user4@abv.bg', score=123, role=self.base_role)
-        self.nw_item_us4_1 = NewsfeedItem.objects.create(author=self.user4, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item_us4_1 = NewsfeedItem.objects.create(author=self.user4, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
     def test_fetch_newsfeed(self):
         # Should return all the people the user has followed's items, sorted by date
@@ -46,8 +47,8 @@ class UserModelNewsfeedTest(TestCase):
             self.assertEqual(expected_items[i], received_items[i])
 
     def test_fetch_newsfeed_receives_own_items_as_well(self):
-        nw_item1 = NewsfeedItem.objects.create(author=self.main_user, type='TEXT_POST', content={'content': 'Hi'})
-        nw_item2 = NewsfeedItem.objects.create(author=self.main_user, type='TEXT_POST', content={'content': 'Hi'})
+        nw_item1 = NewsfeedItem.objects.create(author=self.main_user, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
+        nw_item2 = NewsfeedItem.objects.create(author=self.main_user, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
         received_items = self.main_user.fetch_newsfeed()
 
@@ -57,11 +58,11 @@ class UserModelNewsfeedTest(TestCase):
     def test_fetch_newsfeed_receives_items_ordered_by_date(self):
         self.user5 = User.objects.create(username='user5', password='123', email='user5@abv.bg', score=123, role=self.base_role)
         self.main_user.follow(self.user5)
-        self.latest_item = NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+        self.latest_item = NewsfeedItem.objects.create(author=self.user5, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         self.latest_item.created_at = datetime.now() + timedelta(days=1)
-        self.oldest_item = NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+        self.oldest_item = NewsfeedItem.objects.create(author=self.user5, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         self.oldest_item.created_at = datetime.now() - timedelta(days=1)
-        self.mid_item = NewsfeedItem.objects.create(author=self.user5, type='TEXT_POST', content={'content': 'Hi'})
+        self.mid_item = NewsfeedItem.objects.create(author=self.user5, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         self.oldest_item.save(); self.latest_item.save()
 
         received_items = self.main_user.fetch_newsfeed()

@@ -2,6 +2,7 @@ from rest_framework.test import APITestCase
 
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
+from social.constants import NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem, NewsfeedItemComment
 
 
@@ -12,7 +13,7 @@ class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
-        self.nw_item = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
     def test_comment_creation(self):
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments',
@@ -29,7 +30,7 @@ class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
     def test_uneditable_fields_should_not_affect_creation(self):
         # fields like author and newsfeed item should be set by the view
         #   in regards to who issued the request and what nw_item we picked in the URL
-        new_nw_item = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        new_nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         new_nw_comment = NewsfeedItemComment.objects.create(newsfeed_item=new_nw_item, author=self.user2, content='Tanktank')
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments',
                                     HTTP_AUTHORIZATION=self.auth_token,
@@ -64,7 +65,7 @@ class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
         self.create_user_and_auth_token()
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg',
                                          score=123, role=self.base_role)
-        self.nw_item = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        self.nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         self.nw_comment = NewsfeedItemComment.objects.create(author=self.user2, newsfeed_item=self.nw_item,
                                                              content='No song for the choir now')
 
@@ -82,7 +83,7 @@ class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(reply.parent, self.nw_comment)
 
     def test_read_only_fields_should_not_affect_creation(self):
-        new_nw_item = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        new_nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         new_nw_comment = NewsfeedItemComment.objects.create(newsfeed_item=new_nw_item, author=self.user2, content='Tanktank')
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{self.nw_comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
@@ -119,7 +120,7 @@ class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 404)
 
     def test_invalid_nw_item_nw_comment_pair(self):
-        new_nw_item = NewsfeedItem.objects.create(author=self.user2, type='TEXT_POST', content={'content': 'Hi'})
+        new_nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         new_nw_comment = NewsfeedItemComment.objects.create(newsfeed_item=new_nw_item, author=self.user2, content='Tanktank')
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{new_nw_comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
