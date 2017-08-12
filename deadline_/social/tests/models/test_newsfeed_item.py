@@ -3,7 +3,7 @@ from django.test import TestCase
 from accounts.serializers import UserSerializer
 from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcategoryProficiency
 from challenges.tests.base import TestHelperMixin
-from social.constants import NW_ITEM_TEXT_POST
+from social.constants import NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST
 from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
@@ -23,6 +23,16 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.is_private, False)
         self.assertIsNotNone(nw_item.created_at)
         self.assertIsNotNone(nw_item.updated_at)
+
+    def test_share_post_creation(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                              content={'content': 'Hello I like turtles'})
+        nw_share_item = NewsfeedItem.objects.create_share_post(shared_item=nw_item, author=self.auth_user)
+
+        self.assertEqual(nw_share_item.type, NW_ITEM_SHARE_POST)
+        self.assertEqual(nw_share_item.author, self.auth_user)
+        self.assertEqual(len(nw_share_item.content.keys()), 1)
+        self.assertEqual(nw_share_item.content['newsfeed_item_id'], nw_item.id)
 
     def test_subcategory_badge_post_creation(self):
         challenge_cat = MainCategory.objects.create(name='Tests')
