@@ -208,9 +208,11 @@ class UserSubcategoryProficiency(models.Model):
 
     def try_update_proficiency(self) -> bool:
         """
-        Updates the user's proficiency if he has reached a new one
+        Updates the user's proficiency if he has reached a new one and creates a newsfeed post about it
         :return: a boolean indicating if we have updated it
         """
+        from social.models import NewsfeedItem
+
         to_update = self.to_update_proficiency()
 
         if to_update:
@@ -218,9 +220,13 @@ class UserSubcategoryProficiency(models.Model):
             self.proficiency = next_prof
             # fetch next_proficiency awards and award the user
             prof_award = SubcategoryProficiencyAward.objects.filter(subcategory_id=self.subcategory.id, proficiency_id=next_prof.id).first()
+
             self.user.score += prof_award.xp_reward
             self.user.save()
             self.save()
+
+            # create a newsfeed post about the user's achievement
+            NewsfeedItem.objects.create_subcategory_badge_post(user_subcat_prof=self)
 
         return to_update
 
