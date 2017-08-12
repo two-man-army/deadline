@@ -9,9 +9,11 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from decorators import fetch_models
+from social.errors import LikeAlreadyExistsError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE
+from views import BaseManageView
 
 
 def follow_decorator(view_func, *args, **kwargs):
@@ -110,6 +112,31 @@ class NewsfeedItemDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
     queryset = NewsfeedItem.objects.all()
     serializer_class = NewsfeedItemSerializer
+
+
+# POST /feed/items/{newsfeed_item_id}/likes
+class NewsfeedItemLikeCreateView(APIView):
+    """
+    Adds a like to a NewsfeedItem
+    """
+    permission_classes = (IsAuthenticated, )
+    model_classes = (NewsfeedItem, )
+
+    @fetch_models
+    def post(self, request, nw_item: NewsfeedItem, *args, **kwargs):
+        try:
+            nw_item.like(request.user)
+        except LikeAlreadyExistsError:
+            return Response(status=400, data={'error': 'You have already liked that post!'})
+
+        return Response(status=201)
+
+
+# /feed/items/{newsfeed_item_id}/likes
+class NewsfeedItemLikeManageView(BaseManageView):
+    VIEWS_BY_METHOD = {
+        'POST': NewsfeedItemLikeCreateView.as_view
+    }
 
 
 # POST /feed/items/{newsfeed_item_id}/comments

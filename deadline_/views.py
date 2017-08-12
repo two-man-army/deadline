@@ -16,5 +16,5 @@ class BaseManageView(APIView):
             raise Exception('VIEWS_BY_METHOD static dictionary variable must be defined on a ManageView class!')
         if request.method in self.VIEWS_BY_METHOD:
             return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
-
+        # TODO: Change to 405
         return Response(status=404)
