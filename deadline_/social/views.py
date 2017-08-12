@@ -12,7 +12,7 @@ from decorators import fetch_models
 from social.errors import LikeAlreadyExistsError, NonExistentLikeError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
-from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST
+from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST
 from views import BaseManageView
 
 
@@ -112,6 +112,28 @@ class NewsfeedItemDetailView(RetrieveAPIView):
     permission_classes = (IsAuthenticated, )
     queryset = NewsfeedItem.objects.all()
     serializer_class = NewsfeedItemSerializer
+
+
+class SharePostCreateView(APIView):
+    """
+        Creates a NewsfeedItem of type SHARE_POST
+    """
+    permission_classes = (IsAuthenticated, )
+    model_classes = (NewsfeedItem, )
+
+    @fetch_models
+    def post(self, request, nw_item: NewsfeedItem, *args, **kwargs):
+        if nw_item.type == NW_ITEM_SHARE_POST:
+            return Response(status=400, data={'error': 'You cannot share a share NewsfeedItem!'})
+        NewsfeedItem.objects.create_share_post(author=request.user, shared_item=nw_item)
+        return Response(status=201)
+
+
+class NewsfeedItemDetailManageView(BaseManageView):
+    VIEWS_BY_METHOD = {
+        'GET': NewsfeedItemDetailView.as_view,
+        'POST': SharePostCreateView.as_view
+    }
 
 
 # POST /feed/items/{newsfeed_item_id}/likes

@@ -1,4 +1,6 @@
 from datetime import timedelta, datetime
+from unittest import TestCase
+from unittest.mock import patch
 
 from rest_framework.test import APITestCase
 
@@ -7,6 +9,47 @@ from challenges.tests.base import TestHelperMixin
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
+from social.views import NewsfeedItemDetailView, NewsfeedItemDetailManageView, SharePostCreateView
+
+
+class NewsfeedItemDetailManageViewTests(TestCase):
+    def test_views_by_method_is_mapped_correctly(self):
+        self.assertEqual(len(NewsfeedItemDetailManageView.VIEWS_BY_METHOD.keys()), 2)
+        self.assertEqual(NewsfeedItemDetailManageView.VIEWS_BY_METHOD['GET'], NewsfeedItemDetailView.as_view)
+        self.assertEqual(NewsfeedItemDetailManageView.VIEWS_BY_METHOD['POST'], SharePostCreateView.as_view)
+
+
+class SharePostCreateViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
+        self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
+
+    @patch('social.models.NewsfeedItemManager.create_share_post')
+    def test_create_share_post(self, mock_create_share_post):
+        response = self.client.post(f'/social/feed/items/{self.nw_item_us2_1.id}', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 201)
+        mock_create_share_post.assert_called_once_with(author=self.auth_user, shared_item=self.nw_item_us2_1)
+
+    def test_cannot_create_a_share_pointing_to_a_share(self):
+        share_item = NewsfeedItem.objects.create_share_post(author=self.auth_user, shared_item=self.nw_item_us2_1)
+
+        with patch('social.models.NewsfeedItemManager.create_share_post') as mock_create_share_post:
+            response = self.client.post(f'/social/feed/items/{share_item.id}', HTTP_AUTHORIZATION=self.auth_token)
+            self.assertEqual(response.status_code, 400)
+            mock_create_share_post.assert_not_called()
+
+    @patch('social.models.NewsfeedItemManager.create_share_post')
+    def test_requires_authentication(self, mock_create_share_post):
+        response = self.client.post(f'/social/feed/items/{self.nw_item_us2_1.id}')
+        self.assertEqual(response.status_code, 401)
+        mock_create_share_post.assert_not_called()
+
+    @patch('social.models.NewsfeedItemManager.create_share_post')
+    def test_invalid_newsfeed_item_id_returns_404(self, mock_create_share_post):
+        response = self.client.post('/social/feed/items/111', HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 404)
+        mock_create_share_post.assert_not_called()
 
 
 class TextPostCreateViewTests(APITestCase, TestHelperMixin):

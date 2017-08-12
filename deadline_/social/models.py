@@ -38,6 +38,7 @@ class NewsfeedItemManager(models.Manager):
         """
         Creates a 'share' of a NewsfeedItem or in other words, a NewsfeedItem that points to another
         """
+        # TODO: Add validation for not creating a share of a share
         return self.create(author_id=author.id, type=NW_ITEM_SHARE_POST, content={'newsfeed_item_id': shared_item.id})
 
 
