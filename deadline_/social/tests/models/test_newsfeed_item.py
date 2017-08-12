@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from accounts.serializers import UserSerializer
+from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcategoryProficiency
 from challenges.tests.base import TestHelperMixin
 from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
@@ -12,7 +13,7 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
 
-    def test_model_creation(self):
+    def test_text_post_creation(self):
         nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',
                                               content={'content': 'Hello I like turtles'})
         self.assertEqual(nw_item.author, self.auth_user)
@@ -21,6 +22,19 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.is_private, False)
         self.assertIsNotNone(nw_item.created_at)
         self.assertIsNotNone(nw_item.updated_at)
+
+    def test_subcategory_badge_post_creation(self):
+        challenge_cat = MainCategory.objects.create(name='Tests')
+        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
+        prof = Proficiency.objects.create(name='Tank', needed_percentage=5)
+        user_subcat_progress = UserSubcategoryProficiency.objects.create(user=self.auth_user, subcategory=sub_cat,
+                                                                         proficiency=prof, user_score=0)
+
+        nw_item = NewsfeedItem.objects.create_subcategory_badge_post(user_subcat_progress)
+        self.assertEqual(len(nw_item.content.keys()), 3)
+        self.assertEqual(nw_item.content['subcategory_id'], sub_cat.id)
+        self.assertEqual(nw_item.content['subcategory_name'], sub_cat.name)
+        self.assertEqual(nw_item.content['proficiency_name'], prof.name)
 
     def test_get_absolute_url(self):
         nw_item = NewsfeedItem.objects.create(author=self.auth_user, type='TEXT_POST',

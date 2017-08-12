@@ -4,9 +4,34 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from accounts.models import User
+from challenges.models import SubCategory, UserSubcategoryProficiency
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
+
+
+class NewsfeedItemManager(models.Manager):
+    """
+    Use a custom NewsfeedItem manager for specific type of NewsfeedItem creation
+    """
+
+    def create_subcategory_badge_post(self, user_subcat_prof: UserSubcategoryProficiency):
+        """
+        Creates a SubcategoryBadgePost
+
+        A SubcategoryBadgePost is a NewsfeedItem which has the following fields as content:
+            proficiency_name: - the name of the proficiency (or badge) the user has attained
+            subcategory_name: - the name of the subcategory this badge is for
+            subcategory_id:   - the id of the subcategory
+
+        ex: Stanislav just earned the Master badge for Graph Algorithms!
+        """
+        return self.create(author_id=user_subcat_prof.user_id, type='SUBCATEGORY_BADGE_POST',
+                           content={
+                               'proficiency_name': user_subcat_prof.proficiency.name,
+                               'subcategory_name': user_subcat_prof.subcategory.name,
+                               'subcategory_id': user_subcat_prof.subcategory.id
+                           })
 
 
 class NewsfeedItem(models.Model):
@@ -36,6 +61,8 @@ class NewsfeedItem(models.Model):
     is_private = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = NewsfeedItemManager()
 
     def get_absolute_url(self):
         return f'/social/feed/items/{self.id}'
