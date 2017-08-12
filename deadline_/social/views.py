@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from decorators import fetch_models
-from social.errors import LikeAlreadyExistsError
+from social.errors import LikeAlreadyExistsError, NonExistentLikeError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE
@@ -132,10 +132,27 @@ class NewsfeedItemLikeCreateView(APIView):
         return Response(status=201)
 
 
+# DELETE /feed/items/{newsfeed_item_id}/likes
+class NewsfeedItemLikeDeleteView(APIView):
+    """ Removes a like from a NewsfeedItem """
+    permission_classes = (IsAuthenticated, )
+    model_classes = (NewsfeedItem, )
+
+    @fetch_models
+    def delete(self, request, nw_item: NewsfeedItem, *args, **kwargs):
+        try:
+            nw_item.remove_like(request.user)
+        except NonExistentLikeError:
+            return Response(status=400, data={'error': 'You have have not liked that post!'})
+
+        return Response(status=200)
+
+
 # /feed/items/{newsfeed_item_id}/likes
 class NewsfeedItemLikeManageView(BaseManageView):
     VIEWS_BY_METHOD = {
-        'POST': NewsfeedItemLikeCreateView.as_view
+        'POST': NewsfeedItemLikeCreateView.as_view,
+        'DELETE': NewsfeedItemLikeDeleteView.as_view
     }
 
 
