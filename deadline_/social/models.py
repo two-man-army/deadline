@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from accounts.models import User
 from challenges.models import SubCategory, UserSubcategoryProficiency
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
-    NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST
+    NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
 
@@ -45,10 +45,6 @@ class NewsfeedItemManager(models.Manager):
         """
         Creates a 'link' NewsfeedItem type of a Submission
         """
-        """
-        'submission_id', 'submission_author_name', 'submission_author_id',
-                                   'submission_code_snippet', 'submission_language_name', 'submission_language_loc'
-        """
         return self.create(author_id=author.id, type=NW_ITEM_SUBMISSION_LINK_POST,
                            content={
                                'submission_id': submission.id,
@@ -57,6 +53,18 @@ class NewsfeedItemManager(models.Manager):
                                'submission_code_snippet': submission.code[:200],  # for now up until 200 characters, we'll see how this works
                                'submission_language_name': submission.language.name,
                                'submission_language_loc': 0  # temporary, as we do not store this anywhere
+                           })
+
+    def create_challenge_link(self, challenge: 'Challenge', author: User):
+        """
+        Creates a 'link' NewsfeedItem type of a Submission
+        """
+        return self.create(author_id=author.id, type=NW_ITEM_CHALLENGE_LINK_POST,
+                           content={
+                               'challenge_id': challenge.id,
+                               'challenge_name': challenge.name,
+                               'challenge_subcategory_name': challenge.category.name,
+                               'challenge_difficulty': challenge.difficulty
                            })
 
 
