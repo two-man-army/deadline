@@ -64,6 +64,16 @@ class User(AbstractBaseUser):
             raise UserNotFollowedError(f'{self.username} has not followed {user.username}!')
         self.users_followed.remove(user)
 
+    def fetch_unsuccessful_challenge_attempts_count(self, challenge: 'Challenge'):
+        """
+        Returns the count of unsuccessful submissions this user has made for a given challenge
+        """
+        from challenges.models import Submission
+        return (Submission.objects.filter(author_id=self.id, pending=False, challenge_id=challenge.id)
+                                  .exclude(result_score=challenge.score)
+                                  .count()
+                )
+
     def fetch_max_score_for_challenge(self, challenge_id):
         """
         Fetches the maximum score this user has scored for the given challenge
