@@ -44,9 +44,10 @@ class ChallengeComment(models.Model):
 
 
 class Submission(models.Model):
+    # TODO: Hold lines of code field
     challenge = models.ForeignKey(Challenge)
     author = models.ForeignKey(User)
-    code = models.CharField(max_length=4000, blank=False)
+    code = models.CharField(max_length=4000, blank=False)  # this max_length is barely cutting it
     task_id = models.CharField(max_length=100, blank=False)
     result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
     pending = models.BooleanField(default=True)
