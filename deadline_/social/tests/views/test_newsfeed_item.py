@@ -9,7 +9,8 @@ from challenges.tests.base import TestHelperMixin
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
-from social.views import NewsfeedItemDetailView, NewsfeedItemDetailManageView, SharePostCreateView
+from social.views import NewsfeedItemDetailView, NewsfeedItemDetailManageView, SharePostCreateView, PostCreateView, \
+    TextPostCreateView
 
 
 class NewsfeedItemDetailManageViewTests(TestCase):
@@ -52,6 +53,25 @@ class SharePostCreateViewTests(APITestCase, TestHelperMixin):
         mock_create_share_post.assert_not_called()
 
 
+class PostCreateViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+
+    def test_has_correct_mapping(self):
+        self.assertEqual(len(PostCreateView.VIEWS_BY_TYPE.keys()), 1)
+        self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_TEXT_POST], TextPostCreateView.as_view)
+
+    def test_returns_400_onunsupported_type(self):
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={'post_type': 'TANK'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'Post Type is not supported!')
+
+    def test_returns_400_on_empty_type(self):
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['error'], 'Post Type is not supported!')
+
+
 class TextPostCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
@@ -59,6 +79,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
     def test_create_post(self):
         self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                          data={
+                             'post_type': NW_ITEM_TEXT_POST,
                              'content': 'Training hard',
                              'is_private': False
                          })
@@ -76,6 +97,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
         """
         self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                          data={
+                             'post_type': NW_ITEM_TEXT_POST,
                              'content': 'Training hard',
                              'is_private': False,
                              'author': 20,
@@ -105,6 +127,7 @@ class TextPostCreateViewTests(APITestCase, TestHelperMixin):
     def test_requires_auth(self):
         resp = self.client.post('/social/posts',
                                 data={
+                                    'post_type': NW_ITEM_TEXT_POST,
                                     'content': 'Training hard',
                                     'is_private': False
                                 })

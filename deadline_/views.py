@@ -17,4 +17,5 @@ class BaseManageView(APIView):
         if request.method in self.VIEWS_BY_METHOD:
             return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
         # TODO: Change to 405
+        # TODO: Test if this Response is returnable at all, as it was not with the class PostCreateView
         return Response(status=404)

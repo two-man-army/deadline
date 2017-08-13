@@ -3,6 +3,7 @@ import re
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -80,6 +81,29 @@ class TextPostCreateView(CreateAPIView):
         serializer.save(author_id=self.author_id)
 
 
+# POST /posts
+class PostCreateView(APIView):
+    """
+    This handles NewsfeedItem Post creations, delegating it to the specific View according to the
+        type of post being created
+    """
+    VIEWS_BY_TYPE = {
+        NW_ITEM_TEXT_POST: TextPostCreateView.as_view
+    }
+
+    renderer_classes = (JSONRenderer, )
+
+    def dispatch(self, request, *args, **kwargs):
+        post_type = request.POST.get('post_type', None)
+        if post_type not in self.VIEWS_BY_TYPE:
+            return super().dispatch(request, *args, **kwargs)
+
+        return self.VIEWS_BY_TYPE[post_type]()(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return Response(status=400, data={'error': 'Post Type is not supported!'})
+
+
 class NewsfeedContentView(APIView):
     """
     This view returns all the content (NewsfeedItems) that a user should see
@@ -114,6 +138,7 @@ class NewsfeedItemDetailView(RetrieveAPIView):
     serializer_class = NewsfeedItemSerializer
 
 
+# POST /feed/items/{newsfeed_item_id}
 class SharePostCreateView(APIView):
     """
         Creates a NewsfeedItem of type SHARE_POST
@@ -129,6 +154,7 @@ class SharePostCreateView(APIView):
         return Response(status=201)
 
 
+# /feed/items/{newsfeed_item_id}
 class NewsfeedItemDetailManageView(BaseManageView):
     VIEWS_BY_METHOD = {
         'GET': NewsfeedItemDetailView.as_view,
