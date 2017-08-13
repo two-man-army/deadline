@@ -9,11 +9,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
+from challenges.models import Submission
 from decorators import fetch_models
+from errors import FetchError
 from social.errors import LikeAlreadyExistsError, NonExistentLikeError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
-from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST
+from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, \
+    NW_ITEM_SUBMISSION_LINK_POST
 from views import BaseManageView
 
 
@@ -81,6 +84,28 @@ class TextPostCreateView(CreateAPIView):
         serializer.save(author_id=self.author_id)
 
 
+class SubmissionLinkPostCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        submission_id = request.data.get('submission_id', None)
+        try:
+            submission = Submission.objects.get(id=submission_id)
+        except Submission.DoesNotExist:
+            return Response(status=404, data={'error': f'Submission with ID {submission_id} does not exist!'})
+
+        # validate that the current User is either the author or has solved it perfectly, otherwise he cannot share it
+        if submission.author_id != self.request.user.id:
+            top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(submission.challenge.id,
+                                                                                         self.request.user.id)
+            if top_user_submission is None or top_user_submission.result_score != submission.challenge.score:
+                # User has not fully solved this and as such does not have access to the solution
+                return Response(data={'error': 'You have not fully solved the challenge'}, status=400)
+
+        NewsfeedItem.objects.create_submission_link(submission=submission, author=request.user)
+        return Response(status=201)
+
+
 # POST /posts
 class PostCreateView(APIView):
     """
@@ -88,7 +113,8 @@ class PostCreateView(APIView):
         type of post being created
     """
     VIEWS_BY_TYPE = {
-        NW_ITEM_TEXT_POST: TextPostCreateView.as_view
+        NW_ITEM_TEXT_POST: TextPostCreateView.as_view,
+        NW_ITEM_SUBMISSION_LINK_POST: SubmissionLinkPostCreateView.as_view
     }
 
     renderer_classes = (JSONRenderer, )
@@ -119,6 +145,7 @@ class NewsfeedContentView(APIView):
         serializer = NewsfeedItemSerializer(many=True)
 
         start_offset = page * NEWSFEED_ITEMS_PER_PAGE
+        # TODO: For NewsfeedItems which are SubmissionLinks, validate that the current user can see them otherwise dont show them :)
         nw_items: [NewsfeedItem] = request.user.fetch_newsfeed(start_offset=start_offset, end_limit=start_offset + NEWSFEED_ITEMS_PER_PAGE)
         
         return Response(
