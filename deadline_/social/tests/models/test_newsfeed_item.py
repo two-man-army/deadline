@@ -1,9 +1,9 @@
 from django.test import TestCase
 
 from accounts.serializers import UserSerializer
-from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcategoryProficiency
+from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcategoryProficiency, Submission
 from challenges.tests.base import TestHelperMixin
-from social.constants import NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST
+from social.constants import NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST
 from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
@@ -33,6 +33,25 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_share_item.author, self.auth_user)
         self.assertEqual(len(nw_share_item.content.keys()), 1)
         self.assertEqual(nw_share_item.content['newsfeed_item_id'], nw_item.id)
+
+    def test_submission_link_post_creation(self):
+        self.base_set_up(create_user=False)
+        submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
+                                               author=self.auth_user, code="nyan"*1000)
+        nw_item = NewsfeedItem.objects.create_submission_link(submission=submission, author=self.auth_user)
+
+        expected_content = {
+            'submission_id': submission.id,
+            'submission_author_id': submission.author.id,
+            'submission_author_name': submission.author.username,
+            'submission_code_snippet': submission.code[:200],
+            'submission_language_name': submission.language.name,
+            'submission_language_loc': 0  # temporary, as we do not store this anywhere
+        }
+        self.assertEqual(nw_item.type, NW_ITEM_SUBMISSION_LINK_POST)
+        self.assertEqual(nw_item.content, expected_content)
+        self.assertEqual(nw_item.author, self.auth_user)
+        self.assertEqual(len(nw_item.content.keys()), len(expected_content.keys()))
 
     def test_subcategory_badge_post_creation(self):
         challenge_cat = MainCategory.objects.create(name='Tests')
