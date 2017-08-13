@@ -19,7 +19,7 @@ class TestHelperMixin:
         self.auth_user = User.objects.create(username='123', password='123', email='123@abv.bg', score=123, role=self.base_role)
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
 
-    def base_set_up(self):
+    def base_set_up(self, create_user=True):
         """
         Since a lot of tests use the same setUp code, namely creating:
             - A user
@@ -38,8 +38,8 @@ class TestHelperMixin:
         self.challenge.supported_languages.add(self.python_language)
         self.challenge.save()
         self.challenge_name = self.challenge.name
-
-        self.create_user_and_auth_token()
+        if create_user:
+            self.create_user_and_auth_token()
         self.subcategory_progress = UserSubcategoryProficiency.objects.filter(subcategory=self.sub_cat,
                                                                               user=self.auth_user).first()
         self.submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
