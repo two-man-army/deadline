@@ -11,6 +11,8 @@ from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
+from challenges.models import (Challenge, Submission, Language, SubmissionVote, Proficiency,
+                               UserSubcategoryProficiency, SubCategory, MainCategory)
 from social.constants import NW_ITEM_TEXT_POST
 from social.models import NewsfeedItem
 
@@ -86,7 +88,6 @@ class UserModelNewsfeedTest(TestCase):
 
 class UserModelTest(TestCase):
     def setUp(self):
-        from challenges.models import MainCategory, SubCategory, Proficiency
         self.base_role = Role.objects.create(name='User')
         self.main_cat = MainCategory.objects.create(name='tank')
         self.main_cat2 = MainCategory.objects.create(name='helicopter')
@@ -105,7 +106,6 @@ class UserModelTest(TestCase):
         self.assertEqual(us.role, self.base_role)
 
     def test_user_register_creates_user_subcategory_proficiency(self):
-        from challenges.models import UserSubcategoryProficiency
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.save()
 
@@ -180,23 +180,13 @@ class UserModelTest(TestCase):
             follower.unfollow(user_who_gets_followed)
 
     def test_get_vote_for_submission_returns_vote(self):
-        from challenges.models import Challenge, Submission, SubCategory, MainCategory, ChallengeDescription, Language, \
-            SubmissionVote
-        python_language = Language(name="Python") ;python_language.save()
-        challenge_cat = MainCategory.objects.create(name='Tests'); challenge_cat.save()
-        sub_cat = SubCategory(name='tests', meta_category=challenge_cat); sub_cat.save()
-        challenge = Challenge(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
-                                   test_case_count=3,
-                                   category=sub_cat); challenge.save()
-        auth_user = UserFactory()
-        auth_user.save()
-        s = Submission(language=python_language, challenge=challenge, author=auth_user,
-                       code='a')
-        s.save()
-        sv1 = SubmissionVote(author=auth_user, submission=s, is_upvote=False)
-        sv1.save()
+        self.set_up_fetch_unsuccessful_challenge_attempts_count_tests()
+        s = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                                      code='a')
 
-        received_vote = auth_user.get_vote_for_submission(submission_id=s.id)
+        sv1 = SubmissionVote.objects.create(author=self.auth_user, submission=s, is_upvote=False)
+
+        received_vote = self.auth_user.get_vote_for_submission(submission_id=s.id)
         self.assertEqual(received_vote, sv1)
 
     def test_get_vote_for_submission_no_vote_returns_None(self):
@@ -232,8 +222,6 @@ class UserModelTest(TestCase):
         """
         Should return a UserSubcategoryProficiency model
         """
-        from challenges.models import UserSubcategoryProficiency, SubCategory, MainCategory
-        # from challenges.tests.factories import SubCategoryFactory, MainCategoryFactory
         mc = MainCategory.objects.create(name='t')
         mc.save()
         sc = SubCategory(name='tank', meta_category=mc)
@@ -259,7 +247,6 @@ class UserModelTest(TestCase):
         """
         Should return a Proficiency object
         """
-        from challenges.models import UserSubcategoryProficiency, Proficiency, MainCategory, SubCategory
         mc = MainCategory.objects.create(name='t')
         mc.save()
         sc = SubCategory.objects.create(name='tank', meta_category=mc)
@@ -302,86 +289,70 @@ class UserModelTest(TestCase):
 
         self.assertEqual(User.fetch_user_count(), 5)
 
-    def test_fetch_unsuccessful_challenge_attempts_count(self):
-        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
+    def set_up_fetch_unsuccessful_challenge_attempts_count_tests(self):
+        """ Create a User, Language and a Challenge"""
+        self.auth_user: User = UserFactory()
+        self.python_language = Language.objects.create(name="Python")
+        self.challenge_cat = MainCategory.objects.create(name='Tests'); self.challenge_cat.save()
+        self.sub_cat = SubCategory.objects.create(name='tests', meta_category=self.challenge_cat)
+        self.challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
+                                             test_case_count=3, category=self.sub_cat)
 
-        auth_user: User = UserFactory()
-        python_language = Language.objects.create(name="Python")
-        challenge_cat = MainCategory.objects.create(name='Tests'); challenge_cat.save()
-        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
-        challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
-                                             test_case_count=3, category=sub_cat)
+    def test_fetch_unsuccessful_challenge_attempts_count(self):
+        self.set_up_fetch_unsuccessful_challenge_attempts_count_tests()
         # create 3 unsuccessful submissions and one successful
         for i in range(3):
-            Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
+            Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
                                       pending=False, result_score=1)
         # one successful submission
-        Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                  pending=False, result_score=challenge.score)
+        Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                  pending=False, result_score=self.challenge.score)
 
-        unsuc_count = auth_user.fetch_unsuccessful_challenge_attempts_count(challenge)
+        unsuc_count = self.auth_user.fetch_unsuccessful_challenge_attempts_count(self.challenge)
         self.assertEqual(unsuc_count, 3)
 
     def test_fetch_unsuccessful_challenge_attempts_count_ignores_other_challenge_submissions(self):
-        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
-        auth_user: User = UserFactory()
-        python_language = Language.objects.create(name="Python")
-        challenge_cat = MainCategory.objects.create(name='Tests'); challenge_cat.save()
-        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
-        challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
-                                             test_case_count=3, category=sub_cat)
+        self.set_up_fetch_unsuccessful_challenge_attempts_count_tests()
         # create 10 unsuccesful submissions for another challenge
         other_challenge = Challenge.objects.create(name='Ev', difficulty=5, score=200, description=ChallengeDescFactory()
-                                                   , test_case_count=3, category=sub_cat)
+                                                   , test_case_count=3, category=self.sub_cat)
         for i in range(10):
-            Submission.objects.create(language=python_language, author=auth_user, challenge=other_challenge,
+            Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=other_challenge,
                                       pending=False, result_score=1)
 
         # create 3 unsuccessful submissions and one successful
         for i in range(3):
-            Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
+            Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
                                       pending=False, result_score=1)
         # one successful submission
-        Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                  pending=False, result_score=challenge.score)
+        Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                  pending=False, result_score=self.challenge.score)
 
-        unsuc_count = auth_user.fetch_unsuccessful_challenge_attempts_count(challenge)
+        unsuc_count = self.auth_user.fetch_unsuccessful_challenge_attempts_count(self.challenge)
         self.assertEqual(unsuc_count, 3)
 
     def fetch_unsuccessful_challenge_attempts_count_all_successful_should_return_0(self):
-        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
-        auth_user: User = UserFactory()
-        python_language = Language.objects.create(name="Python")
-        challenge_cat = MainCategory.objects.create(name='Tests'); challenge_cat.save()
-        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
-        challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
-                                             test_case_count=3, category=sub_cat)
+        self.set_up_fetch_unsuccessful_challenge_attempts_count_tests()
         # create 3 successful submissions and one successful
         for i in range(3):
-            Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                      pending=False, result_score=challenge.score)
+            Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                      pending=False, result_score=self.challenge.score)
 
-        unsuc_count = auth_user.fetch_unsuccessful_challenge_attempts_count(challenge)
+        unsuc_count = self.auth_user.fetch_unsuccessful_challenge_attempts_count(self.challenge)
         self.assertEqual(unsuc_count, 0)
 
     def test_fetch_unsuccessful_challenge_attempts_count_ignores_successful_attempts(self):
-        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
-        auth_user: User = UserFactory()
-        python_language = Language.objects.create(name="Python")
-        challenge_cat = MainCategory.objects.create(name='Tests'); challenge_cat.save()
-        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
-        challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
-                                             test_case_count=3, category=sub_cat)
+        self.set_up_fetch_unsuccessful_challenge_attempts_count_tests()
         # create 3 successful submissions and one successful
         for i in range(3):
-            Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                      pending=False, result_score=challenge.score)
+            Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                      pending=False, result_score=self.challenge.score)
         # create 2 unsuccessful
         for i in range(2):
-            Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                      pending=False, result_score=challenge.score-1)
+            Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                      pending=False, result_score=self.challenge.score-1)
 
-        unsuc_count = auth_user.fetch_unsuccessful_challenge_attempts_count(challenge)
+        unsuc_count = self.auth_user.fetch_unsuccessful_challenge_attempts_count(self.challenge)
         self.assertEqual(unsuc_count, 2)
 
     def test_fetch_unsuccessful_challenge_attempts_count_ignores_pending_submissions(self):
@@ -389,25 +360,19 @@ class UserModelTest(TestCase):
         As Pending denoted if the Submission is still being graded,
             a pending submission should not count towards an unsuccessful attempt
         """
-        from challenges.models import Challenge, Submission, SubCategory, MainCategory, Language
-        auth_user: User = UserFactory()
-        python_language = Language.objects.create(name="Python")
-        challenge_cat = MainCategory.objects.create(name='Tests'); challenge_cat.save()
-        sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
-        challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
-                                             test_case_count=3, category=sub_cat)
+        self.set_up_fetch_unsuccessful_challenge_attempts_count_tests()
 
         # one successful, one unsuccessful
-        Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                  pending=False, result_score=challenge.score)
-        Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                  pending=False, result_score=challenge.score-1)
+        Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                  pending=False, result_score=self.challenge.score)
+        Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                  pending=False, result_score=self.challenge.score-1)
         # 10 unsuccessful which are still pending
         for i in range(10):
-            Submission.objects.create(language=python_language, author=auth_user, challenge=challenge,
-                                      pending=True, result_score=challenge.score-1)
+            Submission.objects.create(language=self.python_language, author=self.auth_user, challenge=self.challenge,
+                                      pending=True, result_score=self.challenge.score-1)
 
-        unsuc_count = auth_user.fetch_unsuccessful_challenge_attempts_count(challenge)
+        unsuc_count = self.auth_user.fetch_unsuccessful_challenge_attempts_count(self.challenge)
         self.assertEqual(unsuc_count, 1)
 
 
