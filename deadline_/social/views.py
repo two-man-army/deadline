@@ -9,14 +9,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
-from challenges.models import Submission
+from challenges.models import Submission, Challenge
 from decorators import fetch_models
 from errors import FetchError
 from social.errors import LikeAlreadyExistsError, NonExistentLikeError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, \
-    NW_ITEM_SUBMISSION_LINK_POST
+    NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST
 from views import BaseManageView
 
 
@@ -106,6 +106,20 @@ class SubmissionLinkPostCreateView(APIView):
         return Response(status=201)
 
 
+class ChallengeLinkPostCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        challenge_id = request.data.get('challenge_id', None)
+        try:
+            challenge = Challenge.objects.get(id=challenge_id)
+        except Challenge.DoesNotExist:
+            return Response(status=404, data={'error': f'Challenge with ID {challenge_id} does not exist!'})
+
+        NewsfeedItem.objects.create_challenge_link(challenge=challenge, author=request.user)
+        return Response(status=201)
+
+
 # POST /posts
 class PostCreateView(APIView):
     """
@@ -114,7 +128,8 @@ class PostCreateView(APIView):
     """
     VIEWS_BY_TYPE = {
         NW_ITEM_TEXT_POST: TextPostCreateView.as_view,
-        NW_ITEM_SUBMISSION_LINK_POST: SubmissionLinkPostCreateView.as_view
+        NW_ITEM_SUBMISSION_LINK_POST: SubmissionLinkPostCreateView.as_view,
+        NW_ITEM_CHALLENGE_LINK_POST: ChallengeLinkPostCreateView.as_view
     }
 
     renderer_classes = (JSONRenderer, )

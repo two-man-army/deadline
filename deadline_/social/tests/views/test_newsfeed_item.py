@@ -7,11 +7,12 @@ from rest_framework.test import APITestCase
 from accounts.models import User
 from challenges.models import Submission
 from challenges.tests.base import TestHelperMixin
-from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SUBMISSION_LINK_POST
+from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SUBMISSION_LINK_POST, \
+    NW_ITEM_CHALLENGE_LINK_POST
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
 from social.views import NewsfeedItemDetailView, NewsfeedItemDetailManageView, SharePostCreateView, PostCreateView, \
-    TextPostCreateView
+    TextPostCreateView, SubmissionLinkPostCreateView, ChallengeLinkPostCreateView
 
 
 class NewsfeedItemDetailManageViewTests(TestCase):
@@ -122,13 +123,44 @@ class SubmissionLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         mock_create_subm.assert_not_called()
 
 
+class ChallengeLinkPostCreateViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.base_set_up()
+
+    @patch('social.models.NewsfeedItemManager.create_challenge_link')
+    def test_creation(self, mock_create_challenge_link):
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'post_type': NW_ITEM_CHALLENGE_LINK_POST,
+                                          'challenge_id': self.challenge.id})
+        self.assertEqual(response.status_code, 201)
+        mock_create_challenge_link.assert_called_once_with(author=self.auth_user, challenge=self.challenge)
+
+    @patch('social.models.NewsfeedItemManager.create_challenge_link')
+    def test_requires_auth(self, mock_create_challenge_link):
+        response = self.client.post('/social/posts',
+                                    data={'post_type': NW_ITEM_CHALLENGE_LINK_POST,
+                                          'challenge_id': self.challenge.id})
+        self.assertEqual(response.status_code, 401)
+        mock_create_challenge_link.assert_not_called()
+
+    @patch('social.models.NewsfeedItemManager.create_challenge_link')
+    def test_invalid_challenge_id_returns_404(self, mock_create_challenge_link):
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
+                                    data={'post_type': NW_ITEM_CHALLENGE_LINK_POST,
+                                          'challenge_id': 111})
+        self.assertEqual(response.status_code, 404)
+        mock_create_challenge_link.assert_not_called()
+
+
 class PostCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
 
     def test_has_correct_mapping(self):
-        self.assertEqual(len(PostCreateView.VIEWS_BY_TYPE.keys()), 1)
+        self.assertEqual(len(PostCreateView.VIEWS_BY_TYPE.keys()), 3)
         self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_TEXT_POST], TextPostCreateView.as_view)
+        self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_SUBMISSION_LINK_POST], SubmissionLinkPostCreateView.as_view)
+        self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_CHALLENGE_LINK_POST], ChallengeLinkPostCreateView.as_view)
 
     def test_returns_400_onunsupported_type(self):
         response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={'post_type': 'TANK'})
