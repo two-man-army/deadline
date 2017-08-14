@@ -22,8 +22,8 @@ const Subcategory = ({url, name}) => (
 )
 
 Subcategory.propTypes = {
-  url: PropTypes.string,
-  name: PropTypes.string
+  url: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired
 }
 
 export default Subcategory
