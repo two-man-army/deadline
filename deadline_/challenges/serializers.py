@@ -1,9 +1,12 @@
 from collections import OrderedDict
 
 from rest_framework import serializers
+
+from accounts.serializers import UserSerializer
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, \
     Language, UserSubcategoryProficiency, SubmissionComment, ChallengeComment
 from challenges.models import User
+from serializers import RecursiveField
 
 
 class ChallengeDescriptionSerializer(serializers.ModelSerializer):
@@ -67,12 +70,13 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
 
 
 class SubmissionCommentSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    author = serializers.StringRelatedField(read_only=True)
+    author = UserSerializer(read_only=True)
+    replies = RecursiveField(many=True, read_only=True)
 
     class Meta:
         model = SubmissionComment
-        fields = ('id', 'author', 'content')
+        fields = ('id', 'content', 'author', 'replies')
+        read_only_fields = ('id', 'author', 'replies')
 
 
 class SubmissionSerializer(serializers.ModelSerializer):

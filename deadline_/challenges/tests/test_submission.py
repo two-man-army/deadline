@@ -1,6 +1,7 @@
 """ Tests associated with the Submission model and views """
 import time
 import datetime
+from collections import OrderedDict
 from unittest.mock import patch, MagicMock
 
 from django.test import TestCase
@@ -8,9 +9,11 @@ from django.db.utils import IntegrityError
 from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
+from accounts.serializers import UserSerializer
 from challenges.models import (Challenge, Submission, SubCategory, MainCategory,
                                ChallengeDescription, Language, SubmissionVote, Proficiency, SubmissionComment)
-from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer
+from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer, \
+    SubmissionCommentSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from challenges.tests.base import TestHelperMixin
 from accounts.models import User
@@ -166,6 +169,70 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         sv1.delete()
         self.assertEqual((0, 0), s.get_votes_count())
 
+
+class SubmissionCommentModelViewTest(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.base_set_up()
+
+    def test_nested_serialization(self):
+        author_data = OrderedDict(UserSerializer(instance=self.auth_user).data)
+        first_comment = SubmissionComment.objects.create(submission=self.submission,
+                                                         author=self.auth_user, content='corridor')
+        first_reply = SubmissionComment.objects.create(submission=self.submission, parent=first_comment,
+                                                       author=self.auth_user, content='night call')
+        second_reply = SubmissionComment.objects.create(submission=self.submission, parent=first_comment,
+                                                        author=self.auth_user, content='soldier')
+        second_reply_reply = SubmissionComment.objects.create(submission=self.submission, parent=second_reply,
+                                                        author=self.auth_user, content='wall')
+        first_reply_reply = SubmissionComment.objects.create(submission=self.submission, parent=first_reply,
+                                                              author=self.auth_user, content='ice')
+        first_reply_reply_reply = SubmissionComment.objects.create(submission=self.submission, parent=first_reply_reply,
+                                                                     author=self.auth_user, content='vens')
+
+        # Also asserts that they are ordered by creation date
+        expected_data = {
+            'id': first_comment.id,
+            'content': first_comment.content,
+            'author': author_data,
+            'replies': [
+                {
+                    'id': second_reply.id,
+                    'content': second_reply.content,
+                    'author': author_data,
+                    'replies': [
+                        {
+                            'id': second_reply_reply.id,
+                            'content': second_reply_reply.content,
+                            'author': author_data,
+                            'replies': [],
+                        }
+                    ],
+                },
+                {
+                    'id': first_reply.id,
+                    'content': first_reply.content,
+                    'author': author_data,
+                    'replies': [
+                        {
+                            'id': first_reply_reply.id,
+                            'content': first_reply_reply.content,
+                            'author': author_data,
+                            'replies': [
+                                {
+                                    'id': first_reply_reply_reply.id,
+                                    'content': first_reply_reply_reply.content,
+                                    'author': author_data,
+                                    'replies': [],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+        received_data = SubmissionCommentSerializer(first_comment).data
+        self.assertEqual(expected_data, received_data)
+
     def test_add_comment_adds_comment(self):
         f_submission: Submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
         f_submission.add_comment(author=self.auth_user, content='Hello')
@@ -181,7 +248,6 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         sb_comment.add_reply(author=self.auth_user, content='Light it up')
         self.assertEqual(sb_comment.replies.count(), 1)
         self.assertEqual(sb_comment.replies.first().content, 'Light it up')
-
 
 # TODO: Split tests to test the function validate_data() instead of issuing a request
 # TODO:     + a mock ot assure its called when issuing a request
