@@ -211,7 +211,7 @@
     "model": "challenges.proficiency",
     "pk": 1,
     "fields": {
-      "name": "",
+      "name": "Newbie",
       "needed_percentage": 0
     }
   },
