@@ -68,16 +68,15 @@ class NewsfeedItemManager(models.Manager):
                                'challenge_difficulty': challenge.difficulty
                            })
 
-    def create_challenge_completion_post(self, challenge: 'Challenge', submission: 'Submission',
-                                         author: User, unsuccessful_attempts_count: int):
+    def create_challenge_completion_post(self, submission: 'Submission'):
         """
         Creates a NewsfeedItem of type ChallengeCompletion
             ex: Stanislav has completed challenge Firefox with 100/100 score after 30 attempts
         """
-        if challenge.id != submission.challenge_id:
-            raise Exception(f'Challenge does not correspond to submission')
-        if author.id != submission.author_id:
-            raise Exception(f'Submission does not correspond to author')
+        challenge = submission.challenge
+        author: User = submission.author
+        if not submission.has_solved_challenge():
+            raise Exception(f'Submission has not solved the challenge!')
 
         return self.create(author_id=author.id, type=NW_ITEM_CHALLENGE_COMPLETION_POST,
                            content={
@@ -85,7 +84,7 @@ class NewsfeedItemManager(models.Manager):
                                'challenge_name': challenge.name,
                                'submission_id': submission.id,
                                'challenge_score': challenge.score,
-                               'attempts_count': unsuccessful_attempts_count
+                               'attempts_count': author.fetch_unsuccessful_challenge_attempts_count(challenge)
                            })
 
 

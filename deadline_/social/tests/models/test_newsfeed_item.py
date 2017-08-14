@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 
 from accounts.serializers import UserSerializer
@@ -69,45 +71,37 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(len(nw_item.content.keys()), len(expected_content.keys()))
         self.assertEqual(nw_item.author, self.auth_user)
 
-    def test_challenge_completion_post_creation(self):
+    @patch('challenges.models.Submission.has_solved_challenge')
+    @patch('accounts.models.User.fetch_unsuccessful_challenge_attempts_count')
+    def test_challenge_completion_post_creation(self, mock_fetch, mock_has_solved_challenge):
         self.base_set_up(create_user=False)
-        nw_item = NewsfeedItem.objects.create_challenge_completion_post(challenge=self.challenge,
-                                                                        submission=self.submission,
-                                                                        author=self.auth_user,
-                                                                        unsuccessful_attempts_count=100)
+        mock_has_solved_challenge.return_value = True
+        mock_fetch.return_value = 100
+        nw_item = NewsfeedItem.objects.create_challenge_completion_post(submission=self.submission)
         expected_content = {
-            'challenge_id': self.challenge.id,
-            'challenge_name': self.challenge.name,
+            'challenge_id': self.submission.challenge.id,
+            'challenge_name': self.submission.challenge.name,
             'submission_id': self.submission.id,
-            'challenge_score': self.challenge.score,
+            'challenge_score': self.submission.challenge.score,
             'attempts_count': 100
         }
         self.assertEqual(nw_item.type, NW_ITEM_CHALLENGE_COMPLETION_POST)
         self.assertEqual(len(nw_item.content.keys()), len(expected_content.keys()))
-        self.assertEqual(nw_item.author, self.auth_user)
+        self.assertEqual(nw_item.author, self.submission.author)
         self.assertEqual(nw_item.content, expected_content)
+        mock_has_solved_challenge.assert_called_once()
+        mock_fetch.assert_called_once()
 
-    def test_challenge_completion_post_creation_different_submission_and_author_should_raise(self):
-        """ Submission is not made by the author """
-        self.base_set_up(create_user=False)
-        new_user = UserFactory()
-        new_user.save()
-        with self.assertRaises(Exception):
-            NewsfeedItem.objects.create_challenge_completion_post(challenge=self.challenge,
-                                                                  submission=self.submission,
-                                                                  author=new_user,
-                                                                  unsuccessful_attempts_count=100)
-
-    def test_challenge_completion_post_creation_different_submission_and_challenge_should_raise(self):
+    @patch('challenges.models.Submission.has_solved_challenge')
+    @patch('accounts.models.User.fetch_unsuccessful_challenge_attempts_count')
+    def test_challenge_completion_post_not_solved_submission_should_raise(self, mock_fetch, mock_has_solved_challenge):
         """ Submission is not part of challenge """
         self.base_set_up(create_user=False)
-        other_challenge = Challenge.objects.create(name='What', difficulty=5, score=10, description=ChallengeDescFactory(),
-                                                   test_case_count=2, category=self.sub_cat)
+        mock_has_solved_challenge.return_value = False
         with self.assertRaises(Exception):
-            NewsfeedItem.objects.create_challenge_completion_post(challenge=other_challenge,
-                                                                  submission=self.submission,
-                                                                  author=self.auth_user,
-                                                                  unsuccessful_attempts_count=100)
+            NewsfeedItem.objects.create_challenge_completion_post(submission=self.submission)
+        mock_has_solved_challenge.assert_called_once()
+        mock_fetch.assert_not_called()
 
     def test_subcategory_badge_post_creation(self):
         challenge_cat = MainCategory.objects.create(name='Tests')
