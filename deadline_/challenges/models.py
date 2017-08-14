@@ -76,6 +76,12 @@ class Submission(models.Model):
 
         return upvote_count, downvote_count
 
+    def has_solved_challenge(self) -> bool:
+        """ Returns a boolean, indicating if this Submission has completely solved the Challenge it was made for """
+        if self.pending:
+            return False
+        return self.result_score == self.challenge.score
+
     @staticmethod
     def fetch_top_submissions_for_challenge(challenge_id):
         """

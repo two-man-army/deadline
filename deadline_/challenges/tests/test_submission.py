@@ -49,6 +49,21 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         with self.assertRaises(Exception):
             s.full_clean()
 
+    def test_has_solved_challenge_should_return_true_when_solved(self):
+        s = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                                      code="", result_score=self.challenge.score, pending=False)
+        self.assertTrue(s.has_solved_challenge())
+
+    def test_has_solved_challenge_should_return_false_when_not_solved(self):
+        s = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                                      code="", result_score=self.challenge.score-1, pending=False)
+        self.assertFalse(s.has_solved_challenge())
+
+    def test_has_solved_challenge_should_return_false_when_still_pending(self):
+        s = Submission.objects.create(language=self.python_language, challenge=self.challenge, author=self.auth_user,
+                                      code="", result_score=self.challenge.score, pending=True)
+        self.assertFalse(s.has_solved_challenge())
+
     def test_fetch_top_submissions(self):
         """
         The method should return the top submissions for a given challenge,
