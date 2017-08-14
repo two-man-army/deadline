@@ -1,8 +1,11 @@
 """
     Universal helper methods that are useful across apps
 """
-from errors import FetchError
+from datetime import datetime, timedelta
+
 import django.db.models
+
+from errors import FetchError
 
 
 def fetch_models_by_pks(ids_by_models: {django.db.models.Model: int}) -> []:
@@ -22,3 +25,11 @@ def fetch_models_by_pks(ids_by_models: {django.db.models.Model: int}) -> []:
             raise FetchError(f'{model.__name__} with ID {id} does not exist.')
 
     return fetched_objects
+
+
+def get_date_difference(end_date: datetime, start_date: datetime) -> timedelta:
+    """
+    Returns the difference between two dates
+    This function is mainly made to ease testing
+    """
+    return end_date - start_date
