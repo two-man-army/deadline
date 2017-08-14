@@ -153,7 +153,6 @@ class ChallengeLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         mock_create_challenge_link.assert_not_called()
 
 
-# NEXT TODO: Assure each PostCreate calls appropriate view
 @patch('social.models.NewsfeedItemManager.create_challenge_completion_post')
 class ChallengeCompletionPostCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):

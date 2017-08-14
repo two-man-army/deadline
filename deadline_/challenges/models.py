@@ -115,9 +115,13 @@ class SubmissionComment(models.Model):
     author = models.ForeignKey(User)
     content = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
 
     class Meta:
         ordering = ('-created_at', )
+
+    def add_reply(self, author, content):
+        return SubmissionComment.objects.create(submission=self.submission, parent=self, author=author, content=content)
 
 
 class SubmissionVote(models.Model):

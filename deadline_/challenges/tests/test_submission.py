@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.models import (Challenge, Submission, SubCategory, MainCategory,
-                               ChallengeDescription, Language, SubmissionVote, Proficiency)
+                               ChallengeDescription, Language, SubmissionVote, Proficiency, SubmissionComment)
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from challenges.tests.base import TestHelperMixin
@@ -173,6 +173,14 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         self.assertEqual(f_submission.comments.count(), 1)
         self.assertEqual(f_submission.comments.first().author, self.auth_user)
         self.assertEqual(f_submission.comments.first().content, 'Hello')
+
+    def test_add_reply_adds_reply(self):
+        f_submission: Submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
+        sb_comment = SubmissionComment.objects.create(submission=f_submission, author=self.auth_user, content='aa')
+
+        sb_comment.add_reply(author=self.auth_user, content='Light it up')
+        self.assertEqual(sb_comment.replies.count(), 1)
+        self.assertEqual(sb_comment.replies.first().content, 'Light it up')
 
 
 # TODO: Split tests to test the function validate_data() instead of issuing a request
