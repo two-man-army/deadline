@@ -38,9 +38,13 @@ class ChallengeComment(models.Model):
     author = models.ForeignKey(User)
     content = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
 
     class Meta:
         ordering = ('-created_at', )
+
+    def add_reply(self, author: User, content: str):
+        return ChallengeComment.objects.create(author=author, content=content, challenge_id=self.challenge_id, parent=self)
 
 
 class Submission(models.Model):
