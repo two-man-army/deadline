@@ -1,14 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
+import CategoryHeader from './CategoryHeader'
 
 const Subcategory = ({url, name}) => (
   <li className='subcategory'>
     <Link to={{pathname: url}}>
       <section>
-        <header>
-          <h3 className='subcat-header'>{name}</h3>
-        </header>
+        <CategoryHeader name={name} />
         <div>
           <span className='subcat-difficulty'>
             Difficulty: 3.5/10
