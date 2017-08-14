@@ -1,10 +1,11 @@
 from django.test import TestCase
 
 from accounts.serializers import UserSerializer
-from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcategoryProficiency, Submission
+from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcategoryProficiency, Submission, Challenge
 from challenges.tests.base import TestHelperMixin
+from challenges.tests.factories import UserFactory, ChallengeDescFactory
 from social.constants import NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, \
-    NW_ITEM_CHALLENGE_LINK_POST
+    NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, NEWSFEED_ITEM_TYPE_CONTENT_FIELDS
 from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
@@ -67,6 +68,46 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
         self.assertEqual(nw_item.content, expected_content)
         self.assertEqual(len(nw_item.content.keys()), len(expected_content.keys()))
         self.assertEqual(nw_item.author, self.auth_user)
+
+    def test_challenge_completion_post_creation(self):
+        self.base_set_up(create_user=False)
+        nw_item = NewsfeedItem.objects.create_challenge_completion_post(challenge=self.challenge,
+                                                                        submission=self.submission,
+                                                                        author=self.auth_user,
+                                                                        unsuccessful_attempts_count=100)
+        expected_content = {
+            'challenge_id': self.challenge.id,
+            'challenge_name': self.challenge.name,
+            'submission_id': self.submission.id,
+            'challenge_score': self.challenge.score,
+            'attempts_count': 100
+        }
+        self.assertEqual(nw_item.type, NW_ITEM_CHALLENGE_COMPLETION_POST)
+        self.assertEqual(len(nw_item.content.keys()), len(expected_content.keys()))
+        self.assertEqual(nw_item.author, self.auth_user)
+        self.assertEqual(nw_item.content, expected_content)
+
+    def test_challenge_completion_post_creation_different_submission_and_author_should_raise(self):
+        """ Submission is not made by the author """
+        self.base_set_up(create_user=False)
+        new_user = UserFactory()
+        new_user.save()
+        with self.assertRaises(Exception):
+            NewsfeedItem.objects.create_challenge_completion_post(challenge=self.challenge,
+                                                                  submission=self.submission,
+                                                                  author=new_user,
+                                                                  unsuccessful_attempts_count=100)
+
+    def test_challenge_completion_post_creation_different_submission_and_challenge_should_raise(self):
+        """ Submission is not part of challenge """
+        self.base_set_up(create_user=False)
+        other_challenge = Challenge.objects.create(name='What', difficulty=5, score=10, description=ChallengeDescFactory(),
+                                                   test_case_count=2, category=self.sub_cat)
+        with self.assertRaises(Exception):
+            NewsfeedItem.objects.create_challenge_completion_post(challenge=other_challenge,
+                                                                  submission=self.submission,
+                                                                  author=self.auth_user,
+                                                                  unsuccessful_attempts_count=100)
 
     def test_subcategory_badge_post_creation(self):
         challenge_cat = MainCategory.objects.create(name='Tests')

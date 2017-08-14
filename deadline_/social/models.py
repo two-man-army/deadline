@@ -6,7 +6,8 @@ from django.dispatch import receiver
 from accounts.models import User
 from challenges.models import SubCategory, UserSubcategoryProficiency
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
-    NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST
+    NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
+    NW_ITEM_CHALLENGE_COMPLETION_POST
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
 
@@ -65,6 +66,26 @@ class NewsfeedItemManager(models.Manager):
                                'challenge_name': challenge.name,
                                'challenge_subcategory_name': challenge.category.name,
                                'challenge_difficulty': challenge.difficulty
+                           })
+
+    def create_challenge_completion_post(self, challenge: 'Challenge', submission: 'Submission',
+                                         author: User, unsuccessful_attempts_count: int):
+        """
+        Creates a NewsfeedItem of type ChallengeCompletion
+            ex: Stanislav has completed challenge Firefox with 100/100 score after 30 attempts
+        """
+        if challenge.id != submission.challenge_id:
+            raise Exception(f'Challenge does not correspond to submission')
+        if author.id != submission.author_id:
+            raise Exception(f'Submission does not correspond to author')
+
+        return self.create(author_id=author.id, type=NW_ITEM_CHALLENGE_COMPLETION_POST,
+                           content={
+                               'challenge_id': challenge.id,
+                               'challenge_name': challenge.name,
+                               'submission_id': submission.id,
+                               'challenge_score': challenge.score,
+                               'attempts_count': unsuccessful_attempts_count
                            })
 
 
