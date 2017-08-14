@@ -67,6 +67,22 @@ function getCategoriesMetaInfo () {
   })
 }
 
+/*
+ * Fetches all subcategories based on given categoryId
+ * @param {string} categoryId
+ * returns {Object[]}
+*/
+function getCategorySubcategories (categoryId) {
+  return axios.get(`http://localhost:8000/challenges/categories/${categoryId}/subcategories`, getAxiosConfig())
+    .then(resp => {
+      return resp.data
+    })
+    .catch(err => {
+      console.log(`Error while fetching subcategories for category with ID ${categoryId}`)
+      throw err
+    })
+}
+
 function getLatestAttemptedChallenges () {
   return axios.get('http://localhost:8000/challenges/latest_attempted', getAxiosConfig()).then(resp => {
     return resp.data
@@ -249,8 +265,7 @@ function getOverallLeaderboard () {
 
 export {getAxiosConfig,
   postLogIn, postRegister, postChallengeSolution, postCastSubmissionVote,
-  getLatestAttemptedChallenges, getSubCategoryChallenges, getChallengeDetails, getCategoriesMetaInfo,
+  getLatestAttemptedChallenges, getCategorySubcategories, getSubCategoryChallenges, getChallengeDetails, getCategoriesMetaInfo,
   getTopSolutions, getAllUserSolutions, getChallengeSolution, getSolutionTests, getSelfUserTopSubmission,
-  getOverallLeaderboard, getLanguageDetail,
-  deleteRemoveSubmissionVote
+  getOverallLeaderboard, getLanguageDetail, deleteRemoveSubmissionVote
 }
