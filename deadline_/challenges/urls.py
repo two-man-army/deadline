@@ -5,7 +5,8 @@ from challenges.views import (
     SubmissionCreateView, SubmissionListView, TopSubmissionListView, MainCategoryListView, SubCategoryDetailView,
     LatestAttemptedChallengesListView, LanguageDetailView, SelfTopSubmissionDetailView,
     CastSubmissionVoteView, RemoveSubmissionVoteView, SelfGetLeaderboardPositionView,
-    GetLeaderboardView, LanguageListView, SubmissionCommentManageView, ChallengeCommentManageView)
+    GetLeaderboardView, LanguageListView, SubmissionCommentManageView, ChallengeCommentManageView,
+    SubmissionCommentReplyCreateView)
 from django.views.decorators.cache import cache_page, never_cache
 
 urlpatterns = [
@@ -23,7 +24,10 @@ urlpatterns = [
     url(r'^(?P<challenge_pk>\d+)/submissions/new$', SubmissionCreateView.as_view(), name='submission_create'),
     url(r'^(?P<challenge_pk>\d+)/submissions/all$', cache_page(20)(SubmissionListView.as_view()), name='submission_list'),
     url(r'^(?P<challenge_pk>\d+)/submissions/top$', TopSubmissionListView.as_view(), name='top_submission_list'),
-    url(r'^(?P<challenge_pk>\d+)/submissions/(?P<submission_id>\d+)/comments', SubmissionCommentManageView.as_view(), name='submission_comment'),
+    url(r'^(?P<challenge_pk>\d+)/submissions/(?P<submission_id>\d+)/comments$', SubmissionCommentManageView.as_view(),
+        name='submission_comment'),
+    url(r'^(?P<challenge_pk>\d+)/submissions/(?P<submission_id>\d+)/comments/(?P<comment_id>\d+)$', SubmissionCommentReplyCreateView.as_view(),
+        name='submission_comment_reply_create'),
     url(r'^submissions/(?P<submission_id>\d+)/vote$', CastSubmissionVoteView.as_view(), name='vote_submission'),
     url(r'^submissions/(?P<submission_id>\d+)/removeVote$', RemoveSubmissionVoteView.as_view(), name='remove_submission_vote'),
     url(r'^(?P<challenge_pk>\d+)/submissions/selfTop$', SelfTopSubmissionDetailView.as_view(), name='self_top_submission'),

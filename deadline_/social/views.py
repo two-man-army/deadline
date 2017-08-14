@@ -306,7 +306,8 @@ class NewsfeedItemCommentReplyCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated, )
     serializer_class = NewsfeedItemCommentSerializer
     model_classes = (NewsfeedItem, NewsfeedItemComment)
-
+    # TODO: Decide if better way to create such a comment(reply) is to use a Serializer or the add_reply method
+    # I think its overkill to use a serializer for now, August 14th
     @fetch_models
     def post(self, request, nw_item: NewsfeedItem, nw_item_comment: NewsfeedItemComment, *args, **kwargs):
         if nw_item_comment.newsfeed_item_id != nw_item.id:

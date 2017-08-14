@@ -10,8 +10,11 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote
-from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, LimitedSubmissionSerializer
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote, \
+    SubmissionComment
+from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, \
+    MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, \
+    LimitedSubmissionSerializer, SubmissionCommentSerializer
 from challenges.tasks import run_grader_task
 
 
@@ -223,6 +226,7 @@ class SubmissionListView(ListAPIView):
 
 # POST /challenges/{challenge_id}/submissions/{submission_id}/comments
 class SubmissionCommentCreateView(APIView):
+    # TODO: Test
     permission_classes = (IsAuthenticated, )
     model_classes = (Challenge, Submission)
 
@@ -249,6 +253,7 @@ class SubmissionCommentCreateView(APIView):
             return Response(status=400, data={'error': 'Invalid comment content!'})
         if len(comment_content) < 5 or len(comment_content) > 500:
             return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
+        # TODO: Consistency between comments, some are required to have certain length, others not
 
         if submission.challenge_id != challenge.id:
             return Response(
@@ -263,6 +268,40 @@ class SubmissionCommentCreateView(APIView):
             if top_user_submission is None or top_user_submission.result_score != challenge.score:
                 # User has not fully solved this and as such does not have access to the solution
                 return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+
+
+# POST /challenges/{challenge_id}/submissions/{submission_id}/comments/{comment_id}
+class SubmissionCommentReplyCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = SubmissionCommentSerializer
+    model_classes = (Challenge, Submission, SubmissionComment)
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, submission: Submission, submission_comment: SubmissionComment,
+             *args, **kwargs):
+        if challenge.id != submission.challenge_id:
+            return Response(
+                status=400, data={'error': f'Submission {submission.id} does not belong to Challenge {challenge.id}'}
+            )
+        if submission_comment.submission_id != submission.id:
+            return Response(
+                status=400, data={'error': f'Comment {submission_comment.id} does not belong to Submission {submission.id}'}
+            )
+        # TODO: Refactor into a function and mock in tests
+        # validate that the current User is either the author or has solved it perfectly
+        if submission.author_id != request.user.id:
+            top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge.id, request.user.id)
+            if top_user_submission is None or top_user_submission.result_score != challenge.score:
+                # User has not fully solved this and as such does not have access to the solution
+                return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+
+        self.submission = submission
+        self.user = request.user
+        self.comment = submission_comment
+        return super().post(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        return serializer.save(author_id=self.user.id, submission_id=self.submission.id, parent=self.comment)
 
 
 # /challenges/{challenge_id}/submissions/{submission_id}/comments
