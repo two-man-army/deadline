@@ -3,20 +3,22 @@ import re
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.utils import timezone
+
 from accounts.models import User
 from challenges.models import Submission, Challenge
 from decorators import fetch_models
-from errors import FetchError
+from helpers import get_date_difference
 from social.errors import LikeAlreadyExistsError, NonExistentLikeError
 from social.models import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, \
-    NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST
+    NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, \
+    MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES
 from views import BaseManageView
 
 
@@ -120,6 +122,41 @@ class ChallengeLinkPostCreateView(APIView):
         return Response(status=201)
 
 
+# TODO: Maybe create some decorator which validates that the requires fields in request.data are sent
+class ChallengeCompletionPostCreateView(APIView):
+    """
+    Creates a NewsfeedItem of type CHALLENGE_COMPLETION_POST
+    Used for when a User completes a challenge and wants to share that fact
+    ex: Stanislav just completed Basic Numbers with score 100/100 after 40 attempts!
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request, *args, **kwargs):
+        submission_id = request.data.get('submission_id', None)
+        try:
+            submission = Submission.objects.get(id=submission_id)
+        except Submission.DoesNotExist:
+            return Response(status=404, data={'error': f'Submission with ID {submission_id} does not exist!'})
+
+        # validate that the submission's author is the request user
+        if submission.author_id != request.user.id:
+            return Response(status=400, data={'error': f'Submission {submission.id} does not belong to '
+                                                       f'User with ID {request.user.id}'})
+        # validate that this submission has solved the challenge
+        if not submission.has_solved_challenge():
+            return Response(status=400, data={'error': f'Submission {submission.id} has not fully solved the challenge!'
+                                                       f' ({submission.result_score}/{submission.challenge.score}) Score'})
+        # validate that the submission is made in the allowed timeframe
+        minutes_since_submission = get_date_difference(
+            end_date=timezone.now(),
+            start_date=submission.created_at).total_seconds() // 60
+        if minutes_since_submission > MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES:
+            return Response(status=400, data={'error': f'Submission {submission.id} is not '
+                                                       f'eligible for a CHALLENGE_COMPLETION post!'})
+        NewsfeedItem.objects.create_challenge_completion_post(submission=submission)
+        return Response(status=201)
+
+
 # POST /posts
 class PostCreateView(APIView):
     """
@@ -129,10 +166,9 @@ class PostCreateView(APIView):
     VIEWS_BY_TYPE = {
         NW_ITEM_TEXT_POST: TextPostCreateView.as_view,
         NW_ITEM_SUBMISSION_LINK_POST: SubmissionLinkPostCreateView.as_view,
-        NW_ITEM_CHALLENGE_LINK_POST: ChallengeLinkPostCreateView.as_view
+        NW_ITEM_CHALLENGE_LINK_POST: ChallengeLinkPostCreateView.as_view,
+        NW_ITEM_CHALLENGE_COMPLETION_POST: ChallengeCompletionPostCreateView.as_view,
     }
-
-    renderer_classes = (JSONRenderer, )
 
     def dispatch(self, request, *args, **kwargs):
         post_type = request.POST.get('post_type', None)

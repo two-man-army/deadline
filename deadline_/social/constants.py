@@ -20,3 +20,6 @@ NEWSFEED_ITEM_TYPE_CONTENT_FIELDS = {
 }
 
 NEWSFEED_ITEMS_PER_PAGE = 15
+
+# the maximum time that can pass before a submission is deemed invalid for a CHALLENGE_COMPLETION post
+MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES = 10

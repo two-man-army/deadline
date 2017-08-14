@@ -7,12 +7,13 @@ from rest_framework.test import APITestCase
 from accounts.models import User
 from challenges.models import Submission
 from challenges.tests.base import TestHelperMixin
+from challenges.tests.factories import UserFactory
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SUBMISSION_LINK_POST, \
-    NW_ITEM_CHALLENGE_LINK_POST
+    NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST
 from social.models import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
 from social.views import NewsfeedItemDetailView, NewsfeedItemDetailManageView, SharePostCreateView, PostCreateView, \
-    TextPostCreateView, SubmissionLinkPostCreateView, ChallengeLinkPostCreateView
+    TextPostCreateView, SubmissionLinkPostCreateView, ChallengeLinkPostCreateView, ChallengeCompletionPostCreateView
 
 
 class NewsfeedItemDetailManageViewTests(TestCase):
@@ -152,15 +153,91 @@ class ChallengeLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         mock_create_challenge_link.assert_not_called()
 
 
+# NEXT TODO: Assure each PostCreate calls appropriate view
+@patch('social.models.NewsfeedItemManager.create_challenge_completion_post')
+class ChallengeCompletionPostCreateViewTests(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.base_set_up()
+
+    @patch('challenges.models.Submission.has_solved_challenge')
+    def test_creates_completion(self, mock_has_solved, mock_create_post):
+        mock_has_solved.return_value = True
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={
+            'post_type': NW_ITEM_CHALLENGE_COMPLETION_POST,
+            'submission_id': self.submission.id,
+        })
+        self.assertEqual(response.status_code, 201)
+        mock_create_post.assert_called_once_with(submission=self.submission)
+
+    @patch('helpers.get_date_difference')
+    def test_does_not_create_if_submission_not_eligible_for_post(self, mock_get_date_diff, mock_create_post):
+        """
+        There is a limit on how many minutes can pass
+            before a submission is eligible for this kind of post
+        """
+        from social.constants import MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES
+        mock_get_date_diff.return_value = timedelta(minutes=MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES + 1)
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={
+            'post_type': NW_ITEM_CHALLENGE_COMPLETION_POST,
+            'submission_id': self.submission.id,
+        })
+
+        self.assertEqual(response.status_code, 400)
+        mock_create_post.assert_not_called()
+
+    def test_returns_400_if_submission_is_not_made_by_user(self, mock_create_post):
+        other_user = UserFactory()
+        other_user.save()
+        other_subm = Submission.objects.create(language=self.python_language, challenge=self.challenge,
+                                               author=other_user, code="")
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={
+            'post_type': NW_ITEM_CHALLENGE_COMPLETION_POST,
+            'submission_id': other_subm.id,
+        })
+
+        self.assertEqual(response.status_code, 400)
+        mock_create_post.assert_not_called()
+        mock_create_post.assert_not_called()
+
+    @patch('challenges.models.Submission.has_solved_challenge')
+    def test_returns_400_if_submission_not_solved(self, mock_has_solved, mock_create_post):
+        mock_has_solved.return_value = False
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={
+            'post_type': NW_ITEM_CHALLENGE_COMPLETION_POST,
+            'submission_id': self.submission.id,
+        })
+
+        self.assertEqual(response.status_code, 400)
+        mock_create_post.assert_not_called()
+
+    def test_returns_404_if_invalid_submission(self, mock_create_post):
+        response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={
+            'post_type': NW_ITEM_CHALLENGE_COMPLETION_POST,
+            'submission_id': 111,
+        })
+
+        self.assertEqual(response.status_code, 404)
+        mock_create_post.assert_not_called()
+
+    def test_requires_auth(self, mock_create_post):
+        response = self.client.post('/social/posts', data={
+            'post_type': NW_ITEM_CHALLENGE_COMPLETION_POST,
+            'submission_id': 111,
+        })
+        self.assertEqual(response.status_code, 401)
+        mock_create_post.assert_not_called()
+
+
 class PostCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
 
     def test_has_correct_mapping(self):
-        self.assertEqual(len(PostCreateView.VIEWS_BY_TYPE.keys()), 3)
+        self.assertEqual(len(PostCreateView.VIEWS_BY_TYPE.keys()), 4)
         self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_TEXT_POST], TextPostCreateView.as_view)
         self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_SUBMISSION_LINK_POST], SubmissionLinkPostCreateView.as_view)
         self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_CHALLENGE_LINK_POST], ChallengeLinkPostCreateView.as_view)
+        self.assertEqual(PostCreateView.VIEWS_BY_TYPE[NW_ITEM_CHALLENGE_COMPLETION_POST], ChallengeCompletionPostCreateView.as_view)
 
     def test_returns_400_onunsupported_type(self):
         response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token, data={'post_type': 'TANK'})
