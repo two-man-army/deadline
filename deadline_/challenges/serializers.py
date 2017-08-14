@@ -16,12 +16,13 @@ class ChallengeDescriptionSerializer(serializers.ModelSerializer):
 
 
 class ChallengeCommentSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    author = serializers.StringRelatedField(read_only=True)
+    author = UserSerializer(read_only=True)
+    replies = RecursiveField(many=True, read_only=True)
 
     class Meta:
         model = ChallengeComment
-        fields = ('id', 'author', 'content')
+        fields = ('id', 'content', 'author', 'replies')
+        read_only_fields = ('id', 'author', 'replies')
 
 
 class ChallengeSerializer(serializers.ModelSerializer):

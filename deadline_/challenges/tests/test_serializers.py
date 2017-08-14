@@ -1,14 +1,16 @@
+from collections import OrderedDict
 from unittest.mock import MagicMock
 
 from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
+from accounts.serializers import UserSerializer
 from challenges.serializers import LimitedSubmissionSerializer, SubmissionSerializer, SubmissionCommentSerializer, \
     ChallengeCommentSerializer, ChallengeSerializer, ChallengeDescriptionSerializer
 from challenges.models import Submission, SubmissionVote, ChallengeDescription, MainCategory, SubCategory, Language, \
     Challenge, Proficiency, SubmissionComment, ChallengeComment
 from challenges.tests.base import TestHelperMixin
-from challenges.tests.factories import ChallengeDescFactory
+from challenges.tests.factories import ChallengeDescFactory, UserFactory
 from accounts.models import User
 
 
@@ -179,9 +181,72 @@ class ChallengeCommentSerializerTests(TestCase, TestHelperMixin):
     def test_serialization(self):
         challenge_comment = ChallengeComment.objects.create(challenge=self.challenge,
                                                             author=self.auth_user, content='Hello World')
-        expected_data = {'id': challenge_comment.id, 'author': challenge_comment.author.username, 'content': challenge_comment.content}
+        author_data = OrderedDict(UserSerializer(self.auth_user).data)
+        expected_data = {'id': challenge_comment.id, 'author': author_data, 'content': challenge_comment.content, 'replies': []}
         received_data = ChallengeCommentSerializer(instance=challenge_comment).data
 
         self.assertEqual(expected_data, received_data)
 
+    def test_nested_serialization(self):
+        author_data = OrderedDict(UserSerializer(self.auth_user).data)
 
+        challenge_comment = ChallengeComment.objects.create(challenge=self.challenge,
+                                                            author=self.auth_user, content='Hello World')
+        first_reply = challenge_comment.add_reply(author=self.auth_user, content='Ill Mind')
+        first_reply_reply = first_reply.add_reply(author=self.auth_user, content='lift weights')
+        first_reply_reply_reply = first_reply_reply.add_reply(author=self.auth_user, content='scary fella')
+        second_reply = challenge_comment.add_reply(author=self.auth_user, content='grind disorder')
+        # this also asserts that replies are sorted by creation date descending
+        expected_data = {
+            'id': challenge_comment.id,
+            'content': challenge_comment.content,
+            'author': author_data,
+            'replies': [
+                {
+                    'id': second_reply.id,
+                    'content': second_reply.content,
+                    'author': author_data,
+                    'replies': []
+                },
+                {
+                    'id': first_reply.id,
+                    'content': first_reply.content,
+                    'author': author_data,
+                    'replies': [
+                        {
+                            'id': first_reply_reply.id,
+                            'content': first_reply_reply.content,
+                            'author': author_data,
+                            'replies': [
+                                {
+                                    'id': first_reply_reply_reply.id,
+                                    'content': first_reply_reply_reply.content,
+                                    'author': author_data,
+                                    'replies': []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+
+        self.assertEqual(expected_data, ChallengeCommentSerializer(challenge_comment).data)
+
+    def test_deserialize_ignores_read_only_fields(self):
+        new_user = UserFactory(); new_user.save()
+        desc = ChallengeDescFactory()
+        new_c = Challenge.objects.create(name='Stay Callin', difficulty=5, score=10, description=desc,
+                                                  test_case_count=2, category=self.sub_cat)
+        challenge_comment = ChallengeComment.objects.create(challenge=self.challenge,
+                                                            author=self.auth_user, content='Hello World')
+        ser = ChallengeCommentSerializer(data={'id': 2014, 'content': 'change', 'author_id': new_user.id, 'parent_id': challenge_comment.id,
+                                               'challenge_id': new_c.id})
+        self.assertTrue(ser.is_valid())
+        new_comment = ser.save(author=self.auth_user, challenge=self.challenge)
+
+        self.assertNotEqual(new_comment.id, 2014)
+        self.assertEqual(new_comment.author, self.auth_user)
+        self.assertIsNone(new_comment.parent)
+        self.assertEqual(new_comment.content, 'change')
+        self.assertEqual(new_comment.challenge, self.challenge)
