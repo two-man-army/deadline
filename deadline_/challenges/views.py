@@ -11,10 +11,10 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS
 from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote, \
-    SubmissionComment
+    SubmissionComment, ChallengeComment
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, \
     MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, \
-    LimitedSubmissionSerializer, SubmissionCommentSerializer
+    LimitedSubmissionSerializer, SubmissionCommentSerializer, ChallengeCommentSerializer
 from challenges.tasks import run_grader_task
 
 
@@ -44,6 +44,27 @@ class ChallengeCommentCreateView(APIView):
             return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
 
         challenge.add_comment(author=request.user, content=comment_content)
+        return Response(status=201)
+
+
+# POST /challenges/{challenge_id}/comments/{comment_id}
+class ChallengeCommentReplyCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    model_classes = (Challenge, ChallengeComment)
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, challenge_comment: ChallengeComment, *args, **kwargs):
+        if challenge.id != challenge_comment.challenge_id:
+            return Response(
+                status=400, data={'error': f'Comment {challenge_comment.id} does not belong to Challenge {challenge.id}'}
+            )
+        comment_content = request.data.get('content', None)
+        if not isinstance(comment_content, str):
+            return Response(status=400, data={'error': 'Invalid comment content!'})
+        if len(comment_content) < 5 or len(comment_content) > 500:
+            return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
+
+        challenge_comment.add_reply(author=request.user, content=comment_content)
         return Response(status=201)
 
 

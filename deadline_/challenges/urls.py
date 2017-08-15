@@ -6,7 +6,7 @@ from challenges.views import (
     LatestAttemptedChallengesListView, LanguageDetailView, SelfTopSubmissionDetailView,
     CastSubmissionVoteView, RemoveSubmissionVoteView, SelfGetLeaderboardPositionView,
     GetLeaderboardView, LanguageListView, SubmissionCommentManageView, ChallengeCommentManageView,
-    SubmissionCommentReplyCreateView)
+    SubmissionCommentReplyCreateView, ChallengeCommentReplyCreateView)
 from django.views.decorators.cache import cache_page, never_cache
 
 urlpatterns = [
@@ -19,6 +19,8 @@ urlpatterns = [
 
     url(r'^(?P<pk>\d+)$', cache_page(5)(ChallengeDetailView.as_view()), name='challenge_detail'),
     url(r'^(?P<challenge_pk>\d+)/comments$', ChallengeCommentManageView.as_view(), name='challenge_comment'),
+    url(r'^(?P<challenge_pk>\d+)/comments/(?P<comment_id>\d+)$', ChallengeCommentReplyCreateView.as_view(),
+        name='challenge_comment_reply_create'),
 
     url(r'^(?P<challenge_pk>\d+)/submissions/(?P<pk>\d+)$', SubmissionDetailView.as_view(), name='submission_detail'),
     url(r'^(?P<challenge_pk>\d+)/submissions/new$', SubmissionCreateView.as_view(), name='submission_create'),
