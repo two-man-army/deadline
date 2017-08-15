@@ -24,22 +24,21 @@ def get_user_from_session(session_key):
     return user
 
 
-def get_dialogs_with_user(user_1, user_2):
+def get_or_create_dialog_with_users(user_owner, user_opponent):
     """
-    gets the dialog between user_1 and user_2
-    :param user_1: the first user in dialog (owner or opponent)
-    :param user_2: the second user in dialog (owner or opponent)
-    :return: queryset which include dialog between user_1 and user_2 (queryset can be empty)
+    Gets or creates the dialog between user_owner and user_opponent
     """
-    return Dialog.objects.filter(
-        Q(owner=user_1, opponent=user_2) | Q(opponent=user_1, owner=user_2))
+    if not Dialog.objects.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).exists():
+        return Dialog.objects.create(owner=user_owner, opponent=user_opponent)
+
+    return Dialog.objects.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).first()
 
 logger = logging.getLogger('django-private-dialog')
 ws_connections = {}
 
 
 @asyncio.coroutine
-def target_message(conn, payload):
+def send_message(conn, payload):
     """
     Distibuted payload (message) to one connection
     :param conn: connection
@@ -146,116 +145,108 @@ def gone_offline(stream):
 def new_messages_handler(stream):
     """
     Saves a new chat message to db and distributes msg to connected users
+
+    Needs to be sent the following JSON
+    {
+        "type": "new-message",
+        "message": "YOUR_MESSAGE_HERE",
+        "user_id": YOUR_USER_ID_HERE,
+        "username": HIS_USERNAME_HERE
+    }
     """
     # TODO: handle no user found exception
     while True:
         packet = yield from stream.get()
+        # TODO: Validate JSON
+
         print('Distributing message')
-        # session_id = packet.get('session_key')
-        msg = packet.get('message')
-        username_opponent = packet.get('username')
-        if msg and username_opponent:
-            user_owner = User.objects.get(id=packet.get('user_id'))
-            # user_owner = get_user_from_session(session_id)
-            if user_owner:
-                user_opponent = get_user_model().objects.get(username=username_opponent)
-                print(f'User opponent is {user_opponent}')
-                dialog = get_dialogs_with_user(user_owner, user_opponent)
-                if len(dialog) == 0:
-                    dialog = [Dialog.objects.create(owner=user_owner, opponent=user_opponent)]
-                print(f'Dialog is {dialog}')
-                if len(dialog) > 0:
-                    # Save the message
-                    msg = models.Message.objects.create(
-                        dialog=dialog[0],
-                        sender=user_owner,
-                        text=packet['message']
-                    )
-                    packet['created'] = msg.get_formatted_create_datetime()
-                    packet['sender_name'] = msg.sender.username
+        message = packet.get('message')
+        user_owner = User.objects.get(id=packet.get('user_id'))
+        user_opponent = User.objects.get(username=packet.get('username'))
 
-                    # Send the message
-                    connections = []
-                    # Find socket of the user which sent the message
-                    if (user_owner.username, user_opponent.username) in ws_connections:
-                        connections.append(ws_connections[(user_owner.username, user_opponent.username)])
-                    # Find socket of the opponent
-                    if (user_opponent.username, user_owner.username) in ws_connections:
-                        connections.append(ws_connections[(user_opponent.username, user_owner.username)])
-                    else:
-                        # Find sockets of people who the opponent is talking with
-                        opponent_connections = list(filter(lambda x: x[0] == user_opponent.username, ws_connections))
-                        opponent_connections_sockets = [ws_connections[i] for i in opponent_connections]
-                        connections.extend(opponent_connections_sockets)
+        print(f'User opponent is {user_opponent}')
+        dialog: Dialog = get_or_create_dialog_with_users(user_owner, user_opponent)
+        print(f'Dialog is {dialog}')
 
-                    yield from fanout_message(connections, packet)
-                else:
-                    pass
+        # Save the message
+        msg = models.Message.objects.create(
+            dialog=dialog,
+            sender=user_owner,
+            text=packet['message']
+        )
+        packet['created'] = msg.get_formatted_create_datetime()
+        packet['sender_name'] = msg.sender.username
 
-            else:
-                pass  # no user_owner
-        else:
-            pass  # missing one of params
+        # Send the message
+        connections = []
+        if (user_owner.username, user_opponent.username) in ws_connections:
+            connections.append(ws_connections[(user_owner.username, user_opponent.username)])
+        # Find socket of the opponent
+        if (user_opponent.username, user_owner.username) in ws_connections:
+            connections.append(ws_connections[(user_opponent.username, user_owner.username)])
 
+        yield from fanout_message(connections, packet)
 
-@asyncio.coroutine
-def users_changed_handler(stream):
-    """Sends connected client list of currently active users in the chatroom
-    """
-    while True:
-        yield from stream.get()
+# @asyncio.coroutine
+# def users_changed_handler(stream):
+#     """
+#     Sends connected client list of currently active users in the chatroom
+#     """
+#     while True:
+#         yield from stream.get()
+#
+#         # Get list list of current active users
+#         users = [
+#             {'username': username, 'uuid': uuid_str}
+#             for username, uuid_str in ws_connections.values()
+#         ]
+#
+#         # Make packet with list of new users (sorted by username)
+#         packet = {
+#             'type': 'users-changed',
+#             'value': sorted(users, key=lambda i: i['username'])
+#         }
+#         logger.debug(packet)
+#         yield from fanout_message(ws_connections.keys(), packet)
 
-        # Get list list of current active users
-        users = [
-            {'username': username, 'uuid': uuid_str}
-            for username, uuid_str in ws_connections.values()
-        ]
-
-        # Make packet with list of new users (sorted by username)
-        packet = {
-            'type': 'users-changed',
-            'value': sorted(users, key=lambda i: i['username'])
-        }
-        logger.debug(packet)
-        yield from fanout_message(ws_connections.keys(), packet)
-
-
-@asyncio.coroutine
-def is_typing_handler(stream):
-    """
-    Show message to opponent if user is typing message
-    """
-    while True:
-        packet = yield from stream.get()
-        session_id = packet.get('session_key')
-        user_opponent = packet.get('username')
-        typing = packet.get('typing')
-        if session_id and user_opponent and typing is not None:
-            user_owner = get_user_from_session(session_id)
-            if user_owner:
-                opponent_socket = ws_connections.get((user_opponent, user_owner.username))
-                if typing and opponent_socket:
-                    yield from target_message(opponent_socket,
-                                              {'type': 'opponent-typing', 'username': user_opponent})
-            else:
-                pass  # invalid session id
-        else:
-            pass  # no session id or user_opponent or typing
+#
+# @asyncio.coroutine
+# def is_typing_handler(stream):
+#     """
+#     Show message to opponent if user is typing message
+#     """
+#     while True:
+#         packet = yield from stream.get()
+#         session_id = packet.get('session_key')
+#         user_opponent = packet.get('username')
+#         typing = packet.get('typing')
+#         if session_id and user_opponent and typing is not None:
+#             user_owner = get_user_from_session(session_id)
+#             if user_owner:
+#                 opponent_socket = ws_connections.get((user_opponent, user_owner.username))
+#                 if typing and opponent_socket:
+#                     yield from target_message(opponent_socket,
+#                                               {'type': 'opponent-typing', 'username': user_opponent})
+#             else:
+#                 pass  # invalid session id
+#         else:
+#             pass  # no session id or user_opponent or typing
 
 
 @asyncio.coroutine
 def main_handler(websocket, path):
-    """An Asyncio Task is created for every new websocket client connection
+    """
+    An Asyncio Task is created for every new websocket client connection
     that is established. This coroutine listens to messages from the connected
     client and routes the message to the proper queue.
 
     This coroutine can be thought of as a producer.
     """
-
     # Get users name from the path
     print(f'Path is {path}')
     path = path.split('/')
     username = path[2]
+
     # session_id = path[1]
     # user_owner = get_user_from_session(session_id)
     user_id = int(path[1])
