@@ -43,6 +43,9 @@ class ChallengeComment(models.Model):
     class Meta:
         ordering = ('-created_at', )
 
+    def get_absolute_url(self):
+        return f'/challenges/{self.challenge_id}/comments/{self.id}'
+
     def add_reply(self, author: User, content: str):
         return ChallengeComment.objects.create(author=author, content=content, challenge_id=self.challenge_id, parent=self)
 

@@ -28,6 +28,11 @@ class ChallengeCommentModelTests(TestCase, TestHelperMixin):
         self.assertEqual(new_reply.parent, new_comment)
         self.assertEqual(new_reply.author, self.auth_user)
 
+    def test_get_absolute_url(self):
+        new_comment = self.challenge.add_comment(author=self.auth_user, content='Frozen')
+        expected_url = f'/challenges/{self.challenge.id}/comments/{new_comment.id}'
+        self.assertEqual(new_comment.get_absolute_url(), expected_url)
+
 
 class ChallengeCommentViewTest(APITestCase, TestHelperMixin):
     def setUp(self):
