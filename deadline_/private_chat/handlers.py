@@ -1,6 +1,8 @@
 import asyncio
 import json
 import logging
+import re
+
 import websockets
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -9,6 +11,8 @@ from accounts.models import User
 from private_chat.models import Dialog
 from . import models, router
 from django.contrib.sessions.models import Session
+
+CONNECT_PATH_REGEX = r'^\/(?P<owner_id>\d{1,})\/(?P<owner_token>[a-z0-9]+)\/(?P<opponent_id>\d{1,})$'
 
 
 def get_user_from_session(session_key):
@@ -158,6 +162,7 @@ def new_messages_handler(stream):
     while True:
         packet = yield from stream.get()
         # TODO: Validate JSON
+        # TODO: Think up of a way to validate the user, most likely his Token?
 
         print('Distributing message')
         message = packet.get('message')
@@ -177,7 +182,7 @@ def new_messages_handler(stream):
         packet['created'] = msg.get_formatted_create_datetime()
         packet['sender_name'] = msg.sender.username
 
-        # Send the message
+        # Send the message to both parties
         connections = []
         if (user_owner.username, user_opponent.username) in ws_connections:
             connections.append(ws_connections[(user_owner.username, user_opponent.username)])
@@ -241,20 +246,19 @@ def main_handler(websocket, path):
     client and routes the message to the proper queue.
 
     This coroutine can be thought of as a producer.
+
+    Expected path for initial connection is
+    /user_id/user_token/user_to_speak_to_id
     """
     # Get users name from the path
-    print(f'Path is {path}')
-    path = path.split('/')
-    username = path[2]
-
-    # session_id = path[1]
-    # user_owner = get_user_from_session(session_id)
-    user_id = int(path[1])
-    user_owner = User.objects.get(id=user_id)
+    owner_id, owner_token, opponent_id = extract_path(path)
+    # TODO: Get User objects, validate them
+    # user_owner = User.objects.get(id=owner_id)
+    raise NotImplementedError()
     if user_owner:
         user_owner = user_owner.username
         # Persist users connection, associate user w/a unique ID
-        ws_connections[(user_owner, username)] = websocket
+        ws_connections[(user_owner, opponent_id)] = websocket
 
         # While the websocket is open, listen for incoming messages/events
         # if unable to listening for messages/events, then disconnect the client
@@ -278,3 +282,23 @@ def main_handler(websocket, path):
             del ws_connections[(user_owner, username)]
     else:
         logger.info("Got invalid session_id attempt to connect "+session_id)
+
+
+class RegexMatchError(Exception):
+    """ Used when we cannot match with regex """
+    pass
+
+
+def extract_path(path):
+    """
+    Sample path: /user_id/user_token/user_to_speak_to_id
+    """
+    match_obj = re.match(CONNECT_PATH_REGEX, path)
+    if match_obj is None:
+        raise RegexMatchError(f'Path {path} does not match the expected regex!')
+    regex_groups = match_obj.groupdict()
+    owner_id = int(regex_groups['owner_id'])
+    owner_token = regex_groups['owner_token']
+    opponent_id = int(regex_groups['opponent_id'])
+
+    return owner_id, owner_token, opponent_id
