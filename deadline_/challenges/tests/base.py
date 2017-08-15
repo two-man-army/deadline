@@ -44,3 +44,22 @@ class TestHelperMixin:
                                                                               user=self.auth_user).first()
         self.submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
                                                     author=self.auth_user, code="")
+
+    def create_challenge(self) -> Challenge:
+        """
+        Creates a Challenge object and returns it
+        """
+        from random import randint
+        if not SubCategory.objects.exists():
+            # create a subcategory
+            if not MainCategory.objects.exists():
+                main_cat = MainCategory.objects.create(name=f'Tests{randint(1, 100)}')
+            else:
+                main_cat = MainCategory.objects.first()
+            sub_cat = SubCategory.objects.create(name='tests', meta_category=main_cat)
+        else:
+            sub_cat = SubCategory.objects.first()
+
+        return Challenge.objects.create(name=f'Sample Challenge{randint(1, 100)}', difficulty=randint(1, 10),
+                                        score=randint(1, 100), description=ChallengeDescFactory(),
+                                        test_case_count=randint(1, 20), category=sub_cat)
