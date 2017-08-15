@@ -1,6 +1,5 @@
 .subcategory {
-    margin-right: 30px;
-    margin-bottom: 30px;
+    margin: 0 30px 25px 0;
 
     section {
         width: 330px;
@@ -14,7 +13,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 50px;
+        height: 45px;
         font-family: "Poppins Light";
         font-size: 18px;
         font-weight: normal;
@@ -31,7 +30,9 @@
         align-items: center;
         font-family: "Poppins Regular";
         font-weight: normal;
-        background: antiquewhite;
+        background: #f6f3f5;
+        border: 1px solid #b3aeb1;
+        border-top: 0;
     }
 }
 
