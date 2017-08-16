@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 
 from accounts.models import User, Token
+from private_chat.errors import ChatPairingError, UserTokenMatchError, RegexMatchError
 from private_chat.models import Dialog
 from . import models, router
 from django.contrib.sessions.models import Session
@@ -285,23 +286,6 @@ def main_handler(websocket, path):
         pass
     finally:
         del ws_connections[(owner.id, opponent.id)]
-
-
-class Error(Exception):
-    pass
-
-
-class RegexMatchError(Error):
-    """ Used when we cannot match with regex """
-    pass
-
-
-class ChatPairingError(Error):
-    pass
-
-
-class UserTokenMatchError(Error):
-    pass
 
 
 def extract_path(path):
