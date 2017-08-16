@@ -11,6 +11,7 @@ class SubcategoriesPage extends React.Component {
     }
 
     this.loadSubcategories = this.loadSubcategories.bind(this)
+    this.calculateCompletedPercenage = this.calculateCompletedPercenage.bind(this)
     this.loadSubcategories()
   }
 
@@ -27,6 +28,18 @@ class SubcategoriesPage extends React.Component {
       })
   }
 
+  calculateCompletedPercenage (challengeCount, solvedChallengesCount) {
+    if (solvedChallengesCount === 0) {
+      console.log(challengeCount, solvedChallengesCount)
+      return 0
+    }
+
+    // TODO round two digits after the decimal point
+    const percentageCompleted = (solvedChallengesCount / challengeCount) * 100
+
+    return percentageCompleted
+  }
+
   render () {
     const mainCategory = window.localStorage.categoryName
 
@@ -40,7 +53,14 @@ class SubcategoriesPage extends React.Component {
               name={subcategory.name}
               proficiency={subcategory.proficiency.name}
               challengeCount={subcategory.challenge_count}
-              solvedChallenges={subcategory.solved_challenges_count} />
+              solvedChallenges={subcategory.solved_challenges_count}
+              percentageCompleted={
+                this.calculateCompletedPercenage(
+                  subcategory.challenge_count,
+                  subcategory.solved_challenges_count)
+              }
+              next_proficiency=''
+              exp_to_next_proficiency='' />
           })}
         </ul>
       </section>
