@@ -1,0 +1,29 @@
+.subcategory {
+    section {
+        .category-overlay {
+            // visibility: hidden;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: antiquewhite;
+        }
+
+        &:hover {
+            .overlay {
+                visibility: visible;
+                height: 100%;
+                background: antiquewhite;
+                transition: all 0.2s;
+            }
+        }
+
+        .align-center {
+            text-align: center;
+        }
+    }
+}
