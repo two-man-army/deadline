@@ -1,19 +1,17 @@
 import asyncio
 import json
 import logging
-import re
-
 import websockets
+
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
 from accounts.models import User, Token
-from private_chat.errors import ChatPairingError, UserTokenMatchError, RegexMatchError
+from private_chat.errors import ChatPairingError, UserTokenMatchError
+from private_chat.helpers import extract_connect_path
 from private_chat.models import Dialog
 from . import models, router
 from django.contrib.sessions.models import Session
-
-CONNECT_PATH_REGEX = r'^\/(?P<owner_id>\d{1,})\/(?P<owner_token>[a-z0-9]+)\/(?P<opponent_id>\d{1,})$'
 
 
 def get_user_from_session(session_key):
@@ -254,7 +252,7 @@ def main_handler(websocket, path):
     /user_id/user_token/user_to_speak_to_id
     """
     # Get users name from the path
-    owner_id, owner_token, opponent_id = extract_path(path)
+    owner_id, owner_token, opponent_id = extract_connect_path(path)
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, owner_token, opponent_id)
     except (ChatPairingError, UserTokenMatchError, User.DoesNotExist, Token.DoesNotExist) as e:
@@ -286,21 +284,6 @@ def main_handler(websocket, path):
         pass
     finally:
         del ws_connections[(owner.id, opponent.id)]
-
-
-def extract_path(path):
-    """
-    Sample path: /user_id/user_token/user_to_speak_to_id
-    """
-    match_obj = re.match(CONNECT_PATH_REGEX, path)
-    if match_obj is None:
-        raise RegexMatchError(f'Path {path} does not match the expected regex!')
-    regex_groups = match_obj.groupdict()
-    owner_id = int(regex_groups['owner_id'])
-    owner_token = regex_groups['owner_token']
-    opponent_id = int(regex_groups['opponent_id'])
-
-    return owner_id, owner_token, opponent_id
 
 
 def fetch_and_validate_participants(owner_id: int, owner_token: str, opponent_id: int) -> (User, User):
