@@ -297,6 +297,10 @@ class ChatPairingError(Error):
     pass
 
 
+class UserTokenMatchError(Error):
+    pass
+
+
 def extract_path(path):
     """
     Sample path: /user_id/user_token/user_to_speak_to_id
@@ -310,3 +314,21 @@ def extract_path(path):
     opponent_id = int(regex_groups['opponent_id'])
 
     return owner_id, owner_token, opponent_id
+
+
+def fetch_and_validate_participants(owner_id: int, owner_token: str, opponent_id: int) -> (User, User):
+    """
+    Fetches the User objects and validates them
+    """
+    if owner_id == opponent_id:
+        raise ChatPairingError('Cannot match a user to himself!')
+    token = Token.objects.get(key=owner_token)
+    owner = User.objects.get(id=owner_id)
+
+    # Validate the token is correct
+    if owner.auth_token.key != owner_token or token.user_id != owner_id:
+        raise UserTokenMatchError(f'User with ID {owner_id} does not have a token {owner_token}')
+
+    opponent = User.objects.get(id=opponent_id)
+
+    return owner, opponent
