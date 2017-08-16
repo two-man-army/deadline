@@ -751,7 +751,8 @@ div.login-html input:focus {
   flex-wrap: wrap; }
 
 .subcategory {
-  margin: 0 30px 25px 0; }
+  margin: 0 30px 25px 0;
+  position: relative; }
   .subcategory section {
     width: 330px;
     height: 168px;
@@ -815,5 +816,23 @@ div.login-html input:focus {
   background-repeat: no-repeat;
   background-size: 30px;
   background-position: 9px 12px; }
+
+.subcategory section .category-overlay {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: antiquewhite; }
+.subcategory section:hover .overlay {
+  visibility: visible;
+  height: 100%;
+  background: antiquewhite;
+  transition: all 0.2s; }
+.subcategory section .align-center {
+  text-align: center; }
 
 /*# sourceMappingURL=style.css.map */
