@@ -110,7 +110,7 @@ def check_online(stream):
                 socket = ws_connections.get((user_owner.username, opponent_username))
                 if socket:
                     online_opponents_usernames = [i[0] for i in online_opponents]
-                    yield from target_message(socket,
+                    yield from send_message(socket,
                                               {'type': 'gone-online', 'usernames': online_opponents_usernames})
                 else:
                     pass  # socket for the pair user_owner.username, opponent_username not found
@@ -284,8 +284,16 @@ def main_handler(websocket, path):
         logger.info("Got invalid session_id attempt to connect "+session_id)
 
 
-class RegexMatchError(Exception):
+class Error(Exception):
+    pass
+
+
+class RegexMatchError(Error):
     """ Used when we cannot match with regex """
+    pass
+
+
+class ChatPairingError(Error):
     pass
 
 
