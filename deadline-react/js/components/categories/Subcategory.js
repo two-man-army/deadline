@@ -2,13 +2,17 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import CategoryHeader from './CategoryHeader'
+import SubcategoryOverlay from './SubcategoryOverlay'
 
 const Subcategory = ({
   url,
   name,
   proficiency,
   solvedChallenges,
-  challengeCount
+  challengeCount,
+  percentageCompleted,
+  expToNextProficiency,
+  nextProficiency
   }) => (
     <li className='subcategory'>
       <Link to={{pathname: url}}>
@@ -24,6 +28,10 @@ const Subcategory = ({
               </div>
               <div className='status-text'>Completed</div>
             </div>
+            <SubcategoryOverlay
+              percentageCompleted={percentageCompleted}
+              expToNextProficiency={'fo'}
+              nextProficiency={'fo'} />
           </div>
         </section>
       </Link>
@@ -35,7 +43,10 @@ Subcategory.propTypes = {
   name: PropTypes.string.isRequired,
   proficiency: PropTypes.string.isRequired,
   solvedChallenges: PropTypes.number.isRequired,
-  challengeCount: PropTypes.number.isRequired
+  challengeCount: PropTypes.number.isRequired,
+  percentageCompleted: PropTypes.string.isRequired,
+  expToNextProficiency: PropTypes.number.isRequired,
+  nextProficiency: PropTypes.string.isRquired
 }
 
 export default Subcategory
