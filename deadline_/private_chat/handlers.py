@@ -7,7 +7,7 @@ import websockets
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
-from accounts.models import User
+from accounts.models import User, Token
 from private_chat.models import Dialog
 from . import models, router
 from django.contrib.sessions.models import Session
@@ -155,7 +155,7 @@ def new_messages_handler(stream):
         "type": "new-message",
         "message": "YOUR_MESSAGE_HERE",
         "user_id": YOUR_USER_ID_HERE,
-        "username": HIS_USERNAME_HERE
+        "opponent_id": HIS_ID_HERE
     }
     """
     # TODO: handle no user found exception
@@ -163,11 +163,13 @@ def new_messages_handler(stream):
         packet = yield from stream.get()
         # TODO: Validate JSON
         # TODO: Think up of a way to validate the user, most likely his Token?
-
+        # TODO: Absolutely needs validation
+        # TODO: Maybeu nique session key per Dialog?
+        # print(vars(packet))
         print('Distributing message')
         message = packet.get('message')
         user_owner = User.objects.get(id=packet.get('user_id'))
-        user_opponent = User.objects.get(username=packet.get('username'))
+        user_opponent = User.objects.get(id=packet.get('opponent_id'))
 
         print(f'User opponent is {user_opponent}')
         dialog: Dialog = get_or_create_dialog_with_users(user_owner, user_opponent)
@@ -184,11 +186,11 @@ def new_messages_handler(stream):
 
         # Send the message to both parties
         connections = []
-        if (user_owner.username, user_opponent.username) in ws_connections:
-            connections.append(ws_connections[(user_owner.username, user_opponent.username)])
+        if (user_owner.id, user_opponent.id) in ws_connections:
+            connections.append(ws_connections[(user_owner.id, user_opponent.id)])
         # Find socket of the opponent
-        if (user_opponent.username, user_owner.username) in ws_connections:
-            connections.append(ws_connections[(user_opponent.username, user_owner.username)])
+        if (user_opponent.id, user_owner.id) in ws_connections:
+            connections.append(ws_connections[(user_opponent.id, user_owner.id)])
 
         yield from fanout_message(connections, packet)
 
@@ -252,36 +254,37 @@ def main_handler(websocket, path):
     """
     # Get users name from the path
     owner_id, owner_token, opponent_id = extract_path(path)
-    # TODO: Get User objects, validate them
-    # user_owner = User.objects.get(id=owner_id)
-    raise NotImplementedError()
-    if user_owner:
-        user_owner = user_owner.username
-        # Persist users connection, associate user w/a unique ID
-        ws_connections[(user_owner, opponent_id)] = websocket
+    try:
+        owner, opponent = fetch_and_validate_participants(owner_id, owner_token, opponent_id)
+    except (ChatPairingError, UserTokenMatchError, User.DoesNotExist, Token.DoesNotExist) as e:
+        print(str(e))
+        return
 
-        # While the websocket is open, listen for incoming messages/events
-        # if unable to listening for messages/events, then disconnect the client
-        try:
-            while websocket.open:
-                data = yield from websocket.recv()
-                if not data:
-                    continue
+    # owner = owner.username
+    # Persist users connection, associate user w/a unique ID
+    ws_connections[(owner.id, opponent.id)] = websocket
+    # TODO: Create Dialog here and give the session_id
+    yield from send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'})
+    # While the websocket is open, listen for incoming messages/events
+    # if unable to listening for messages/events, then disconnect the client
+    try:
+        while websocket.open:
+            data = yield from websocket.recv()
+            if not data:
+                continue
 
-                logger.debug(data)
+            logger.debug(data)
 
-                try:
-                    print(f'Data is {data}')
-                    yield from router.MessageRouter(data)()
-                except Exception as e:
-                    logger.error('could not route msg', e)
+            try:
+                print(f'Data is {data}')
+                yield from router.MessageRouter(data)()
+            except Exception as e:
+                logger.error('could not route msg', e)
 
-        except websockets.exceptions.InvalidState:  # User disconnected
-            pass
-        finally:
-            del ws_connections[(user_owner, username)]
-    else:
-        logger.info("Got invalid session_id attempt to connect "+session_id)
+    except websockets.exceptions.InvalidState:  # User disconnected
+        pass
+    finally:
+        del ws_connections[(owner.id, opponent.id)]
 
 
 class Error(Exception):
