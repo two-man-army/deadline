@@ -7,12 +7,12 @@ const SubcategoryOverlay = ({
   nextProficiency
 }) => (
   <div className='category-overlay'>
-    <div className='align-center next-proficiency'>
+    <div className='align-center next-proficiency-exp'>
       {expToNextProficiency} exp
-      <p>to {nextProficiency}</p>
+      <p className='next-proficiency-title'>to {nextProficiency}</p>
     </div>
     <div className='align-center'>
-      <div className=''>
+      <div className='challenges-progress'>
         {percentageCompleted}%
       </div>
       <div className='status-text'>Completed</div>
