@@ -26,11 +26,11 @@ class Dialog(models.Model):
     secret_key = models.CharField(max_length=50, null=True)
 
     def __str__(self):
-        return _("Chat with ") + self.opponent.username
+        return f'Chat between {self.owner.username} and {self.opponent.username}'
 
 
 @receiver(post_save, sender=Dialog)
-def user_post_save(sender, instance, created, *args, **kwargs):
+def populate_tokens(sender, instance, created, *args, **kwargs):
     """
         Create tokens
     """
