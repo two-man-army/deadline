@@ -8,8 +8,8 @@ const SubcategoryOverlay = ({
 }) => (
   <div className='category-overlay'>
     <div className='align-center next-proficiency'>
-      400 exp
-      <p>to Legend</p>
+      {expToNextProficiency} exp
+      <p>to {nextProficiency}</p>
     </div>
     <div className='align-center'>
       <div className=''>
