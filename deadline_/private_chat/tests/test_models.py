@@ -59,3 +59,43 @@ class DialogModelTests(TestCase):
 
         self.assertFalse(dialog.token_is_valid(opponent_token))
         self.assertFalse(dialog.token_is_valid(owner_token))
+
+    @patch('private_chat.models.Dialog.tokens_are_expired')
+    def test_refresh_tokens_expired_tokens_should_refresh(self, mock_are_expired):
+        mock_are_expired.return_value = False
+        owner, opponent = UserFactory(username='own'), UserFactory(username='opn')
+        dialog = Dialog.objects.create(owner=owner, opponent=opponent)
+        with patch('private_chat.models.generate_dialog_tokens') as mock_gen:
+            mock_gen.return_value = '1', '2', '3'
+
+            dialog.refresh_tokens()
+            self.assertEqual(dialog.secret_key, '1')
+            self.assertEqual(dialog.owner_token, '2')
+            self.assertEqual(dialog.opponent_token, '3')
+            mock_are_expired.assert_called_once()
+            mock_gen.assert_called_once_with('own', 'opn')
+
+    @patch('private_chat.models.Dialog.tokens_are_expired')
+    def test_force_refresh_tokens_expired_tokens_should_refresh(self, mock_are_expired):
+        mock_are_expired.return_value = False
+        owner, opponent = UserFactory(username='own'), UserFactory(username='opn')
+        dialog = Dialog.objects.create(owner=owner, opponent=opponent)
+
+        with patch('private_chat.models.generate_dialog_tokens') as mock_gen:
+            mock_gen.return_value = '1', '2', '3'
+
+            dialog.refresh_tokens(force=True)
+            self.assertEqual(dialog.secret_key, '1')
+            self.assertEqual(dialog.owner_token, '2')
+            self.assertEqual(dialog.opponent_token, '3')
+            mock_gen.assert_called_once_with('own', 'opn')
+
+    @patch('private_chat.models.Dialog.tokens_are_expired')
+    def test_refresh_tokens_not_expired_tokens_should_raise(self, mock_are_expired):
+        mock_are_expired.return_value = True
+        owner, opponent = UserFactory(username='own'), UserFactory(username='opn')
+        dialog = Dialog.objects.create(owner=owner, opponent=opponent)
+
+        with self.assertRaises(Exception):
+            dialog.refresh_tokens()
+

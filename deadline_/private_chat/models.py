@@ -37,6 +37,15 @@ class Dialog(models.Model):
         except jwt.ExpiredSignatureError:
             return True
 
+    def refresh_tokens(self, force=False):
+        if not force and self.tokens_are_expired():
+            raise Exception("Will not reset Dialog's tokens when they are not expired without being forced!")
+        secret_key, owner_token, opponent_token = generate_dialog_tokens(self.owner.username, self.opponent.username)
+        self.secret_key = secret_key
+        self.owner_token = owner_token
+        self.opponent_token = opponent_token
+        self.save()
+
     def token_is_valid(self, token):
         return token in [self.owner_token, self.opponent_token] and not self.tokens_are_expired()
 
