@@ -28,11 +28,11 @@ const Subcategory = ({
               </div>
               <div className='status-text'>Completed</div>
             </div>
-            <SubcategoryOverlay
-              percentageCompleted={percentageCompleted}
-              expToNextProficiency={'fo'}
-              nextProficiency={'fo'} />
           </div>
+          <SubcategoryOverlay
+            percentageCompleted={percentageCompleted}
+            expToNextProficiency={expToNextProficiency}
+            nextProficiency={nextProficiency} />
         </section>
       </Link>
     </li>
