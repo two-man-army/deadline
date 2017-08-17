@@ -9,7 +9,6 @@ from private_chat.models import Dialog
 
 
 class DialogModelTests(TestCase):
-
     @patch('private_chat.models.generate_dialog_tokens')
     def test_creation_assigns_secret_key_and_tokens(self, mock_gen_tokens):
         mock_gen_tokens.return_value = ('one', 'two', 'three')
@@ -37,3 +36,26 @@ class DialogModelTests(TestCase):
         dialog.save()
 
         self.assertTrue(dialog.tokens_are_expired())
+
+    @patch('private_chat.models.Dialog.tokens_are_expired')
+    def test_token_is_valid(self, mock_tokens_are_expired):
+        mock_tokens_are_expired.return_value = False
+
+        owner_name, opponent_name = 'owner', 'opponent'
+        owner, opponent = UserFactory(username=owner_name), UserFactory(username=opponent_name)
+        dialog = Dialog.objects.create(owner=owner, opponent=opponent)
+
+        self.assertTrue(dialog.token_is_valid(dialog.opponent_token))
+        mock_tokens_are_expired.assert_called_once()
+        self.assertTrue(dialog.token_is_valid(dialog.owner_token))
+
+    def test_token_is_valid_forged_token_should_return_false(self):
+        # creating a separate token with the same username should not be a valid token
+        owner_name, opponent_name = 'owner', 'opponent'
+        owner, opponent = UserFactory(username=owner_name), UserFactory(username=opponent_name)
+        dialog = Dialog.objects.create(owner=owner, opponent=opponent)
+        owner_token = jwt.encode({'exp': datetime.utcnow() + timedelta(days=1), 'username': owner_name}, dialog.secret_key)
+        opponent_token = jwt.encode({'exp': datetime.utcnow() + timedelta(days=1), 'username': opponent_name}, dialog.secret_key)
+
+        self.assertFalse(dialog.token_is_valid(opponent_token))
+        self.assertFalse(dialog.token_is_valid(owner_token))

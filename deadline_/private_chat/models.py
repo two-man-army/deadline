@@ -37,6 +37,10 @@ class Dialog(models.Model):
         except jwt.ExpiredSignatureError:
             return True
 
+    def token_is_valid(self, token):
+        return token in [self.owner_token, self.opponent_token] and not self.tokens_are_expired()
+
+
 @receiver(post_save, sender=Dialog)
 def populate_tokens(sender, instance, created, *args, **kwargs):
     """
