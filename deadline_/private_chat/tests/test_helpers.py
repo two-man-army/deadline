@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta
 from unittest import TestCase as unittest_TestCase
+from unittest.mock import patch, MagicMock
 
+from private_chat.constants import DIALOG_TOKEN_EXPIRY_MINUTES
 from private_chat.errors import RegexMatchError
-from private_chat.helpers import extract_connect_path
+from private_chat.helpers import extract_connect_path, generate_dialog_tokens
 
 
 class ExtractPathTests(unittest_TestCase):
@@ -30,3 +33,31 @@ class ExtractPathTests(unittest_TestCase):
         for path in wrong_paths:
             with self.assertRaises(RegexMatchError):
                 extract_connect_path(path)
+
+
+class GenerateDialogTokensTests(unittest_TestCase):
+    """
+    generate_dialog_tokens should get a secret key from uuid4, call jwt encode and return them
+    """
+
+    @patch('private_chat.helpers.uuid4')
+    @patch('private_chat.helpers.get_utc_time')
+    @patch('private_chat.helpers.jwt.encode')
+    def test_works_correctly(self, mock_jwt_encode, mock_utc_time, mock_uuid4):
+        """
+        Should get a secret key, an expiry date and create a JWT with them
+        """
+        mock_uuid4.return_value = MagicMock(hex='secret')
+        utc_time = datetime.utcnow()
+        mock_utc_time.return_value = utc_time
+        mock_jwt_encode.return_value = 1
+        owner_name, opponent_name = 'owner', 'opponent'
+        expected_expiry_date = utc_time + timedelta(minutes=DIALOG_TOKEN_EXPIRY_MINUTES)
+
+        received_secret, received_owner_token, received_opponent_token = generate_dialog_tokens(owner_name, opponent_name)
+
+        mock_jwt_encode.assert_any_call({'exp': expected_expiry_date, 'username': owner_name}, 'secret')
+        mock_jwt_encode.assert_any_call({'exp': expected_expiry_date, 'username': opponent_name}, 'secret')
+        self.assertEqual(received_secret, 'secret')
+        self.assertEqual(received_opponent_token, 1)
+        self.assertEqual(received_owner_token, 1)
