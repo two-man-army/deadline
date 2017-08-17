@@ -28,6 +28,14 @@ class Dialog(models.Model):
     def __str__(self):
         return f'Chat between {self.owner.username} and {self.opponent.username}'
 
+    def tokens_are_expired(self) -> bool:
+        """ Checks whether the current tokens are expired """
+        try:
+            jwt.decode(self.owner_token, self.secret_key)
+            jwt.decode(self.opponent_token, self.secret_key)
+            return False
+        except jwt.ExpiredSignatureError:
+            return True
 
 @receiver(post_save, sender=Dialog)
 def populate_tokens(sender, instance, created, *args, **kwargs):
