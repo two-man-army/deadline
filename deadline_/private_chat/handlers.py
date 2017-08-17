@@ -14,6 +14,26 @@ from . import models, router
 from django.contrib.sessions.models import Session
 
 
+class WebSocketConnection:
+    def __init__(self, socket, owner_id, opponent_id):
+        self.web_socket = socket
+        self.owner_id = owner_id
+        self.opponent_id = opponent_id
+        self.is_valid = False
+
+    def validate(self):
+        self.is_valid = True
+
+    def invalidate(self):
+        self.is_valid = False
+
+    def __hash__(self):
+        return hash(str(self.owner_id) + str(self.opponent_id))
+
+    def __eq__(self, other):
+        return self.owner_id == other.owner_id and self.opponent_id == other.opponent_id
+
+
 def get_user_from_session(session_key):
     """
     Gets the user from current User model using the passed session_key
@@ -37,7 +57,7 @@ def get_or_create_dialog_with_users(user_owner, user_opponent):
     return Dialog.objects.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).first()
 
 logger = logging.getLogger('django-private-dialog')
-ws_connections = {}
+ws_connections: {(int, int): WebSocketConnection} = {}
 
 
 @asyncio.coroutine
@@ -186,10 +206,10 @@ def new_messages_handler(stream):
         # Send the message to both parties
         connections = []
         if (user_owner.id, user_opponent.id) in ws_connections:
-            connections.append(ws_connections[(user_owner.id, user_opponent.id)])
+            connections.append(ws_connections[(user_owner.id, user_opponent.id)].web_socket)
         # Find socket of the opponent
         if (user_opponent.id, user_owner.id) in ws_connections:
-            connections.append(ws_connections[(user_opponent.id, user_owner.id)])
+            connections.append(ws_connections[(user_opponent.id, user_owner.id)].web_socket)
 
         yield from fanout_message(connections, packet)
 
@@ -252,16 +272,18 @@ def main_handler(websocket, path):
     /user_id/user_token/user_to_speak_to_id
     """
     # Get users name from the path
-    owner_id, owner_token, opponent_id = extract_connect_path(path)
+    owner_id, opponent_id = extract_connect_path(path)
     try:
-        owner, opponent = fetch_and_validate_participants(owner_id, owner_token, opponent_id)
+        owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
     except (ChatPairingError, UserTokenMatchError, User.DoesNotExist, Token.DoesNotExist) as e:
         print(str(e))
         return
 
     # owner = owner.username
     # Persist users connection, associate user w/a unique ID
-    ws_connections[(owner.id, opponent.id)] = websocket
+    if (owner.id, opponent.id) not in ws_connections:
+        ws_connections[(owner.id, opponent.id)] = WebSocketConnection(websocket, owner_id, opponent_id)
+    ws_object = ws_connections[(owner.id, opponent.id)]
     # TODO: Create Dialog here and give the session_id
     yield from send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'})
     # While the websocket is open, listen for incoming messages/events
@@ -283,22 +305,16 @@ def main_handler(websocket, path):
     except websockets.exceptions.InvalidState:  # User disconnected
         pass
     finally:
-        del ws_connections[(owner.id, opponent.id)]
+        del ws_connections[ws_object]
 
 
-def fetch_and_validate_participants(owner_id: int, owner_token: str, opponent_id: int) -> (User, User):
+def fetch_and_validate_participants(owner_id: int, opponent_id: int) -> (User, User):
     """
     Fetches the User objects and validates them
     """
     if owner_id == opponent_id:
         raise ChatPairingError('Cannot match a user to himself!')
-    token = Token.objects.get(key=owner_token)
     owner = User.objects.get(id=owner_id)
-
-    # Validate the token is correct
-    if owner.auth_token.key != owner_token or token.user_id != owner_id:
-        raise UserTokenMatchError(f'User with ID {owner_id} does not have a token {owner_token}')
-
     opponent = User.objects.get(id=opponent_id)
 
     return owner, opponent
