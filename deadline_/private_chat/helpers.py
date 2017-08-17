@@ -10,17 +10,16 @@ from private_chat.errors import RegexMatchError
 
 def extract_connect_path(path):
     """
-    Sample path: /user_id/user_token/user_to_speak_to_id
+    Sample path: /chat/user_id/user_to_speak_to_id
     """
     match_obj = re.match(CONNECT_PATH_REGEX, path)
     if match_obj is None:
         raise RegexMatchError(f'Path {path} does not match the expected regex!')
     regex_groups = match_obj.groupdict()
     owner_id = int(regex_groups['owner_id'])
-    owner_token = regex_groups['owner_token']
     opponent_id = int(regex_groups['opponent_id'])
 
-    return owner_id, owner_token, opponent_id
+    return owner_id, opponent_id
 
 
 def generate_dialog_tokens(owner_name: str, opponent_name: str):
