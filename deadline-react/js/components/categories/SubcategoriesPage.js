@@ -12,6 +12,8 @@ class SubcategoriesPage extends React.Component {
 
     this.loadSubcategories = this.loadSubcategories.bind(this)
     this.calculateCompletedPercenage = this.calculateCompletedPercenage.bind(this)
+    this.expToNextProficiency = this.expToNextProficiency.bind(this)
+    this.expToNextProficiency(1000, 850)
     this.loadSubcategories()
   }
 
@@ -28,9 +30,20 @@ class SubcategoriesPage extends React.Component {
       })
   }
 
+  // TODO round two digits after the decimal point
+  /**
+   * Calculates the needed exp. to the next proficiency.
+   *
+   */
+  expToNextProficiency (maxScore, userScore) {
+    const percentageToMaxScore = (100 - ((userScore / maxScore) * 100))
+    const requiredExp = (percentageToMaxScore / 100) * maxScore
+
+    return requiredExp
+  }
+
   calculateCompletedPercenage (challengeCount, solvedChallengesCount) {
     if (solvedChallengesCount === 0) {
-      console.log(challengeCount, solvedChallengesCount)
       return 0
     }
 
@@ -42,6 +55,7 @@ class SubcategoriesPage extends React.Component {
 
   render () {
     const mainCategory = window.localStorage.categoryName
+    // remove hard coded values below once we have real data.
 
     return (
       <section className='subcategories-page main'>
@@ -59,8 +73,11 @@ class SubcategoriesPage extends React.Component {
                   subcategory.challenge_count,
                   subcategory.solved_challenges_count)
               }
-              next_proficiency=''
-              exp_to_next_proficiency='' />
+              nextProficiency={subcategory.next_proficiency.name}
+              expToNextProficiency={
+                this.expToNextProficiency(
+                  1000,
+                  850)} />
           })}
         </ul>
       </section>
