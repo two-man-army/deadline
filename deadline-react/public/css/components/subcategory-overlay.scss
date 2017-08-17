@@ -12,6 +12,11 @@
             right: 0;
             background: #f6f3f5;
             border: 1px solid #b3aeb1;
+            font-weight: normal;
+
+            .next-proficiency-title {
+                margin-top: 7px;
+            }
         }
 
         &:hover {

@@ -799,13 +799,14 @@ div.login-html input:focus {
   padding-left: 30px; }
 
 .subcat-progress,
+.next-proficiency-exp,
 .challenges-progress {
   font-size: 30px;
   color: #e83b36;
-  /* hardcoded for testing, should be removed later*/
-  padding-bottom: 7px; }
+  /* hardcoded for testing, should be removed later*/ }
 
 .proficiency,
+.next-proficiency-title,
 .status-text {
   font-size: 12px;
   color: #333333;
@@ -828,7 +829,10 @@ div.login-html input:focus {
   bottom: 0;
   right: 0;
   background: #f6f3f5;
-  border: 1px solid #b3aeb1; }
+  border: 1px solid #b3aeb1;
+  font-weight: normal; }
+  .subcategory section .category-overlay .next-proficiency-title {
+    margin-top: 7px; }
 .subcategory section:hover .category-overlay {
   visibility: visible;
   height: 100%;
