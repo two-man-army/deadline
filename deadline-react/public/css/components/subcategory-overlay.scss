@@ -1,24 +1,24 @@
 .subcategory {
     section {
         .category-overlay {
-            // visibility: hidden;
+            visibility: hidden;
             display: flex;
             justify-content: space-around;
             align-items: center;
             width: 100%;
-            height: 100%;
+            height: 0;
             position: absolute;
             bottom: 0;
             right: 0;
-            background: antiquewhite;
+            background: #f6f3f5;
+            border: 1px solid #b3aeb1;
         }
 
         &:hover {
-            .overlay {
+            .category-overlay {
                 visibility: visible;
                 height: 100%;
-                background: antiquewhite;
-                transition: all 0.2s;
+                transition: all 0.3s;
             }
         }
 

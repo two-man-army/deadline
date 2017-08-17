@@ -818,20 +818,21 @@ div.login-html input:focus {
   background-position: 9px 12px; }
 
 .subcategory section .category-overlay {
+  visibility: hidden;
   display: flex;
   justify-content: space-around;
   align-items: center;
   width: 100%;
-  height: 100%;
+  height: 0;
   position: absolute;
   bottom: 0;
   right: 0;
-  background: antiquewhite; }
-.subcategory section:hover .overlay {
+  background: #f6f3f5;
+  border: 1px solid #b3aeb1; }
+.subcategory section:hover .category-overlay {
   visibility: visible;
   height: 100%;
-  background: antiquewhite;
-  transition: all 0.2s; }
+  transition: all 0.3s; }
 .subcategory section .align-center {
   text-align: center; }
 
