@@ -2,9 +2,11 @@ from datetime import datetime, timedelta
 from unittest import TestCase as unittest_TestCase
 from unittest.mock import patch, MagicMock
 
+from challenges.tests.factories import UserFactory
 from private_chat.constants import DIALOG_TOKEN_EXPIRY_MINUTES
 from private_chat.errors import RegexMatchError
 from private_chat.helpers import extract_connect_path, generate_dialog_tokens
+from private_chat.services.dialog import get_or_create_dialog_token
 
 
 class ExtractPathTests(unittest_TestCase):
@@ -58,3 +60,60 @@ class GenerateDialogTokensTests(unittest_TestCase):
         self.assertEqual(received_secret, 'secret')
         self.assertEqual(received_opponent_token, 1)
         self.assertEqual(received_owner_token, 1)
+
+
+class GetOrCreateDialogTokenTests(unittest_TestCase):
+    def setUp(self):
+        self.first_user = UserFactory()
+        self.second_user = UserFactory()
+
+    @patch('private_chat.services.dialog.Dialog.objects.get_or_create_dialog_with_users')
+    def test_gets_owner_token_if_owner_passed(self, mock_goc_dialog_users):
+        tokens_are_expired = MagicMock()
+        tokens_are_expired.return_value = False
+        mock_goc_dialog_users.return_value = MagicMock(
+            tokens_are_expired=tokens_are_expired,
+            owner_token='token',
+            owner=self.first_user
+        )
+
+        token = get_or_create_dialog_token(owner=self.first_user, opponent=self.second_user)
+        self.assertEqual(token, 'token')
+
+        tokens_are_expired.assert_called_once()
+        mock_goc_dialog_users.assert_called_once_with(self.first_user, self.second_user)
+
+    @patch('private_chat.services.dialog.Dialog.objects.get_or_create_dialog_with_users')
+    def test_gets_opponent_token_if_owner_is_opponent_on_dialog(self, mock_goc_dialog_users):
+        tokens_are_expired = MagicMock()
+        tokens_are_expired.return_value = False
+        mock_goc_dialog_users.return_value = MagicMock(
+            tokens_are_expired=tokens_are_expired,
+            opponent_token='token',
+            opponent=self.first_user
+        )
+
+        token = get_or_create_dialog_token(owner=self.first_user, opponent=self.second_user)
+        self.assertEqual(token, 'token')
+
+        tokens_are_expired.assert_called_once()
+        mock_goc_dialog_users.assert_called_once_with(self.first_user, self.second_user)
+
+    @patch('private_chat.services.dialog.Dialog.objects.get_or_create_dialog_with_users')
+    def test_calls_refresh_tokens_if_expired(self, mock_goc_dialog_users):
+        tokens_are_expired = MagicMock()
+        tokens_are_expired.return_value = True
+        refresh_tokens = MagicMock()
+        mock_goc_dialog_users.return_value = MagicMock(
+            tokens_are_expired=tokens_are_expired,
+            refresh_tokens=refresh_tokens,
+            opponent_token='token',
+            opponent=self.first_user
+        )
+
+        token = get_or_create_dialog_token(owner=self.first_user, opponent=self.second_user)
+
+        self.assertEqual(token, 'token')
+        tokens_are_expired.assert_called_once()
+        refresh_tokens.assert_called_once()
+        mock_goc_dialog_users.assert_called_once_with(self.first_user, self.second_user)
