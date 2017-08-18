@@ -20,10 +20,10 @@ class DialogManager(models.Manager):
         """
         Gets or creates the dialog between user_owner and user_opponent
         """
-        if not self.objects.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).exists():
-            return self.objects.create(owner=user_owner, opponent=user_opponent)
+        if not self.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).exists():
+            return self.create(owner=user_owner, opponent=user_opponent)
 
-        return self.objects.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).first()
+        return self.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).first()
 
 
 class Dialog(models.Model):

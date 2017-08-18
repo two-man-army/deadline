@@ -99,3 +99,19 @@ class DialogModelTests(TestCase):
         with self.assertRaises(Exception):
             dialog.refresh_tokens()
 
+    def test_get_or_create_dialog_should_get_existing_dialog(self):
+        # Should get the existing dialog regardless of how we send the users
+        owner, opponent = UserFactory(), UserFactory()
+
+        dialog = Dialog.objects.create(owner=owner, opponent=opponent)
+
+        self.assertEqual(dialog, Dialog.objects.get_or_create_dialog_with_users(owner, opponent))
+        self.assertEqual(dialog, Dialog.objects.get_or_create_dialog_with_users(opponent, owner))
+
+    def test_get_or_create_dialog_should_create_dialog_when_it_doesnt_exist(self):
+        owner, opponent = UserFactory(), UserFactory()
+
+        dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
+
+        self.assertEqual(dialog.owner, owner)
+        self.assertEqual(dialog.opponent, opponent)
