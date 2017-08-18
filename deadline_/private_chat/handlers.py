@@ -189,7 +189,7 @@ def new_messages_handler(stream):
             continue
 
         print(f'User opponent is {user_opponent}')
-        dialog: Dialog = get_or_create_dialog_with_users(user_owner, user_opponent)
+        dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(user_owner, user_opponent)
         print(f'Dialog is {dialog}')
 
         # Save the message
@@ -272,7 +272,7 @@ def main_handler(websocket, path):
     owner_id, opponent_id = extract_connect_path(path)
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
-    except (ChatPairingError, UserTokenMatchError, User.DoesNotExist, Token.DoesNotExist) as e:
+    except (ChatPairingError, User.DoesNotExist) as e:
         print(str(e))
         return
 
@@ -302,7 +302,7 @@ def main_handler(websocket, path):
     except websockets.exceptions.InvalidState:  # User disconnected
         pass
     finally:
-        del ws_connections[ws_object]
+        del ws_connections[(owner.id, opponent.id)]
 
 
 def fetch_and_validate_participants(owner_id: int, opponent_id: int) -> (User, User):
