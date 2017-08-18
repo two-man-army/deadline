@@ -30,16 +30,14 @@ class SubcategoriesPage extends React.Component {
       })
   }
 
-  // TODO round two digits after the decimal point
   /**
-   * Calculates the needed exp. to the next proficiency.
+   * Calculates the needed exp. (score) to the next proficiency.
    *
    */
-  expToNextProficiency (maxScore, userScore) {
-    const percentageToMaxScore = (100 - ((userScore / maxScore) * 100))
-    const requiredExp = (percentageToMaxScore / 100) * maxScore
+  expToNextProficiency (neededPercentage, maxScore, userScore) {
+    const neededScore = (neededPercentage * maxScore) / 100
 
-    return requiredExp
+    return neededScore - userScore
   }
 
   calculateCompletedPercenage (challengeCount, solvedChallengesCount) {
@@ -47,10 +45,9 @@ class SubcategoriesPage extends React.Component {
       return 0
     }
 
-    // TODO round two digits after the decimal point
     const percentageCompleted = (solvedChallengesCount / challengeCount) * 100
 
-    return percentageCompleted
+    return percentageCompleted.toFixed(2)
   }
 
   render () {
@@ -76,8 +73,9 @@ class SubcategoriesPage extends React.Component {
               nextProficiency={subcategory.next_proficiency.name}
               expToNextProficiency={
                 this.expToNextProficiency(
+                  subcategory.next_proficiency.needed_percentage,
                   1000,
-                  850)} />
+                  150)} />
           })}
         </ul>
       </section>
