@@ -10,6 +10,7 @@ from accounts.models import User, Token
 from private_chat.errors import ChatPairingError, UserTokenMatchError
 from private_chat.helpers import extract_connect_path
 from private_chat.models import Dialog
+from private_chat.services.dialog import get_or_create_dialog_token
 from . import models, router
 from django.contrib.sessions.models import Session
 
@@ -153,6 +154,51 @@ def gone_offline(stream):
                 pass  # invalid session id
         else:
             pass  # no session id
+
+
+@asyncio.coroutine
+def fetch_dialog_token(stream):
+    """
+    Returns the Dialog token for a specific conversation and for the specific participant
+
+    Needs to be sent the following JSON
+    {
+    "type": "fetch-token",
+    "user_id": YOUR_USER_ID_HERE,
+    "auth_token": YOUR_AUTH_TOKEN_HERE
+    "opponent_id": HIS_ID_HERE,
+    }
+    """
+    while True:
+        packet: dict = yield from stream.get()
+        owner_id, opponent_id = packet.get('user_id', None), packet.get('opponent_id', None)
+
+        to_send_message, payload = _fetch_dialog_token(packet, owner_id, opponent_id)
+        if to_send_message:
+            yield from send_message(ws_connections[(owner_id, opponent_id)].web_socket, payload)
+
+
+def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
+    """
+    :return:
+        - boolean indicating if we want to send a message
+        - the payload we would send
+    """
+    if (owner_id, opponent_id) not in ws_connections:
+        return False, {}  # we do not have such a connection. Either malicious or a mistake, but we cant respond back
+
+    try:
+        owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
+        if owner.auth_token.key != packet.get('auth_token'):  # authenticate user
+            raise UserTokenMatchError(f'Invalid token!')
+    except (User.DoesNotExist, UserTokenMatchError) as e:
+        print(str(e))
+        logger.debug(f'Raised {e.__class__} in fetch-token handler. Error message was {str(e)}')
+
+        return True, {'error': str(e)}
+
+    token = get_or_create_dialog_token(owner, opponent)
+    return True, {'conversation_token': token}
 
 
 @asyncio.coroutine
