@@ -193,6 +193,7 @@ def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
         return True, {'error': str(e)}
 
     token = get_or_create_dialog_token(owner, opponent)
+    ws_connections[(owner_id, opponent_id)].is_valid = True
     return True, {'conversation_token': token}
 
 
