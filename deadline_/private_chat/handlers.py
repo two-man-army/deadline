@@ -204,7 +204,7 @@ def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
 @asyncio.coroutine
 def new_messages_handler(stream):
     """
-    Saves a new chat message to db and distributes msg to connected users
+    Receives a message from a user and direct it to the recipient
 
     Needs to be sent the following JSON
     {
@@ -214,48 +214,63 @@ def new_messages_handler(stream):
         "opponent_id": HIS_ID_HERE
     }
     """
-    # TODO: handle no user found exception
     while True:
         packet = yield from stream.get()
-        # TODO: Validate JSON
-        # print(vars(packet))
-        print('Distributing message')
-        message = packet.get('message')
-        conversation_token = packet.get('conversation_token')
-        user_owner = User.objects.get(id=packet.get('user_id'))
-        user_opponent = User.objects.get(id=packet.get('opponent_id'))
+        owner_id, opponent_id = packet.get('user_id'), packet.get('opponent_id')
+        to_send, is_err, payload = _new_messages_handler(packet, owner_id, opponent_id)
 
-        if (user_owner.id, user_opponent.id) not in ws_connections:
-            raise Exception('User who sent this does not have an open connection')  # TODO: Change error
-        owner_socket: WebSocketConnection = ws_connections[(user_owner.id, user_opponent.id)]
+        if to_send:
+            owner_id, opponent_id = int(owner_id), int(opponent_id)
+            owner_socket = ws_connections[(owner_id, opponent_id)]
 
-        if not owner_socket.is_valid:
-            # User is not authorized, therefore we cut this message
-            yield from send_message(owner_socket.web_socket, {'error': 'You need to authorize yourself by fetching a token!'})
-            continue
+            connections = [owner_socket.web_socket]
+            if not is_err and (opponent_id, owner_id) in ws_connections:
+                opponent_socket: WebSocketConnection = ws_connections[(opponent_id, owner_id)]
+                if opponent_socket.is_valid:
+                    connections.append(opponent_socket.web_socket)
 
-        print(f'User opponent is {user_opponent}')
-        dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(user_owner, user_opponent)
-        print(f'Dialog is {dialog}')
+            yield from fanout_message(connections, payload)
 
-        # Save the message
-        msg = models.Message.objects.create(
-            dialog=dialog,
-            sender=user_owner,
-            text=packet['message']
-        )
-        packet['created'] = msg.get_formatted_create_datetime()
-        packet['sender_name'] = msg.sender.username
 
-        # Send the message to both parties
-        connections = []
+def _new_messages_handler(packet: dict, owner_id, opponent_id):
+    """
+    Validates the user_ids, the connection's validity and owner's authorization and sends the message to both
+    """
+    if (owner_id, opponent_id) not in ws_connections:
+        return False, True, {}  # no such connection, we cannot send this to anybody
 
-        connections.append(owner_socket.web_socket)
-        # Find socket of the opponent
-        if (user_opponent.id, user_owner.id) in ws_connections:
-            connections.append(ws_connections[(user_opponent.id, user_owner.id)].web_socket)
+    message = packet.get('message')
+    if not message:
+        return True, True, {'error': 'Message cannot be empty!'}
 
-        yield from fanout_message(connections, packet)
+    try:
+        owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
+    except (User.DoesNotExist, ChatPairingError) as e:
+        return True, True, {'error': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
+
+    owner_socket: WebSocketConnection = ws_connections[(owner.id, opponent.id)]
+    if not owner_socket.is_valid:
+        return True, True, {'error': 'You need to authorize yourself by fetching a token!'}
+
+    conversation_token = packet.get('conversation_token')
+
+    dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
+    if not dialog.token_is_valid(conversation_token):
+        return True, True, {'error': 'Invalid conversation_token. Fetch a new one!'}
+
+    msg = models.Message.objects.create(
+        dialog=dialog,
+        sender=owner,
+        text=message
+    )
+
+    payload_to_send = {
+        'created': msg.get_formatted_create_datetime(),
+        'sender_name': msg.sender.username,
+        'message': message
+    }
+
+    return True, False, payload_to_send
 
 # @asyncio.coroutine
 # def users_changed_handler(stream):
