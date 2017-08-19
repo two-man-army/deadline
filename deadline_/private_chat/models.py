@@ -70,7 +70,7 @@ class Dialog(models.Model):
 @receiver(post_save, sender=Dialog)
 def populate_tokens(sender, instance, created, *args, **kwargs):
     """
-        Create tokens
+        Create tokens that are used to authorize conversations
     """
     if not created:
         return
@@ -85,7 +85,6 @@ class Message(TimeStampedModel, SoftDeletableModel):
     dialog = models.ForeignKey(Dialog, verbose_name=_("Dialog"), related_name="messages")
     sender = models.ForeignKey(User, verbose_name=_("Author"), related_name="messages")
     text = models.TextField(verbose_name=_("Message text"))
-    all_objects = models.Manager()
 
     def get_formatted_create_datetime(self):
         return dj_date(self.created, settings.DATETIME_FORMAT)

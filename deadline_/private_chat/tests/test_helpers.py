@@ -49,7 +49,7 @@ class GenerateDialogTokensTests(unittest_TestCase):
         mock_uuid4.return_value = MagicMock(hex='secret')
         utc_time = datetime.utcnow()
         mock_utc_time.return_value = utc_time
-        mock_jwt_encode.return_value = 1
+        mock_jwt_encode.return_value = b'1'
         owner_name, opponent_name = 'owner', 'opponent'
         expected_expiry_date = utc_time + timedelta(minutes=DIALOG_TOKEN_EXPIRY_MINUTES)
 
@@ -58,8 +58,8 @@ class GenerateDialogTokensTests(unittest_TestCase):
         mock_jwt_encode.assert_any_call({'exp': expected_expiry_date, 'username': owner_name}, 'secret')
         mock_jwt_encode.assert_any_call({'exp': expected_expiry_date, 'username': opponent_name}, 'secret')
         self.assertEqual(received_secret, 'secret')
-        self.assertEqual(received_opponent_token, 1)
-        self.assertEqual(received_owner_token, 1)
+        self.assertEqual(received_opponent_token, '1')
+        self.assertEqual(received_owner_token, '1')
 
 
 class GetOrCreateDialogTokenTests(unittest_TestCase):

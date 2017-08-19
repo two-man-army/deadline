@@ -26,7 +26,6 @@ def generate_dialog_tokens(owner_name: str, opponent_name: str):
     """
     Generates a new secret_key and tokens for each participant
     """
-    # TODO: Move as static Dialog method
     secret_key = uuid4().hex
     expiry_date = get_utc_time() + timedelta(minutes=DIALOG_TOKEN_EXPIRY_MINUTES)
     owner_token = jwt.encode({'exp': expiry_date, 'username': owner_name}, secret_key).decode("utf-8")

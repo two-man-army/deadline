@@ -4,9 +4,8 @@ import logging
 import websockets
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 
-from accounts.models import User, Token
+from accounts.models import User
 from private_chat.errors import ChatPairingError, UserTokenMatchError
 from private_chat.helpers import extract_connect_path
 from private_chat.models import Dialog
@@ -56,14 +55,11 @@ ws_connections: {(int, int): WebSocketConnection} = {}
 def send_message(conn, payload):
     """
     Distibuted payload (message) to one connection
-    :param conn: connection
-    :param payload: payload(json dumpable)
-    :return:
     """
     try:
         yield from conn.send(json.dumps(payload))
     except Exception as e:
-        logger.debug('could not send', e)
+        logger.debug(f'Could not send message to websocket due to {e}')
 
 
 @asyncio.coroutine
@@ -75,7 +71,7 @@ def fanout_message(connections, payload):
         try:
             yield from conn.send(json.dumps(payload))
         except Exception as e:
-            logger.debug('could not send', e)
+            logger.debug(f'Could not send message to multiple websockets due to {e}')
 
 
 @asyncio.coroutine
@@ -192,7 +188,6 @@ def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
         if owner.auth_token.key != packet.get('auth_token'):  # authenticate user
             raise UserTokenMatchError(f'Invalid token!')
     except (User.DoesNotExist, UserTokenMatchError) as e:
-        print(str(e))
         logger.debug(f'Raised {e.__class__} in fetch-token handler. Error message was {str(e)}')
 
         return True, {'error': str(e)}
@@ -265,6 +260,7 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
     )
 
     payload_to_send = {
+        'type': 'received-message',
         'created': msg.get_formatted_create_datetime(),
         'sender_name': msg.sender.username,
         'message': message
@@ -337,28 +333,24 @@ def main_handler(websocket, path):
         print(str(e))
         return
 
-    # owner = owner.username
-    # Persist users connection, associate user w/a unique ID
     if (owner.id, opponent.id) not in ws_connections:
         ws_connections[(owner.id, opponent.id)] = WebSocketConnection(websocket, owner_id, opponent_id)
-    ws_object = ws_connections[(owner.id, opponent.id)]
 
     yield from send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'})
+
     # While the websocket is open, listen for incoming messages/events
-    # if unable to listening for messages/events, then disconnect the client
     try:
         while websocket.open:
             data = yield from websocket.recv()
             if not data:
                 continue
 
-            logger.debug(data)
 
             try:
-                print(f'Data is {data}')
+                logger.debug(f'Data is {data}')
                 yield from router.MessageRouter(data)()
             except Exception as e:
-                logger.error('could not route msg', e)
+                logger.error(f'Could not route message {e}')
 
     except websockets.exceptions.InvalidState:  # User disconnected
         pass

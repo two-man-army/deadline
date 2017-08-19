@@ -21,7 +21,7 @@ class FetchDialogTokenTests(TestCase):
 
             expected_token = Dialog.objects.get_or_create_dialog_with_users(self.first_user, self.second_user).owner_token
             self.assertTrue(to_send_message)
-            self.assertEqual(payload, {'conversation_token': bytes(expected_token, 'utf-8')})  # no idea why it turns into bytes
+            self.assertEqual(payload, {'conversation_token': expected_token})
 
     def test_returns_false_if_ids_not_in_ws_connections(self):
         """
@@ -66,6 +66,7 @@ class NewsMessageTests(TestCase):
             self.assertEqual(msg.text, 'Hello Bob :)')
             self.assertEqual(msg.sender, self.first_user)
             expected_payload = {
+                'type': 'received-message',
                 'created': msg.get_formatted_create_datetime(),
                 'sender_name': msg.sender.username,
                 'message': 'Hello Bob :)'
