@@ -1,14 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
+import CategoryHeader from './CategoryHeader'
 
-const Category = ({name, url}) => (
-  <li className='category'>
+const Category = ({id, name, url, onClick}) => (
+  <li id={id} data-category-name={name} className='category' onClick={onClick}>
     <Link to={{pathname: url}}>
       <section>
-        <header>
-          <h3 className='category-header'>{name}</h3>
-        </header>
+        <CategoryHeader name={name} />
         <div className='category-info'>
           <div className='completed-subcategories'>
             <div className='subcat-progress'>
@@ -29,8 +28,10 @@ const Category = ({name, url}) => (
 )
 
 Category.propTypes = {
-  name: PropTypes.string,
-  url: PropTypes.string
+  id: PropTypes.number.isRequired,
+  name: PropTypes.string.isRequired,
+  url: PropTypes.string,
+  onClick: PropTypes.func
 }
 
 export default Category

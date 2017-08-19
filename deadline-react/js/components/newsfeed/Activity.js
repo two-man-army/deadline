@@ -1,9 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import TimeAgo from 'react-timeago'
-import Username from './Username'
-import UserImage from './UserImage'
-import Level from './Level'
+import Username from '../Username'
+import UserImage from '../UserImage'
+import Level from '../Level'
 import ActivityMsg from './ActivityMsg'
 
 const Activity = ({name, path, msg, className}) => (

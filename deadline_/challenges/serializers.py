@@ -171,7 +171,7 @@ class MainCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MainCategory
-        fields = ('name', 'sub_categories')
+        fields = ('id', 'name', 'sub_categories')
 
 
 class SubCategorySerializer(serializers.ModelSerializer):

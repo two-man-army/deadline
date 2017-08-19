@@ -1,0 +1,34 @@
+.subcategory {
+    section {
+        .category-overlay {
+            visibility: hidden;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 0;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #f6f3f5;
+            border: 1px solid #b3aeb1;
+            font-weight: normal;
+
+            .next-proficiency-title {
+                margin-top: 7px;
+            }
+        }
+
+        &:hover {
+            .category-overlay {
+                visibility: visible;
+                height: 100%;
+                transition: all 0.3s;
+            }
+        }
+
+        .align-center {
+            text-align: center;
+        }
+    }
+}

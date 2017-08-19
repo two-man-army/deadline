@@ -1,6 +1,6 @@
 import React from 'react'
 import RanklistBoxRow from './RanklistBoxRow'
-import { getOverallLeaderboard } from '../requests.js'
+import { getOverallLeaderboard } from '../../requests.js'
 
 class RanklistBox extends React.Component {
   constructor (props) {

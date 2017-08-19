@@ -29,7 +29,7 @@ class CategoryModelTest(TestCase):
 
     def test_serialize(self):
         """ the Category should show all its subcategories """
-        expected_json = '{"name":"Test","sub_categories":["Unit","Mock","Patch"]}'
+        expected_json = f'{{"id":{self.c1.id},"name":"Test","sub_categories":["Unit","Mock","Patch"]}}'
         received_data = JSONRenderer().render(MainCategorySerializer(self.c1).data)
 
         self.assertEqual(received_data.decode('utf-8'), expected_json)

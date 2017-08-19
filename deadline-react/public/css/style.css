@@ -412,6 +412,9 @@ div.login-html input:focus {
     display: flex;
     flex: 1; }
   .dashboard .main {
+    padding: 20px 30px 18px 30px;
+    margin: 30px 20px 20px 30px;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
     flex: 1; }
@@ -491,34 +494,30 @@ div.login-html input:focus {
     font-family: 'Poppins Regular';
     font-size: 12px; }
 
-.activity-feed {
-  padding: 20px 30px 18px 30px;
-  margin: 30px 20px 20px 30px;
-  background: #ffffff; }
-  .activity-feed .activity-feed-header {
-    margin-bottom: 0;
-    /* override semantic ui styles */
-    font-family: "Poppins Light";
-    font-size: 22px;
-    font-weight: normal;
-    color: #555555; }
-  .activity-feed .activity-item {
-    display: flex;
-    padding: 20px 0;
-    border-bottom: 1px solid #e1cee3; }
-    .activity-feed .activity-item:last-of-type {
-      border-bottom: none; }
-    .activity-feed .activity-item img {
-      border-radius: 50%;
-      align-self: center;
-      width: 40px;
-      height: 45px; }
-    .activity-feed .activity-item h3 {
-      margin-bottom: -7px;
-      color: #2d2d2d;
-      font-family: "Poppins Medium";
-      font-size: 16px;
-      font-weight: normal; }
+.activity-feed .activity-feed-header {
+  margin-bottom: 0;
+  /* override semantic ui styles */
+  font-family: "Poppins Light";
+  font-size: 22px;
+  font-weight: normal;
+  color: #555555; }
+.activity-feed .activity-item {
+  display: flex;
+  padding: 20px 0;
+  border-bottom: 1px solid #e1cee3; }
+  .activity-feed .activity-item:last-of-type {
+    border-bottom: none; }
+  .activity-feed .activity-item img {
+    border-radius: 50%;
+    align-self: center;
+    width: 40px;
+    height: 45px; }
+  .activity-feed .activity-item h3 {
+    margin-bottom: -7px;
+    color: #2d2d2d;
+    font-family: "Poppins Medium";
+    font-size: 16px;
+    font-weight: normal; }
 
 .activity-content .activity-msg, .activity-content .activity-item-lvl, .activity-timeago {
   color: #2d2d2d;
@@ -661,22 +660,15 @@ div.login-html input:focus {
   .ranklist-box-header .all-users {
     color: #ff8606; }
 
-.category-page {
-  padding: 20px 30px 18px 30px;
-  margin: 30px 20px 20px 30px;
-  background: #ffffff;
+.category-page h2 {
+  margin: 10px 0 20px 0;
+  font-family: "Poppins Light";
+  font-size: 24px;
+  font-weight: normal;
+  color: #333333; }
+.category-page .categories {
   display: flex;
-  flex-direction: column;
-  flex: 1; }
-  .category-page h2 {
-    margin: 10px 0 20px 0;
-    font-family: "Poppins Light";
-    font-size: 24px;
-    font-weight: normal;
-    color: #333333; }
-  .category-page .categories {
-    display: flex;
-    flex-wrap: wrap; }
+  flex-wrap: wrap; }
 
 .category {
   margin-right: 30px;
@@ -720,7 +712,7 @@ div.login-html input:focus {
       }
       */ }
 
-.completed-subcategories, .completed-challenges {
+.completed-subcategories, .completed-challenges, .proficiency {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -745,5 +737,107 @@ div.login-html input:focus {
 .status-text {
   font-size: 14px;
   color: #555555; }
+
+.main-category {
+  margin-bottom: 15px;
+  font-family: "Poppins Light";
+  font-size: 24px;
+  font-weight: normal;
+  color: #333333;
+  opacity: .8; }
+
+.subcategories {
+  display: flex;
+  flex-wrap: wrap; }
+
+.subcategory {
+  margin: 0 30px 25px 0;
+  position: relative; }
+  .subcategory section {
+    width: 330px;
+    height: 168px;
+    display: flex;
+    flex-direction: column; }
+  .subcategory .category-header {
+    margin: 0;
+    /* override semantic ui */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 45px;
+    font-family: "Poppins Light";
+    font-size: 18px;
+    font-weight: normal;
+    background: #ff8606;
+    color: #ffffff; }
+  .subcategory .category-info {
+    position: relative;
+    display: flex;
+    height: 100%;
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+    font-family: "Poppins Regular";
+    font-weight: normal;
+    background: #f6f3f5;
+    border: 1px solid #b3aeb1;
+    border-top: 0; }
+
+.completed-subcategories, .completed-challenges, .proficiency {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  text-align: center; }
+
+.proficiency {
+  padding-top: 25px;
+  padding-right: 60px;
+  border-right: 1px solid #e1e1e1; }
+
+.completed-challenges {
+  padding-left: 30px; }
+
+.subcat-progress,
+.next-proficiency-exp,
+.challenges-progress {
+  font-size: 30px;
+  color: #e83b36;
+  /* hardcoded for testing, should be removed later*/ }
+
+.proficiency,
+.next-proficiency-title,
+.status-text {
+  font-size: 12px;
+  color: #333333;
+  opacity: .8; }
+
+.proficiency {
+  background-image: url("../../assets/img/pikachu.svg");
+  background-repeat: no-repeat;
+  background-size: 30px;
+  background-position: 9px 12px; }
+
+.subcategory section .category-overlay {
+  visibility: hidden;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  height: 0;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #f6f3f5;
+  border: 1px solid #b3aeb1;
+  font-weight: normal; }
+  .subcategory section .category-overlay .next-proficiency-title {
+    margin-top: 7px; }
+.subcategory section:hover .category-overlay {
+  visibility: visible;
+  height: 100%;
+  transition: all 0.3s; }
+.subcategory section .align-center {
+  text-align: center; }
 
 /*# sourceMappingURL=style.css.map */

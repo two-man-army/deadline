@@ -1,0 +1,81 @@
+.subcategory {
+    margin: 0 30px 25px 0;
+    position: relative;
+
+    section {
+        width: 330px;
+        height: 168px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .category-header {
+        margin: 0; /* override semantic ui */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 45px;
+        font-family: "Poppins Light";
+        font-size: 18px;
+        font-weight: normal;
+        background: #ff8606;
+        color: #ffffff;
+    }
+
+    .category-info {
+        position: relative;
+        display: flex;
+        height: 100%;
+        padding: 20px;
+        justify-content: center;
+        align-items: center;
+        font-family: "Poppins Regular";
+        font-weight: normal;
+        background: #f6f3f5;
+        border: 1px solid #b3aeb1;
+        border-top: 0;
+    }
+}
+
+// placeholder
+%completed-items {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.proficiency {
+    @extend %completed-items;
+    padding-top: 25px;
+    padding-right: 60px;
+    border-right: 1px solid #e1e1e1;
+}
+
+.completed-challenges {
+    @extend %completed-items;
+    padding-left: 30px;
+}
+
+.subcat-progress,
+.next-proficiency-exp,
+.challenges-progress {
+    font-size: 30px;
+    color: #e83b36; /* hardcoded for testing, should be removed later*/
+}
+
+.proficiency,
+.next-proficiency-title,
+.status-text {
+    font-size: 12px;
+    color: #333333;
+    opacity: .8;
+}
+
+.proficiency {
+    background-image: url('../../assets/img/pikachu.svg');
+    background-repeat: no-repeat;
+    background-size: 30px;
+    background-position: 9px 12px;
+}
