@@ -172,6 +172,9 @@ def fetch_dialog_token(stream):
         to_send_message, payload = _fetch_dialog_token(packet, owner_id, opponent_id)
         if to_send_message:
             yield from send_message(ws_connections[(owner_id, opponent_id)].web_socket, payload)
+            yield from send_message(ws_connections[(owner_id, opponent_id)].web_socket,
+                                    {'is_online': (opponent_id, owner_id) in ws_connections
+                                                    and ws_connections[(opponent_id, owner_id)].is_valid})
 
 
 def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
