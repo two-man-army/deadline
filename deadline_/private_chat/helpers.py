@@ -29,8 +29,8 @@ def generate_dialog_tokens(owner_name: str, opponent_name: str):
     # TODO: Move as static Dialog method
     secret_key = uuid4().hex
     expiry_date = get_utc_time() + timedelta(minutes=DIALOG_TOKEN_EXPIRY_MINUTES)
-    owner_token = jwt.encode({'exp': expiry_date, 'username': owner_name}, secret_key)
-    opponent_token = jwt.encode({'exp': expiry_date, 'username': opponent_name}, secret_key)
+    owner_token = jwt.encode({'exp': expiry_date, 'username': owner_name}, secret_key).decode("utf-8")
+    opponent_token = jwt.encode({'exp': expiry_date, 'username': opponent_name}, secret_key).decode("utf-8")
 
     return secret_key, owner_token, opponent_token
 
