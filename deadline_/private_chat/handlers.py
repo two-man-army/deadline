@@ -170,7 +170,7 @@ def fetch_dialog_token(stream):
     }
     """
     while True:
-        packet: dict = yield from stream.get()
+        packet = yield from stream.get()
         owner_id, opponent_id = packet.get('user_id', None), packet.get('opponent_id', None)
 
         to_send_message, payload = _fetch_dialog_token(packet, owner_id, opponent_id)
