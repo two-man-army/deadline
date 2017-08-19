@@ -12,7 +12,7 @@ def get_or_create_dialog_token(owner: User, opponent: User) -> str:
     """
     dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
     if dialog.tokens_are_expired():
-        dialog.refresh_tokens()
+        dialog.refresh_tokens(True)
 
     if dialog.owner == owner:
         dialog_token = dialog.owner_token
