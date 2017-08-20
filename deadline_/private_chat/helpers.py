@@ -4,8 +4,9 @@ from uuid import uuid4
 
 import jwt
 
+from accounts.models import User
 from private_chat.constants import CONNECT_PATH_REGEX, DIALOG_TOKEN_EXPIRY_MINUTES
-from private_chat.errors import RegexMatchError
+from private_chat.errors import RegexMatchError, ChatPairingError
 
 
 def extract_connect_path(path):
@@ -32,6 +33,18 @@ def generate_dialog_tokens(owner_name: str, opponent_name: str):
     opponent_token = jwt.encode({'exp': expiry_date, 'username': opponent_name}, secret_key).decode("utf-8")
 
     return secret_key, owner_token, opponent_token
+
+
+def fetch_and_validate_participants(owner_id: int, opponent_id: int) -> (User, User):
+    """
+    Fetches the User objects and validates them
+    """
+    if owner_id == opponent_id:
+        raise ChatPairingError('Cannot match a user to himself!')
+    owner = User.objects.get(id=owner_id)
+    opponent = User.objects.get(id=opponent_id)
+
+    return owner, opponent
 
 
 def get_utc_time():

@@ -1,37 +1,17 @@
-import asyncio
+"""
+Defines handlers for the different type of received messages
+"""
 import json
 import logging
 import websockets
 
-from django.contrib.auth import get_user_model
-
 from accounts.models import User
+from private_chat.classes import WebSocketConnection
 from private_chat.errors import ChatPairingError, UserTokenMatchError
-from private_chat.helpers import extract_connect_path
+from private_chat.helpers import extract_connect_path, fetch_and_validate_participants
 from private_chat.models import Dialog
 from private_chat.services.dialog import get_or_create_dialog_token
 from . import models, router
-from django.contrib.sessions.models import Session
-
-
-class WebSocketConnection:
-    def __init__(self, socket, owner_id, opponent_id):
-        self.web_socket = socket
-        self.owner_id = owner_id
-        self.opponent_id = opponent_id
-        self.is_valid = False
-
-    def validate(self):
-        self.is_valid = True
-
-    def invalidate(self):
-        self.is_valid = False
-
-    def __hash__(self):
-        return hash(str(self.owner_id) + str(self.opponent_id))
-
-    def __eq__(self, other):
-        return self.owner_id == other.owner_id and self.opponent_id == other.opponent_id
 
 
 logger = logging.getLogger('django-private-dialog')
@@ -281,15 +261,3 @@ async def main_handler(websocket, path):
         if (opponent.id, owner.id) in ws_connections and ws_connections[(opponent.id, owner.id)].is_valid:
             await send_message(ws_connections[(opponent.id, owner.id)].web_socket,
                                {'type': 'online-check', 'is_online': False})
-
-
-def fetch_and_validate_participants(owner_id: int, opponent_id: int) -> (User, User):
-    """
-    Fetches the User objects and validates them
-    """
-    if owner_id == opponent_id:
-        raise ChatPairingError('Cannot match a user to himself!')
-    owner = User.objects.get(id=owner_id)
-    opponent = User.objects.get(id=opponent_id)
-
-    return owner, opponent

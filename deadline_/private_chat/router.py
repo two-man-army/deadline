@@ -18,12 +18,11 @@ class MessageRouter(object):
         try:
             self.packet = json.loads(data)
         except Exception as e:
-            logger.debug('could not load json: {}'.format(str(e)))
+            logger.debug(f'Could not load json: {e}')
 
     @asyncio.coroutine
     def __call__(self):
         logger.debug('routing message: {}'.format(self.packet))
-        print('routing message')
         send_queue = self.get_send_queue()
         yield from send_queue.put(self.packet)
 
