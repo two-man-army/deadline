@@ -92,5 +92,9 @@ class Message(TimeStampedModel, SoftDeletableModel):
     def get_formatted_create_datetime(self):
         return dj_date(self.created, settings.DATETIME_FORMAT)
 
+    @staticmethod
+    def fetch_messages_from_dialog_created_before(message, message_count: int):
+        return Message.objects.filter(dialog=message.dialog, created__lt=message.created).all()[:message_count]
+
     def __str__(self):
         return self.sender.username + "(" + self.get_formatted_create_datetime() + ") - '" + self.text + "'"

@@ -145,3 +145,16 @@ class MessageModelTests(TestCase):
         ordered_message_ids = [p['id'] for p in Message.objects.order_by('created').values('id').all()]
         received_ordered_ids = [p['id'] for p in MessageSerializer(instance=Message.objects.all(), many=True).data]
         self.assertEqual(ordered_message_ids, received_ordered_ids)
+
+    def test_fetch_messages_created_before(self):
+        other_user = UserFactory()
+        other_dialog = Dialog.objects.create(owner=self.first_user, opponent=other_user)
+        for i in range(40):
+            msg = Message.objects.create(dialog=self.dialog, sender=self.first_user, text='What the f you mean?',
+                                         created=random_datetime())
+            Message.objects.create(dialog=other_dialog, sender=self.first_user, text='What huh',
+                                   created=random_datetime())
+        message_count = 5
+        expected_result = [msg.id for msg in Message.objects.filter(dialog=msg.dialog, created__lt=msg.created).all()[:message_count]]
+        received_result = [msg.id for msg in Message.fetch_messages_from_dialog_created_before(message=msg, message_count=message_count)]
+        self.assertEqual(expected_result, received_result)
