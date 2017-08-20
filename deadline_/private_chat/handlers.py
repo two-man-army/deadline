@@ -185,6 +185,28 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
     return True, False, payload_to_send
 
 
+def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (bool, dict):
+    """
+    Returns a boolean indicating if we should send a message and the payload of said message
+    """
+    if (owner_id, opponent_id) not in ws_connections:
+        return False, {}  # no such connection, we cannot send this to anybody
+
+    try:
+        owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
+    except (User.DoesNotExist, ChatPairingError) as e:
+        return True, {'type': 'error', 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
+
+    owner_socket: WebSocketConnection = ws_connections[(owner.id, opponent.id)]
+    if not owner_socket.is_valid:
+        return True, {'type': 'error', 'message': 'You need to authorize yourself by fetching a token!'}
+
+    dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
+    if not dialog.token_is_valid(conversation_token):
+        return True, {'type': 'error', 'message': 'Invalid conversation_token. Fetch a new one!'}
+
+    return False, {}
+
 
 async def main_handler(websocket, path):
     """

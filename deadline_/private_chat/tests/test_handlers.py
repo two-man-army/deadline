@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from django.test import TestCase
 
 from challenges.tests.factories import UserFactory
-from private_chat.handlers import _fetch_dialog_token, _new_messages_handler
+from private_chat.handlers import _fetch_dialog_token, _new_messages_handler, _is_typing
 from private_chat.models import Dialog, Message
 
 
