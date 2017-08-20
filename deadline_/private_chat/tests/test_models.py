@@ -5,7 +5,8 @@ import jwt
 from django.test import TestCase
 
 from challenges.tests.factories import UserFactory
-from private_chat.models import Dialog
+from private_chat.models import Dialog, Message
+from private_chat.serializers import MessageSerializer
 
 
 class DialogModelTests(TestCase):
@@ -115,3 +116,22 @@ class DialogModelTests(TestCase):
 
         self.assertEqual(dialog.owner, owner)
         self.assertEqual(dialog.opponent, opponent)
+
+
+class MessageModelTests(TestCase):
+    def setUp(self):
+        self.first_user = UserFactory()
+        self.second_user = UserFactory()
+        self.dialog = Dialog.objects.create(owner=self.first_user, opponent=self.second_user)
+
+    def test_serializes(self):
+        msg = Message.objects.create(dialog=self.dialog, sender=self.first_user, text='What the f you mean?')
+        ser_data = MessageSerializer(instance=msg).data
+        expected_data = {
+            'id': msg.id,
+            'message': 'What the f you mean?',
+            'sender_name': self.first_user.username,
+            'created': msg.get_formatted_create_datetime()
+        }
+
+        self.assertEqual(ser_data, expected_data)
