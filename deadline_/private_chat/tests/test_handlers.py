@@ -120,3 +120,36 @@ class NewsMessageTests(TestCase):
             self.assertTrue(to_send_msg)
             self.assertTrue(is_err)
             self.assertIn('token', payload['error'].lower())
+
+
+class IsTypingTests(TestCase):
+    def setUp(self):
+        self.first_user = UserFactory()
+        self.second_user = UserFactory()
+
+    def test_doesnt_send_message_if_websocket_not_available(self):
+        to_send_msg, payload = _is_typing(self.first_user.id, 200, 'what')
+        self.assertFalse(to_send_msg)
+
+    def test_sends_error_if_websocket_is_not_valid(self):
+        with patch('private_chat.handlers.ws_connections',
+                   {(self.first_user.id, self.second_user.id): MagicMock(is_valid=False)}):
+            to_send_msg, payload = _is_typing(self.first_user.id, self.second_user.id, 'TANK')
+            self.assertTrue(to_send_msg)
+            self.assertTrue(payload['type'], 'error')
+            self.assertIn('authorize', payload['message'].lower())
+
+    def test_sends_error_if_dialog_invalid(self):
+        with patch('private_chat.handlers.ws_connections',
+                   {(self.first_user.id, self.second_user.id): MagicMock(is_valid=True)}):
+            to_send_msg, payload = _is_typing(self.first_user.id, self.second_user.id, 'tank')
+            self.assertTrue(to_send_msg)
+            self.assertTrue(payload['type'], 'error')
+            self.assertIn('token', payload['message'].lower())
+
+    def test_doesnt_send_message_if_all_ok(self):
+        dialog = Dialog.objects.get_or_create_dialog_with_users(self.first_user, self.second_user)
+        with patch('private_chat.handlers.ws_connections',
+                   {(self.first_user.id, self.second_user.id): MagicMock(is_valid=True)}):
+            to_send_msg, payload = _is_typing(self.first_user.id, self.second_user.id, dialog.owner_token)
+            self.assertFalse(to_send_msg)

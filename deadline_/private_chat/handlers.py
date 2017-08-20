@@ -185,6 +185,36 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
     return True, False, payload_to_send
 
 
+async def is_typing_handler(stream):
+    """
+    Show message to opponent if user is typing message
+    Expects the following JSON
+    {
+    "type": "is-typing",
+    "conversation_token": YOUR_TOKEN_HERE,
+    "user_id": YOUR_ID_HERE,
+    "opponent_id": OPPONENT_ID_HERE
+    }
+    """
+    while True:
+        packet = await stream.get()
+        owner_id, opponent_id = packet.get('user_id'), packet.get('opponent_id')
+        conversation_token = packet.get('conversation_token')
+
+        to_send_msg, payload = _is_typing(owner_id, opponent_id, conversation_token)
+        owner_socket = ws_connections[(owner_id, opponent_id)].web_socket
+        if to_send_msg:
+            await send_message(owner_socket, payload)
+            continue
+
+        opponent_is_online = (opponent_id, owner_id) in ws_connections and ws_connections[(opponent_id, owner_id)].is_valid
+        if opponent_is_online:
+            opponent_socket = ws_connections[(opponent_id, owner_id)].web_socket
+            await send_message(opponent_socket, {'type': 'opponent-typing'})
+        else:
+            await send_message(owner_socket, {'type': 'error', 'message': f'User {opponent_id} is offline!'})
+
+
 def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (bool, dict):
     """
     Returns a boolean indicating if we should send a message and the payload of said message
