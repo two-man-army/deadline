@@ -273,7 +273,8 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
         'type': 'received-message',
         'created': msg.get_formatted_create_datetime(),
         'sender_name': msg.sender.username,
-        'message': message
+        'message': message,
+        'id': msg.id
     }
 
     return True, False, payload_to_send

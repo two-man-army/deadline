@@ -76,7 +76,8 @@ class NewsMessageTests(TestCase):
                 'type': 'received-message',
                 'created': msg.get_formatted_create_datetime(),
                 'sender_name': msg.sender.username,
-                'message': 'Hello Bob :)'
+                'message': 'Hello Bob :)',
+                'id': msg.id
             }
             self.assertEqual(expected_payload, payload)
 
