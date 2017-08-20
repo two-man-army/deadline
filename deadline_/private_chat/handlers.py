@@ -161,20 +161,25 @@ def fetch_dialog_token(stream):
     {
     "type": "fetch-token",
     "user_id": YOUR_USER_ID_HERE,
-    "auth_token": YOUR_AUTH_TOKEN_HERE
-    "opponent_id": HIS_ID_HERE,
+    "auth_token": YOUR_AUTH_TOKEN_HERE,
+    "opponent_id": HIS_ID_HERE
     }
     """
     while True:
         packet = yield from stream.get()
-        owner_id, opponent_id = packet.get('user_id', None), packet.get('opponent_id', None)
+        owner_id, opponent_id = int(packet.get('user_id', '-1')), int(packet.get('opponent_id', '-1'))
 
         to_send_message, payload = _fetch_dialog_token(packet, owner_id, opponent_id)
         if to_send_message:
             yield from send_message(ws_connections[(owner_id, opponent_id)].web_socket, payload)
+
+            opponent_is_online = (opponent_id, owner_id) in ws_connections and ws_connections[(opponent_id, owner_id)].is_valid
             yield from send_message(ws_connections[(owner_id, opponent_id)].web_socket,
-                                    {'is_online': (opponent_id, owner_id) in ws_connections
-                                                    and ws_connections[(opponent_id, owner_id)].is_valid})
+                                    {'type': 'online-check', 'is_online': opponent_is_online})
+            # Notify the opponent that we came online
+            if opponent_is_online:
+                yield from send_message(ws_connections[(opponent_id, owner_id)].web_socket,
+                                        {'type': 'online-check', 'is_online': True})
 
 
 def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
@@ -210,7 +215,8 @@ def new_messages_handler(stream):
         "type": "new-message",
         "message": "YOUR_MESSAGE_HERE",
         "user_id": YOUR_USER_ID_HERE,
-        "opponent_id": HIS_ID_HERE
+        "opponent_id": HIS_ID_HERE,
+        "conversation_token": YOUR_CONVESRATION_TOKEN_HERE
     }
     """
     while True:
@@ -349,7 +355,6 @@ def main_handler(websocket, path):
             if not data:
                 continue
 
-
             try:
                 logger.debug(f'Data is {data}')
                 yield from router.MessageRouter(data)()
@@ -360,6 +365,9 @@ def main_handler(websocket, path):
         pass
     finally:
         del ws_connections[(owner.id, opponent.id)]
+        if (opponent.id, owner.id) in ws_connections and ws_connections[(opponent.id, owner.id)].is_valid:
+            yield from send_message(ws_connections[(opponent.id, owner.id)].web_socket,
+                                    {'type': 'online-check', 'is_online': False})
 
 
 def fetch_and_validate_participants(owner_id: int, opponent_id: int) -> (User, User):
