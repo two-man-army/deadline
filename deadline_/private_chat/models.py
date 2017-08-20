@@ -86,6 +86,9 @@ class Message(TimeStampedModel, SoftDeletableModel):
     sender = models.ForeignKey(User, verbose_name=_("Author"), related_name="messages")
     text = models.TextField(verbose_name=_("Message text"))
 
+    class Meta:
+        ordering = ('created', )
+
     def get_formatted_create_datetime(self):
         return dj_date(self.created, settings.DATETIME_FORMAT)
 

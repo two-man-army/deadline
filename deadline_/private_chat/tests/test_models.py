@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+from time import sleep
 from unittest.mock import patch
 import jwt
 
 from django.test import TestCase
+from radar import random_datetime
 
 from challenges.tests.factories import UserFactory
 from private_chat.models import Dialog, Message
@@ -135,3 +137,11 @@ class MessageModelTests(TestCase):
         }
 
         self.assertEqual(ser_data, expected_data)
+
+    def test_many_serialize_are_ordered_by_date(self):
+        for i in range(10):
+            Message.objects.create(dialog=self.dialog, sender=self.first_user, text='What the f you mean?',
+                                   created=random_datetime())
+        ordered_message_ids = [p['id'] for p in Message.objects.order_by('created').values('id').all()]
+        received_ordered_ids = [p['id'] for p in MessageSerializer(instance=Message.objects.all(), many=True).data]
+        self.assertEqual(ordered_message_ids, received_ordered_ids)

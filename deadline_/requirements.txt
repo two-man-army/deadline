@@ -30,6 +30,7 @@ python-dotenv==0.6.4
 pytz==2016.10
 psycopg2==2.7.3
 pytz==2016.10
+radar==0.3
 simplegeneric==0.8.1
 six==1.10.0
 traitlets==4.3.1
