@@ -27,7 +27,7 @@ async def send_message(conn, payload):
     try:
         await conn.send(json.dumps(payload))
     except Exception as e:
-        logger.debug(f'Could not send message to websocket due to {e}')
+        logger.error(f'Could not send message to websocket due to {e}')
 
 
 async def fanout_message(connections, payload):
@@ -38,7 +38,7 @@ async def fanout_message(connections, payload):
         try:
             await conn.send(json.dumps(payload))
         except Exception as e:
-            logger.debug(f'Could not send message to multiple websockets due to {e}')
+            logger.error(f'Could not send message to multiple websockets due to {e}')
 
 
 async def fetch_dialog_token(stream):
@@ -238,20 +238,32 @@ async def main_handler(websocket, path):
         print(str(e))
         return
 
-    if (owner.id, opponent.id) not in ws_connections:
-        ws_connections[(owner.id, opponent.id)] = WebSocketConnection(websocket, owner_id, opponent_id)
+    if (owner.id, opponent.id) in ws_connections:
+        # This websocket is already connected, overwrite it only if it is not valid
+        if ws_connections[(owner.id, opponent.id)].is_valid:
+            logger.debug(f'Tried to overwrite socket with ID {(owner.id, opponent.id)} but did not since it was valid!')
+            return
+        logger.debug(f'Overwrote socket with ID {(owner.id, opponent.id)}')
+
+    ws_connections[(owner.id, opponent.id)] = WebSocketConnection(websocket, owner_id, opponent_id)
 
     await send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'})
 
     # While the websocket is open, listen for incoming messages/events
+    is_overwritten = False
     try:
         while websocket.open:
             data = await websocket.recv()
+            if ws_connections[(owner.id, opponent.id)].web_socket != websocket:
+                # This socket has been overwritten, so stop it
+                is_overwritten = True
+                return
+
             if not data:
                 continue
 
             try:
-                logger.debug(f'Data is {data}')
+                print(f'Data is {data}')
                 await router.MessageRouter(data)()
             except Exception as e:
                 logger.error(f'Could not route message {e}')
@@ -259,7 +271,11 @@ async def main_handler(websocket, path):
     except websockets.exceptions.InvalidState:  # User disconnected
         pass
     finally:
-        del ws_connections[(owner.id, opponent.id)]
+        if not is_overwritten:
+            del ws_connections[(owner.id, opponent.id)]
+        else:
+            logger.debug(f'Deleted old overwritten socket with ID {(owner.id, opponent.id)}')
+
         if (opponent.id, owner.id) in ws_connections and ws_connections[(opponent.id, owner.id)].is_valid:
             await send_message(ws_connections[(opponent.id, owner.id)].web_socket,
                                {'type': 'online-check', 'is_online': False})
