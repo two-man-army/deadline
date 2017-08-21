@@ -1,6 +1,7 @@
 import React from 'react'
 import Subcategory from './Subcategory'
 import { getCategorySubcategories } from '../../requests'
+import { convertToUrlFriendlyText } from '../../helpers.js'
 
 class SubcategoriesPage extends React.Component {
   constructor (props) {
@@ -11,6 +12,7 @@ class SubcategoriesPage extends React.Component {
     }
 
     this.loadSubcategories = this.loadSubcategories.bind(this)
+    this.storeSubcategoryDetails = this.storeSubcategoryDetails.bind(this)
     this.calculateCompletedPercenage = this.calculateCompletedPercenage.bind(this)
     this.expToNextProficiency = this.expToNextProficiency.bind(this)
     this.expToNextProficiency(1000, 850)
@@ -28,6 +30,11 @@ class SubcategoriesPage extends React.Component {
           }
         })
       })
+  }
+
+  storeSubcategoryDetails (e) {
+    const subcategoryName = e.currentTarget.dataset.subcategoryName
+    window.localStorage.subcategory = subcategoryName
   }
 
   /**
@@ -52,6 +59,7 @@ class SubcategoriesPage extends React.Component {
 
   render () {
     const mainCategory = window.localStorage.categoryName
+    const nextUrl = `/categories/${convertToUrlFriendlyText(mainCategory)}`
     // remove hard coded values below once we have real data.
 
     return (
@@ -61,6 +69,8 @@ class SubcategoriesPage extends React.Component {
           {this.state.subcategories.map(subcategory => {
             return <Subcategory
               key={subcategory.name}
+              url={`${nextUrl}/${convertToUrlFriendlyText(subcategory.name)}`}
+              onClick={this.storeSubcategoryDetails}
               name={subcategory.name}
               proficiency={subcategory.proficiency.name}
               challengeCount={subcategory.challenge_count}
