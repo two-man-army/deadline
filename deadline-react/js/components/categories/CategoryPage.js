@@ -41,7 +41,7 @@ class CategoryPage extends React.Component {
         <ul className='categories'>
           {this.state.categories.map(category => {
             const categoryInURL = convertToUrlFriendlyText(category.name)
-            return <Category id={category.id} data-category-name={category.name} key={category.id} name={category.name} url={`/categories/${categoryInURL}`} onClick={this.storeCategoryDetails} />
+            return <Category id={category.id} key={category.id} name={category.name} url={`/categories/${categoryInURL}`} onClick={this.storeCategoryDetails} />
           })}
           <Category name='Test category' />
           <Category name='Test category' />
