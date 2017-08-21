@@ -1,7 +1,11 @@
 import asyncio
+
+import uvloop
 import websockets
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # needs to be set before websockets for some reason
 from private_chat import channels, handlers
 
 
