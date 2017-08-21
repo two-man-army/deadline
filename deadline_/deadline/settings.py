@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'social',
     'private_chat',
     'notifications',
+    'django_extensions',
 ]
 
 REST_FRAMEWORK = {
