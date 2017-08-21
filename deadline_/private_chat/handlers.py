@@ -7,6 +7,8 @@ import websockets
 
 from accounts.models import User
 from private_chat.classes import WebSocketConnection
+from private_chat.constants import EXPIRED_TOKEN_ERR_TYPE, AUTHORIZATION_ERR_TYPE, NOT_FOUND_ERR_TYPE, \
+    VALIDATION_ERR_TYPE, WARNING_ERR_TYPE
 from private_chat.errors import ChatPairingError, UserTokenMatchError
 from private_chat.helpers import extract_connect_path, fetch_and_validate_participants
 from private_chat.models import Dialog
@@ -82,9 +84,9 @@ def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
         if owner.auth_token.key != packet.get('auth_token'):  # authenticate user
             raise UserTokenMatchError(f'Invalid token!')
     except (User.DoesNotExist, UserTokenMatchError) as e:
+        err_type = {User.DoesNotExist: NOT_FOUND_ERR_TYPE, UserTokenMatchError: AUTHORIZATION_ERR_TYPE}[e.__class__]
         logger.debug(f'Raised {e.__class__} in fetch-token handler. Error message was {str(e)}')
-
-        return True, {'type': 'error', 'message': str(e)}
+        return True, {'type': 'error', 'error_type': err_type, 'message': str(e)}
 
     token = get_or_create_dialog_token(owner, opponent)
     ws_connections[(owner_id, opponent_id)].is_valid = True
@@ -131,22 +133,22 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
 
     message = packet.get('message')
     if not message:
-        return True, True, {'type': 'error', 'message': 'Message cannot be empty!'}
+        return True, True, {'type': 'error', 'error_type': VALIDATION_ERR_TYPE, 'message': 'Message cannot be empty!'}
 
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
     except (User.DoesNotExist, ChatPairingError) as e:
-        return True, True, {'type': 'error', 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
+        return True, True, {'type': 'error', 'error_type': NOT_FOUND_ERR_TYPE, 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
 
     owner_socket: WebSocketConnection = ws_connections[(owner.id, opponent.id)]
     if not owner_socket.is_valid:
-        return True, True, {'type': 'error', 'message': 'You need to authorize yourself by fetching a token!'}
+        return True, True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE, 'message': 'You need to authorize yourself by fetching a token!'}
 
     conversation_token = packet.get('conversation_token')
 
     dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
     if not dialog.token_is_valid(conversation_token):
-        return True, True, {'type': 'error', 'message': 'Invalid conversation_token. Fetch a new one!'}
+        return True, True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE, 'message': 'Invalid conversation_token. Fetch a new one!'}
 
     msg = models.Message.objects.create(
         dialog=dialog,
@@ -192,7 +194,7 @@ async def is_typing_handler(stream):
             opponent_socket = ws_connections[(opponent_id, owner_id)].web_socket
             await send_message(opponent_socket, {'type': 'opponent-typing'})
         else:
-            await send_message(owner_socket, {'type': 'error', 'message': f'User {opponent_id} is offline!'})
+            await send_message(owner_socket, {'type': 'error', 'error_type': WARNING_ERR_TYPE, 'message': f'User {opponent_id} is offline!'})
 
 
 def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (bool, dict):
@@ -205,15 +207,15 @@ def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (boo
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
     except (User.DoesNotExist, ChatPairingError) as e:
-        return True, {'type': 'error', 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
+        return True, {'type': 'error', 'error_type': NOT_FOUND_ERR_TYPE, 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
 
     owner_socket: WebSocketConnection = ws_connections[(owner.id, opponent.id)]
     if not owner_socket.is_valid:
-        return True, {'type': 'error', 'message': 'You need to authorize yourself by fetching a token!'}
+        return True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE, 'message': 'You need to authorize yourself by fetching a token!'}
 
     dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
     if not dialog.token_is_valid(conversation_token):
-        return True, {'type': 'error', 'message': 'Invalid conversation_token. Fetch a new one!'}
+        return True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE, 'message': 'Invalid conversation_token. Fetch a new one!'}
 
     return False, {}
 

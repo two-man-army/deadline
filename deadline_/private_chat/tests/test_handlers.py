@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from django.test import TestCase
 
 from challenges.tests.factories import UserFactory
+from private_chat.constants import EXPIRED_TOKEN_ERR_TYPE, AUTHORIZATION_ERR_TYPE, VALIDATION_ERR_TYPE
 from private_chat.handlers import _fetch_dialog_token, _new_messages_handler, _is_typing
 from private_chat.models import Dialog, Message
 
@@ -47,7 +48,7 @@ class FetchDialogTokenTests(TestCase):
 
             self.assertTrue(to_send_message)
             self.assertEqual('error', payload['type'])
-            self.assertIn('message', payload)
+            self.assertEqual(AUTHORIZATION_ERR_TYPE, payload['error_type'])
             self.assertEqual(websocket_mock.is_valid, False)
 
 
@@ -92,6 +93,7 @@ class NewsMessageTests(TestCase):
             self.assertTrue(to_send_msg)
             self.assertTrue(is_err)
             self.assertEqual('error', payload['type'])
+            self.assertEqual(VALIDATION_ERR_TYPE, payload['error_type'])
             self.assertIn('message', payload['message'].lower())
 
     def test_doesnt_send_message_if_websocket_not_available(self):
@@ -110,7 +112,7 @@ class NewsMessageTests(TestCase):
             self.assertTrue(to_send_msg)
             self.assertTrue(is_err)
             self.assertEqual('error', payload['type'])
-            self.assertIn('authorize', payload['message'].lower())
+            self.assertEqual(AUTHORIZATION_ERR_TYPE, payload['error_type'])
 
     def test_sends_error_if_dialog_invalid(self):
         packet = {
@@ -123,7 +125,7 @@ class NewsMessageTests(TestCase):
             self.assertTrue(to_send_msg)
             self.assertTrue(is_err)
             self.assertEqual('error', payload['type'])
-            self.assertIn('token', payload['message'].lower())
+            self.assertEqual(EXPIRED_TOKEN_ERR_TYPE, payload['error_type'])
 
 
 class IsTypingTests(TestCase):
@@ -141,7 +143,7 @@ class IsTypingTests(TestCase):
             to_send_msg, payload = _is_typing(self.first_user.id, self.second_user.id, 'TANK')
             self.assertTrue(to_send_msg)
             self.assertTrue(payload['type'], 'error')
-            self.assertIn('authorize', payload['message'].lower())
+            self.assertEqual(AUTHORIZATION_ERR_TYPE, payload['error_type'])
 
     def test_sends_error_if_dialog_invalid(self):
         with patch('private_chat.handlers.ws_connections',
@@ -149,7 +151,7 @@ class IsTypingTests(TestCase):
             to_send_msg, payload = _is_typing(self.first_user.id, self.second_user.id, 'tank')
             self.assertTrue(to_send_msg)
             self.assertTrue(payload['type'], 'error')
-            self.assertIn('token', payload['message'].lower())
+            self.assertEqual(EXPIRED_TOKEN_ERR_TYPE, payload['error_type'])
 
     def test_doesnt_send_message_if_all_ok(self):
         dialog = Dialog.objects.get_or_create_dialog_with_users(self.first_user, self.second_user)
