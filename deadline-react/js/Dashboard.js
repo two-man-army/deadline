@@ -5,6 +5,7 @@ import Header from './components/Header'
 import FollowSuggestions from './components/FollowSuggestions'
 import RanklistBox from './components/ranklist/RanklistBox'
 import SubcategoriesPage from './components/categories/SubcategoriesPage'
+import ChallengesPage from './components/challenges/ChallengesPage'
 import ActivityFeed from './components/newsfeed/ActivityFeed'
 import DisplayMetaInfo from './semantic_ui_components/DisplayMetaInfo'
 import SidebarNav from './components/SidebarNav'
@@ -64,7 +65,8 @@ class Dashboard extends React.Component {
               <Route exact path='/' component={ActivityFeed} />
               <Route exact path='/leaderboard' component={OverallLeaderboard} />
               <Route exact path='/categories' component={CategoryPage} />
-              <Route exact path='/categories/:subcategory' component={SubcategoriesPage} />
+              <Route exact path='/categories/:category' component={SubcategoriesPage} />
+              <Route exact path='/categories/:category/:subcategory' component={ChallengesPage} />
               <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
               <Route exact path='/accounts/password/change' component={Profile} />
               <Route exact path='/accounts/edit' component={Profile} />
