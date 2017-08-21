@@ -1,5 +1,5 @@
 """
-Functions related to Dialog objects
+Dialog-related functions for handlers to use
 """
 from accounts.models import User
 from private_chat.models import Dialog

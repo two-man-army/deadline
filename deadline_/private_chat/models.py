@@ -1,6 +1,3 @@
-from datetime import timedelta, datetime
-from uuid import uuid4
-
 import jwt
 from django.db import models
 from django.conf import settings
@@ -8,7 +5,6 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import date as dj_date
-from django.utils.translation import ugettext as _
 from model_utils.models import TimeStampedModel, SoftDeletableModel
 
 from accounts.models import User
@@ -27,7 +23,8 @@ class DialogManager(models.Manager):
         return dialog
 
     def fetch_dialog_with_users(self, user_owner, user_opponent):
-        return self.filter(Q(owner=user_owner, opponent=user_opponent) | Q(opponent=user_owner, owner=user_opponent)).first()
+        return self.filter(Q(owner=user_owner, opponent=user_opponent)
+                           | Q(opponent=user_owner, owner=user_opponent)).first()
 
 
 class Dialog(models.Model):
@@ -35,9 +32,9 @@ class Dialog(models.Model):
     Dialogs have two tokens, once for each participant.
     Said participant needs to prove its him with this token and said token should expire frequently
     """
-    owner = models.ForeignKey(User, verbose_name=_("Dialog owner"), related_name="selfDialogs")
+    owner = models.ForeignKey(User, verbose_name="Dialog owner", related_name="selfDialogs")
     owner_token = models.CharField(max_length=200, null=True)
-    opponent = models.ForeignKey(User, verbose_name=_("Dialog opponent"))
+    opponent = models.ForeignKey(User, verbose_name="Dialog opponent")
     opponent_token = models.CharField(max_length=200, null=True)
     secret_key = models.CharField(max_length=50, null=True)
     objects = DialogManager()
@@ -74,7 +71,8 @@ def populate_tokens(sender, instance, created, *args, **kwargs):
     """
     if not created:
         return
-    secret_key, owner_token, opponent_token = generate_dialog_tokens(instance.owner.username, instance.opponent.username)
+    secret_key, owner_token, opponent_token = generate_dialog_tokens(instance.owner.username,
+                                                                     instance.opponent.username)
     instance.secret_key = secret_key
     instance.owner_token = owner_token
     instance.opponent_token = opponent_token
@@ -82,9 +80,9 @@ def populate_tokens(sender, instance, created, *args, **kwargs):
 
 
 class Message(TimeStampedModel, SoftDeletableModel):
-    dialog = models.ForeignKey(Dialog, verbose_name=_("Dialog"), related_name="messages")
-    sender = models.ForeignKey(User, verbose_name=_("Author"), related_name="messages")
-    text = models.TextField(verbose_name=_("Message text"))
+    dialog = models.ForeignKey(Dialog, verbose_name="Dialog", related_name="messages")
+    sender = models.ForeignKey(User, verbose_name="Author", related_name="messages")
+    text = models.TextField(verbose_name="Message text")
 
     class Meta:
         ordering = ('created', )

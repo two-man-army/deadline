@@ -11,9 +11,9 @@ from private_chat.constants import EXPIRED_TOKEN_ERR_TYPE, AUTHORIZATION_ERR_TYP
     VALIDATION_ERR_TYPE, WARNING_ERR_TYPE
 from private_chat.errors import ChatPairingError, UserTokenMatchError
 from private_chat.helpers import extract_connect_path, fetch_and_validate_participants
-from private_chat.models import Dialog
+from private_chat.models import Dialog, Message
 from private_chat.services.dialog import get_or_create_dialog_token
-from . import models, router
+from private_chat.router import MessageRouter
 
 
 logger = logging.getLogger('django-private-dialog')
@@ -22,7 +22,7 @@ ws_connections: {(int, int): WebSocketConnection} = {}
 
 async def send_message(conn, payload):
     """
-    Distibuted payload (message) to one connection
+    Distributed payload (message) to one connection
     """
     try:
         await conn.send(json.dumps(payload))
@@ -30,7 +30,7 @@ async def send_message(conn, payload):
         logger.error(f'Could not send message to websocket due to {e}')
 
 
-async def fanout_message(connections, payload):
+async def fan_out_message(connections, payload):
     """
     distributes payload (message) to all connected ws clients
     """
@@ -61,13 +61,14 @@ async def fetch_dialog_token(stream):
         if to_send_message:
             await send_message(ws_connections[(owner_id, opponent_id)].web_socket, payload)
 
-            opponent_is_online = (opponent_id, owner_id) in ws_connections and ws_connections[(opponent_id, owner_id)].is_valid
+            opponent_is_online = ((opponent_id, owner_id) in ws_connections
+                                  and ws_connections[(opponent_id, owner_id)].is_valid)
             await send_message(ws_connections[(owner_id, opponent_id)].web_socket,
-                                    {'type': 'online-check', 'is_online': opponent_is_online})
+                               {'type': 'online-check', 'is_online': opponent_is_online})
             # Notify the opponent that we came online
             if opponent_is_online:
                 await send_message(ws_connections[(opponent_id, owner_id)].web_socket,
-                                        {'type': 'online-check', 'is_online': True})
+                                   {'type': 'online-check', 'is_online': True})
 
 
 def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
@@ -121,7 +122,7 @@ async def new_messages_handler(stream):
                 if opponent_socket.is_valid:
                     connections.append(opponent_socket.web_socket)
 
-            await fanout_message(connections, payload)
+            await fan_out_message(connections, payload)
 
 
 def _new_messages_handler(packet: dict, owner_id, opponent_id):
@@ -138,19 +139,22 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
     except (User.DoesNotExist, ChatPairingError) as e:
-        return True, True, {'type': 'error', 'error_type': NOT_FOUND_ERR_TYPE, 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
+        # should not happen, as we should not have a non-existent user in ws_connections
+        return True, True, {'type': 'error', 'error_type': NOT_FOUND_ERR_TYPE, 'message': str(e)}
 
     owner_socket: WebSocketConnection = ws_connections[(owner.id, opponent.id)]
     if not owner_socket.is_valid:
-        return True, True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE, 'message': 'You need to authorize yourself by fetching a token!'}
+        return True, True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE,
+                            'message': 'You need to authorize yourself by fetching a token!'}
 
     conversation_token = packet.get('conversation_token')
 
     dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
     if not dialog.token_is_valid(conversation_token):
-        return True, True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE, 'message': 'Invalid conversation_token. Fetch a new one!'}
+        return True, True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE,
+                            'message': 'Invalid conversation_token. Fetch a new one!'}
 
-    msg = models.Message.objects.create(
+    msg = Message.objects.create(
         dialog=dialog,
         sender=owner,
         text=message
@@ -189,12 +193,14 @@ async def is_typing_handler(stream):
             await send_message(owner_socket, payload)
             continue
 
-        opponent_is_online = (opponent_id, owner_id) in ws_connections and ws_connections[(opponent_id, owner_id)].is_valid
+        opponent_is_online = ((opponent_id, owner_id) in ws_connections
+                              and ws_connections[(opponent_id, owner_id)].is_valid)
         if opponent_is_online:
             opponent_socket = ws_connections[(opponent_id, owner_id)].web_socket
             await send_message(opponent_socket, {'type': 'opponent-typing'})
         else:
-            await send_message(owner_socket, {'type': 'error', 'error_type': WARNING_ERR_TYPE, 'message': f'User {opponent_id} is offline!'})
+            await send_message(owner_socket, {'type': 'error', 'error_type': WARNING_ERR_TYPE,
+                                              'message': f'User {opponent_id} is offline!'})
 
 
 def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (bool, dict):
@@ -207,15 +213,18 @@ def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (boo
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
     except (User.DoesNotExist, ChatPairingError) as e:
-        return True, {'type': 'error', 'error_type': NOT_FOUND_ERR_TYPE, 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
+        # should not happen, as we should not have a non-existent user in ws_connections
+        return True, {'type': 'error', 'error_type': NOT_FOUND_ERR_TYPE, 'message': str(e)}
 
     owner_socket: WebSocketConnection = ws_connections[(owner.id, opponent.id)]
     if not owner_socket.is_valid:
-        return True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE, 'message': 'You need to authorize yourself by fetching a token!'}
+        return True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE,
+                      'message': 'You need to authorize yourself by fetching a token!'}
 
     dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
     if not dialog.token_is_valid(conversation_token):
-        return True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE, 'message': 'Invalid conversation_token. Fetch a new one!'}
+        return True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE,
+                      'message': 'Invalid conversation_token. Fetch a new one!'}
 
     return False, {}
 
@@ -264,7 +273,7 @@ async def main_handler(websocket, path):
 
             try:
                 print(f'Data is {data}')
-                await router.MessageRouter(data)()
+                await MessageRouter(data)()
             except Exception as e:
                 logger.error(f'Could not route message {e}')
 
@@ -273,9 +282,8 @@ async def main_handler(websocket, path):
     finally:
         if not is_overwritten:
             del ws_connections[(owner.id, opponent.id)]
+            if (opponent.id, owner.id) in ws_connections and ws_connections[(opponent.id, owner.id)].is_valid:
+                await send_message(ws_connections[(opponent.id, owner.id)].web_socket,
+                                   {'type': 'online-check', 'is_online': False})
         else:
             logger.debug(f'Deleted old overwritten socket with ID {(owner.id, opponent.id)}')
-
-        if (opponent.id, owner.id) in ws_connections and ws_connections[(opponent.id, owner.id)].is_valid:
-            await send_message(ws_connections[(opponent.id, owner.id)].web_socket,
-                               {'type': 'online-check', 'is_online': False})

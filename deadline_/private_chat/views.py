@@ -18,7 +18,8 @@ class PreviousMessagesListView(APIView):
     permission_classes = (IsAuthenticated, )
 
     def get(self, request, *args, **kwargs):
-        before_pm, is_err, err_msg = self.validate_and_fetch(request.GET.get('conversation_token'), request.GET.get('before_pm'))
+        before_pm, is_err, err_msg = self.validate_and_fetch(request.GET.get('conversation_token'),
+                                                             request.GET.get('before_pm'))
         if is_err:
             return Response(status=400, data={'error': err_msg})
 
