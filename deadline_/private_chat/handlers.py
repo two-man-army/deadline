@@ -84,7 +84,7 @@ def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
     except (User.DoesNotExist, UserTokenMatchError) as e:
         logger.debug(f'Raised {e.__class__} in fetch-token handler. Error message was {str(e)}')
 
-        return True, {'error': str(e)}
+        return True, {'type': 'error', 'message': str(e)}
 
     token = get_or_create_dialog_token(owner, opponent)
     ws_connections[(owner_id, opponent_id)].is_valid = True
@@ -131,22 +131,22 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
 
     message = packet.get('message')
     if not message:
-        return True, True, {'error': 'Message cannot be empty!'}
+        return True, True, {'type': 'error', 'message': 'Message cannot be empty!'}
 
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
     except (User.DoesNotExist, ChatPairingError) as e:
-        return True, True, {'error': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
+        return True, True, {'type': 'error', 'message': str(e)}  # should not happen, as we should not have a non-existent user in ws_connections
 
     owner_socket: WebSocketConnection = ws_connections[(owner.id, opponent.id)]
     if not owner_socket.is_valid:
-        return True, True, {'error': 'You need to authorize yourself by fetching a token!'}
+        return True, True, {'type': 'error', 'message': 'You need to authorize yourself by fetching a token!'}
 
     conversation_token = packet.get('conversation_token')
 
     dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
     if not dialog.token_is_valid(conversation_token):
-        return True, True, {'error': 'Invalid conversation_token. Fetch a new one!'}
+        return True, True, {'type': 'error', 'message': 'Invalid conversation_token. Fetch a new one!'}
 
     msg = models.Message.objects.create(
         dialog=dialog,

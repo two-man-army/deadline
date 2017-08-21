@@ -46,7 +46,8 @@ class FetchDialogTokenTests(TestCase):
                                                            self.first_user.id, self.second_user.id)
 
             self.assertTrue(to_send_message)
-            self.assertIn('error', payload)
+            self.assertEqual('error', payload['type'])
+            self.assertIn('message', payload)
             self.assertEqual(websocket_mock.is_valid, False)
 
 
@@ -90,7 +91,8 @@ class NewsMessageTests(TestCase):
             to_send_msg, is_err, payload = _new_messages_handler(packet, self.first_user.id, self.second_user.id)
             self.assertTrue(to_send_msg)
             self.assertTrue(is_err)
-            self.assertIn('message', payload['error'].lower())
+            self.assertEqual('error', payload['type'])
+            self.assertIn('message', payload['message'].lower())
 
     def test_doesnt_send_message_if_websocket_not_available(self):
         to_send_msg, is_err, payload = _new_messages_handler({}, self.first_user.id, 200)
@@ -107,7 +109,8 @@ class NewsMessageTests(TestCase):
             to_send_msg, is_err, payload = _new_messages_handler(packet, self.first_user.id, self.second_user.id)
             self.assertTrue(to_send_msg)
             self.assertTrue(is_err)
-            self.assertIn('authorize', payload['error'].lower())
+            self.assertEqual('error', payload['type'])
+            self.assertIn('authorize', payload['message'].lower())
 
     def test_sends_error_if_dialog_invalid(self):
         packet = {
@@ -119,7 +122,8 @@ class NewsMessageTests(TestCase):
             to_send_msg, is_err, payload = _new_messages_handler(packet, self.first_user.id, self.second_user.id)
             self.assertTrue(to_send_msg)
             self.assertTrue(is_err)
-            self.assertIn('token', payload['error'].lower())
+            self.assertEqual('error', payload['type'])
+            self.assertIn('token', payload['message'].lower())
 
 
 class IsTypingTests(TestCase):
