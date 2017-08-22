@@ -15,7 +15,6 @@ class SubcategoriesPage extends React.Component {
     this.storeSubcategoryDetails = this.storeSubcategoryDetails.bind(this)
     this.calculateCompletedPercenage = this.calculateCompletedPercenage.bind(this)
     this.expToNextProficiency = this.expToNextProficiency.bind(this)
-    this.expToNextProficiency(1000, 850)
     this.loadSubcategories()
   }
 
