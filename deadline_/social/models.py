@@ -111,7 +111,7 @@ class NewsfeedItem(models.Model):
     """
     author = models.ForeignKey(User)
     type = models.CharField(max_length=30)  # no other table for now
-    content = HStoreField()  # varied, depending on the type
+    content = HStoreField()  # varies depending on the type
     is_private = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -173,3 +173,17 @@ class NewsfeedItemLike(models.Model):
     newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='likes')
     author = models.ForeignKey(User)
     unique_together = ('newsfeed_item', 'author')
+
+
+class Notification(models.Model):
+    """
+    A Notification is a simple notification that a user receives, again facebook-esque
+    Since the content here is dynamic (somebody liked your post, new challenge appears in the site, etc),
+        we need an HStore field to store data related to the type of the notification.
+    """
+    recipient = models.ForeignKey(User)
+    type = models.CharField(max_length=30)  # no other table for now
+    content = HStoreField()  # varies depending on the type
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
