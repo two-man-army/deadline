@@ -26,14 +26,22 @@ class ChallengesPage extends React.Component {
 
   render () {
     const category = window.localStorage.subcategory
-    console.log(this.state.challenges)
 
     return (
-      <section className='category-page main'>
-        <h2>{category}</h2>
+      <section className='challenges-page main'>
+        <header>
+          <h2 className='subcategory-name'>{category}</h2>
+          <div className='subcategories'>
+            subcategories
+          </div>
+        </header>
         <ul className='challenges'>
           {this.state.challenges.map(challenge => {
-            return <Challenge key={challenge.id} name={challenge.name} />
+            return <Challenge
+              key={challenge.id}
+              name={challenge.name}
+              difficulty={challenge.difficulty}
+              score={challenge.score} />
           })}
         </ul>
       </section>
