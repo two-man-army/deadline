@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from challenges.validators import MaxFloatDigitValidator, PossibleFloatDigitValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from challenges.validators import PossibleFloatDigitValidator
 from accounts.models import User
 from sql_queries import (
     SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE,
@@ -138,6 +141,20 @@ class SubmissionVote(models.Model):
 
     class Meta:
         unique_together = ('submission', 'author')
+
+
+@receiver(post_save, sender=SubmissionVote)
+def submission_vote_create_notification(sender, instance, created, *args, **kwargs):
+    """
+    Creates a Notification when somebody has upvoted a user's submission
+    """
+    from social.models import Notification
+
+    if created and instance.is_upvote and instance.author != instance.submission.author:
+        Notification.objects.create_receive_submission_upvote_notification(
+            recipient=instance.submission.author,
+            submission=instance.submission,
+            liker=instance.author)
 
 
 class TestCase(models.Model):

@@ -17,6 +17,8 @@ from challenges.serializers import SubmissionSerializer, LimitedChallengeSeriali
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory
 from challenges.tests.base import TestHelperMixin
 from accounts.models import User
+from social.constants import RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION
+from social.models import Notification
 
 
 class SubmissionModelTest(TestCase, TestHelperMixin):
@@ -543,6 +545,23 @@ class SubmissionVoteModelTest(TestCase, TestHelperMixin):
     def setUp(self):
         self.base_set_up()
 
+    def test_upvote_save_creates_notification(self):
+        other_user = UserFactory()
+        SubmissionVote.objects.create(author=other_user, submission=self.submission, is_upvote=True)
+        self.assertEqual(Notification.objects.count(), 1)
+        notif = Notification.objects.first()
+        self.assertEqual(notif.recipient, self.submission.author)
+        self.assertEqual(notif.type, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION)
+
+    def test_upvote_save_doesnt_create_notification_if_submission_author_upvotes(self):
+        SubmissionVote.objects.create(author=self.auth_user, submission=self.submission, is_upvote=True)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_downvote_save_doesnt_create_notification(self):
+        other_user = UserFactory()
+        SubmissionVote.objects.create(author=other_user, submission=self.submission, is_upvote=False)
+        self.assertEqual(Notification.objects.count(), 0)
+
     def test_cannot_save_blank(self):
         s = SubmissionVote(author=self.auth_user)
         with self.assertRaises(Exception):
@@ -579,6 +598,10 @@ class SubmissionVoteViewTest(APITestCase, TestHelperMixin):
         self.assertTrue(SubmissionVote.objects.all().first().is_upvote)
         self.submission.refresh_from_db()
         self.assertEqual(self.submission.get_votes_count(), (1, 0))
+        self.assertEqual(Notification.objects.count(), 1)
+        notif = Notification.objects.first()
+        self.assertEqual(notif.type, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION)
+        self.assertEqual(notif.recipient, self.submission.author)
 
     def test_cast_submission_vote_modifies_upvote_to_downvote(self):
         SubmissionVote.objects.create(author_id=self.auth_user.id, submission_id=self.submission.id, is_upvote=True)
