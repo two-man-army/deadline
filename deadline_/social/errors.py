@@ -38,3 +38,7 @@ class LikeAlreadyExistsError(Exception):
 class NonExistentLikeError(Exception):
     """ Used for when a User tries to delete a Like but it does not exist in the first place """
     pass
+
+
+class InvalidFollowError(Exception):
+    pass
