@@ -3,9 +3,10 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from challenges.tests.base import TestHelperMixin
-from challenges.tests.factories import UserFactory
-from social.constants import RECEIVE_FOLLOW_NOTIFICATION
-from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField
+from challenges.tests.factories import UserFactory, SubmissionFactory
+from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_LIKE_NOTIFICATION
+from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
+    InvalidFollowError
 from social.models import Notification
 
 
@@ -44,5 +45,28 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         self.assertEqual(notif.recipient, self.auth_user)
         self.assertEqual(notif.content, {'follower_id': sec_user.id, 'follower_name': sec_user.username})
 
-    def test_create_receive_follow_notification_raises_nvalid_follow_if_same_follower(self):
-        pass
+    def test_create_receive_follow_notification_raises_invalid_follow_if_same_follower(self):
+        with self.assertRaises(InvalidFollowError):
+            Notification.objects.create_receive_follow_notification(recipient=self.auth_user, follower=self.auth_user)
+
+    def test_create_receive_submission_like_notification(self):
+        sec_user = UserFactory()
+        submission = SubmissionFactory(author=self.auth_user)
+        notif = Notification.objects.create_receive_submission_like_notification(recipient=self.auth_user, submission=submission, liker=sec_user)
+        expected_content = {
+            'submission_id': submission.id,
+            'challenge_id': submission.challenge.id,
+            'challenge_name': submission.challenge.name,
+            'liker_id': sec_user.id,
+            'liker_name': sec_user.username
+        }
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(notif.type, RECEIVE_SUBMISSION_LIKE_NOTIFICATION)
+        self.assertEqual(notif.recipient, self.auth_user)
+        self.assertEqual(expected_content, notif.content)
+
+    def test_create_receive_submission_like_notification_doesnt_create_if_same_user(self):
+        submission = SubmissionFactory(author=self.auth_user)
+        notif = Notification.objects.create_receive_submission_like_notification(recipient=self.auth_user, submission=submission, liker=self.auth_user)
+        self.assertIsNone(notif)
+        self.assertEqual(Notification.objects.count(), 0)
