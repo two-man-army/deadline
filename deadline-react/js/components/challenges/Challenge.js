@@ -8,13 +8,13 @@ const Challenge = ({
   score,
   difficulty,
   onClick}) => (
-    <li data-subcategory-name={name} className='challenge' onClick={onClick}>
+    <li className='challenge' onClick={onClick}>
       <Link to={{pathname: url}}>
-        <section>
-          <div className='challenge'>
-            <h3>{name}</h3>
-            <p>Difficulty: {difficulty}</p>
-            <p>Score: {score}</p>
+        <section className='challenge-info'>
+          <div>
+            <h3 className='challenge-name'>{name}</h3>
+            <p className='difficulty'>Difficulty: {difficulty}/10</p>
+            <p className='score'>Score: {score}</p>
           </div>
           <div className='success-rate'>70%</div>
         </section>
@@ -25,8 +25,8 @@ const Challenge = ({
 Challenge.propTypes = {
   name: PropTypes.string.isRequired,
   url: PropTypes.string,
-  score: PropTypes.number,
-  difficulty: PropTypes.number,
+  score: PropTypes.number.isRequired,
+  difficulty: PropTypes.number.isRequired,
   onClick: PropTypes.func
 }
 
