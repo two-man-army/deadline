@@ -7,9 +7,10 @@ from accounts.models import User
 from challenges.models import SubCategory, UserSubcategoryProficiency
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
     NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
-    NW_ITEM_CHALLENGE_COMPLETION_POST
+    NW_ITEM_CHALLENGE_COMPLETION_POST, VALID_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONTENT_FIELDS
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
-    LikeAlreadyExistsError, NonExistentLikeError
+    LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
+    InvalidNotificationContentField
 
 
 class NewsfeedItemManager(models.Manager):
@@ -187,3 +188,25 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+@receiver(pre_save, sender=Notification)
+def notification_type_validation(sender, instance, *args, **kwargs):
+    # Validate that the type is valid and contains what we expect exactly
+    if instance.type not in VALID_NOTIFICATION_TYPES:
+        raise InvalidNotificationType(f'{instance.type} is not a valid NewsfeedItem type!')
+
+    # Assert that each field is present
+    required_fields = NOTIFICATION_TYPE_CONTENT_FIELDS[instance.type]
+    for field in required_fields:
+        if field not in instance.content:
+            raise MissingNotificationContentField(
+                f'The field {field} must be in the content of NewsfeedItem of type {instance.type}.')
+
+    # Assert that no other unnecessary fields are present
+    if len(required_fields) < len(instance.content.keys()):
+        # Some unnecessary field is present
+        for field in instance.content.keys():
+            if field not in required_fields:
+                raise InvalidNotificationContentField(
+                    f'The field {field} is not part of the expected content for {instance.type} and is unnecessary!')

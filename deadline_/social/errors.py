@@ -3,13 +3,29 @@ class InvalidNewsfeedItemType(Exception):
     pass
 
 
+class InvalidNotificationType(Exception):
+    """ Used for when a somebody tries to create a Notification with an invalid type """
+    pass
+
+
 class MissingNewsfeedItemContentField(Exception):
     """ Used for when a field is missing from NewsfeedItem's content field """
     pass
 
 
+class MissingNotificationContentField(Exception):
+    """ Used for when a field is missing from Notification's content field """
+    pass
+
+
 class InvalidNewsfeedItemContentField(Exception):
     """ Used for when a field which is not part of the NewsfeedItem's expected content fields
+        is added to it regardless """
+    pass
+
+
+class InvalidNotificationContentField(Exception):
+    """ Used for when a field which is not part of the Notification's expected content fields
         is added to it regardless """
     pass
 

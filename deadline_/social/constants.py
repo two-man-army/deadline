@@ -23,3 +23,8 @@ NEWSFEED_ITEMS_PER_PAGE = 15
 
 # the maximum time that can pass before a submission is deemed invalid for a CHALLENGE_COMPLETION post
 MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES = 10
+
+
+VALID_NOTIFICATION_TYPES = []
+# Holds the fields that must be populated on a notification type's content HStore field
+NOTIFICATION_TYPE_CONTENT_FIELDS = {}
