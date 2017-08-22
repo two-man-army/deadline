@@ -840,4 +840,37 @@ div.login-html input:focus {
 .subcategory section .align-center {
   text-align: center; }
 
+.challenges-page .subcategory-name {
+  color: #ff8606;
+  font-weight: normal; }
+
+.challenges {
+  display: flex;
+  flex-wrap: wrap; }
+  .challenges .challenge {
+    margin: 0 20px 20px 0;
+    background: #fff9f2; }
+    .challenges .challenge .challenge-info {
+      display: flex;
+      width: 336px;
+      height: 143px;
+      padding: 15px; }
+      .challenges .challenge .challenge-info .challenge-name {
+        margin: 0;
+        font-family: "Poppins Light";
+        font-size: 22px;
+        font-weight: normal;
+        color: #ff8606; }
+      .challenges .challenge .challenge-info .difficulty {
+        margin: 0;
+        font-family: "Poppins Light";
+        font-size: 14px;
+        color: #777777; }
+      .challenges .challenge .challenge-info .score {
+        font-family: "Poppins Light";
+        font-size: 16px;
+        color: #777777; }
+      .challenges .challenge .challenge-info .success-rate {
+        color: #777777; }
+
 /*# sourceMappingURL=style.css.map */

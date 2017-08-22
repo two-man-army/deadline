@@ -1,0 +1,48 @@
+.challenges-page {
+    .subcategory-name {
+        color: #ff8606;
+        font-weight: normal;
+    }
+}
+
+.challenges {
+    display: flex;
+    flex-wrap: wrap;
+
+    .challenge {
+        margin: 0 20px 20px 0;
+        background: #fff9f2;
+
+        .challenge-info {
+            display: flex;
+            width: 336px;
+            height: 143px;
+            padding: 15px;
+
+            .challenge-name {
+                margin: 0;
+                font-family: "Poppins Light";
+                font-size: 22px;
+                font-weight: normal;
+                color: #ff8606;
+            }
+
+            .difficulty  {
+                margin: 0;
+                font-family: "Poppins Light";
+                font-size: 14px;
+                color: #777777;
+            }
+
+            .score {
+                font-family: "Poppins Light";
+                font-size: 16px;
+                color: #777777;
+            }
+
+            .success-rate {
+                color: #777777;
+            }
+        }
+    }
+}
