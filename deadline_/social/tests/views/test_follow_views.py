@@ -1,6 +1,7 @@
 from rest_framework.test import APITestCase
 
 from accounts.models import User, Role
+from social.models import Notification
 
 
 class UserFollowViewTest(APITestCase):
@@ -18,6 +19,7 @@ class UserFollowViewTest(APITestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(self.second_user.followers.count(), 1)
         self.assertEqual(self.first_user.users_followed.count(), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.second_user).count(), 1)
 
     def test_cannot_follow_same_person_twice(self):
         self.client.post(f'/social/follow?target={self.second_user.id}', HTTP_AUTHORIZATION=self.first_user_auth_token)

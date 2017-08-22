@@ -14,7 +14,7 @@ from challenges.tests.factories import UserFactory, ChallengeDescFactory
 from challenges.models import (Challenge, Submission, Language, SubmissionVote, Proficiency,
                                UserSubcategoryProficiency, SubCategory, MainCategory)
 from social.constants import NW_ITEM_TEXT_POST
-from social.models import NewsfeedItem
+from social.models import NewsfeedItem, Notification
 
 
 class UserModelNewsfeedTest(TestCase):
@@ -156,6 +156,14 @@ class UserModelTest(TestCase):
 
         self.assertEqual(user_who_gets_followed.followers.count(), 1)
         self.assertEqual(user_who_gets_followed.users_followed.count(), 0)
+
+    def test_follow_creates_notification(self):
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)
+
+        follower.follow(user_who_gets_followed)
+
+        self.assertEqual(Notification.objects.filter(recipient=user_who_gets_followed).count(), 1)
 
     def test_cannot_have_duplicate_follower(self):
         user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)

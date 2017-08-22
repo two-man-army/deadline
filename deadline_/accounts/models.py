@@ -55,8 +55,11 @@ class User(AbstractBaseUser):
             .order_by('-created_at')[start_offset:end_limit]
 
     def follow(self, user):
+        from social.models import Notification
+
         if user in self.users_followed.all():
             raise UserAlreadyFollowedError(f'{self.username} has already followed {user.username}!')
+        Notification.objects.create_receive_follow_notification(recipient=user, follower=self)
         self.users_followed.add(user)
 
     def unfollow(self, user):
