@@ -7,8 +7,9 @@ from challenges.models import MainCategory, SubCategory, Proficiency, UserSubcat
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
 from social.constants import NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, \
-    NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, NEWSFEED_ITEM_TYPE_CONTENT_FIELDS
-from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
+    NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, \
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION
+from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike, Notification
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
@@ -253,6 +254,25 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
 
         self.assertEqual(nw_item.likes.count(), 1)
         self.assertEqual(nw_item.likes.first().author, self.auth_user)
+
+    def test_like_should_create_notification(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                              content={'content': 'Hello I like turtles'})
+        nw_item.like(UserFactory())
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first().type, RECEIVE_NW_ITEM_LIKE_NOTIFICATION)
+
+    def test_like_should_not_create_notification_if_forbidden(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                              content={'content': 'Hello I like turtles'})
+        nw_item.like(self.auth_user, create_notif=False)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_like_should_not_create_notification_if_author_is_liker(self):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                              content={'content': 'Hello I like turtles'})
+        nw_item.like(self.auth_user, create_notif=True)
+        self.assertEqual(Notification.objects.count(), 0)
 
     def test_duplicate_like_raises_error(self):
         nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,

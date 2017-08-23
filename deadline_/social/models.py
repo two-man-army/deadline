@@ -123,11 +123,17 @@ class NewsfeedItem(models.Model):
     def get_absolute_url(self):
         return f'/social/feed/items/{self.id}'
 
-    def like(self, user: User):
+    def like(self, user: User, create_notif=True):
         if NewsfeedItemLike.objects.filter(newsfeed_item=self, author=user).exists():
             raise LikeAlreadyExistsError(f'The Like from User {user.id} for Item {self.id} does already exists!')
 
-        return NewsfeedItemLike.objects.create(author=user, newsfeed_item=self)
+        nw_like = NewsfeedItemLike.objects.create(author=user, newsfeed_item=self)
+
+        if create_notif and user != self.author:
+            Notification.objects.create_receive_nw_item_like_notification(recipient=self.author, nw_item=self,
+                                                                          liker=user)
+
+        return nw_like
 
     def remove_like(self, user: User):
         like = NewsfeedItemLike.objects.filter(newsfeed_item=self, author=user).first()

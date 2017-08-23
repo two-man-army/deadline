@@ -149,7 +149,9 @@ def submission_vote_create_notification(sender, instance, created, *args, **kwar
     Creates a Notification when somebody has upvoted a user's submission
     """
     from social.models import Notification
-
+    # TODO: Move this to a function which is called in the VIEW which casts the like,
+    # TODO:     As the user might want to disable notifications from submission likes somewhere in his settings
+    # TODO:     and having it in a function separated will be clearer
     if created and instance.is_upvote and instance.author != instance.submission.author:
         Notification.objects.create_receive_submission_upvote_notification(
             recipient=instance.submission.author,
