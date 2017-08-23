@@ -1,13 +1,11 @@
-<<<<<<< HEAD
 """
 Universal errors that are used across the apps
 """
+class Error(Exception):
+    pass
 
 
 class FetchError(Exception):
-=======
-class Error(Exception):
->>>>>>> feature/social-aspect-chat
     pass
 
 
