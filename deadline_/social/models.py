@@ -143,6 +143,9 @@ class NewsfeedItem(models.Model):
 
         like.delete()
 
+    def add_comment(self, author: User, content: str):
+        return NewsfeedItemComment.objects.create(author=author, content=content, newsfeed_item=self)
+
 
 @receiver(pre_save, sender=NewsfeedItem)
 def nw_item_validation(sender, instance, *args, **kwargs):
