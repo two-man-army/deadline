@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'accounts',
     'challenges',
     'social',
+    'private_chat',
 ]
 
 REST_FRAMEWORK = {
@@ -83,6 +84,8 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = 5
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
+CHAT_WS_SERVER_HOST = 'localhost'
+CHAT_WS_SERVER_PORT = 5002
 
 ROOT_URLCONF = 'deadline.urls'
 
