@@ -3,11 +3,12 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from challenges.tests.base import TestHelperMixin
-from challenges.tests.factories import UserFactory, SubmissionFactory
-from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION
+from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory
+from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, \
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
-from social.models import Notification
+from social.models import Notification, NewsfeedItem
 
 
 class NotifiationItemTests(TestCase, TestHelperMixin):
@@ -70,3 +71,32 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         notif = Notification.objects.create_receive_submission_upvote_notification(recipient=self.auth_user, submission=submission, liker=self.auth_user)
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_receive_nw_item_like_notification(self):
+        sec_user = UserFactory()
+        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
+        expected_content = {'nw_content': nw_item.content,
+                            'nw_type': nw_item.type, 'liker_id': sec_user.id, 'liker_name': sec_user.username}
+
+        notif = Notification.objects.create_receive_nw_item_like_notification(recipient=self.auth_user,
+                                                                              nw_item=nw_item, liker=sec_user)
+
+        self.assertEqual(notif.type, RECEIVE_NW_ITEM_LIKE_NOTIFICATION)
+        self.assertEqual(notif.content, expected_content)
+        self.assertEqual(notif.recipient, self.auth_user)
+
+    def test_create_receive_nw_item_like_notification_doesnt_create_if_liker_is_recipient(self):
+        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
+        notif = Notification.objects.create_receive_nw_item_like_notification(recipient=self.auth_user,
+                                                                              nw_item=nw_item, liker=self.auth_user)
+        self.assertIsNone(notif)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_receive_nw_item_like_notification_raises_if_recipient_is_not_author(self):
+        """ This would mean that person A got a notification that somebody likes person B's nw_item """
+        sec_user = UserFactory()
+        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
+
+        with self.assertRaises(Exception):
+            Notification.objects.create_receive_nw_item_like_notification(recipient=sec_user,
+                                                                          nw_item=nw_item, liker=sec_user)
