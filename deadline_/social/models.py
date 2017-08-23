@@ -8,7 +8,8 @@ from challenges.models import SubCategory, UserSubcategoryProficiency
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
     NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
     NW_ITEM_CHALLENGE_COMPLETION_POST, VALID_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONTENT_FIELDS, \
-    RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_NW_ITEM_LIKE_NOTIFICATION
+    RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_NW_ITEM_LIKE_NOTIFICATION, \
+    NEW_CHALLENGE_NOTIFICATION
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -229,6 +230,15 @@ class NotificationManager(models.Manager):
         return self.create(recipient=recipient, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
                            content={'nw_content': nw_item.content,
                                     'liker_id': liker.id, 'liker_name': liker.username, 'nw_type': nw_item.type})
+
+    def create_new_challenge_notification(self, recipient: User, challenge: 'Challenge'):
+        """ A notification which notifies the user that a new challenge has appeared on the site"""
+        # TODO: Figure out a way to add new challenges and create notifications. Maybe add a created_on
+        # TODO:     - denoting when the challenge was created (not in the DB but in general) and only show recent ones?
+
+        return self.create(recipient=recipient, type=NEW_CHALLENGE_NOTIFICATION,
+                           content={'challenge_name': challenge.name, 'challenge_id': challenge.id,
+                                    'challenge_subcategory_name': challenge.category.name})
 
 
 class Notification(models.Model):

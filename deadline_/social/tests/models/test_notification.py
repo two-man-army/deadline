@@ -5,7 +5,7 @@ from django.test import TestCase
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory
 from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, \
-    RECEIVE_NW_ITEM_LIKE_NOTIFICATION
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem
@@ -100,3 +100,16 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         with self.assertRaises(Exception):
             Notification.objects.create_receive_nw_item_like_notification(recipient=sec_user,
                                                                           nw_item=nw_item, liker=sec_user)
+
+    def test_create_new_challenge_notification(self):
+        chal = ChallengeFactory()
+        expected_content = {
+            'challenge_name': chal.name,
+            'challenge_id': chal.id,
+            'challenge_subcategory_name': chal.category.name
+        }
+        notif = Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=chal)
+
+        self.assertEqual(notif.type, NEW_CHALLENGE_NOTIFICATION)
+        self.assertEqual(notif.recipient, self.auth_user)
+        self.assertEqual(expected_content, notif.content)
