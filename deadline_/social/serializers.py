@@ -13,6 +13,7 @@ from social.models import NewsfeedItemComment, NewsfeedItem, NewsfeedItemLike
 class NewsfeedItemCommentSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     replies = RecursiveField(many=True, read_only=True)
+    content = serializers.CharField(max_length=500, min_length=2, allow_blank=False)
 
     class Meta:
         model = NewsfeedItemComment

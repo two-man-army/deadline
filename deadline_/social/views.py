@@ -283,22 +283,22 @@ class NewsfeedItemLikeManageView(BaseManageView):
 
 
 # POST /feed/items/{newsfeed_item_id}/comments
-class NewsfeedItemCommentCreateView(CreateAPIView):
+class NewsfeedItemCommentCreateView(APIView):
     """
         Creates a comment for a NewsfeedItem
     """
     permission_classes = (IsAuthenticated, )
-    serializer_class = NewsfeedItemCommentSerializer
     model_classes = (NewsfeedItem, )
 
     @fetch_models
     def post(self, request, nw_item: NewsfeedItem, *args, **kwargs):
-        self.nw_item = nw_item
-        self.req_user = request.user
-        return super().post(request, *args, **kwargs)
+        ser = NewsfeedItemCommentSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(status=400, data={'error': ser.errors})
 
-    def perform_create(self, serializer):
-        return serializer.save(author_id=self.req_user.id, newsfeed_item_id=self.nw_item.id)
+        nw_item.add_comment(author=request.user, content=request.data['content'])
+
+        return Response(status=201)
 
 
 # POST /feed/items/{newsfeed_item_id}/comments/{comment_id}
