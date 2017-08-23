@@ -4,8 +4,9 @@ from django.test import TestCase
 
 from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
-from social.constants import NW_ITEM_TEXT_POST
-from social.models import NewsfeedItem, NewsfeedItemComment
+from challenges.tests.factories import UserFactory
+from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
+from social.models import NewsfeedItem, NewsfeedItemComment, Notification
 from social.serializers import NewsfeedItemCommentSerializer
 
 
@@ -23,14 +24,6 @@ class NewsfeedItemCommentTests(TestCase, TestHelperMixin):
         self.assertIn(self.comment_1, self.nw_item.comments.all())
         self.assertIn(self.comment_2, self.nw_item.comments.all())
         self.assertIn(self.comment_3, self.nw_item.comments.all())
-
-    def test_can_create_comment_from_newsfeed_item(self):
-        comment = self.nw_item.add_comment(author=self.auth_user, content='HelloHello')
-        self.assertEqual(NewsfeedItemComment.objects.count(), 4)
-        self.assertEqual(NewsfeedItemComment.objects.last(), comment)
-        self.assertEqual(comment.content, 'HelloHello')
-        self.assertEqual(comment.author, self.auth_user)
-        self.assertEqual(comment.newsfeed_item, self.nw_item)
 
     def test_can_add_reply(self):
         reply = self.comment_1.add_reply(self.auth_user, 'whats UP :)')

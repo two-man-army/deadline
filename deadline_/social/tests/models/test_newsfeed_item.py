@@ -8,7 +8,7 @@ from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
 from social.constants import NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, \
     NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, \
-    RECEIVE_NW_ITEM_LIKE_NOTIFICATION
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
 from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike, Notification
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
@@ -299,3 +299,36 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
                                               content={'content': 'Hello I like turtles'})
         with self.assertRaises(NonExistentLikeError):
             nw_item.remove_like(self.auth_user)
+
+    def test_can_create_comment_from_newsfeed_item(self):
+        self.nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                                   content={'content': 'Hello I like turtles'})
+        comment = self.nw_item.add_comment(author=self.auth_user, content='HelloHello')
+        self.assertEqual(NewsfeedItemComment.objects.count(), 1)
+        self.assertEqual(NewsfeedItemComment.objects.last(), comment)
+        self.assertEqual(comment.content, 'HelloHello')
+        self.assertEqual(comment.author, self.auth_user)
+        self.assertEqual(comment.newsfeed_item, self.nw_item)
+
+    def test_create_comment_adds_notification(self):
+        self.nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                                   content={'content': 'Hello I like turtles'})
+        sec_user = UserFactory()
+        comment = self.nw_item.add_comment(author=sec_user, content='HelloHello')
+        self.assertEqual(Notification.objects.count(), 1)
+        notif = Notification.objects.first()
+        self.assertEqual(notif.type, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION)
+        self.assertEqual(notif.recipient, self.nw_item.author)
+
+    def test_create_comment_doesnt_create_notification_if_specified(self):
+        self.nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                                   content={'content': 'Hello I like turtles'})
+        sec_user = UserFactory()
+        self.nw_item.add_comment(author=sec_user, content='HelloHello', to_notify=False)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_comment_doesnt_create_notification_if_author_is_recipient(self):
+        self.nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                                   content={'content': 'Hello I like turtles'})
+        self.nw_item.add_comment(author=self.auth_user, content='HelloHello', to_notify=True)
+        self.assertEqual(Notification.objects.count(), 0)

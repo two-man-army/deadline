@@ -143,7 +143,9 @@ class NewsfeedItem(models.Model):
 
         like.delete()
 
-    def add_comment(self, author: User, content: str):
+    def add_comment(self, author: User, content: str, to_notify: bool=True):
+        if to_notify and self.author != author:
+            Notification.objects.create_nw_item_comment_notification(recipient=self.author, commenter=author, nw_item=self)
         return NewsfeedItemComment.objects.create(author=author, content=content, newsfeed_item=self)
 
 

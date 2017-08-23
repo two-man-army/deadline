@@ -2,8 +2,8 @@ from rest_framework.test import APITestCase
 
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
-from social.constants import NW_ITEM_TEXT_POST
-from social.models import NewsfeedItem, NewsfeedItemComment
+from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
+from social.models import NewsfeedItem, NewsfeedItemComment, Notification
 
 
 class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
@@ -26,6 +26,9 @@ class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(nw_comment.author, self.auth_user)
         self.assertEqual(nw_comment.content, 'OK I WAS GONE FOR A MINUTE')
         self.assertIsNone(nw_comment.parent)
+        # Should also create a notification
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first().type, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION)
 
     def test_uneditable_fields_should_not_affect_creation(self):
         # fields like author and newsfeed item should be set by the view
