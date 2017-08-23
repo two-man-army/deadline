@@ -238,7 +238,7 @@ class Notification(models.Model):
         we need an HStore field to store data related to the type of the notification.
     """
     recipient = models.ForeignKey(User)
-    type = models.CharField(max_length=30)  # no other table for now
+    type = models.CharField(max_length=60)  # no other table for now
     content = HStoreField()  # varies depending on the type
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
