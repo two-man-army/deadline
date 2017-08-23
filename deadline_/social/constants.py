@@ -29,13 +29,17 @@ RECEIVE_FOLLOW_NOTIFICATION = 'RECEIVE_FOLLOW_NOTIFICATION'
 RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION = 'RECEIVE_SUBMISSION_LIKE_NOTIFICATION'
 RECEIVE_NW_ITEM_LIKE_NOTIFICATION = 'RECEIVE_NW_LIKE_NOTIFICATION'
 NEW_CHALLENGE_NOTIFICATION = 'NEW_CHALLENGE_NOTIFICATION'
+RECEIVE_NW_ITEM_COMMENT_NOTIFICATION = 'RECEIVE_NW_COMMENT_NOTIFICATION'
 
 VALID_NOTIFICATION_TYPES = [RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
-                            RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION]
+                            RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION,
+                            RECEIVE_NW_ITEM_COMMENT_NOTIFICATION]
 # Holds the fields that must be populated on a notification type's content HStore field
 NOTIFICATION_TYPE_CONTENT_FIELDS = {
     RECEIVE_FOLLOW_NOTIFICATION: ['follower_id', 'follower_name'],
     RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION: ['submission_id', 'challenge_id', 'challenge_name', 'liker_id', 'liker_name'],
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION: ['liker_id', 'liker_name', 'nw_type', 'nw_content'],
-    NEW_CHALLENGE_NOTIFICATION: ['challenge_name', 'challenge_id', 'challenge_subcategory_name']
+    NEW_CHALLENGE_NOTIFICATION: ['challenge_name', 'challenge_id', 'challenge_subcategory_name'],
+    RECEIVE_NW_ITEM_COMMENT_NOTIFICATION: ['nw_item_id', 'nw_item_type', 'nw_item_content',
+                                           'commenter_id', 'commenter_name']
 }

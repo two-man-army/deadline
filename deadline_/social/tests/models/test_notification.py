@@ -5,7 +5,7 @@ from django.test import TestCase
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory
 from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, \
-    RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem
@@ -113,3 +113,31 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         self.assertEqual(notif.type, NEW_CHALLENGE_NOTIFICATION)
         self.assertEqual(notif.recipient, self.auth_user)
         self.assertEqual(expected_content, notif.content)
+
+    def test_create_nw_item_comment_notification(self):
+        sec_user = UserFactory()
+        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
+        expected_content = {'commenter_name': sec_user.username, 'commenter_id': sec_user.id,
+                            'nw_item_content': nw_item.content, 'nw_item_id': nw_item.id, 'nw_item_type': nw_item.type}
+        notif = Notification.objects.create_nw_item_comment_notification(recipient=nw_item.author, nw_item=nw_item,
+                                                                         commenter=sec_user)
+
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first(), notif)
+        self.assertEqual(notif.type, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION)
+        self.assertEqual(notif.recipient, nw_item.author)
+        self.assertEqual(notif.content, expected_content)
+
+    def test_create_nw_item_comment_notification_doesnt_create_if_commenter_is_recipient(self):
+        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
+        notif = Notification.objects.create_nw_item_comment_notification(recipient=nw_item.author, nw_item=nw_item,
+                                                                         commenter=self.auth_user)
+        self.assertIsNone(notif)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_nw_item_comment_notification_raises_if_recipient_is_not_author(self):
+        sec_user = UserFactory()
+        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
+        with self.assertRaises(Exception):
+            Notification.objects.create_nw_item_comment_notification(recipient=sec_user, nw_item=nw_item,
+                                                                     commenter=sec_user)

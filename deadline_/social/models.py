@@ -9,7 +9,7 @@ from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_I
     NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
     NW_ITEM_CHALLENGE_COMPLETION_POST, VALID_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONTENT_FIELDS, \
     RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_NW_ITEM_LIKE_NOTIFICATION, \
-    NEW_CHALLENGE_NOTIFICATION
+    NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -242,6 +242,20 @@ class NotificationManager(models.Manager):
         return self.create(recipient=recipient, type=NEW_CHALLENGE_NOTIFICATION,
                            content={'challenge_name': challenge.name, 'challenge_id': challenge.id,
                                     'challenge_subcategory_name': challenge.category.name})
+
+    def create_nw_item_comment_notification(self, recipient: User, nw_item: NewsfeedItem, commenter: User):
+        """ A notification which notifies the user that somebody has commented on his NewsfeedItem """
+        if nw_item.author != recipient:
+            raise Exception('Tried to create a Notification about a received '
+                            "NewsfeedItem comment which was not the recipient's")
+        if commenter == recipient:
+            return
+
+        return self.create(recipient=recipient, type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION,
+                           content={'nw_item_content': nw_item.content, 'nw_item_id': nw_item.id,
+                                    'nw_item_type': nw_item.type,
+                                    'commenter_name': commenter.username,
+                                    'commenter_id': commenter.id})
 
 
 class Notification(models.Model):
