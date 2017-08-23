@@ -130,9 +130,9 @@ class SubmissionCommentSerializerTests(TestCase, TestHelperMixin):
         subm_comment = SubmissionComment.objects.create(submission=self.submission,
                                                         author=self.auth_user, content="Hello World")
 
-        expected_data = {'id': subm_comment.id, 'author': subm_comment.author.username, 'content': subm_comment.content}
+        expected_data = {'id': subm_comment.id, 'author': UserSerializer(subm_comment.author).data,
+                         'content': subm_comment.content, 'replies': []}
         received_data = SubmissionCommentSerializer(instance=subm_comment).data
-
         self.assertEqual(expected_data, received_data)
 
 
