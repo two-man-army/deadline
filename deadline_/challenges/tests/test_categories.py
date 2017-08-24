@@ -99,9 +99,9 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
         it needs to reflex the max score in a subcategory
         """
         c1 = Challenge(name='Sub1', difficulty=5, score=200, description=ChallengeDescFactory(),
-                      test_case_count=5, category=self.sub1)
+                       test_case_count=5, category=self.sub1)
         c2 = Challenge(name='Sub1_2', difficulty=5, score=200, description=ChallengeDescFactory(),
-                      test_case_count=5, category=self.sub1)
+                       test_case_count=5, category=self.sub1)
         c3 = Challenge(name='Sub2', difficulty=5, score=200, description=ChallengeDescFactory(),
                        test_case_count=5, category=self.sub2)
         c1.save(); c2.save(); c3.save()
