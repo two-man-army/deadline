@@ -173,7 +173,6 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         self.setup_proficiencies()
         subm = SubmissionFactory(author_id=self.auth_user.id)
         subm_comment = SubmissionCommentFactory(submission=subm, author=self.auth_user)
-
         notif = Notification.objects.create_submission_comment_notification(comment=subm_comment)
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)

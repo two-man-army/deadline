@@ -260,8 +260,12 @@ class SubmissionCommentCreateView(APIView):
         if isinstance(result, Response):
             return result  # validation error
 
-        submission.add_comment(author=request.user, content=comment_content)
+        self.add_comment(submission=submission, author=request.user, content=comment_content)
+
         return Response(status=201)
+
+    def add_comment(self, submission: Submission, author: User, content: str):
+        return submission.add_comment(author=author, content=content, to_notify=True)
 
     def validate_data(self, current_user, comment_content, challenge, submission):
         """
