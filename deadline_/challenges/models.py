@@ -32,6 +32,11 @@ class Challenge(models.Model):
     def get_absolute_url(self):
         return '/challenges/{}'.format(self.id)
 
+    def is_solved_by_user(self, user: User) -> bool:
+        """ Returns a boolean, indicating if the user has solved this challenge """
+        top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(self.id, user.id)
+        return top_user_submission is not None and top_user_submission.result_score == self.score
+
     def add_comment(self, author: User, content: str):
         return ChallengeComment.objects.create(author=author, content=content, challenge=self)
 
