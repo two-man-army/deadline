@@ -1,5 +1,6 @@
 import React from 'react'
 import Challenge from './Challenge'
+import { Link } from 'react-router-dom'
 import { getSubCategoryChallenges } from '../../requests'
 import { convertFromUrlToFriendlyText } from '../../helpers'
 
@@ -10,6 +11,7 @@ class ChallengesPage extends React.Component {
     this.state = {
       challenges: []
     }
+    this.subcategories = ['Recursion', 'Sorting', 'Greedy', 'Strings', 'Graphs', 'Miscellaneous']
 
     this.loadSubcategoryChallenges = this.loadSubcategoryChallenges.bind(this)
     this.loadSubcategoryChallenges()
@@ -29,10 +31,15 @@ class ChallengesPage extends React.Component {
 
     return (
       <section className='challenges-page main'>
-        <header>
-          <h2 className='subcategory-name'>{category}</h2>
-          <div className='subcategories'>
-            subcategories
+        <header className='challenges-header'>
+          <div className='current-subcategory'>
+            <h2 className='subcategory-name'>{category}</h2>
+            <p>some progress bar here</p>
+          </div>
+          <div className='challenges-nav'>
+            <ul>
+              {this.subcategories.map(subcat => <li><Link to=''>{subcat}</Link></li>)}
+            </ul>
           </div>
         </header>
         <ul className='challenges'>
