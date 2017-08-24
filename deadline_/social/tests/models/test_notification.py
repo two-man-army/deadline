@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory, SubmissionCommentFactory
+from errors import ForbiddenMethodError
 from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, \
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION
@@ -16,19 +17,24 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
 
+    def test_objects_create_raises_error(self):
+        with self.assertRaises(ForbiddenMethodError):
+            Notification.objects.create(recipient=self.auth_user, type=RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
+                                        content={'content': 'Hello I like turtles'})
+
     def test_model_save_raises_if_invalid_notification_type(self):
         """ An error should be raised if we enter an invalid newsfeeditem type """
         with self.assertRaises(InvalidNotificationType):
-            Notification.objects.create(recipient=self.auth_user, type='TANK',
-                                        content={'content': 'Hello I like turtles'})
+            Notification.objects._create(recipient=self.auth_user, type='TANK',
+                                         content={'content': 'Hello I like turtles'})
 
     @patch('social.models.VALID_NOTIFICATION_TYPES', ['test_type'])
     @patch('social.models.NOTIFICATION_TYPE_CONTENT_FIELDS', {'test_type': ['1', '2']})
     def test_model_save_raises_if_missing_newsfeed_content_field(self):
         """ Given a valid Newsfeed Type, an error should be raised if a required field is missing """
         with self.assertRaises(MissingNotificationContentField):
-            Notification.objects.create(recipient=self.auth_user, type='test_type',
-                                        content={})
+            Notification.objects._create(recipient=self.auth_user, type='test_type',
+                                         content={})
 
     @patch('social.models.VALID_NOTIFICATION_TYPES', ['test_type'])
     @patch('social.models.NOTIFICATION_TYPE_CONTENT_FIELDS', {'test_type': ['1', '2']})
@@ -36,8 +42,8 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         """ Given a valid Newsfeed Type, an error should be raised if an invalid field is added,
                 regardless if all the right ones are supplied (memory is expensive) """
         with self.assertRaises(InvalidNotificationContentField):
-            Notification.objects.create(recipient=self.auth_user, type='test_type',
-                                        content={'1': 'Hello I like turtles', '2': 'pf', 'tank': 'yo'})
+            Notification.objects._create(recipient=self.auth_user, type='test_type',
+                                         content={'1': 'Hello I like turtles', '2': 'pf', 'tank': 'yo'})
 
     def test_create_receive_follow_notification(self):
         sec_user = UserFactory()

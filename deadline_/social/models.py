@@ -5,6 +5,7 @@ from django.dispatch import receiver
 
 from accounts.models import User
 from challenges.models import SubCategory, UserSubcategoryProficiency, SubmissionComment
+from errors import ForbiddenMethodError
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
     NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
     NW_ITEM_CHALLENGE_COMPLETION_POST, VALID_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONTENT_FIELDS, \
@@ -196,6 +197,17 @@ class NotificationManager(models.Manager):
     """
     Use a custom Notification manager for specific type of Notification creation
     """
+    def create(self, *args, **kwargs):
+        raise ForbiddenMethodError('This method is not intended to be used. '
+                                   'Please use any of the create_xxx methods to create a specific type of notification')
+
+    def _create(self, *args, **kwargs):
+        """
+        The create() method, intentionally marked as private as it is not intended for usage at all,
+            except for testing purposes
+        """
+        return super().create(*args, **kwargs)
+
     def create_receive_follow_notification(self, recipient: User, follower: User):
         """
         Creates a Notification that a User has been followed
@@ -203,11 +215,11 @@ class NotificationManager(models.Manager):
         """
         if follower == recipient:
             raise InvalidFollowError('You cannot follow yourself!')
-        return self.create(recipient=recipient, type=RECEIVE_FOLLOW_NOTIFICATION,
-                           content={
-                               'follower_id': follower.id,
-                               'follower_name': follower.username
-                           })
+        return self._create(recipient=recipient, type=RECEIVE_FOLLOW_NOTIFICATION,
+                            content={
+                                'follower_id': follower.id,
+                                'follower_name': follower.username
+                            })
 
     def create_receive_submission_upvote_notification(self, submission: 'Submission', liker: User):
         """
@@ -217,69 +229,69 @@ class NotificationManager(models.Manager):
         if liker == submission.author:
             return
 
-        return self.create(recipient=submission.author, type=RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
-                           content={
-                               'submission_id': submission.id,
-                               'challenge_id': submission.challenge.id,
-                               'challenge_name': submission.challenge.name,
-                               'liker_id': liker.id,
-                               'liker_name': liker.username
-                           })
+        return self._create(recipient=submission.author, type=RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
+                            content={
+                                'submission_id': submission.id,
+                                'challenge_id': submission.challenge.id,
+                                'challenge_name': submission.challenge.name,
+                                'liker_id': liker.id,
+                                'liker_name': liker.username
+                            })
 
     def create_receive_nw_item_like_notification(self, nw_item: NewsfeedItem, liker: User):
         if liker == nw_item.author:
             return
 
-        return self.create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
-                           content={'nw_content': nw_item.content,
-                                    'liker_id': liker.id, 'liker_name': liker.username, 'nw_type': nw_item.type})
+        return self._create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
+                            content={'nw_content': nw_item.content,
+                                     'liker_id': liker.id, 'liker_name': liker.username, 'nw_type': nw_item.type})
 
     def create_new_challenge_notification(self, recipient: User, challenge: 'Challenge'):
         """ A notification which notifies the user that a new challenge has appeared on the site"""
         # TODO: Figure out a way to add new challenges and create notifications. Maybe add a created_on
         # TODO:     - denoting when the challenge was created (not in the DB but in general) and only show recent ones?
 
-        return self.create(recipient=recipient, type=NEW_CHALLENGE_NOTIFICATION,
-                           content={'challenge_name': challenge.name, 'challenge_id': challenge.id,
-                                    'challenge_subcategory_name': challenge.category.name})
+        return self._create(recipient=recipient, type=NEW_CHALLENGE_NOTIFICATION,
+                            content={'challenge_name': challenge.name, 'challenge_id': challenge.id,
+                                     'challenge_subcategory_name': challenge.category.name})
 
     def create_nw_item_comment_notification(self, nw_item: NewsfeedItem, commenter: User):
         """ A notification which notifies the user that somebody has commented on his NewsfeedItem """
         if commenter == nw_item.author:
             return
 
-        return self.create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION,
-                           content={'nw_item_content': nw_item.content, 'nw_item_id': nw_item.id,
-                                    'nw_item_type': nw_item.type,
-                                    'commenter_name': commenter.username,
-                                    'commenter_id': commenter.id})
+        return self._create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION,
+                            content={'nw_item_content': nw_item.content, 'nw_item_id': nw_item.id,
+                                     'nw_item_type': nw_item.type,
+                                     'commenter_name': commenter.username,
+                                     'commenter_id': commenter.id})
 
     def create_nw_item_comment_reply_notification(self, nw_comment: NewsfeedItemComment, reply: NewsfeedItemComment):
         if nw_comment.author == reply.author:
             return
 
-        return self.create(recipient=nw_comment.author, type=RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION,
-                           content={
-                               'nw_comment_id': nw_comment.id,
-                               'commenter_id': reply.author.id,
-                               'commenter_name': reply.author.username,
-                               'comment_content': reply.content
-                           })
+        return self._create(recipient=nw_comment.author, type=RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION,
+                            content={
+                                'nw_comment_id': nw_comment.id,
+                                'commenter_id': reply.author.id,
+                                'commenter_name': reply.author.username,
+                                'comment_content': reply.content
+                            })
 
     def create_submission_comment_notification(self, comment: SubmissionComment):
         if comment.author == comment.submission.author:
             return
 
-        return self.create(recipient=comment.submission.author, type=RECEIVE_SUBMISSION_COMMENT_NOTIFICATION,
-                           content={
-                               'submission_id': comment.submission.id,
-                               'challenge_id': comment.submission.challenge.id,
-                               'challenge_name': comment.submission.challenge.name,
-                               'commenter_name': comment.author.username,
-                               'commenter_id': comment.author.id,
-                               'comment_content': comment.content,
-                               'comment_id': comment.id
-                           })
+        return self._create(recipient=comment.submission.author, type=RECEIVE_SUBMISSION_COMMENT_NOTIFICATION,
+                            content={
+                                'submission_id': comment.submission.id,
+                                'challenge_id': comment.submission.challenge.id,
+                                'challenge_name': comment.submission.challenge.name,
+                                'commenter_name': comment.author.username,
+                                'commenter_id': comment.author.id,
+                                'comment_content': comment.content,
+                                'comment_id': comment.id
+                            })
 
 
 class Notification(models.Model):
