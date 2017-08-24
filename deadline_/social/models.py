@@ -247,6 +247,7 @@ class NotificationManager(models.Manager):
 
     def create_nw_item_comment_notification(self, recipient: User, nw_item: NewsfeedItem, commenter: User):
         """ A notification which notifies the user that somebody has commented on his NewsfeedItem """
+        # TODO(NEXT): Remove recipient caue it doesnt make sense
         if nw_item.author != recipient:
             raise Exception('Tried to create a Notification about a received '
                             "NewsfeedItem comment which was not the recipient's")
@@ -258,6 +259,18 @@ class NotificationManager(models.Manager):
                                     'nw_item_type': nw_item.type,
                                     'commenter_name': commenter.username,
                                     'commenter_id': commenter.id})
+
+    def create_nw_item_comment_reply_notification(self, nw_comment: NewsfeedItemComment, reply: NewsfeedItemComment):
+        if nw_comment.author == reply.author:
+            return
+
+        return self.create(recipient=nw_comment.author, type=RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION,
+                           content={
+                               'nw_comment_id': nw_comment.id,
+                               'commenter_id': reply.author.id,
+                               'commenter_name': reply.author.username,
+                               'comment_content': reply.content
+                           })
 
 
 class Notification(models.Model):
