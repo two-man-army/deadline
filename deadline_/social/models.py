@@ -131,8 +131,7 @@ class NewsfeedItem(models.Model):
         nw_like = NewsfeedItemLike.objects.create(author=user, newsfeed_item=self)
 
         if create_notif and user != self.author:
-            Notification.objects.create_receive_nw_item_like_notification(recipient=self.author, nw_item=self,
-                                                                          liker=user)
+            Notification.objects.create_receive_nw_item_like_notification(nw_item=self, liker=user)
 
         return nw_like
 
@@ -145,7 +144,7 @@ class NewsfeedItem(models.Model):
 
     def add_comment(self, author: User, content: str, to_notify: bool=True):
         if to_notify and self.author != author:
-            Notification.objects.create_nw_item_comment_notification(recipient=self.author, commenter=author, nw_item=self)
+            Notification.objects.create_nw_item_comment_notification(commenter=author, nw_item=self)
         return NewsfeedItemComment.objects.create(author=author, content=content, newsfeed_item=self)
 
 
@@ -209,17 +208,15 @@ class NotificationManager(models.Manager):
                                'follower_name': follower.username
                            })
 
-    def create_receive_submission_upvote_notification(self, recipient: User, submission: 'Submission', liker: User):
+    def create_receive_submission_upvote_notification(self, submission: 'Submission', liker: User):
         """
         Creates a Notification that a User has liked your submission
         ex: Stanislav has liked your Submission for Challenge Robert's Pass
         """
-        if recipient != submission.author:
-            raise Exception("Tried to create a Notification for a submission like which was not the recipient's")
-        if liker == recipient:
+        if liker == submission.author:
             return
 
-        return self.create(recipient=recipient, type=RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
+        return self.create(recipient=submission.author, type=RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
                            content={
                                'submission_id': submission.id,
                                'challenge_id': submission.challenge.id,
@@ -228,14 +225,11 @@ class NotificationManager(models.Manager):
                                'liker_name': liker.username
                            })
 
-    def create_receive_nw_item_like_notification(self, recipient: User, nw_item: NewsfeedItem, liker: User):
-        if nw_item.author != recipient:
-            raise Exception('Tried to create a Notification about a received '
-                            "NewsfeedItem like which was not the recipient's")
-        if liker == recipient:
+    def create_receive_nw_item_like_notification(self, nw_item: NewsfeedItem, liker: User):
+        if liker == nw_item.author:
             return
 
-        return self.create(recipient=recipient, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
+        return self.create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
                            content={'nw_content': nw_item.content,
                                     'liker_id': liker.id, 'liker_name': liker.username, 'nw_type': nw_item.type})
 
@@ -248,16 +242,12 @@ class NotificationManager(models.Manager):
                            content={'challenge_name': challenge.name, 'challenge_id': challenge.id,
                                     'challenge_subcategory_name': challenge.category.name})
 
-    def create_nw_item_comment_notification(self, recipient: User, nw_item: NewsfeedItem, commenter: User):
+    def create_nw_item_comment_notification(self, nw_item: NewsfeedItem, commenter: User):
         """ A notification which notifies the user that somebody has commented on his NewsfeedItem """
-        # TODO(NEXT): Remove recipient caue it doesnt make sense
-        if nw_item.author != recipient:
-            raise Exception('Tried to create a Notification about a received '
-                            "NewsfeedItem comment which was not the recipient's")
-        if commenter == recipient:
+        if commenter == nw_item.author:
             return
 
-        return self.create(recipient=recipient, type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION,
+        return self.create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION,
                            content={'nw_item_content': nw_item.content, 'nw_item_id': nw_item.id,
                                     'nw_item_type': nw_item.type,
                                     'commenter_name': commenter.username,

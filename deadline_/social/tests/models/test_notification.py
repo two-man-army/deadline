@@ -54,7 +54,7 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
     def test_create_receive_submission_upvote_notification(self):
         sec_user = UserFactory()
         submission = SubmissionFactory(author=self.auth_user)
-        notif = Notification.objects.create_receive_submission_upvote_notification(recipient=self.auth_user, submission=submission, liker=sec_user)
+        notif = Notification.objects.create_receive_submission_upvote_notification(submission=submission, liker=sec_user)
         expected_content = {
             'submission_id': submission.id,
             'challenge_id': submission.challenge.id,
@@ -69,7 +69,7 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
 
     def test_create_receive_submission_upvote_notification_doesnt_create_if_same_user(self):
         submission = SubmissionFactory(author=self.auth_user)
-        notif = Notification.objects.create_receive_submission_upvote_notification(recipient=self.auth_user, submission=submission, liker=self.auth_user)
+        notif = Notification.objects.create_receive_submission_upvote_notification(submission=submission, liker=self.auth_user)
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)
 
@@ -79,8 +79,7 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         expected_content = {'nw_content': nw_item.content,
                             'nw_type': nw_item.type, 'liker_id': sec_user.id, 'liker_name': sec_user.username}
 
-        notif = Notification.objects.create_receive_nw_item_like_notification(recipient=self.auth_user,
-                                                                              nw_item=nw_item, liker=sec_user)
+        notif = Notification.objects.create_receive_nw_item_like_notification(nw_item=nw_item, liker=sec_user)
 
         self.assertEqual(notif.type, RECEIVE_NW_ITEM_LIKE_NOTIFICATION)
         self.assertEqual(notif.content, expected_content)
@@ -88,19 +87,9 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
 
     def test_create_receive_nw_item_like_notification_doesnt_create_if_liker_is_recipient(self):
         nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
-        notif = Notification.objects.create_receive_nw_item_like_notification(recipient=self.auth_user,
-                                                                              nw_item=nw_item, liker=self.auth_user)
+        notif = Notification.objects.create_receive_nw_item_like_notification(nw_item=nw_item, liker=self.auth_user)
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)
-
-    def test_create_receive_nw_item_like_notification_raises_if_recipient_is_not_author(self):
-        """ This would mean that person A got a notification that somebody likes person B's nw_item """
-        sec_user = UserFactory()
-        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
-
-        with self.assertRaises(Exception):
-            Notification.objects.create_receive_nw_item_like_notification(recipient=sec_user,
-                                                                          nw_item=nw_item, liker=sec_user)
 
     def test_create_new_challenge_notification(self):
         chal = ChallengeFactory()
@@ -120,8 +109,7 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
         expected_content = {'commenter_name': sec_user.username, 'commenter_id': sec_user.id,
                             'nw_item_content': nw_item.content, 'nw_item_id': nw_item.id, 'nw_item_type': nw_item.type}
-        notif = Notification.objects.create_nw_item_comment_notification(recipient=nw_item.author, nw_item=nw_item,
-                                                                         commenter=sec_user)
+        notif = Notification.objects.create_nw_item_comment_notification(nw_item=nw_item, commenter=sec_user)
 
         self.assertEqual(Notification.objects.count(), 1)
         self.assertEqual(Notification.objects.first(), notif)
@@ -131,17 +119,9 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
 
     def test_create_nw_item_comment_notification_doesnt_create_if_commenter_is_recipient(self):
         nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
-        notif = Notification.objects.create_nw_item_comment_notification(recipient=nw_item.author, nw_item=nw_item,
-                                                                         commenter=self.auth_user)
+        notif = Notification.objects.create_nw_item_comment_notification(nw_item=nw_item, commenter=self.auth_user)
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)
-
-    def test_create_nw_item_comment_notification_raises_if_recipient_is_not_author(self):
-        sec_user = UserFactory()
-        nw_item = NewsfeedItem.objects.create_challenge_link(challenge=ChallengeFactory(), author=self.auth_user)
-        with self.assertRaises(Exception):
-            Notification.objects.create_nw_item_comment_notification(recipient=sec_user, nw_item=nw_item,
-                                                                     commenter=sec_user)
 
     def test_create_nw_item_comment_reply_notif(self):
         sec_user = UserFactory()

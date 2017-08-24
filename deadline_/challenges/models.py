@@ -154,7 +154,6 @@ def submission_vote_create_notification(sender, instance, created, *args, **kwar
     # TODO:     and having it in a function separated will be clearer
     if created and instance.is_upvote and instance.author != instance.submission.author:
         Notification.objects.create_receive_submission_upvote_notification(
-            recipient=instance.submission.author,
             submission=instance.submission,
             liker=instance.author)
 
