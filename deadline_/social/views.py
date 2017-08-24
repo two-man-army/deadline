@@ -97,12 +97,9 @@ class SubmissionLinkPostCreateView(APIView):
             return Response(status=404, data={'error': f'Submission with ID {submission_id} does not exist!'})
 
         # validate that the current User is either the author or has solved it perfectly, otherwise he cannot share it
-        if submission.author_id != self.request.user.id:
-            top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(submission.challenge.id,
-                                                                                         self.request.user.id)
-            if top_user_submission is None or top_user_submission.result_score != submission.challenge.score:
-                # User has not fully solved this and as such does not have access to the solution
-                return Response(data={'error': 'You have not fully solved the challenge'}, status=400)
+        if submission.author_id != self.request.user.id and not submission.challenge.is_solved_by_user(self.request.user):
+            # User has not fully solved this and as such does not have access to the solution
+            return Response(data={'error': 'You have not fully solved the challenge'}, status=400)
 
         NewsfeedItem.objects.create_submission_link(submission=submission, author=request.user)
         return Response(status=201)

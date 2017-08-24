@@ -222,11 +222,9 @@ class SubmissionDetailView(RetrieveAPIView):
                             status=400)
 
         # validate that the current User is either the author or has solved it perfectly
-        if submission.author_id != self.request.user.id:
-            top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge.id, self.request.user.id)
-            if top_user_submission is None or top_user_submission.result_score != challenge.score:
-                # User has not fully solved this and as such does not have access to the solution
-                return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+        if submission.author_id != self.request.user.id and not challenge.is_solved_by_user(self.request.user):
+            # User has not fully solved this and as such does not have access to the solution
+            return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
 
         return challenge, submission
 
@@ -288,11 +286,9 @@ class SubmissionCommentCreateView(APIView):
             )
 
         # validate that the current User is either the author or has solved it perfectly
-        if submission.author_id != current_user.id:
-            top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge.id, current_user.id)
-            if top_user_submission is None or top_user_submission.result_score != challenge.score:
-                # User has not fully solved this and as such does not have access to the solution
-                return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+        if submission.author_id != current_user.id and not challenge.is_solved_by_user(current_user):
+            # User has not fully solved this and as such does not have access to the solution
+            return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
 
 
 # POST /challenges/{challenge_id}/submissions/{submission_id}/comments/{comment_id}
@@ -312,13 +308,10 @@ class SubmissionCommentReplyCreateView(CreateAPIView):
             return Response(
                 status=400, data={'error': f'Comment {submission_comment.id} does not belong to Submission {submission.id}'}
             )
-        # TODO: Refactor into a function and mock in tests
         # validate that the current User is either the author or has solved it perfectly
-        if submission.author_id != request.user.id:
-            top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(challenge.id, request.user.id)
-            if top_user_submission is None or top_user_submission.result_score != challenge.score:
-                # User has not fully solved this and as such does not have access to the solution
-                return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+        if submission.author_id != request.user.id and not challenge.is_solved_by_user(request.user):
+            # User has not fully solved this and as such does not have access to the solution
+            return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
 
         self.submission = submission
         self.user = request.user
