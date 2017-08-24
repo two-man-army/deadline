@@ -304,10 +304,8 @@ class NewsfeedItemCommentCreateView(APIView):
 # POST /feed/items/{newsfeed_item_id}/comments/{comment_id}
 class NewsfeedItemCommentReplyCreateView(CreateAPIView):
     permission_classes = (IsAuthenticated, )
-    serializer_class = NewsfeedItemCommentSerializer
     model_classes = (NewsfeedItem, NewsfeedItemComment)
-    # TODO: Decide if better way to create such a comment(reply) is to use a Serializer or the add_reply method
-    # I think its overkill to use a serializer for now, August 14th
+
     @fetch_models
     def post(self, request, nw_item: NewsfeedItem, nw_item_comment: NewsfeedItemComment, *args, **kwargs):
         if nw_item_comment.newsfeed_item_id != nw_item.id:
@@ -315,10 +313,10 @@ class NewsfeedItemCommentReplyCreateView(CreateAPIView):
                 status=400, data={'error': f'Comment {nw_item_comment.id} does not belong to NewsfeedItem {nw_item.id}'}
             )
 
-        self.nw_item = nw_item
-        self.user = request.user
-        self.comment = nw_item_comment
-        return super().post(request, *args, **kwargs)
+        ser = NewsfeedItemCommentSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(status=400, data={'error': ser.errors})
 
-    def perform_create(self, serializer):
-        return serializer.save(author_id=self.user.id, newsfeed_item_id=self.nw_item.id, parent=self.comment)
+        nw_item_comment.add_reply(author=request.user, content=request.data['content'])
+
+        return Response(status=201)
