@@ -708,8 +708,13 @@ class SubmissionCommentViewTest(APITestCase, TestHelperMixin):
 
     def test_create_comment(self):
         # create a solved submission for auth_user to give him access
+        Submission.objects.create(language=self.python_language, challenge=self.c1, author=self.auth_user,
+                                  result_score=self.c1.score, pending=False, code="")
+
+        us = UserFactory()
         Submission.objects.create(language=self.python_language, challenge=self.c1,
-                                  author=UserFactory(), code="", result_score=self.c1.score, pending=False)
+                                  author=us, code="", result_score=self.c1.score, pending=False)
+
         response = self.client.post(f'/challenges/{self.c1.id}/submissions/{self.submission.id}/comments',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'Hello World'})
