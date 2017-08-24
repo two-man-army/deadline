@@ -63,3 +63,13 @@ class TestHelperMixin:
         return Challenge.objects.create(name=f'Sample Challenge{randint(1, 100)}', difficulty=randint(1, 10),
                                         score=randint(1, 100), description=ChallengeDescFactory(),
                                         test_case_count=randint(1, 20), category=sub_cat)
+
+    def setup_proficiencies(self):
+        """
+        Creates a couple of Proficiency models
+        """
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        Proficiency.objects.create(name='newb', needed_percentage=25)
+        Proficiency.objects.create(name='med', needed_percentage=50)
+        Proficiency.objects.create(name='advanced', needed_percentage=75)
+        Proficiency.objects.create(name='master', needed_percentage=100)
