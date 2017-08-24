@@ -9,7 +9,7 @@ from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_I
     NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
     NW_ITEM_CHALLENGE_COMPLETION_POST, VALID_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONTENT_FIELDS, \
     RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_NW_ITEM_LIKE_NOTIFICATION, \
-    NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
+    NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -179,8 +179,11 @@ class NewsfeedItemComment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
 
-    def add_reply(self, author, content):
-        return NewsfeedItemComment.objects.create(newsfeed_item=self.newsfeed_item, parent=self, author=author, content=content)
+    def add_reply(self, author, content, to_notify=True):
+        reply = NewsfeedItemComment.objects.create(newsfeed_item=self.newsfeed_item, parent=self, author=author, content=content)
+        if to_notify and author != self.author:
+            Notification.objects.create_nw_item_comment_reply_notification(nw_comment=self, reply=reply)
+        return reply
 
 
 class NewsfeedItemLike(models.Model):

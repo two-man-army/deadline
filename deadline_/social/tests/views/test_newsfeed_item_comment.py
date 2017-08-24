@@ -1,9 +1,13 @@
+from unittest.mock import patch, MagicMock
+
 from rest_framework.test import APITestCase
 
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
-from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
+from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
+    RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION
 from social.models import NewsfeedItem, NewsfeedItemComment, Notification
+from social.views import NewsfeedItemCommentReplyCreateView
 
 
 class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
@@ -84,6 +88,9 @@ class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(reply.author, self.auth_user)
         self.assertEqual(reply.newsfeed_item, self.nw_item)
         self.assertEqual(reply.parent, self.nw_comment)
+        # Should also create a notification
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first().type, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION)
 
     def test_read_only_fields_should_not_affect_creation(self):
         new_nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
@@ -104,6 +111,25 @@ class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(reply.author, self.auth_user)
         self.assertEqual(reply.newsfeed_item, self.nw_item)
         self.assertEqual(reply.parent, self.nw_comment)
+        # Should also create a notification
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first().type, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION)
+
+    @patch('social.views.NewsfeedItemCommentReplyCreateView.create_reply')
+    def test_view_calls_add_reply(self, mock_cr_repl):
+        self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{self.nw_comment.id}',
+                         HTTP_AUTHORIZATION=self.auth_token,
+                         data={'content': 'No rest for the wicked'})
+        mock_cr_repl.assert_called_once_with(author=self.auth_user, nw_item_comment=self.nw_comment,
+                                             content='No rest for the wicked')
+
+    def test_create_reply_calls_add_reply(self):
+        add_reply_mock = MagicMock()
+        comment_mock = MagicMock(add_reply=add_reply_mock)
+        NewsfeedItemCommentReplyCreateView().create_reply(author=self.auth_user, nw_item_comment=comment_mock,
+                                                          content='No rest for the wicked')
+
+        add_reply_mock.assert_called_once_with(to_notify=True, content='No rest for the wicked', author=self.auth_user)
 
     def test_unauth_should_401(self):
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{self.nw_comment.id}',

@@ -5,7 +5,8 @@ from django.test import TestCase
 from accounts.serializers import UserSerializer
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory
-from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
+from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
+    RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION
 from social.models import NewsfeedItem, NewsfeedItemComment, Notification
 from social.serializers import NewsfeedItemCommentSerializer
 
@@ -13,6 +14,7 @@ from social.serializers import NewsfeedItemCommentSerializer
 class NewsfeedItemCommentTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
+        self.second_user = UserFactory()
         self.nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
                                                    content={'content': 'Hello I like turtles'})
         self.comment_1 = NewsfeedItemComment.objects.create(author=self.auth_user, content='name', newsfeed_item=self.nw_item)
@@ -26,13 +28,23 @@ class NewsfeedItemCommentTests(TestCase, TestHelperMixin):
         self.assertIn(self.comment_3, self.nw_item.comments.all())
 
     def test_can_add_reply(self):
-        reply = self.comment_1.add_reply(self.auth_user, 'whats UP :)')
+        reply = self.comment_1.add_reply(self.second_user, 'whats UP :)')
 
         self.assertEqual(self.comment_1.replies.count(), 1)
         self.assertEqual(self.comment_1.replies.first(), reply)
-        self.assertEqual(reply.author, self.auth_user)
+        self.assertEqual(reply.author, self.second_user)
         self.assertEqual(reply.newsfeed_item, self.comment_1.newsfeed_item)
         self.assertEqual(reply.content, 'whats UP :)')
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first().type, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION)
+
+    def test_add_reply_doesnt_create_notification_if_person_replies_to_himself(self):
+        self.comment_1.add_reply(self.auth_user, 'whats UP :)', to_notify=True)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_add_reply_doesnt_create_notif_if_said(self):
+        self.comment_1.add_reply(self.second_user, 'whats UP :)', to_notify=False)
+        self.assertEqual(Notification.objects.count(), 0)
 
     def test_deserialization(self):
         ser = NewsfeedItemCommentSerializer(data={'content': 'Tankkk'})
