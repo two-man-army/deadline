@@ -3,10 +3,10 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from challenges.tests.base import TestHelperMixin
-from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory
+from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory, SubmissionCommentFactory
 from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, \
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
-    RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION
+    RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -151,5 +151,29 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
                                                    content='secured')
         notif = Notification.objects.create_nw_item_comment_reply_notification(nw_comment=nw_comment, reply=reply)
 
+        self.assertIsNone(notif)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_submission_comment_notification(self):
+        self.setup_proficiencies()
+        subm = SubmissionFactory(author_id=self.auth_user.id)
+        subm_comment = SubmissionCommentFactory(submission=subm)
+        expected_content = {
+            'submission_id': subm.id, 'challenge_id': subm.challenge.id, 'challenge_name': subm.challenge.name,
+            'commenter_name': subm_comment.author.username, 'comment_content': subm_comment.content,
+            'comment_id': subm_comment.id, 'commenter_id': subm_comment.author.id,
+        }
+
+        notif = Notification.objects.create_submission_comment_notification(comment=subm_comment)
+        self.assertEqual(notif.type, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION)
+        self.assertEqual(notif.recipient, subm.author)
+        self.assertEqual(notif.content, expected_content)
+
+    def test_create_submission_comment_notification_not_created_if_author_comments_himself(self):
+        self.setup_proficiencies()
+        subm = SubmissionFactory(author_id=self.auth_user.id)
+        subm_comment = SubmissionCommentFactory(submission=subm, author=self.auth_user)
+
+        notif = Notification.objects.create_submission_comment_notification(comment=subm_comment)
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)
