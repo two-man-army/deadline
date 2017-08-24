@@ -412,7 +412,7 @@ div.login-html input:focus {
     display: flex;
     flex: 1; }
   .dashboard .main {
-    padding: 20px 30px 18px 30px;
+    padding: 30px 30px 18px 30px;
     margin: 30px 20px 20px 30px;
     background: #ffffff;
     display: flex;
@@ -840,8 +840,25 @@ div.login-html input:focus {
 .subcategory section .align-center {
   text-align: center; }
 
+.challenges-page .challenges-header {
+  display: flex; }
+  .challenges-page .challenges-header .current-subcategory {
+    flex: 1; }
+.challenges-page .challenges-nav ul {
+  display: flex;
+  font-family: "Poppins Regular";
+  font-weight: normal;
+  font-size: 18px; }
+  .challenges-page .challenges-nav ul li {
+    margin-right: 30px; }
+    .challenges-page .challenges-nav ul li:last-of-type {
+      margin: 0; }
+    .challenges-page .challenges-nav ul li a {
+      color: #999999; }
 .challenges-page .subcategory-name {
   color: #ff8606;
+  font-size: 24px;
+  font-family: "Poppins Light";
   font-weight: normal; }
 
 .challenges {

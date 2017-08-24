@@ -1,6 +1,37 @@
 .challenges-page {
+    .challenges-header {
+        display: flex;
+
+        .current-subcategory {
+            flex: 1;
+        }
+    }
+
+    .challenges-nav {
+        ul  {
+            display: flex;
+            font-family: "Poppins Regular";
+            font-weight: normal;
+            font-size: 18px;
+
+            li {
+                margin-right: 30px;
+
+                &:last-of-type {
+                    margin: 0;
+                }
+
+                a {
+                    color: #999999;
+                }
+            }
+        }
+    }
+
     .subcategory-name {
         color: #ff8606;
+        font-size: 24px;
+        font-family: "Poppins Light";
         font-weight: normal;
     }
 }
