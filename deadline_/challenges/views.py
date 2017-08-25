@@ -313,11 +313,11 @@ class SubmissionCommentReplyCreateView(CreateAPIView):
             # User has not fully solved this and as such does not have access to the solution
             return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
 
-        ser = SubmissionCommentSerializer(data=self.request.data)
+        ser = SubmissionCommentSerializer(data=request.data)
         if not ser.is_valid():
             return Response(data={'error': ser.errors}, status=400)
 
-        submission_comment.add_reply(author=self.request.user, content=self.request.data['content'], to_notify=True)
+        submission_comment.add_reply(author=request.user, content=request.data['content'], to_notify=True)
 
         return Response(status=201)
 
@@ -348,11 +348,11 @@ class CastSubmissionVoteView(APIView):
         except Submission.DoesNotExist:
             return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
 
-        if submission.author_id == self.request.user.id:
+        if submission.author_id == request.user.id:
             return Response(status=400, data={'error': 'You cannot vote on your own submission!'})
 
         # try to find such a SubmissionVote first
-        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user, submission=submission).first()
+        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=request.user, submission=submission).first()
         if submission_vote is None:
             # user has not voted before
             SubmissionVote.objects.create(author_id=request.user.id, submission_id=submission.id, is_upvote=is_upvote)
@@ -377,11 +377,11 @@ class RemoveSubmissionVoteView(APIView):
         except Submission.DoesNotExist:
             return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
 
-        if submission.author_id == self.request.user.id:   # ...wtf?
+        if submission.author_id == request.user.id:
             return Response(status=400, data={'error': 'You cannot vote on your own submission!'})
 
         # see if such a Submission exists
-        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user,
+        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=request.user,
                                                                         submission=submission).first()
         if submission_vote is None:
             return Response(status=404, data={'error': f'The user has not voted for submission with ID {submission.id}'})

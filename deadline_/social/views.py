@@ -97,7 +97,7 @@ class SubmissionLinkPostCreateView(APIView):
             return Response(status=404, data={'error': f'Submission with ID {submission_id} does not exist!'})
 
         # validate that the current User is either the author or has solved it perfectly, otherwise he cannot share it
-        if submission.author_id != self.request.user.id and not submission.challenge.is_solved_by_user(self.request.user):
+        if submission.author_id != request.user.id and not submission.challenge.is_solved_by_user(request.user):
             # User has not fully solved this and as such does not have access to the solution
             return Response(data={'error': 'You have not fully solved the challenge'}, status=400)
 
