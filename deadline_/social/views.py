@@ -314,9 +314,6 @@ class NewsfeedItemCommentReplyCreateView(CreateAPIView):
         if not ser.is_valid():
             return Response(status=400, data={'error': ser.errors})
 
-        self.create_reply(nw_item_comment=nw_item_comment, content=request.data['content'], author=request.user)
+        nw_item_comment.add_reply(author=request.user, content=request.data['content'], to_notify=True)
 
         return Response(status=201)
-
-    def create_reply(self, nw_item_comment: NewsfeedItemComment, content: str, author: User):
-        nw_item_comment.add_reply(author=author, content=content, to_notify=True)

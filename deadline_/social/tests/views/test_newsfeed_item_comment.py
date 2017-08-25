@@ -64,6 +64,7 @@ class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 401)
 
 
+@patch('social.models.NewsfeedItemComment.add_reply')
 class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
     """
     Should create a Reply to a NewsfeedItemComment
@@ -76,82 +77,39 @@ class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
         self.nw_comment = NewsfeedItemComment.objects.create(author=self.user2, newsfeed_item=self.nw_item,
                                                              content='No song for the choir now')
 
-    def test_should_create_reply(self):
+    def test_should_create_reply(self, mock_add_reply):
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{self.nw_comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'No rest for the wicked'})
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(self.nw_comment.replies.count(), 1)
-        reply = self.nw_comment.replies.first()
-        self.assertEqual(reply.content, 'No rest for the wicked')
-        self.assertEqual(reply.author, self.auth_user)
-        self.assertEqual(reply.newsfeed_item, self.nw_item)
-        self.assertEqual(reply.parent, self.nw_comment)
-        # Should also create a notification
-        self.assertEqual(Notification.objects.count(), 1)
-        self.assertEqual(Notification.objects.first().type, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION)
+        mock_add_reply.assert_called_once_with(author=self.auth_user, content='No rest for the wicked', to_notify=True)
 
-    def test_read_only_fields_should_not_affect_creation(self):
-        new_nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
-        new_nw_comment = NewsfeedItemComment.objects.create(newsfeed_item=new_nw_item, author=self.user2, content='Tanktank')
-        response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{self.nw_comment.id}',
-                                    HTTP_AUTHORIZATION=self.auth_token,
-                                    data={'content': 'OK I WAS GONE FOR A MINUTE',
-                                          'newsfeed_item': new_nw_item.id,
-                                          'newsfeed_item_id': new_nw_item.id,
-                                          'author': self.user2.id,
-                                          'author_id': self.user2.id,
-                                          'parent': new_nw_comment.id,
-                                          'parent_id': new_nw_comment.id})
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(self.nw_comment.replies.count(), 1)
-        reply = self.nw_comment.replies.first()
-        self.assertEqual(reply.content, 'OK I WAS GONE FOR A MINUTE')
-        self.assertEqual(reply.author, self.auth_user)
-        self.assertEqual(reply.newsfeed_item, self.nw_item)
-        self.assertEqual(reply.parent, self.nw_comment)
-        # Should also create a notification
-        self.assertEqual(Notification.objects.count(), 1)
-        self.assertEqual(Notification.objects.first().type, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION)
-
-    @patch('social.views.NewsfeedItemCommentReplyCreateView.create_reply')
-    def test_view_calls_add_reply(self, mock_cr_repl):
-        self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{self.nw_comment.id}',
-                         HTTP_AUTHORIZATION=self.auth_token,
-                         data={'content': 'No rest for the wicked'})
-        mock_cr_repl.assert_called_once_with(author=self.auth_user, nw_item_comment=self.nw_comment,
-                                             content='No rest for the wicked')
-
-    def test_create_reply_calls_add_reply(self):
-        add_reply_mock = MagicMock()
-        comment_mock = MagicMock(add_reply=add_reply_mock)
-        NewsfeedItemCommentReplyCreateView().create_reply(author=self.auth_user, nw_item_comment=comment_mock,
-                                                          content='No rest for the wicked')
-
-        add_reply_mock.assert_called_once_with(to_notify=True, content='No rest for the wicked', author=self.auth_user)
-
-    def test_unauth_should_401(self):
+    def test_unauth_should_401(self, mock_add_reply):
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{self.nw_comment.id}',
                                     data={'content': 'No rest for the wicked'})
         self.assertEqual(response.status_code, 401)
+        mock_add_reply.assert_not_called()
 
-    def test_invalid_nw_item_id_should_404(self):
+    def test_invalid_nw_item_id_should_404(self, mock_add_reply):
         response = self.client.post(f'/social/feed/items/111/comments/{self.nw_comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'No rest for the wicked'})
         self.assertEqual(response.status_code, 404)
+        mock_add_reply.assert_not_called()
 
-    def test_invalid_comment_id_should_404(self):
+    def test_invalid_comment_id_should_404(self, mock_add_reply):
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/111',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'No rest for the wicked'})
         self.assertEqual(response.status_code, 404)
+        mock_add_reply.assert_not_called()
 
-    def test_invalid_nw_item_nw_comment_pair(self):
+    def test_invalid_nw_item_nw_comment_pair(self, mock_add_reply):
         new_nw_item = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
         new_nw_comment = NewsfeedItemComment.objects.create(newsfeed_item=new_nw_item, author=self.user2, content='Tanktank')
         response = self.client.post(f'/social/feed/items/{self.nw_item.id}/comments/{new_nw_comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'No rest for the wicked'})
         self.assertEqual(response.status_code, 400)
+        mock_add_reply.assert_not_called()
