@@ -54,8 +54,16 @@ class ChallengeComment(models.Model):
     def get_absolute_url(self):
         return f'/challenges/{self.challenge_id}/comments/{self.id}'
 
-    def add_reply(self, author: User, content: str):
-        return ChallengeComment.objects.create(author=author, content=content, challenge_id=self.challenge_id, parent=self)
+    def add_reply(self, author: User, content: str, to_notify=True):
+        from social.models import Notification
+
+        reply = ChallengeComment.objects.create(author=author, content=content,
+                                                challenge_id=self.challenge_id, parent=self)
+
+        if to_notify and author != self.author:
+            Notification.objects.create_challenge_comment_reply_notification(reply=reply)
+
+        return reply
 
 
 class Submission(models.Model):

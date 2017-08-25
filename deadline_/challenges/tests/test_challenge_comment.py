@@ -4,6 +4,9 @@ from django.test import TestCase
 from rest_framework.test import APITestCase
 
 from challenges.tests.base import TestHelperMixin
+from challenges.tests.factories import UserFactory
+from social.constants import RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION
+from social.models import Notification
 
 
 class ChallengeCommentModelTests(TestCase, TestHelperMixin):
@@ -21,7 +24,8 @@ class ChallengeCommentModelTests(TestCase, TestHelperMixin):
         self.assertEqual(new_comment.replies.count(), 0)
 
     def test_add_reply(self):
-        new_comment = self.challenge.add_comment(author=self.auth_user, content='Frozen')
+        sec_user = UserFactory()
+        new_comment = self.challenge.add_comment(author=sec_user, content='Frozen')
         new_reply = new_comment.add_reply(author=self.auth_user, content='Stone')
         self.assertEqual(new_reply.replies.count(), 0)
         self.assertEqual(new_comment.replies.count(), 1)
@@ -29,6 +33,21 @@ class ChallengeCommentModelTests(TestCase, TestHelperMixin):
         self.assertEqual(new_reply.content, 'Stone')
         self.assertEqual(new_reply.parent, new_comment)
         self.assertEqual(new_reply.author, self.auth_user)
+        # assert it creates a notification
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first().type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
+        self.assertEqual(Notification.objects.first().recipient, sec_user)
+
+    def test_add_reply_doesnt_create_notification_if_commenter_replies_himself(self):
+        new_comment = self.challenge.add_comment(author=self.auth_user, content='Frozen')
+        new_comment.add_reply(author=self.auth_user, content='Stone', to_notify=True)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_add_reply_doest_create_notification_if_explicitly_stated(self):
+        sec_user = UserFactory()
+        new_comment = self.challenge.add_comment(author=sec_user, content='Frozen')
+        new_comment.add_reply(author=self.auth_user, content='Stone', to_notify=False)
+        self.assertEqual(Notification.objects.count(), 0)
 
     def test_get_absolute_url(self):
         new_comment = self.challenge.add_comment(author=self.auth_user, content='Frozen')
@@ -95,7 +114,7 @@ class ChallengeCommentReplyCreateViewTest(APITestCase, TestHelperMixin):
         response = self.client.post(self.comment_url, HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'No, it is not!'})
         self.assertEqual(response.status_code, 201)
-        mock_add_reply.assert_called_once_with(author=self.auth_user, content='No, it is not!')
+        mock_add_reply.assert_called_once_with(author=self.auth_user, content='No, it is not!', to_notify=True)
 
     def test_invalid_challenge_id_returns_404(self, mock_add_reply):
         response = self.client.post(f'/challenges/111/comments/{self.comment.id}',

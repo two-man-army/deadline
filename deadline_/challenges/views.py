@@ -64,7 +64,7 @@ class ChallengeCommentReplyCreateView(APIView):
         if len(comment_content) < 5 or len(comment_content) > 500:
             return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
 
-        challenge_comment.add_reply(author=request.user, content=comment_content)
+        challenge_comment.add_reply(author=request.user, content=comment_content, to_notify=True)
         return Response(status=201)
 
 
