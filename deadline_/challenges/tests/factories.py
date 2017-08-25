@@ -2,7 +2,7 @@ import factory
 
 from accounts.models import Role
 from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User, \
-    SubmissionComment, Proficiency
+    SubmissionComment, Proficiency, ChallengeComment
 
 
 class RoleFactory(factory.DjangoModelFactory):
@@ -68,6 +68,15 @@ class ChallengeFactory(factory.DjangoModelFactory):
     score = factory.Faker('random_digit')
     test_case_count = factory.Faker('random_digit')
     category = factory.SubFactory(SubCategoryFactory)
+
+
+class ChallengeCommentFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = ChallengeComment
+
+    challenge = factory.SubFactory(ChallengeFactory)
+    author = factory.SubFactory(UserFactory)
+    content = factory.Faker('text')
 
 
 class SubmissionFactory(factory.DjangoModelFactory):
