@@ -7,7 +7,8 @@ from challenges.tests.factories import UserFactory, SubmissionFactory, Challenge
 from errors import ForbiddenMethodError
 from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, \
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
-    RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION
+    RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
+    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -180,5 +181,36 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         subm = SubmissionFactory(author_id=self.auth_user.id)
         subm_comment = SubmissionCommentFactory(submission=subm, author=self.auth_user)
         notif = Notification.objects.create_submission_comment_notification(comment=subm_comment)
+        self.assertIsNone(notif)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_submission_comment_reply_notif(self):
+        self.setup_proficiencies()
+        sec_user = UserFactory()
+        subm = SubmissionFactory(author_id=self.auth_user.id)
+        subm_comment = SubmissionCommentFactory(submission=subm, author=self.auth_user)
+        subm_reply = SubmissionCommentFactory(submission=subm, author=sec_user, parent=subm_comment)
+        expected_content = {
+            'submission_id': subm_reply.submission.id, 'challenge_id': subm_reply.submission.challenge.id,
+            'challenge_name': subm_reply.submission.challenge.name, 'comment_id': subm_reply.id,
+            'comment_content': subm_reply.content, 'commenter_id': subm_reply.author.id,
+            'commenter_name': subm_reply.author.username
+        }
+
+        notif = Notification.objects.create_submission_comment_reply_notification(comment=subm_reply)
+
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(notif, Notification.objects.first())
+        self.assertEqual(notif.type, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION)
+        self.assertEqual(notif.recipient, subm_comment.author)
+        self.assertEqual(notif.content, expected_content)
+
+    def test_create_submission_comment_reply_notif_not_created_if_commenter_replies_to_himself(self):
+        self.setup_proficiencies()
+        subm = SubmissionFactory(author_id=self.auth_user.id)
+        subm_comment = SubmissionCommentFactory(submission=subm, author=self.auth_user)
+        subm_reply = SubmissionCommentFactory(submission=subm, author=self.auth_user, parent=subm_comment)
+
+        notif = Notification.objects.create_submission_comment_reply_notification(comment=subm_reply)
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)

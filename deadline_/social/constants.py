@@ -31,6 +31,7 @@ NEW_CHALLENGE_NOTIFICATION = 'NEW_CHALLENGE_NOTIFICATION'
 
 RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION = 'RECEIVE_SUBMISSION_LIKE_NOTIFICATION'
 RECEIVE_SUBMISSION_COMMENT_NOTIFICATION = 'RECEIVE_SUBMISSION_COMMENT_NOTIFICATION'
+RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION = 'RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION'
 
 RECEIVE_NW_ITEM_LIKE_NOTIFICATION = 'RECEIVE_NW_LIKE_NOTIFICATION'
 RECEIVE_NW_ITEM_COMMENT_NOTIFICATION = 'RECEIVE_NW_COMMENT_NOTIFICATION'
@@ -40,7 +41,7 @@ RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION = 'RECEIVE_NW_COMMENT_REPLY_NOTIFICAT
 VALID_NOTIFICATION_TYPES = [RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
                             RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION,
                             RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION,
-                            RECEIVE_SUBMISSION_COMMENT_NOTIFICATION]
+                            RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION]
 # Holds the fields that must be populated on a notification type's content HStore field
 NOTIFICATION_TYPE_CONTENT_FIELDS = {
     RECEIVE_FOLLOW_NOTIFICATION: ['follower_id', 'follower_name'],
@@ -51,5 +52,7 @@ NOTIFICATION_TYPE_CONTENT_FIELDS = {
                                            'commenter_id', 'commenter_name'],
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION: ['nw_comment_id', 'commenter_id', 'commenter_name', 'comment_content'],
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION: ['submission_id', 'challenge_id', 'challenge_name', 'commenter_name',
-                                              'comment_content', 'commenter_id', 'comment_id']
+                                              'comment_content', 'commenter_id', 'comment_id'],
+    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION: ['submission_id', 'challenge_id', 'challenge_name', 'commenter_name',
+                                                    'comment_content', 'commenter_id', 'comment_id'],
 }

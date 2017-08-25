@@ -11,7 +11,7 @@ from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_I
     NW_ITEM_CHALLENGE_COMPLETION_POST, VALID_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONTENT_FIELDS, \
     RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_NW_ITEM_LIKE_NOTIFICATION, \
     NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, \
-    RECEIVE_SUBMISSION_COMMENT_NOTIFICATION
+    RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -292,6 +292,21 @@ class NotificationManager(models.Manager):
                                 'comment_content': comment.content,
                                 'comment_id': comment.id
                             })
+
+    def create_submission_comment_reply_notification(self, comment: SubmissionComment):
+        if comment.parent.author == comment.author:
+            return
+
+        return self._create(recipient=comment.parent.author, type=RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION,
+                           content={
+                               'submission_id': comment.submission.id,
+                               'challenge_id': comment.submission.challenge.id,
+                               'challenge_name': comment.submission.challenge.name,
+                               'commenter_name': comment.author.username,
+                               'commenter_id': comment.author.id,
+                               'comment_content': comment.content,
+                               'comment_id': comment.id
+                           })
 
 
 class Notification(models.Model):
