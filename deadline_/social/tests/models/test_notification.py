@@ -3,12 +3,13 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from challenges.tests.base import TestHelperMixin
-from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory, SubmissionCommentFactory
+from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory, SubmissionCommentFactory, \
+    ChallengeCommentFactory
 from errors import ForbiddenMethodError
 from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, \
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
-    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION
+    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -212,5 +213,36 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         subm_reply = SubmissionCommentFactory(submission=subm, author=self.auth_user, parent=subm_comment)
 
         notif = Notification.objects.create_submission_comment_reply_notification(comment=subm_reply)
+        self.assertIsNone(notif)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_notification_comment_reply_notif(self):
+        self.setup_proficiencies()
+        chal = ChallengeFactory()
+        chal_comment = ChallengeCommentFactory(challenge=chal, author=self.auth_user)
+        chal_reply = ChallengeCommentFactory(challenge=chal, parent=chal_comment)
+        expected_content = {
+            'challenge_id': chal.id,
+            'challenge_name': chal.name,
+            'comment_id': chal_reply.id,
+            'comment_content': chal_reply.content,
+            'commenter_id': chal_reply.author.id,
+            'commenter_name': chal_reply.author.username
+        }
+
+        notif = Notification.objects.create_challenge_comment_reply_notification(reply=chal_reply)
+
+        self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
+        self.assertEqual(notif.recipient, chal_comment.author)
+        self.assertEqual(notif.content, expected_content)
+
+    def test_create_notification_comment_reply_notif_not_created_if_commenter_replies_to_himself(self):
+        self.setup_proficiencies()
+        chal = ChallengeFactory()
+        chal_comment = ChallengeCommentFactory(challenge=chal, author=self.auth_user)
+        chal_reply = ChallengeCommentFactory(challenge=chal, parent=chal_comment, author=self.auth_user)
+
+        notif = Notification.objects.create_challenge_comment_reply_notification(reply=chal_reply)
+
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)

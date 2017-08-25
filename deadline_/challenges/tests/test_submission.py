@@ -7,11 +7,10 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from django.db.utils import IntegrityError
 from rest_framework.test import APITestCase
-from rest_framework.renderers import JSONRenderer
 
 from accounts.serializers import UserSerializer
-from challenges.models import (Challenge, Submission, SubCategory, MainCategory,
-                               ChallengeDescription, Language, SubmissionVote, Proficiency, SubmissionComment)
+from challenges.models import (Challenge, Submission, SubCategory, MainCategory, Language, SubmissionVote,
+                               Proficiency, SubmissionComment)
 from challenges.serializers import SubmissionSerializer, LimitedChallengeSerializer, LimitedSubmissionSerializer, \
     SubmissionCommentSerializer
 from challenges.tests.factories import ChallengeFactory, SubmissionFactory, UserFactory, ChallengeDescFactory

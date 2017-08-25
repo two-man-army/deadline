@@ -4,14 +4,15 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from accounts.models import User
-from challenges.models import SubCategory, UserSubcategoryProficiency, SubmissionComment
+from challenges.models import SubCategory, UserSubcategoryProficiency, SubmissionComment, ChallengeComment
 from errors import ForbiddenMethodError
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
     NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
     NW_ITEM_CHALLENGE_COMPLETION_POST, VALID_NOTIFICATION_TYPES, NOTIFICATION_TYPE_CONTENT_FIELDS, \
     RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_NW_ITEM_LIKE_NOTIFICATION, \
     NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, \
-    RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION
+    RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, \
+    RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -307,6 +308,20 @@ class NotificationManager(models.Manager):
                                'comment_content': comment.content,
                                'comment_id': comment.id
                            })
+
+    def create_challenge_comment_reply_notification(self, reply: ChallengeComment):
+        if reply.parent.author == reply.author:
+            return
+
+        return self._create(recipient=reply.parent.author, type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION,
+                            content={
+                                'challenge_id': reply.challenge.id,
+                                'challenge_name': reply.challenge.name,
+                                'comment_id': reply.id,
+                                'comment_content': reply.content,
+                                'commenter_id': reply.author.id,
+                                'commenter_name': reply.author.username
+                            })
 
 
 class Notification(models.Model):
