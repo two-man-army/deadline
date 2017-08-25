@@ -245,50 +245,27 @@ class SubmissionListView(ListAPIView):
 
 # POST /challenges/{challenge_id}/submissions/{submission_id}/comments
 class SubmissionCommentCreateView(APIView):
-    # TODO: Test
     permission_classes = (IsAuthenticated, )
     model_classes = (Challenge, Submission)
 
     @fetch_models
     def post(self, request, challenge: Challenge, submission: Submission, *args, **kwargs):
-        comment_content = request.data.get('content', None)
-        result = self.validate_data(current_user=request.user,
-                                    comment_content=comment_content,
-                                    challenge=challenge, submission=submission)
-        if isinstance(result, Response):
-            return result  # validation error
-
-        self.add_comment(submission=submission, author=request.user, content=comment_content)
-
-        return Response(status=201)
-
-    def add_comment(self, submission: Submission, author: User, content: str):
-        return submission.add_comment(author=author, content=content, to_notify=True)
-
-    def validate_data(self, current_user, comment_content, challenge, submission):
-        """
-        Validate that the comment content is OK and that the
-
-            a) the user is the author of the submission
-            b) the user has solved the associated challenge with max score
-        """
-        if not isinstance(comment_content, str):
+        ser = SubmissionCommentSerializer(data=request.data)
+        if not ser.is_valid():
             return Response(status=400, data={'error': 'Invalid comment content!'})
-        if len(comment_content) < 5 or len(comment_content) > 500:
-            return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
-        # TODO: Consistency between comments, some are required to have certain length, others not
-
         if submission.challenge_id != challenge.id:
             return Response(
                 status=400,
                 data={'error':
-                      f'Submission with ID {submission.id} does not belong to Challenge with ID {challenge.id}'}
-            )
-
+                      f'Submission with ID {submission.id} does not belong to Challenge with ID {challenge.id}'})
         # validate that the current User is either the author or has solved it perfectly
-        if submission.author_id != current_user.id and not challenge.is_solved_by_user(current_user):
+        if submission.author_id != request.user.id and not challenge.is_solved_by_user(request.user):
             # User has not fully solved this and as such does not have access to the solution
             return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+
+        submission.add_comment(author=request.user, content=request.data['content'], to_notify=True)
+
+        return Response(status=201)
 
 
 # POST /challenges/{challenge_id}/submissions/{submission_id}/comments/{comment_id}
