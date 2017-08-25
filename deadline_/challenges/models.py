@@ -146,8 +146,15 @@ class SubmissionComment(models.Model):
     class Meta:
         ordering = ('-created_at', )
 
-    def add_reply(self, author, content):
-        return SubmissionComment.objects.create(submission=self.submission, parent=self, author=author, content=content)
+    def add_reply(self, author, content, to_notify=True):
+        from social.models import Notification
+
+        reply = SubmissionComment.objects.create(submission=self.submission, parent=self, author=author, content=content)
+
+        if to_notify and author != self.author:
+            Notification.objects.create_submission_comment_reply_notification(comment=reply)
+
+        return reply
 
 
 class SubmissionVote(models.Model):

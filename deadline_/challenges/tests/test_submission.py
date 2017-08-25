@@ -18,7 +18,8 @@ from challenges.tests.factories import ChallengeFactory, SubmissionFactory, User
 from challenges.tests.base import TestHelperMixin
 from accounts.models import User
 from challenges.views import SubmissionCommentCreateView
-from social.constants import RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION
+from social.constants import RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
+    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION
 from social.models import Notification
 
 
@@ -261,9 +262,25 @@ class SubmissionCommentModelViewTest(TestCase, TestHelperMixin):
         f_submission: Submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
         sb_comment = SubmissionComment.objects.create(submission=f_submission, author=self.auth_user, content='aa')
 
-        sb_comment.add_reply(author=self.auth_user, content='Light it up')
+        sb_comment.add_reply(author=UserFactory(), content='Light it up')
         self.assertEqual(sb_comment.replies.count(), 1)
         self.assertEqual(sb_comment.replies.first().content, 'Light it up')
+        # should also create a notification
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(Notification.objects.first().type, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION)
+
+    def test_add_reply_doesnt_create_notif_if_commenter_is_replier(self):
+        f_submission: Submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
+        sb_comment = SubmissionComment.objects.create(submission=f_submission, author=self.auth_user, content='aa')
+        sb_comment.add_reply(self.auth_user, content='Light it up', to_notify=True)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_add_reply_doesnt_create_notif_if_specified(self):
+        f_submission: Submission = SubmissionFactory(author=self.auth_user, challenge=self.challenge, result_score=50)
+        sb_comment = SubmissionComment.objects.create(submission=f_submission, author=self.auth_user, content='aa')
+
+        sb_comment.add_reply(author=UserFactory(), content='Light it up', to_notify=False)
+        self.assertEqual(Notification.objects.count(), 0)
 
 
 # TODO: Split tests to test the function validate_data() instead of issuing a request

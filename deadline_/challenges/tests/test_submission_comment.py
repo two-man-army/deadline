@@ -1,8 +1,13 @@
+from unittest.mock import MagicMock, patch
+
 from rest_framework.test import APITestCase
 
 from challenges.models import SubmissionComment, Submission
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory
+from challenges.views import SubmissionCommentReplyCreateView
+from social.constants import RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION
+from social.models import Notification
 
 
 class SubmissionCommentCreateReplyView(APITestCase, TestHelperMixin):
@@ -22,6 +27,24 @@ class SubmissionCommentCreateReplyView(APITestCase, TestHelperMixin):
         self.assertEqual(self.comment.replies.count(), 1)
         self.assertEqual(self.comment.replies.first().content, 'When the night call ye')
         self.assertEqual(self.comment.replies.first().author, self.auth_user)
+        # Should also create a notification
+        self.assertEqual(Notification.objects.count(), 1)
+        notif = Notification.objects.first()
+        self.assertEqual(notif.type, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION)
+
+    @patch('challenges.views.SubmissionCommentReplyCreateView.add_reply')
+    def test_view_calls_local_add_reply(self, mock_add_reply):
+        self.client.post(f'/challenges/{self.challenge.id}/submissions/{self.submission.id}/comments/{self.comment.id}',
+                         HTTP_AUTHORIZATION=self.auth_token, data={'content': 'When the night call ye'})
+        mock_add_reply.assert_called_once()
+
+    def test_calls_comment_add_reply(self):
+        mock_add_reply = MagicMock()
+        mock_comment = MagicMock(add_reply=mock_add_reply)
+
+        SubmissionCommentReplyCreateView().add_reply(submission_comment=mock_comment, author=1, content='whatup')
+
+        mock_add_reply.assert_called_once_with(author=1, content='whatup', to_notify=True)
 
     def test_ignores_forbidden_fields(self):
         """ Should not be able to edit parent_id, submission_id or author_id"""

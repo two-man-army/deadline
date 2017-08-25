@@ -313,13 +313,16 @@ class SubmissionCommentReplyCreateView(CreateAPIView):
             # User has not fully solved this and as such does not have access to the solution
             return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
 
-        self.submission = submission
-        self.user = request.user
-        self.comment = submission_comment
-        return super().post(request, *args, **kwargs)
+        ser = SubmissionCommentSerializer(data=self.request.data)
+        if not ser.is_valid():
+            return Response(data={'error': ser.errors}, status=400)
 
-    def perform_create(self, serializer):
-        return serializer.save(author_id=self.user.id, submission_id=self.submission.id, parent=self.comment)
+        self.add_reply(submission_comment, self.request.user, self.request.data['content'])
+
+        return Response(status=201)
+
+    def add_reply(self, submission_comment: SubmissionComment, author: User, content: str):
+        return submission_comment.add_reply(author=author, content=content, to_notify=True)
 
 
 # /challenges/{challenge_id}/submissions/{submission_id}/comments
