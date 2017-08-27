@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 
 from challenges.models import SubmissionComment, Submission
 from challenges.tests.base import TestHelperMixin
-from challenges.tests.factories import UserFactory, ChallengeFactory
+from challenges.tests.factories import UserFactory, ChallengeFactory, SubmissionFactory, SubmissionCommentFactory
 
 
 @patch('challenges.models.Submission.add_comment')
@@ -136,9 +136,7 @@ class SubmissionCommentCreateReplyView(APITestCase, TestHelperMixin):
         mock_add_reply.assert_not_called()
 
     def test_invalid_challenge_submission_relation_returns_400(self, mock_add_reply):
-        second_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
-                                                      author=self.second_user, code="")
-        response = self.client.post(f'/challenges/{self.challenge.id}/submissions/{second_submission.id}/comments/{self.comment.id}',
+        response = self.client.post(f'/challenges/{self.challenge.id}/submissions/{SubmissionFactory(author=self.second_user).id}/comments/{self.comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'When the night call ye'})
 
@@ -146,9 +144,7 @@ class SubmissionCommentCreateReplyView(APITestCase, TestHelperMixin):
         mock_add_reply.assert_not_called()
 
     def test_invalid_submission_comment_relation_returns_400(self, mock_add_reply):
-        second_submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
-                                                      author=self.second_user, code="")
-        new_comment = SubmissionComment.objects.create(submission=second_submission, author=self.second_user, content='Hello, my name is boris')
+        new_comment = SubmissionCommentFactory(author=self.auth_user, submission=SubmissionFactory(author=self.auth_user))
         response = self.client.post(f'/challenges/{self.challenge.id}/submissions/{self.submission.id}/comments/{new_comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'When the night call ye'})

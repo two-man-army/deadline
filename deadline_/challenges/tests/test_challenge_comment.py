@@ -131,8 +131,7 @@ class ChallengeCommentReplyCreateViewTest(APITestCase, TestHelperMixin):
         mock_add_reply.assert_not_called()
 
     def test_invalid_relationship_between_challenge_comment_returns_400(self, mock_add_reply):
-        new_challenge = self.create_challenge()
-        new_comment = new_challenge.add_comment(author=self.auth_user, content='No rest for the')
+        new_comment = self.create_challenge().add_comment(author=self.auth_user, content='No rest for the')
         response = self.client.post(f'/challenges/{self.challenge.id}/comments/{new_comment.id}',
                                     HTTP_AUTHORIZATION=self.auth_token,
                                     data={'content': 'No, it is not!'})
