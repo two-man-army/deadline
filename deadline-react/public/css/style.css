@@ -844,17 +844,29 @@ div.login-html input:focus {
   display: flex; }
   .challenges-page .challenges-header .current-subcategory {
     flex: 1; }
-.challenges-page .challenges-nav ul {
-  display: flex;
-  font-family: "Poppins Regular";
-  font-weight: normal;
-  font-size: 18px; }
-  .challenges-page .challenges-nav ul li {
-    margin-right: 30px; }
-    .challenges-page .challenges-nav ul li:last-of-type {
-      margin: 0; }
-    .challenges-page .challenges-nav ul li a {
-      color: #999999; }
+.challenges-page .challenges-nav {
+  max-width: 600px; }
+  .challenges-page .challenges-nav .search.selection {
+    width: 200px;
+    height: 30px; }
+  .challenges-page .challenges-nav ul {
+    padding-bottom: 10px;
+    display: flex;
+    font-family: "Poppins Regular";
+    font-weight: normal;
+    font-size: 18px;
+    overflow-x: scroll; }
+    .challenges-page .challenges-nav ul::-webkit-scrollbar {
+      height: 3px;
+      background-color: #d1d1d1; }
+    .challenges-page .challenges-nav ul::-webkit-scrollbar-thumb {
+      background-color: #6e6e6e; }
+    .challenges-page .challenges-nav ul li {
+      margin-right: 30px; }
+      .challenges-page .challenges-nav ul li:last-of-type {
+        margin: 0; }
+      .challenges-page .challenges-nav ul li a {
+        color: #999999; }
 .challenges-page .subcategory-name {
   color: #ff8606;
   font-size: 24px;
@@ -871,7 +883,11 @@ div.login-html input:focus {
       display: flex;
       width: 336px;
       height: 143px;
-      padding: 15px; }
+      padding: 15px;
+      justify-content: space-between; }
+      .challenges .challenge .challenge-info div {
+        display: flex;
+        flex-direction: column; }
       .challenges .challenge .challenge-info .challenge-name {
         margin: 0;
         font-family: "Poppins Light";
@@ -880,6 +896,7 @@ div.login-html input:focus {
         color: #ff8606; }
       .challenges .challenge .challenge-info .difficulty {
         margin: 0;
+        flex: 1;
         font-family: "Poppins Light";
         font-size: 14px;
         color: #777777; }
@@ -888,6 +905,11 @@ div.login-html input:focus {
         font-size: 16px;
         color: #777777; }
       .challenges .challenge .challenge-info .success-rate {
+        width: 113px;
         color: #777777; }
+      .challenges .challenge .challenge-info .ant-progress-text {
+        font-family: "Poppins Light";
+        font-size: 24px;
+        font-weight: normal; }
 
 /*# sourceMappingURL=style.css.map */
