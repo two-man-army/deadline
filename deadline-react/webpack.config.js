@@ -38,6 +38,9 @@ module.exports = {
       {
         test: /\.js?$/,
         loader: 'babel-loader',
+        options: {
+          plugins: [["import", { libraryName: "antd", style: "css" }]]
+        },
         include: [
           path.resolve(__dirname, 'js')
         ]
