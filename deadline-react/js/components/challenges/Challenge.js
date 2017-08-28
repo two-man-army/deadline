@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
+import { Circle } from 'rc-progress'
 
 const Challenge = ({
   name,
@@ -16,7 +17,13 @@ const Challenge = ({
             <p className='difficulty'>Difficulty: {difficulty}/10</p>
             <p className='score'>Score: {score}</p>
           </div>
-          <div className='success-rate'>70%</div>
+          <div className='success-rate'>
+            <Circle
+              percent='30'
+              strokeWidth='4'
+              trailWidth='3'
+              strokeColor='red' />
+          </div>
         </section>
       </Link>
     </li>
