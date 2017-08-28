@@ -3,13 +3,14 @@ import Challenge from './Challenge'
 import { Link } from 'react-router-dom'
 import { getSubCategoryChallenges } from '../../requests'
 import { convertFromUrlToFriendlyText } from '../../helpers'
+import SelectionSearch from '../../semantic_ui_components/SelectionSearch.js'
 
 class ChallengesPage extends React.Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      challenges: []
+      challenges: [],
     }
     this.subcategories = ['Recursion', 'Sorting', 'Greedy', 'Strings', 'Graphs', 'Miscellaneous']
 
@@ -39,7 +40,14 @@ class ChallengesPage extends React.Component {
           <div className='challenges-nav'>
             <ul>
               {this.subcategories.map(subcat => <li><Link to=''>{subcat}</Link></li>)}
+              <li>foo</li>
+              <li>foo</li>
+              <li>foo</li>
+              <li>foo</li>
+              <li>foo</li>
+              <li>foo</li>
             </ul>
+            <SelectionSearch />
           </div>
         </header>
         <ul className='challenges'>
