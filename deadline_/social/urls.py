@@ -13,4 +13,6 @@ urlpatterns = [
     url(r'^feed/items/(?P<pk>\d+)/comments$', views.NewsfeedItemCommentCreateView.as_view(), name='newsfeed_comment_create'),
     url(r'^feed/items/(?P<nw_item_pk>\d+)/comments/(?P<pk>\d+)$', views.NewsfeedItemCommentReplyCreateView.as_view(),
         name='newsfeed_comment_reply_create'),
+
+    url(r'^notifications/token$', views.notification_token, name='notification_token'),
 ]
