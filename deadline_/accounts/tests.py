@@ -517,3 +517,20 @@ class UserDetailsViewTest(APITestCase):
     def test_requires_authentication(self):
         response = self.client.get(f'/accounts/user/{self.user.id}')
         self.assertEqual(response.status_code, 401)
+
+
+class HelpersTest(TestCase):
+
+    @patch('accounts.helpers.NOTIFICATION_TOKEN_EXPIRY_MINUTES', 20)
+    @patch('accounts.helpers.jwt.encode')
+    @patch('accounts.helpers.get_utc_time')
+    def test_generate_notification_token(self, mock_utc_time, mock_jwt_encode):
+        utc_time = datetime.utcnow()
+        mock_utc_time.return_value = utc_time
+        expected_expiry_date = utc_time + timedelta(minutes=20)
+        mock_jwt_encode.return_value = MagicMock(decode=lambda x: 'chrissy')
+
+        notif_token = generate_notification_token(MagicMock(username='yo'))
+
+        mock_jwt_encode.assert_called_once_with({'exp': expected_expiry_date, 'username': 'yo'}, NOTIFICATION_SECRET_KEY)
+        self.assertEqual('chrissy', notif_token)
