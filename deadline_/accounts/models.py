@@ -27,6 +27,7 @@ class User(AbstractBaseUser):
     password = models.CharField(max_length=256)
     score = models.IntegerField(default=0)
     salt = models.CharField(max_length=40)
+    notification_token = models.CharField(max_length=200, null=True)
     users_followed = models.ManyToManyField(to='accounts.User', related_name='followers')
     role = models.ForeignKey(Role)
     last_submit_at = models.DateTimeField(auto_now_add=True)
