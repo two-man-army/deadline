@@ -11,7 +11,7 @@ from django.views.decorators.cache import cache_page, never_cache
 urlpatterns = [
     url(r'^latest_attempted$', cache_page(60)(LatestAttemptedChallengesListView.as_view()), name='latest_challenges'),
 
-    url(r'^categories/(?P<category_pk>\d+)/subcategories$',
+    url(r'^categories/(?P<category_pk>[\w ]+)/subcategories$',
         cache_page(20)(CategorySubcategoriesListView.as_view()), name='subcategories_list'),
     url(r'^categories/all$', cache_page(60*60)(MainCategoryListView.as_view()), name='category_list'),
 
