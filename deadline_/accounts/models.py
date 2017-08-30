@@ -1,6 +1,6 @@
 import hashlib, uuid
 
-
+import jwt
 from django.conf import settings
 from django.db import models
 from django.db.models import Count
@@ -10,8 +10,9 @@ from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
 
+from accounts.constants import NOTIFICATION_SECRET_KEY
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
-from accounts.helpers import hash_password
+from accounts.helpers import hash_password, generate_notification_token
 from django.db import models
 from django.dispatch import receiver
 
@@ -42,6 +43,23 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+    def notification_token_is_expired(self) -> bool:
+        """ Checks whether the current token is expired """
+        try:
+            jwt.decode(self.notification_token, NOTIFICATION_SECRET_KEY)
+            return False
+        except jwt.ExpiredSignatureError:
+            return True
+
+    def refresh_notification_token(self, force=False):
+        if not force and not self.notification_token_is_expired():
+            raise Exception("Will not reset the notification token when it is not expired without being forced!")
+        self.notification_token = generate_notification_token(self)
+        self.save()
+
+    def token_is_valid(self, token):
+        return token == self.notification_token and not self.notification_token_is_expired()
 
     def fetch_newsfeed(self, start_offset=0, end_limit=None):
         """

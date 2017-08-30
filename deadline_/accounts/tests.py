@@ -1,13 +1,16 @@
 from datetime import timedelta, datetime
 from unittest.mock import patch, MagicMock
 
+import jwt
 from django.http import HttpResponse
 from django.test import TestCase
 from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
 from rest_framework.parsers import JSONParser
 
+from accounts.constants import NOTIFICATION_SECRET_KEY
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
+from accounts.helpers import generate_notification_token
 from accounts.models import User, Role
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
@@ -382,6 +385,76 @@ class UserModelTest(TestCase):
 
         unsuc_count = self.auth_user.fetch_unsuccessful_challenge_attempts_count(self.challenge)
         self.assertEqual(unsuc_count, 1)
+
+    @patch('accounts.models.generate_notification_token')
+    @patch('accounts.models.User.notification_token_is_expired')
+    def test_refresh_notification_token(self, mock_is_exp, mock_gen):
+        mock_is_exp.return_value = True
+        mock_gen.return_value = 'token :)'
+
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        us.refresh_notification_token()
+
+        mock_is_exp.assert_called_once()
+        mock_gen.assert_called_once_with(us)
+        self.assertEqual(us.notification_token, 'token :)')
+
+    @patch('accounts.models.generate_notification_token')
+    @patch('accounts.models.User.notification_token_is_expired')
+    def test_refresh_notification_token_should_not_reset_if_not_expired(self, mock_is_exp, mock_gen):
+        mock_is_exp.return_value = False
+        mock_gen.return_value = 'token :)'
+
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        with self.assertRaises(Exception):
+            us.refresh_notification_token()
+
+    @patch('accounts.models.generate_notification_token')
+    @patch('accounts.models.User.notification_token_is_expired')
+    def test_refresh_notification_token_non_expired_token_should_be_reset_with_force(self, mock_is_exp, mock_gen):
+        mock_is_exp.return_value = False
+        mock_gen.return_value = 'token :)'
+
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        us.refresh_notification_token(force=True)
+
+        mock_gen.assert_called_once_with(us)
+        self.assertEqual(us.notification_token, 'token :)')
+
+    @patch('accounts.models.User.notification_token_is_expired')
+    def test_token_is_valid(self, mock_is_exp):
+        mock_is_exp.return_value = False
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        us.notification_token = 'h'
+
+        self.assertTrue(us.token_is_valid('h'))
+        self.assertFalse(us.token_is_valid('m'))
+
+    @patch('accounts.models.User.notification_token_is_expired')
+    def test_token_is_valid_expired_token(self, mock_is_exp):
+        mock_is_exp.return_value = True
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        us.notification_token = 'h'
+
+        self.assertFalse(us.token_is_valid('h'))
+
+    def test_notification_token_is_expired(self):
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        expiry_date = datetime.utcnow() - timedelta(minutes=1)
+        notification_token = jwt.encode({'exp': expiry_date, 'username': us.username}, NOTIFICATION_SECRET_KEY).decode("utf-8")
+
+        us.notification_token = notification_token
+
+        self.assertTrue(us.notification_token_is_expired())
+
+    def test_notification_token_is_expired_returns_false_when_not_exp(self):
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        expiry_date = datetime.utcnow() + timedelta(minutes=1)
+        notification_token = jwt.encode({'exp': expiry_date, 'username': us.username}, NOTIFICATION_SECRET_KEY).decode("utf-8")
+
+        us.notification_token = notification_token
+
+        self.assertFalse(us.notification_token_is_expired())
 
 
 class RegisterViewTest(APITestCase):
