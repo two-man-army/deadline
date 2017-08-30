@@ -51,9 +51,10 @@ class MainCategoryListView(ListAPIView):
     queryset = MainCategory.objects.all()
 
 
-# /challenges/categories/{category_id}/subcategories
+# /challenges/categories/{category_id/name}/subcategories
 class CategorySubcategoriesListView(APIView):
     """
+    Either fetches the category by ID or by its name
         Returns all the subcategories for the given category along with
             - user's current proficiency on the subcategory
             - experience required to reach next proficiency
@@ -64,10 +65,14 @@ class CategorySubcategoriesListView(APIView):
     def get(self, request, *args, **kwargs):
         category_pk = kwargs.get('category_pk', None)
         try:
-            category = MainCategory.objects.get(id=category_pk)
+            try:
+                category = MainCategory.objects.get(id=int(category_pk))
+            except ValueError:
+                category = MainCategory.objects.get(name=category_pk)
         except MainCategory.DoesNotExist:
             return Response(data={'error': 'Maincategory with ID {} does not exist.'.format(category_pk)},
                             status=404)
+
         return Response(status=200,
                         data=LimitedSubCategorySerializer(instance=list(category.sub_categories.all()),
                                                           many=True, context={'request': request}).data)

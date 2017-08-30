@@ -151,7 +151,7 @@ class SubCategoryViewTest(TestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 404)
 
 
-class CategorySubcategoriesListView(TestCase, TestHelperMixin):
+class CategorySubcategoriesListViewTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.sample_desc = ChallengeDescription(content='What Up', input_format='Something',
                                                 output_format='something', constraints='some',
@@ -160,7 +160,7 @@ class CategorySubcategoriesListView(TestCase, TestHelperMixin):
         self.sample_desc.save()
         Proficiency.objects.create(name='starter', needed_percentage=0)
         Proficiency.objects.create(name='starter 2', needed_percentage=50)
-        self.c1 = MainCategory.objects.create(name='Test')
+        self.c1 = MainCategory.objects.create(name='Test bate')
         self.c2 = MainCategory.objects.create(name='TANK')
         self.sub1 = SubCategory.objects.create(name='Unit Tests', meta_category=self.c1)
         self.sub2 = SubCategory.objects.create(name='Unit Tests II', meta_category=self.c1)
@@ -171,6 +171,15 @@ class CategorySubcategoriesListView(TestCase, TestHelperMixin):
     def test_returns_serialized_data(self):
         req_mock = MagicMock(user=self.auth_user)
         response = self.client.get(f'/challenges/categories/{self.c1.id}/subcategories',
+                                   HTTP_AUTHORIZATION=self.auth_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, LimitedSubCategorySerializer(many=True,
+                                                                     instance=[self.sub1, self.sub2],
+                                                                     context={'request': req_mock}).data)
+
+    def test_works_with_name(self):
+        req_mock = MagicMock(user=self.auth_user)
+        response = self.client.get(f'/challenges/categories/{self.c1.name}/subcategories',
                                    HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, LimitedSubCategorySerializer(many=True,
