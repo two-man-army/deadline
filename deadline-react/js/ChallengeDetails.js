@@ -105,7 +105,7 @@ class ChallengeDetails extends React.Component {
     console.log('USER INFO')
     console.log(this.state.userInfo)
     return (
-      <div>
+      <div className='main'>
         <Container>
           <Tabs
             onChange={this.handleTabChange}
