@@ -13,7 +13,6 @@ class SubcategoriesPage extends React.Component {
     }
 
     this.loadSubcategories = this.loadSubcategories.bind(this)
-    this.storeSubcategoryDetails = this.storeSubcategoryDetails.bind(this)
     this.calculateCompletedPercenage = this.calculateCompletedPercenage.bind(this)
     this.expToNextProficiency = this.expToNextProficiency.bind(this)
     this.loadSubcategories()
@@ -30,11 +29,6 @@ class SubcategoriesPage extends React.Component {
           }
         })
       })
-  }
-
-  storeSubcategoryDetails (e) {
-    const subcategoryName = e.currentTarget.dataset.subcategoryName
-    window.localStorage.subcategory = subcategoryName
   }
 
   /**
