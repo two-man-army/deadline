@@ -3,8 +3,8 @@ import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 import CategoryHeader from './CategoryHeader'
 
-const Category = ({id, name, url, onClick}) => (
-  <li id={id} data-category-name={name} className='category' onClick={onClick}>
+const Category = ({id, name, url}) => (
+  <li id={id} data-category-name={name} className='category'>
     <Link to={{pathname: url}}>
       <section>
         <CategoryHeader name={name} />
@@ -30,8 +30,7 @@ const Category = ({id, name, url, onClick}) => (
 Category.propTypes = {
   id: PropTypes.number.isRequired,
   name: PropTypes.string.isRequired,
-  url: PropTypes.string,
-  onClick: PropTypes.func
+  url: PropTypes.string
 }
 
 export default Category
