@@ -406,8 +406,7 @@ div.login-html input:focus {
 
 .dashboard {
   display: flex;
-  flex: 1;
-  height: 100vh; }
+  flex: 1; }
   .dashboard .columns {
     display: flex;
     flex: 1; }
