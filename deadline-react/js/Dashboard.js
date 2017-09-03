@@ -55,7 +55,6 @@ class Dashboard extends React.Component {
 
   render () {
     return (
-      // <Route exact path='/categories/:category' component={CategoryChallengeList} />
       <div>
         <Header />
         <section className='dashboard'>
