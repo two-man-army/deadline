@@ -7,9 +7,9 @@ const Challenge = ({
   name,
   url,
   score,
-  difficulty,
-  onClick}) => (
-    <li className='challenge' onClick={onClick}>
+  difficulty
+  }) => (
+    <li className='challenge'>
       <Link to={{pathname: url}}>
         <section className='challenge-info'>
           <div>
@@ -31,10 +31,9 @@ const Challenge = ({
 
 Challenge.propTypes = {
   name: PropTypes.string.isRequired,
-  url: PropTypes.string,
+  url: PropTypes.string.isRequired,
   score: PropTypes.number.isRequired,
-  difficulty: PropTypes.number.isRequired,
-  onClick: PropTypes.func
+  difficulty: PropTypes.number.isRequired
 }
 
 export default Challenge
