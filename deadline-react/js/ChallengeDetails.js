@@ -46,11 +46,8 @@ class ChallengeDetails extends React.Component {
     getChallengeDetails(this.props.match.params.challengeId).then(challenge => {
       this.setState(challenge)
       getSelfUserTopSubmission(challenge.id).then(topSubmission => {
-        console.log('top submission')
-        console.log(topSubmission)
         this.modifyScore(topSubmission.result_score || 0)
       }).catch(err => {
-        console.log(err)
         throw err
       })
       this.loadSubmissions(challenge.id)
@@ -84,8 +81,6 @@ class ChallengeDetails extends React.Component {
 
   modifyScore (newScore) {
     if (newScore > this.state.userInfo.maxScore) {
-      console.log('MODIFIED SCORE')
-      console.log(newScore)
       this.setState({userInfo: {maxScore: newScore}})
     }
   }
@@ -102,8 +97,7 @@ class ChallengeDetails extends React.Component {
         padding: 10
       }
     }
-    console.log('USER INFO')
-    console.log(this.state.userInfo)
+
     return (
       <div className='main'>
         <Container>
