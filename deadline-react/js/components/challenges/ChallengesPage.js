@@ -23,10 +23,8 @@ class ChallengesPage extends React.Component {
 
   loadSubcategoryChallenges () {
     const subcategory = convertFromUrlToFriendlyText(this.props.match.params.subcategory)
-    console.log('Querying with ' + subcategory)
     getSubCategoryChallenges(subcategory).then(subcat => {
-      let challenges = subcat.challenges
-      this.setState(() => ({challenges}))
+      this.setState(() => ({challenges: subcat.challenges}))
     })
   }
 
