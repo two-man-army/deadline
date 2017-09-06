@@ -1,7 +1,6 @@
 .dashboard {
     display: flex;
     flex: 1;
-    height: 100vh;
 
     .columns {
         display: flex;
@@ -9,7 +8,7 @@
     }
 
     .main {
-        padding: 20px 30px 18px 30px;
+        padding: 30px 30px 18px 30px;
         margin: 30px 20px 20px 30px;
         background: #ffffff;
         display: flex;

@@ -406,13 +406,12 @@ div.login-html input:focus {
 
 .dashboard {
   display: flex;
-  flex: 1;
-  height: 100vh; }
+  flex: 1; }
   .dashboard .columns {
     display: flex;
     flex: 1; }
   .dashboard .main {
-    padding: 20px 30px 18px 30px;
+    padding: 30px 30px 18px 30px;
     margin: 30px 20px 20px 30px;
     background: #ffffff;
     display: flex;
@@ -839,5 +838,77 @@ div.login-html input:focus {
   transition: all 0.3s; }
 .subcategory section .align-center {
   text-align: center; }
+
+.challenges-page .challenges-header {
+  display: flex; }
+  .challenges-page .challenges-header .current-subcategory {
+    flex: 1; }
+.challenges-page .challenges-nav {
+  max-width: 600px; }
+  .challenges-page .challenges-nav .search.selection {
+    width: 200px;
+    height: 30px; }
+  .challenges-page .challenges-nav ul {
+    padding-bottom: 10px;
+    display: flex;
+    font-family: "Poppins Regular";
+    font-weight: normal;
+    font-size: 18px;
+    overflow-x: scroll; }
+    .challenges-page .challenges-nav ul::-webkit-scrollbar {
+      height: 3px;
+      background-color: #d1d1d1; }
+    .challenges-page .challenges-nav ul::-webkit-scrollbar-thumb {
+      background-color: #6e6e6e; }
+    .challenges-page .challenges-nav ul li {
+      margin-right: 30px; }
+      .challenges-page .challenges-nav ul li:last-of-type {
+        margin: 0; }
+      .challenges-page .challenges-nav ul li a {
+        color: #999999; }
+.challenges-page .subcategory-name {
+  color: #ff8606;
+  font-size: 24px;
+  font-family: "Poppins Light";
+  font-weight: normal; }
+
+.challenges {
+  display: flex;
+  flex-wrap: wrap; }
+  .challenges .challenge {
+    margin: 0 20px 20px 0;
+    background: #fff9f2; }
+    .challenges .challenge .challenge-info {
+      display: flex;
+      width: 336px;
+      height: 143px;
+      padding: 15px;
+      justify-content: space-between; }
+      .challenges .challenge .challenge-info div {
+        display: flex;
+        flex-direction: column; }
+      .challenges .challenge .challenge-info .challenge-name {
+        margin: 0;
+        font-family: "Poppins Light";
+        font-size: 22px;
+        font-weight: normal;
+        color: #ff8606; }
+      .challenges .challenge .challenge-info .difficulty {
+        margin: 0;
+        flex: 1;
+        font-family: "Poppins Light";
+        font-size: 14px;
+        color: #777777; }
+      .challenges .challenge .challenge-info .score {
+        font-family: "Poppins Light";
+        font-size: 16px;
+        color: #777777; }
+      .challenges .challenge .challenge-info .success-rate {
+        width: 113px;
+        color: #777777; }
+      .challenges .challenge .challenge-info .ant-progress-text {
+        font-family: "Poppins Light";
+        font-size: 24px;
+        font-weight: normal; }
 
 /*# sourceMappingURL=style.css.map */

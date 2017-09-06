@@ -1,0 +1,112 @@
+.challenges-page {
+    .challenges-header {
+        display: flex;
+
+        .current-subcategory {
+            flex: 1;
+        }
+    }
+
+    .challenges-nav {
+        max-width: 600px;
+
+        .search.selection {
+            width: 200px;
+            height: 30px;
+        }
+
+        ul  {
+            padding-bottom: 10px;
+            display: flex;
+            font-family: "Poppins Regular";
+            font-weight: normal;
+            font-size: 18px;
+            overflow-x: scroll;
+
+            &::-webkit-scrollbar {
+                height: 3px;
+                background-color: #d1d1d1;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background-color: #6e6e6e;
+            }
+
+
+            li {
+                margin-right: 30px;
+
+                &:last-of-type {
+                    margin: 0;
+                }
+
+                a {
+                    color: #999999;
+                }
+            }
+        }
+    }
+
+    .subcategory-name {
+        color: #ff8606;
+        font-size: 24px;
+        font-family: "Poppins Light";
+        font-weight: normal;
+    }
+}
+
+.challenges {
+    display: flex;
+    flex-wrap: wrap;
+
+    .challenge {
+        margin: 0 20px 20px 0;
+        background: #fff9f2;
+
+        .challenge-info {
+            display: flex;
+            width: 336px;
+            height: 143px;
+            padding: 15px;
+            justify-content: space-between;
+
+            div {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .challenge-name {
+                margin: 0;
+                font-family: "Poppins Light";
+                font-size: 22px;
+                font-weight: normal;
+                color: #ff8606;
+            }
+
+            .difficulty  {
+                margin: 0;
+                flex: 1;
+                font-family: "Poppins Light";
+                font-size: 14px;
+                color: #777777;
+            }
+
+            .score {
+                font-family: "Poppins Light";
+                font-size: 16px;
+                color: #777777;
+            }
+
+            .success-rate {
+                width: 113px;
+                color: #777777;
+            }
+
+            .ant-progress-text  {
+                font-family: "Poppins Light";
+                font-size: 24px;
+                font-weight: normal;
+            }
+        }
+    }
+}

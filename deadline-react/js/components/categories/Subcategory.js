@@ -12,9 +12,10 @@ const Subcategory = ({
   challengeCount,
   percentageCompleted,
   expToNextProficiency,
-  nextProficiency
+  nextProficiency,
+  onClick
   }) => (
-    <li className='subcategory'>
+    <li data-subcategory-name={name} className='subcategory' onClick={onClick}>
       <Link to={{pathname: url}}>
         <section>
           <CategoryHeader name={name} />
@@ -46,7 +47,8 @@ Subcategory.propTypes = {
   challengeCount: PropTypes.number.isRequired,
   percentageCompleted: PropTypes.string.isRequired,
   expToNextProficiency: PropTypes.number.isRequired,
-  nextProficiency: PropTypes.string.isRquired
+  nextProficiency: PropTypes.string.isRquired,
+  onClick: PropTypes.func.isRquired
 }
 
 export default Subcategory
