@@ -329,42 +329,6 @@ div.login-html input:focus {
       margin-left: 52px;
       margin-right: 33px; }
 
-.challenge-meta-info-difficulty {
-  display: flex;
-  /* for vertical alignment in difficulty and the star ratings */ }
-
-.challenge-meta-info-difficulty.dv-star-rating {
-  margin-left: 7px; }
-
-.variable-descriptor {
-  font-family: "Times New Roman";
-  font-weight: bold;
-  font-size: 1.25rem;
-  font-style: italic; }
-
-.challenge-description > div > div {
-  margin-left: 10px; }
-
-.challenge-description > div {
-  margin: 10px 0; }
-
-.challenge-desc-sample-input > div, .challenge-desc-sample-output > div {
-  width: 250px;
-  background: rgba(128, 128, 128, 0.27);
-  padding: 10px; }
-
-.challenge-board-title {
-  padding: 20px 0;
-  text-shadow: 0 0 10p black;
-  text-align: center;
-  font-weight: bold;
-  color: #ff5533;
-  text-shadow: 0 0 0px black;
-  background: #303336; }
-
-.challenge-details-tab > div > div {
-  background-color: #ff5533 !important; }
-
 /* profile page */
 .profile-page {
   margin: 0 auto;
@@ -910,5 +874,56 @@ div.login-html input:focus {
         font-family: "Poppins Light";
         font-size: 24px;
         font-weight: normal; }
+
+.challenge-details .challenge-name {
+  margin-bottom: 60px;
+  font-size: 24px;
+  font-family: "Poppins Light"; }
+.challenge-details .ant-tabs-bar {
+  margin-bottom: 32px; }
+.challenge-details .ant-tabs-nav {
+  font-size: 18px;
+  font-family: "Poppins Regular";
+  font-weight: normal; }
+  .challenge-details .ant-tabs-nav .ant-tabs-tab {
+    padding-bottom: 15px;
+    color: #333333; }
+    .challenge-details .ant-tabs-nav .ant-tabs-tab:hover {
+      color: #333333;
+      opacity: .6; }
+  .challenge-details .ant-tabs-nav .ant-tabs-tab-active {
+    color: #ff8e17; }
+    .challenge-details .ant-tabs-nav .ant-tabs-tab-active:hover {
+      color: #ff8e17; }
+  .challenge-details .ant-tabs-nav .ant-tabs-ink-bar {
+    background-color: #b7b7b7; }
+.challenge-details .challenge-description {
+  font-size: 14px; }
+  .challenge-details .challenge-description > div {
+    margin-bottom: 30px; }
+  .challenge-details .challenge-description > div > div {
+    margin-left: 20px; }
+  .challenge-details .challenge-description .variable-descriptor {
+    font-family: "Times New Roman";
+    font-weight: bold;
+    font-size: 1.25rem;
+    font-style: italic; }
+  .challenge-details .challenge-description .io-format > div {
+    padding: 10px;
+    width: 250px;
+    background: #f4f1fa;
+    font-family: "Poppins Regular";
+    font-size: 18px;
+    color: #555555; }
+  .challenge-details .challenge-description .challenge-desc-constraints {
+    font-family: "Poppins Regular";
+    font-size: 18px;
+    font-weight: normal;
+    color: #777777; }
+  .challenge-details .challenge-description h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-family: "Poppins Light";
+    color: #460a40; }
 
 /*# sourceMappingURL=style.css.map */

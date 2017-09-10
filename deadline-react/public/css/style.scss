@@ -13,9 +13,6 @@
 // Header
 @import 'components/header';
 
-// Challenge
-@import 'components/challenge-page';
-
 // Profile
 @import 'components/profile';
 
@@ -45,3 +42,6 @@
 
 // Challenges
 @import 'components/challenges';
+
+// Challenge details
+@import 'components/challenge-details/challenge';
