@@ -1,18 +1,23 @@
-/**
- * The specific Challenge page with the description of the problem and the
+/** * The specific Challenge page with the description of the problem and the
  *  code editor for submission
  */
 import React from 'react'
 import PropTypes from 'prop-types'
-import MonacoEditor from 'react-monaco-editor'
+// import MonacoEditor from 'react-monaco-editor'
 import SweetAlert from 'sweetalert-react'
 import { EmptySolutionError } from './errors'
 import {getLanguageDetail, postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
 import SelectionSearch from './semantic_ui_components/SelectionSearch.js'
 import ChallengeTestsResults from './semantic_ui_components/ChallengeTestsResults.js'
-import { options, themeOptions, requireConfig } from './editor_settings/editorSettings.js'
+import { themeOptions } from './editor_settings/editorSettings.js'
 import { Button, Segment, Dimmer, Container } from 'semantic-ui-react'
 import { divideCollectionIntoPieces } from './helpers.js'
+import AceEditor from 'react-ace'
+import 'brace/mode/javascript'
+import 'brace/theme/monokai'
+import 'brace/theme/terminal'
+import 'brace/theme/github'
+import 'brace/keybinding/vim'
 
 class ChallengeBoard extends React.Component {
   constructor (props) {
@@ -20,7 +25,7 @@ class ChallengeBoard extends React.Component {
     this.state = {
       code: '',
       selectedLanguage: '',
-      selectedTheme: 'vs-dark',
+      selectedTheme: 'monokai',
       displayStyle: 'none',
       showRedBorder: '',
       showAlert: false,
@@ -47,13 +52,13 @@ class ChallengeBoard extends React.Component {
    */
   buildDescription () {
     let sampleInput = this.props.description.sample_input !== undefined && this.props.description.sample_input.length >= 1 ? (
-      <div className='challenge-desc-sample-input'>
+      <div className='io-format'>
         <h3>Sample Input</h3>
         <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.sample_input)}} />
       </div>
     ) : (<div />)
     let sampleOutput = this.props.description.sample_output !== undefined && this.props.description.sample_output.length >= 1 ? (
-      <div className='challenge-desc-sample-output'>
+      <div className='io-format'>
         <h3>Sample Output:</h3>
         <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.sample_output)}} />
       </div>
@@ -69,7 +74,7 @@ class ChallengeBoard extends React.Component {
     return (
       <div className='challenge-description'>
         <div className='challenge-desc-content'>
-          <h1>Description:</h1>
+          <h3>Description:</h3>
           <div dangerouslySetInnerHTML={{__html: this.parseTextIntoHTML(this.props.description.content)}} />
         </div>
         <div className='challenge-desc-input-format'>
@@ -199,7 +204,6 @@ class ChallengeBoard extends React.Component {
 
   themeChangeHandler (event, theme) {
     this.setState({selectedTheme: theme.value})
-    console.log(theme.value)
   }
 
   /**
@@ -255,6 +259,7 @@ class ChallengeBoard extends React.Component {
 
   submitSolution () {
     if (this.state.selectedLanguage) {
+      console.log(this.props.id)
       postChallengeSolution(this.props.id, this.state.code, this.state.selectedLanguage).then(submission => {
         this.setState({hasSubmitted: true, isGrading: true})
 
@@ -280,12 +285,9 @@ class ChallengeBoard extends React.Component {
   }
 
   render () {
-    // TODO: Show test results
-    // TODO: Create new component for editor options
     return (
       <Container>
         <div className='challenge-board'>
-          <h1 className='challenge-board-title'>{this.props.name}</h1>
           {this.buildDescription()}
           <div className='editor-options'>
             <div className='lang-choice-select'>
@@ -305,19 +307,27 @@ class ChallengeBoard extends React.Component {
             text={this.state.alertDesc}
             onConfirm={() => this.setState({ showAlert: false })}
           />
-          <MonacoEditor
-            height='600'
-            options={options}
-            language={this.state.selectedLanguage.toLowerCase()}
+          <AceEditor
+            mode='javascript'
+            keyboardHandler='vim'
             theme={this.state.selectedTheme}
+            name='blah2'
+            width='100%'
             value={this.state.code}
-            onChange={this.onChange}
-            editorDidMount={this.editorDidMount}
-            requireConfig={requireConfig}
-          />
+            fontSize={18}
+            showPrintMargin
+            showGutter
+            highlightActiveLine
+            setOptions={{
+              enableBasicAutocompletion: true,
+              enableLiveAutocompletion: true,
+              enableSnippets: false,
+              showLineNumbers: true,
+              useWorker: false,
+              tabSize: 2
+            }} />
           <Button fluid className='submit-solution-btn' color='orange' onClick={this.submitSolution}>Submit solution</Button>
           {this.state.solutionResultsJSX}
-          <script src={'/node_modules/monaco-editor/min/vs/loader.js'} />
         </div>
       </Container>
     )
@@ -326,7 +336,7 @@ class ChallengeBoard extends React.Component {
 
 ChallengeBoard.propTypes = {
   id: PropTypes.number,
-  name: PropTypes.string,
+  // name: PropTypes.string,
   // rating: PropTypes.number,
   // score: PropTypes.number,
   description: PropTypes.shape({
