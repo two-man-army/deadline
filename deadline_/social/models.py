@@ -343,7 +343,11 @@ class Notification(models.Model):
     # e.g One user likes your photo, another does again, another again, and when you login you'll get 3 different notifications? No thanks.
 
     class Meta:
-        ordering = ('updated_at', )  # order by updated_at, as we might make some notificaion unread
+        ordering = ('updated_at', )  # order by updated_at, as we might update notifications to simulate squashing
+
+    @staticmethod
+    def fetch_unread_notifications_for_user(user: User):
+        return Notification.objects.filter(recipient=user, is_read=False).order_by('updated_at')
 
 
 @receiver(pre_save, sender=Notification)

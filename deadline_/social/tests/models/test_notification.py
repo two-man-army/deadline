@@ -17,7 +17,7 @@ from social.models import Notification, NewsfeedItem, NewsfeedItemComment
 from social.serializers import NotificationSerializer
 
 
-class NotifiationItemTests(TestCase, TestHelperMixin):
+class NotificationTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
 
@@ -250,6 +250,26 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
         self.assertEqual(Notification.objects.count(), 0)
 
 
+class NotificationHelperMethodTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+
+    def test_fetch_unread_notifications_for_user(self):
+        sec_user = UserFactory()
+        chal = ChallengeFactory()
+        notifs = [Notification.objects.create_new_challenge_notification(recipient=(self.auth_user if i % 2 == 0 else sec_user),
+                                                                         challenge=chal) for i in range(20)]
+        for i, notif in enumerate(notifs):
+            notif.updated_at = random_datetime()
+            notif.is_read = True if i % 2 == 0 else False
+            notif.save()
+
+        # notifs should be ordered by updated_at
+        expected_notifs = list(sorted([notif for notif in notifs if notif.recipient == self.auth_user and not notif.is_read],
+                                      key=lambda x: x.updated_at))
+        self.assertEqual(list(Notification.fetch_unread_notifications_for_user(self.auth_user)), expected_notifs)
+
+
 class NotificationSerializerTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
@@ -275,7 +295,7 @@ class NotificationSerializerTests(TestCase, TestHelperMixin):
 
     def test_multiple_serializations_orders_by_updated_at(self):
         chal = ChallengeFactory()
-        notifs = [Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=chal)]
+        notifs = [Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=chal) for _ in range(15)]
         for notif in notifs:
             notif.updated_at = random_datetime()
             notif.save()
