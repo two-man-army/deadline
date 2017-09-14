@@ -72,7 +72,7 @@ def notification_token(request: Request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def unseen_notifications(request: Request):
+def unseen_notifications(request: Request, *args, **kwargs):
     """
     Returns all the unseen notifications for a user
     """
@@ -81,9 +81,25 @@ def unseen_notifications(request: Request):
         many=True).data)
 
 
+class NotificationReadView(APIView):
+    """
+    Given a list of notification IDs, marks all of them as read
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def put(self, request, *args, **kwargs):
+        if 'notifications' not in request.data or not all(type(item) == int for item in request.data['notifications']):
+            return Response(status=400,
+                            data={'error': f'Invalid request data, notifications must a list of notification IDs'})
+
+        Notification.objects.filter(id__in=request.data['notifications'], recipient=request.user).update(is_read=True)
+        return Response(status=200)
+
+
 class NotificationManageView(BaseManageView):
     VIEWS_BY_METHOD = {
-        'GET': unseen_notifications
+        'GET': unseen_notifications,
+        'PUT': NotificationReadView.as_view
     }
 
 

@@ -13,8 +13,6 @@ urlpatterns = [
     url(r'^feed/items/(?P<pk>\d+)/comments$', views.NewsfeedItemCommentCreateView.as_view(), name='newsfeed_comment_create'),
     url(r'^feed/items/(?P<nw_item_pk>\d+)/comments/(?P<pk>\d+)$', views.NewsfeedItemCommentReplyCreateView.as_view(),
         name='newsfeed_comment_reply_create'),
-
     url(r'^notifications/token$', views.notification_token, name='notification_token'),
-    url(r'^notifications/$', views.unseen_notifications, name='unseen_notification')
-    # TODO: Mark notif as seen URL
+    url(r'^notifications/$', views.NotificationManageView.as_view(), name='notification_views')
 ]
