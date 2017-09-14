@@ -63,6 +63,15 @@ def unfollow(request: Request, user: User):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def notification_token(request: Request):
+    if request.user.notification_token_is_expired():
+        request.user.refresh_notification_token()
+
+    return Response(status=200, data={'token': request.user.notification_token})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def unseen_notifications(request: Request):
     """
     Returns all the unseen notifications for a user
@@ -72,13 +81,10 @@ def unseen_notifications(request: Request):
         many=True).data)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def notification_token(request: Request):
-    if request.user.notification_token_is_expired():
-        request.user.refresh_notification_token()
-
-    return Response(status=200, data={'token': request.user.notification_token})
+class NotificationManageView(BaseManageView):
+    VIEWS_BY_METHOD = {
+        'GET': unseen_notifications
+    }
 
 
 class TextPostCreateView(CreateAPIView):

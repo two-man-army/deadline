@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+from unittest import TestCase as unittest_TestCase
 from unittest.mock import patch
 
 import jwt
@@ -6,6 +7,13 @@ from rest_framework.test import APITestCase
 
 from accounts.constants import NOTIFICATION_TOKEN_EXPIRY_MINUTES, NOTIFICATION_SECRET_KEY
 from challenges.tests.base import TestHelperMixin
+from social.views import NotificationManageView, unseen_notifications
+
+
+class NotificationManageViewTests(unittest_TestCase):
+    def test_defines_appropriate_views(self):
+        self.assertEqual(len(NotificationManageView.VIEWS_BY_METHOD.keys()), 1)
+        self.assertEqual(NotificationManageView.VIEWS_BY_METHOD['GET'], unseen_notifications)
 
 
 class UnseenNotificationsViewTests(APITestCase, TestHelperMixin):
