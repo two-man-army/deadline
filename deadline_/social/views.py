@@ -14,8 +14,8 @@ from challenges.models import Submission, Challenge
 from decorators import fetch_models
 from helpers import get_date_difference
 from social.errors import LikeAlreadyExistsError, NonExistentLikeError
-from social.models import NewsfeedItem, NewsfeedItemComment
-from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer
+from social.models import NewsfeedItem, NewsfeedItemComment, Notification
+from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer, NotificationSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, \
     NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, \
     MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES
@@ -59,6 +59,17 @@ def unfollow(request: Request, user: User):
 
     request.user.unfollow(user)
     return Response(status=204)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def unseen_notifications(request: Request):
+    """
+    Returns all the unseen notifications for a user
+    """
+    return Response(status=200, data=NotificationSerializer(
+        instance=Notification.fetch_unread_notifications_for_user(request.user),
+        many=True).data)
 
 
 @api_view(['GET'])
