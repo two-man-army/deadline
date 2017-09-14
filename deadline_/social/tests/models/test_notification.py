@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.test import TestCase
+from radar import random_datetime
 
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory, SubmissionCommentFactory, \
@@ -13,6 +14,7 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
+from social.serializers import NotificationSerializer
 
 
 class NotifiationItemTests(TestCase, TestHelperMixin):
@@ -246,3 +248,37 @@ class NotifiationItemTests(TestCase, TestHelperMixin):
 
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)
+
+
+class NotificationSerializerTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+
+    def test_serialize(self):
+        chal = ChallengeFactory()
+        expected_notif_content = {
+            'challenge_name': chal.name,
+            'challenge_id': chal.id,
+            'challenge_subcategory_name': chal.category.name
+        }
+
+        notif = Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=chal)
+        expected_data = {
+            'id': notif.id,
+            'type': notif.type,
+            'updated_at': notif.updated_at.isoformat().replace('+00:00', 'Z'),
+            'content': expected_notif_content
+        }
+
+        self.assertEqual(notif.content, expected_notif_content)
+        self.assertEqual(expected_data, NotificationSerializer(notif).data)
+
+    def test_multiple_serializations_orders_by_updated_at(self):
+        chal = ChallengeFactory()
+        notifs = [Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=chal)]
+        for notif in notifs:
+            notif.updated_at = random_datetime()
+            notif.save()
+
+        expected_data = NotificationSerializer(list(sorted(notifs, key=lambda x: x.updated_at)), many=True).data
+        self.assertEqual(expected_data, NotificationSerializer(notifs, many=True).data)

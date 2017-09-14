@@ -338,6 +338,12 @@ class Notification(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = NotificationManager()
+    # TODO: Implement some logic to squash multiple notifications into one
+    # TODO: And have it be marked as unread again,
+    # e.g One user likes your photo, another does again, another again, and when you login you'll get 3 different notifications? No thanks.
+
+    class Meta:
+        ordering = ('updated_at', )  # order by updated_at, as we might make some notificaion unread
 
 
 @receiver(pre_save, sender=Notification)
