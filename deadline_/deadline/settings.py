@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'challenges',
     'social',
     'private_chat',
+    'notifications',
 ]
 
 REST_FRAMEWORK = {
