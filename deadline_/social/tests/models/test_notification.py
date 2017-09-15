@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from radar import random_datetime
 
+from deadline.settings import RABBITMQ_CLIENT  # MagicMock under testing
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory, SubmissionFactory, ChallengeFactory, SubmissionCommentFactory, \
     ChallengeCommentFactory
@@ -56,6 +57,16 @@ class NotificationTests(TestCase, TestHelperMixin):
         self.assertEqual(notif.type, RECEIVE_FOLLOW_NOTIFICATION)
         self.assertEqual(notif.recipient, self.auth_user)
         self.assertEqual(notif.content, {'follower_id': sec_user.id, 'follower_name': sec_user.username})
+
+    def test_post_save_notif_sends_create_message_to_rabbit_mq(self):
+        sec_user = UserFactory()
+        notif = Notification.objects.create_receive_follow_notification(recipient=self.auth_user, follower=sec_user)
+
+        # Assert it is called only on creation
+        notif.type = 'tank'
+        notif.save()
+
+        RABBITMQ_CLIENT.send_notification_message.assert_called_once_with(notif.id)
 
     def test_create_receive_follow_notification_raises_invalid_follow_if_same_follower(self):
         with self.assertRaises(InvalidFollowError):

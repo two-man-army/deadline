@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import HStoreField
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
 from accounts.models import User
@@ -350,6 +350,9 @@ class Notification(models.Model):
         return Notification.objects.filter(recipient=user, is_read=False).order_by('updated_at')
 
 
+from deadline.celery import send_notification
+
+
 @receiver(pre_save, sender=Notification)
 def notification_type_validation(sender, instance, *args, **kwargs):
     # Validate that the type is valid and contains what we expect exactly
@@ -370,3 +373,9 @@ def notification_type_validation(sender, instance, *args, **kwargs):
             if field not in required_fields:
                 raise InvalidNotificationContentField(
                     f'The field {field} is not part of the expected content for {instance.type} and is unnecessary!')
+
+
+@receiver(post_save, sender=Notification)
+def notification_type_validation(sender, instance, created, *args, **kwargs):
+    if created:
+        send_notification(instance.id)
