@@ -11,11 +11,25 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
+
 from os.path import join, dirname
 from dotenv import load_dotenv
+import pika
+
+from external_services import RabbitMQClient
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
+
+if 'test' in sys.argv:
+    from unittest.mock import MagicMock
+    RABBITMQ_CLIENT = MagicMock()
+else:
+    RABBITMQ_CREDENTIALS = pika.PlainCredentials(os.environ.get('RABBITMQ_USERNAME'),
+                                                 os.environ.get('RABBITMQ_PASSWORD'))
+    RABBITMQ_PARAMETERS = pika.ConnectionParameters(host=os.environ.get('RABBITMQ_HOST'), credentials=RABBITMQ_CREDENTIALS)
+    RABBITMQ_CLIENT = RabbitMQClient(RABBITMQ_PARAMETERS)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -63,7 +77,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
     }
 }
-import sys
+
 if 'test' in sys.argv:
     CACHES['default'] = {'BACKEND': 'django.core.cache.backends.dummy.DummyCache',}
 
