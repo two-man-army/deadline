@@ -104,6 +104,16 @@ class UserModelTest(TestCase):
         self.assertTrue(hasattr(us, 'auth_token'))
         self.assertIsNotNone(us.auth_token)
 
+    @patch('accounts.models.generate_notification_token')
+    def test_user_register_creates_notification_token(self, gen_notif_mock):
+        gen_notif_mock.return_value = 'deadshot_brr_ak_make_your_head_rock'
+
+        new_user = User.objects.create(username='user3', password='123', email='user3@abv.bg', score=123, role=self.base_role)
+
+        self.assertIsNotNone(new_user.notification_token)
+        self.assertEqual(new_user.notification_token, 'deadshot_brr_ak_make_your_head_rock')
+        gen_notif_mock.assert_called_once()
+
     def test_user_register_assigns_default_user_role(self):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         self.assertEqual(us.role, self.base_role)
@@ -396,7 +406,8 @@ class UserModelTest(TestCase):
         us.refresh_notification_token()
 
         mock_is_exp.assert_called_once()
-        mock_gen.assert_called_once_with(us)
+        mock_gen.assert_called_with(us)
+        self.assertEqual(len(mock_gen.mock_calls), 2)  # called once on registration
         self.assertEqual(us.notification_token, 'token :)')
 
     @patch('accounts.models.generate_notification_token')
@@ -418,7 +429,8 @@ class UserModelTest(TestCase):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.refresh_notification_token(force=True)
 
-        mock_gen.assert_called_once_with(us)
+        mock_gen.assert_called_with(us)
+        self.assertEqual(len(mock_gen.mock_calls), 2)  # called once on registration as well
         self.assertEqual(us.notification_token, 'token :)')
 
     @patch('accounts.models.User.notification_token_is_expired')
@@ -427,8 +439,8 @@ class UserModelTest(TestCase):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.notification_token = 'h'
 
-        self.assertTrue(us.token_is_valid('h'))
-        self.assertFalse(us.token_is_valid('m'))
+        self.assertTrue(us.notification_token_is_valid('h'))
+        self.assertFalse(us.notification_token_is_valid('m'))
 
     @patch('accounts.models.User.notification_token_is_expired')
     def test_token_is_valid_expired_token(self, mock_is_exp):
@@ -436,7 +448,7 @@ class UserModelTest(TestCase):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)
         us.notification_token = 'h'
 
-        self.assertFalse(us.token_is_valid('h'))
+        self.assertFalse(us.notification_token_is_valid('h'))
 
     def test_notification_token_is_expired(self):
         us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role=self.base_role)

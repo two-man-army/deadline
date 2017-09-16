@@ -60,7 +60,7 @@ class User(AbstractBaseUser):
         self.notification_token = generate_notification_token(self)
         self.save()
 
-    def token_is_valid(self, token):
+    def notification_token_is_valid(self, token):
         return token == self.notification_token and not self.notification_token_is_expired()
 
     def fetch_newsfeed(self, start_offset=0, end_limit=None):
@@ -156,6 +156,7 @@ def user_post_save(sender, instance, created, *args, **kwargs):
     if not created:
         return
 
+    instance.notification_token = generate_notification_token(instance)
     Token.objects.create(user=instance)
     starter_proficiency = Proficiency.objects.filter(needed_percentage=0).first()
 
@@ -163,3 +164,5 @@ def user_post_save(sender, instance, created, *args, **kwargs):
     for subcat in SubCategory.objects.all():
         UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency,
                                                   user_score=0)
+
+    instance.save()
