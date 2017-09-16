@@ -1,3 +1,5 @@
+import json
+
 from websockets import WebSocketServerProtocol
 
 
@@ -30,3 +32,13 @@ class UserConnection(WebSocketConnection):
         received_message = await self.web_socket.recv()
         print(f'Received message {received_message} from user {self.user_id}')
         return received_message
+
+    async def send_message(self, payload):
+        """
+        Sends a payload (message) to one connection
+        """
+        try:
+            await self.web_socket.send(json.dumps(payload))
+        except Exception as e:
+            print(f'Could not send message to websocket due to {e}')
+
