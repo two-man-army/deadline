@@ -233,7 +233,7 @@ async def main_handler(websocket, path):
     """
     An Asyncio Task is created for every new websocket client connection
     that is established. This coroutine listens to messages from the connected
-    client and routes the message to the proper queue.
+    client and routes the message to the proper queue depending on the message type.
 
     This coroutine can be thought of as a producer.
 

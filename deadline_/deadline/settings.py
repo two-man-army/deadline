@@ -30,6 +30,7 @@ else:
                                                  os.environ.get('RABBITMQ_PASSWORD'))
     RABBITMQ_PARAMETERS = pika.ConnectionParameters(host=os.environ.get('RABBITMQ_HOST'), credentials=RABBITMQ_CREDENTIALS)
     RABBITMQ_CLIENT = RabbitMQClient(RABBITMQ_PARAMETERS)
+RABBITMQ_CONNECTION_URL = f"amqp://{os.environ.get('RABBITMQ_USERNAME')}:{os.environ.get('RABBITMQ_PASSWORD')}@{os.environ.get('RABBITMQ_HOST')}:5672/%2F"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

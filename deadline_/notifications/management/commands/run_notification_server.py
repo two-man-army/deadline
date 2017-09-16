@@ -5,8 +5,12 @@ import websockets
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+
+from notifications.notifications_consumer import NotificationConsumer
+
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # needs to be set before websockets for some reason
 from notifications import channels, handlers
+from deadline.settings import RABBITMQ_CONNECTION_URL
 
 
 class Command(BaseCommand):
@@ -21,8 +25,9 @@ class Command(BaseCommand):
             )
         )
 
-        # asyncio.async(handlers.new_messages_handler(channels.new_messages))
-        # asyncio.async(handlers.fetch_dialog_token(channels.fetch_dialog_token))
-        # asyncio.async(handlers.is_typing_handler(channels.is_typing))
         loop = asyncio.get_event_loop()
+
+        NotificationConsumer(RABBITMQ_CONNECTION_URL).run()
+
+        print(f'Running WS server on {settings.NOTIFICATIONS_WS_SERVER_HOST}:{settings.NOTIFICATIONS_WS_SERVER_PORT}')
         loop.run_forever()

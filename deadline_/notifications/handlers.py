@@ -1,2 +1,2 @@
 async def main_handler(websocket, path):
-    pass
+    print(f'Websocket connection on URL {path}')
