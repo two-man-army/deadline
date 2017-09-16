@@ -8,6 +8,11 @@ from notifications.router import MessageRouter
 ws_connections: {int: UserConnection} = {}
 
 
+async def authenticate_user(stream):
+    while True:
+        auth_message = await stream.get()
+        print(auth_message)
+
 async def main_handler(websocket, path):
     user_id = extract_connect_path(path)
     try:

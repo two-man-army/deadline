@@ -1,6 +1,9 @@
 import asyncio
 import json
 
+from .channels import user_authentication
+
+
 class MessageRouter(object):
     """
     The purpose of this class is to
@@ -9,6 +12,7 @@ class MessageRouter(object):
         send the message to the appropriate queue (which is connected to a handler)
     """
     MESSAGE_QUEUES = {
+        'authentication': user_authentication,
     }
 
     def __init__(self, data):
