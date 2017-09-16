@@ -1,3 +1,4 @@
+import asyncio
 import websockets
 
 from accounts.models import User
@@ -34,13 +35,24 @@ async def authenticate_user(stream):
         auth_message = await stream.get()
         token, user_id = auth_message.get('token'), auth_message.get('user_id')
         if user_id not in ws_connections:
-            return  # no such connection, we cannot send this to anybody
-        # TODO: Maybe store user in his connection?
-        user: User = User.objects.get(id=user_id)
+            print(f'Somebody else tried to authenticate user_id {user_id}.')
+            continue
+
+        user: User = User.objects.get(id=user_id) # TODO: Maybe store user in his connection?
+        user_connection: UserConnection = ws_connections[user.id]
         if not user.notification_token_is_valid(token):
-            return  # TODO: Send fail message
-        # User is authenticated
-        ws_connections[user.id].is_valid = True
+            asyncio.ensure_future(user_connection.send_message({
+                "type": "ERROR",
+                "message": "Notification token is invalid or expired!"
+            }))
+            continue
+
+        # User has authenticated
+        user_connection.is_valid = True
+        asyncio.ensure_future(user_connection.send_message({
+            "type": "OK",
+            "message": "Successfully authenticated!"
+        }))
 
 
 async def main_handler(websocket, path):
