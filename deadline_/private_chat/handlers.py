@@ -3,6 +3,8 @@ Defines handlers for the different type of received messages
 """
 import json
 import logging
+
+import asyncio
 import websockets
 
 from accounts.models import User
@@ -59,16 +61,16 @@ async def fetch_dialog_token(stream):
 
         to_send_message, payload = _fetch_dialog_token(packet, owner_id, opponent_id)
         if to_send_message:
-            await send_message(ws_connections[(owner_id, opponent_id)].web_socket, payload)
+            asyncio.ensure_future(send_message(ws_connections[(owner_id, opponent_id)].web_socket, payload))
 
             opponent_is_online = ((opponent_id, owner_id) in ws_connections
                                   and ws_connections[(opponent_id, owner_id)].is_valid)
-            await send_message(ws_connections[(owner_id, opponent_id)].web_socket,
-                               {'type': 'online-check', 'is_online': opponent_is_online})
+            asyncio.ensure_future(send_message(ws_connections[(owner_id, opponent_id)].web_socket,
+                                               {'type': 'online-check', 'is_online': opponent_is_online}))
             # Notify the opponent that we came online
             if opponent_is_online:
-                await send_message(ws_connections[(opponent_id, owner_id)].web_socket,
-                                   {'type': 'online-check', 'is_online': True})
+                asyncio.ensure_future(send_message(ws_connections[(opponent_id, owner_id)].web_socket,
+                                                   {'type': 'online-check', 'is_online': True}))
 
 
 def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
@@ -190,17 +192,17 @@ async def is_typing_handler(stream):
         to_send_msg, payload = _is_typing(owner_id, opponent_id, conversation_token)
         owner_socket = ws_connections[(owner_id, opponent_id)].web_socket
         if to_send_msg:
-            await send_message(owner_socket, payload)
+            asyncio.ensure_future(send_message(owner_socket, payload))
             continue
 
         opponent_is_online = ((opponent_id, owner_id) in ws_connections
                               and ws_connections[(opponent_id, owner_id)].is_valid)
         if opponent_is_online:
             opponent_socket = ws_connections[(opponent_id, owner_id)].web_socket
-            await send_message(opponent_socket, {'type': 'opponent-typing'})
+            asyncio.ensure_future(send_message(opponent_socket, {'type': 'opponent-typing'}))
         else:
-            await send_message(owner_socket, {'type': 'error', 'error_type': WARNING_ERR_TYPE,
-                                              'message': f'User {opponent_id} is offline!'})
+            asyncio.ensure_future(send_message(owner_socket, {'type': 'error', 'error_type': WARNING_ERR_TYPE,
+                                                              'message': f'User {opponent_id} is offline!'}))
 
 
 def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (bool, dict):
@@ -256,7 +258,7 @@ async def main_handler(websocket, path):
 
     ws_connections[(owner.id, opponent.id)] = WebSocketConnection(websocket, owner_id, opponent_id)
 
-    await send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'})
+    asyncio.ensure_future(send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'}))
 
     # While the websocket is open, listen for incoming messages/events
     is_overwritten = False
@@ -283,7 +285,7 @@ async def main_handler(websocket, path):
         if not is_overwritten:
             del ws_connections[(owner.id, opponent.id)]
             if (opponent.id, owner.id) in ws_connections and ws_connections[(opponent.id, owner.id)].is_valid:
-                await send_message(ws_connections[(opponent.id, owner.id)].web_socket,
-                                   {'type': 'online-check', 'is_online': False})
+                asyncio.ensure_future(send_message(ws_connections[(opponent.id, owner.id)].web_socket,
+                                                   {'type': 'online-check', 'is_online': False}))
         else:
             logger.debug(f'Deleted old overwritten socket with ID {(owner.id, opponent.id)}')
