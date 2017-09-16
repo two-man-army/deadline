@@ -9,15 +9,43 @@ ws_connections: {int: UserConnection} = {}
 
 
 async def authenticate_user(stream):
+    """
+    Authenticates the user, essentially validating his connection
+        and proving he is who he claims to be
+    Expects the following JSON
+    {
+    "type": "authentication",
+    "token": YOUR_NOTIFICATION_TOKEN_HERE,
+    "user_id": YOUR_ID_HERE,
+    }
+    Can either return
+        an error message
+        {
+            "type": "ERROR",
+            "message": "Notification token is invalid or expired!"
+        }
+        an OK acknowledgement
+        {
+            "type": "OK",
+            "message": "Successfully authenticated"
+        }
+    """
     while True:
         auth_message = await stream.get()
-        print(auth_message)
+        token, user_id = auth_message.get('token'), auth_message.get('user_id')
+        if user_id not in ws_connections:
+            return  # no such connection, we cannot send this to anybody
+        # TODO: Maybe store user in his connection?
+        user: User = User.objects.get(id=user_id)
+        if not user.notification_token_is_valid(token):
+            return  # TODO: Send fail message
+        # User is authenticated
+        ws_connections[user.id].is_valid = True
+
 
 async def main_handler(websocket, path):
     user_id = extract_connect_path(path)
     try:
-        # TODO: validate user_id
-        # owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
         user = User.objects.get(id=user_id)
     except User.DoesNotExist as e:
         print(str(e))
