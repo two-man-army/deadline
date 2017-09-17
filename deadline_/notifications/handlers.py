@@ -9,6 +9,43 @@ from notifications.router import MessageRouter
 ws_connections: {int: UserConnection} = {}
 
 
+class NotificationsHandler:
+    """
+    This class receives a Notification message from RabbitMQ and sends it out to the appropriate
+    """
+
+    @staticmethod
+    def receive_message(msg: str) -> bool:
+        try:
+            print(f'Notifications handler received msg {msg}')
+            # TODO: Parse notif id, fetch notif, check if read
+            print('Sending message to async router')
+            # asyncio.ensure_future(MessageRouter('{"type": "authentication"}')())
+            pass
+        except Exception:
+            return False
+
+        return True
+
+    @staticmethod
+    async def send_notification(stream):
+        """
+        Expects a Notification JSON in the following form:
+        {
+            "notification": {notification_object},
+            "recipient_id": {ID of the user who is meant to receive this}
+        }
+
+        Sends the following JSON to the recipient
+        {
+            "type": "NOTIFICATION",
+            "notification": {...}
+        }
+        """
+        while True:
+            notification_obj = await stream.get()
+
+
 async def authenticate_user(stream):
     """
     Authenticates the user, essentially validating his connection

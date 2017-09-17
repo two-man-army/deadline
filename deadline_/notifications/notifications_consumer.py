@@ -207,8 +207,3 @@ class NotificationsConsumerConnection(BaseRabbitMQConsumerConnection):
     EXCHANGE_TYPE = 'fanout'
     QUEUE = 'text'
     ROUTING_KEY = 'example.text'
-
-
-class NotificationsHandler:
-    def receive_message(self, msg: str):
-        pass
