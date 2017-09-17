@@ -20,7 +20,7 @@ class NotificationsHandler:
             print(f'Notifications handler received msg {msg}')
             # TODO: Parse notif id, fetch notif, check if read
             print('Sending message to async router')
-            # asyncio.ensure_future(MessageRouter('{"type": "authentication"}')())
+            asyncio.ensure_future(MessageRouter('{"type": "send_notification"}')())
             pass
         except Exception:
             return False
@@ -44,6 +44,7 @@ class NotificationsHandler:
         """
         while True:
             notification_obj = await stream.get()
+            print(f'send_notification received OBJ {notification_obj}')
 
 
 async def authenticate_user(stream):

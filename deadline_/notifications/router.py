@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from .channels import user_authentication
+from .channels import user_authentication, send_notification
 
 
 class MessageRouter(object):
@@ -13,6 +13,7 @@ class MessageRouter(object):
     """
     MESSAGE_QUEUES = {
         'authentication': user_authentication,
+        'send_notification': send_notification
     }
 
     def __init__(self, data):
