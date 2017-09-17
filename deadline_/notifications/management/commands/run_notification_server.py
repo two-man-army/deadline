@@ -6,7 +6,7 @@ import websockets
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from notifications.notifications_consumer import NotificationConsumer
+from notifications.notifications_consumer import NotificationsConsumerConnection, NotificationsHandler
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # needs to be set before websockets for some reason
 from notifications import channels, handlers
@@ -28,7 +28,7 @@ class Command(BaseCommand):
         asyncio.async(handlers.authenticate_user(channels.user_authentication))
         loop = asyncio.get_event_loop()
 
-        NotificationConsumer(RABBITMQ_CONNECTION_URL).run()
+        NotificationsConsumerConnection(RABBITMQ_CONNECTION_URL, NotificationsHandler()).run()
 
         print(f'Running WS server on {settings.NOTIFICATIONS_WS_SERVER_HOST}:{settings.NOTIFICATIONS_WS_SERVER_PORT}')
         loop.run_forever()

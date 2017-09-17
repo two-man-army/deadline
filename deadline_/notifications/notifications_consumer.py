@@ -8,8 +8,12 @@ from pika.channel import Channel
 from pika.frame import Method as FrameMethod
 
 
-class NotificationConsumer:
+class BaseRabbitMQConsumerConnection:
     """
+    This is the base class of a RabbitMQ consumer, it sets up and maintains the connection.
+    Classes should inherit this and define the needed static variables t be able to properly set up a connection
+    A handler object must also be sent, one who processes the message. see: on_message method
+
     The RabbitMQ connection which is part of the async event loop and receives notifications for it to send out
 
     If RabbitMQ closes the connection, it will reopen it. You should
@@ -26,15 +30,10 @@ class NotificationConsumer:
         which triggers a chain of on_success_xxx methods. These methods declare the exchange, the queue, bind the queue
             and setup the correct handlers for receiving a message and closing a connection
     """
-    EXCHANGE = 'notifications'
-    EXCHANGE_TYPE = 'fanout'
-    QUEUE = 'text'
-    ROUTING_KEY = 'example.text'
+    NEEDED_STATIC_VARIABLES = ['EXCHANGE', 'EXCHANGE_TYPE', 'QUEUE', 'ROUTING_KEY']
 
-    def __init__(self, amqp_url: str):
-        """Create a new instance of the consumer class, passing in the AMQP
-        URL used to connect to RabbitMQ.
-
+    def __init__(self, amqp_url: str, handler):
+        """
         :param str amqp_url: The AMQP url to connect with
         """
         self._connection = None
@@ -42,6 +41,8 @@ class NotificationConsumer:
         self._closing = False
         self._consumer_tag = None
         self._url = amqp_url
+        self.handler = handler
+        self._validate_instantiation()
 
     def run(self):
         """
@@ -62,17 +63,16 @@ class NotificationConsumer:
                    __: BasicProperties, body: str):
         """
         The heart of this class, this is the method that processes a received message
+        It sends it to the consumer's receive_message method and expects a boolean value returned, indicating
+            if the message was processed
         """
         # LOGGER.info('Received message # %s from %s: %s',
         #             basic_deliver.delivery_tag, properties.app_id, body)
         print(f'Received message {body}')
-        try:
-            # TODO: Call the messageRouter to pass it to the handler
-            # TODO: Check if an error in the handler will come up here, so as to not send an acknowledgement
-            pass
-        except:
-            pass
-        self._channel.basic_ack(basic_deliver.delivery_tag)  # acknowledge that the message has been processed
+        was_processed = self.handler.receive_message(body)
+
+        if was_processed:
+            self._channel.basic_ack(basic_deliver.delivery_tag)  # acknowledge that the message has been processed
 
     # Setup methods
 
@@ -189,3 +189,26 @@ class NotificationConsumer:
         """
         if not self._closing:
             self._connection = self.connect()
+
+    def _validate_instantiation(self):
+        """ Validates that the class was instantiated properly"""
+        for var_name in self.NEEDED_STATIC_VARIABLES:
+            if not hasattr(self, var_name):
+                raise Exception(f'{var_name} needs to be defined for {self.__class__.__name__}')
+        if not hasattr(self.handler, 'receive_message'):
+            raise Exception('Consumer is required to have defined the receive_message method!')
+
+
+class NotificationsConsumerConnection(BaseRabbitMQConsumerConnection):
+    """
+    This class defines the needed variables to establish a RabbitMQ connection
+    """
+    EXCHANGE = 'notifications'
+    EXCHANGE_TYPE = 'fanout'
+    QUEUE = 'text'
+    ROUTING_KEY = 'example.text'
+
+
+class NotificationsHandler:
+    def receive_message(self, msg: str):
+        pass
