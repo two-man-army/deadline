@@ -4,7 +4,7 @@ from django.test import TestCase
 from rest_framework.renderers import JSONRenderer
 
 from challenges.tests.base import TestHelperMixin
-from notifications.errors import NotificationAlreadyRead
+from notifications.errors import NotificationAlreadyRead, OfflineRecipientError
 from notifications.handlers import NotificationsHandler
 from social.models import Notification
 from social.serializers import NotificationSerializer
@@ -15,20 +15,37 @@ class NotificationsHandlerTests(TestCase, TestHelperMixin):
         self.base_set_up(create_user=True)
         self.notification = Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=self.challenge)
 
-    def test_fetch_notification_returns_notif(self):
+    def test_receive_message_functions(self):
+        with patch('notifications.handlers.ws_connections', {self.notification.recipient_id: MagicMock()}):
+            self.assertTrue(NotificationsHandler.receive_message(str(self.notification.id)))
+
+    @patch('notifications.handlers.NotificationsHandler.validate_notification')
+    def test_fetch_notification_returns_notif_and_calls_validate(self, mock_validate_notif):
         received_notif = NotificationsHandler.fetch_notification(self.notification.id)
         self.assertEqual(received_notif, self.notification)
+        mock_validate_notif.assert_called_once_with(self.notification)
 
-    def test_fetch_notifications_raises_does_not_exist_if_id_invalid(self):
-        with self.assertRaises(Notification.DoesNotExist):
-            NotificationsHandler.fetch_notification(1123)
+    def test_validate_validates_successfully(self):
+        with patch('notifications.handlers.ws_connections', {self.notification.recipient_id: MagicMock(is_valid=True)}):
+            NotificationsHandler.validate_notification(self.notification)
 
-    def test_fetch_notifications_raises_notfication_already_read_if_notif_read(self):
+    def test_validate_raises_already_read_if_notif_read(self):
         self.notification.is_read = True
         self.notification.save()
 
         with self.assertRaises(NotificationAlreadyRead):
-            NotificationsHandler.fetch_notification(self.notification.id)
+            NotificationsHandler.validate_notification(self.notification)
+
+    def test_validate_OfflineRecipientError_if_recipient_not_in_ws_conns(self):
+        with patch('notifications.handlers.ws_connections', {}):
+            with self.assertRaises(OfflineRecipientError):
+                NotificationsHandler.validate_notification(self.notification)
+
+    def test_validate_OfflineRecipientError_if_recipient_cons_not_validated(self):
+        ws_conn_mock = {self.notification.recipient_id: MagicMock(is_valid=False)}
+        with patch('notifications.handlers.ws_connections', ws_conn_mock):
+            with self.assertRaises(OfflineRecipientError):
+                NotificationsHandler.validate_notification(self.notification)
 
     def test_build_notification_message(self):
         notif_json = JSONRenderer().render(data=NotificationSerializer(self.notification).data).decode('utf-8')
@@ -78,6 +95,14 @@ class NotificationsHandlerTests(TestCase, TestHelperMixin):
     @patch('notifications.handlers.NotificationsHandler.fetch_notification')
     def test_receive_message_returns_true_on_notif_doesnt_exist_err(self, mock_fetch):
         mock_fetch.side_effect = Notification.DoesNotExist()
+        is_processed = NotificationsHandler.receive_message('1111')
+
+        self.assertTrue(is_processed)
+        mock_fetch.assert_called_once_with(1111)
+
+    @patch('notifications.handlers.NotificationsHandler.fetch_notification')
+    def test_receive_message_returns_true_on_offlineRecipientError(self, mock_fetch):
+        mock_fetch.side_effect = OfflineRecipientError()
         is_processed = NotificationsHandler.receive_message('1111')
 
         self.assertTrue(is_processed)

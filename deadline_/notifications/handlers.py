@@ -4,7 +4,7 @@ from rest_framework.renderers import JSONRenderer
 
 from accounts.models import User
 from notifications.classes import UserConnection
-from notifications.errors import NotificationAlreadyRead
+from notifications.errors import NotificationAlreadyRead, OfflineRecipientError
 from notifications.helpers import extract_connect_path
 from notifications.router import MessageRouter
 from social.models import Notification
@@ -25,10 +25,24 @@ class NotificationsHandler:
         Fetches a notification and checks if its read
         """
         notif: Notification = Notification.objects.get(id=notif_id)
-        if notif.is_read:
-            raise NotificationAlreadyRead(f'Notification with ID {notif.id} is already read!')
+        try:
+            NotificationsHandler.validate_notification(notif)
+        except (NotificationAlreadyRead, OfflineRecipientError) as e:
+            raise e
 
         return notif
+
+    @staticmethod
+    def validate_notification(notif: Notification):
+        """
+        Validates that the notification is not read, that the recipient is connected and validated
+        """
+        if notif.is_read:
+            raise NotificationAlreadyRead(f'Notification with ID {notif.id} is already read!')
+        elif notif.recipient_id not in ws_connections:
+            raise OfflineRecipientError(f'The notification recipient {notif.recipient_id} is not connected!')
+        elif not ws_connections[notif.recipient_id].is_valid:
+            raise OfflineRecipientError(f'The notification recipient {notif.recipient_id} is not authorized!')
 
     @staticmethod
     def build_notification_message(notif: Notification) -> str:
@@ -55,6 +69,7 @@ class NotificationsHandler:
         try:
             notif_id = int(msg)
             notification = NotificationsHandler.fetch_notification(notif_id)
+
             notif_msg: str = NotificationsHandler.build_notification_message(notification)
 
             # We've done the most we can and we can acknowledge the message being sent.
@@ -64,6 +79,8 @@ class NotificationsHandler:
             asyncio.ensure_future(MessageRouter(notif_msg)())
         except (NotificationAlreadyRead, Notification.DoesNotExist) as e:
             print(f'DEBUG - Notification was either read or with an invalid ID - {e}')
+        except OfflineRecipientError as e:
+            print(f'Recipient was not eligible to receive the message - {e}')
         except ValueError as e:
             print(f'Value error, most probably while parsing MSG - msg: {msg}\n {e}')
             return False
