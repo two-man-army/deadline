@@ -17,7 +17,15 @@ from private_chat.models import Dialog, Message
 from private_chat.services.dialog import get_or_create_dialog_token
 from private_chat.router import MessageRouter
 
-
+"""
+REVISIT: This way of handling connections is not scalable in the slightest way - 
+    we can never run more than one process of this server, 
+    as the ws_connections variable will not get shared and ws frames could be sent
+    to the process that did not establish the connection
+IDEA:    Maybe it could get shared via some message broker (e.g connection established/authenticated/disconnected) 
+            or store it in something like Redis or a DB?
+IDEA:    Maybe we could rewrite it to something which allows parallelism with shared memory
+"""
 logger = logging.getLogger('django-private-dialog')
 ws_connections: {(int, int): WebSocketConnection} = {}
 

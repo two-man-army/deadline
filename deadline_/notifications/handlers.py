@@ -10,6 +10,13 @@ from notifications.router import MessageRouter
 from social.models import Notification
 from social.serializers import NotificationSerializer
 
+"""
+REVISIT: This way of handling connections is not scalable in the slightest way - 
+    we can never run more than one process of this server, as the ws_connections variable will not get shared
+IDEA:    Maybe it could get shared via some message broker (e.g connection established/authenticated/disconnected) 
+            or store it in something like Redis or a DB?
+IDEA:    Maybe we could rewrite it to something which allows parallelism with shared memory
+"""
 ws_connections: {int: UserConnection} = {}
 
 
@@ -106,8 +113,9 @@ class NotificationsHandler:
         }
         """
         while True:
-            notification_obj = await stream.get()
-            print(f'send_notification received OBJ {notification_obj}')
+            notification_obj: dict = await stream.get()
+            if notification_obj.get('type') != 'send_notification':
+                raise Exception(f'Unexpected type {notification_obj.get("type")} at send_notification handler!')
 
 
 async def authenticate_user(stream):
