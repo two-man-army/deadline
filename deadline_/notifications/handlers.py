@@ -16,6 +16,7 @@ ws_connections: {int: UserConnection} = {}
 class NotificationsHandler:
     """
     This class receives a Notification message from RabbitMQ and sends it out to the appropriate
+    It expects the message to be a simple ID(integer), e.g "1"
     """
 
     @staticmethod
@@ -45,16 +46,29 @@ class NotificationsHandler:
             "type": "send_notification"
         }).decode('utf-8')
 
-
     @staticmethod
     def receive_message(msg: str) -> bool:
+        """
+        Processes the message and sends it to the handler
+        :return: a boolean indicating if hte message was successfully processed
+        """
         try:
-            print(f'Notifications handler received msg {msg}')
-            # TODO: Parse notif id, fetch notif, check if read
-            print('Sending message to async router')
-            asyncio.ensure_future(MessageRouter('{"type": "send_notification"}')())
-            pass
-        except Exception:
+            notif_id = int(msg)
+            notification = NotificationsHandler.fetch_notification(notif_id)
+            notif_msg: str = NotificationsHandler.build_notification_message(notification)
+
+            # We've done the most we can and we can acknowledge the message being sent.
+            # If anything in the handler fails - fuck.
+            # Making him send some sort of callback for acknowledgement is possible but overly-complex at this time
+            print('DEBUG - Sending message {notif_msg} to router')
+            asyncio.ensure_future(MessageRouter(notif_msg)())
+        except (NotificationAlreadyRead, Notification.DoesNotExist) as e:
+            print(f'DEBUG - Notification was either read or with an invalid ID - {e}')
+        except ValueError as e:
+            print(f'Value error, most probably while parsing MSG - msg: {msg}\n {e}')
+            return False
+        except Exception as e:
+            print(f'Exception while receiving a message - {e}')
             return False
 
         return True
