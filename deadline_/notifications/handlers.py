@@ -82,7 +82,7 @@ class NotificationsHandler:
             # We've done the most we can and we can acknowledge the message being sent.
             # If anything in the handler fails - fuck.
             # Making him send some sort of callback for acknowledgement is possible but overly-complex at this time
-            print('DEBUG - Sending message {notif_msg} to router')
+            print(f'DEBUG - Sending message {notif_msg} to router')
             asyncio.ensure_future(MessageRouter(notif_msg)())
         except (NotificationAlreadyRead, Notification.DoesNotExist) as e:
             print(f'DEBUG - Notification was either read or with an invalid ID - {e}')
@@ -116,6 +116,16 @@ class NotificationsHandler:
             notification_obj: dict = await stream.get()
             if notification_obj.get('type') != 'send_notification':
                 raise Exception(f'Unexpected type {notification_obj.get("type")} at send_notification handler!')
+
+            recipient_id = notification_obj.get('recipient_id')
+            if recipient_id not in ws_connections or not ws_connections[recipient_id].is_valid:
+                print(f'Notification recipient with ID {recipient_id} was either not connected or not authorized')
+                continue
+
+            asyncio.ensure_future(ws_connections[recipient_id].send_message({
+                "type": "NOTIFICATION",
+                "notification": notification_obj['notification']
+            }))
 
 
 async def authenticate_user(stream):
