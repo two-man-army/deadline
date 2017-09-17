@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+from rest_framework.renderers import JSONRenderer
 
 from accounts.models import User
 from notifications.classes import UserConnection
@@ -7,6 +8,7 @@ from notifications.errors import NotificationAlreadyRead
 from notifications.helpers import extract_connect_path
 from notifications.router import MessageRouter
 from social.models import Notification
+from social.serializers import NotificationSerializer
 
 ws_connections: {int: UserConnection} = {}
 
@@ -26,6 +28,23 @@ class NotificationsHandler:
             raise NotificationAlreadyRead(f'Notification with ID {notif.id} is already read!')
 
         return notif
+
+    @staticmethod
+    def build_notification_message(notif: Notification) -> str:
+        """
+        Given a Notification object, build the following JSON string (for the handler to receive):
+        {
+            "notification": {...},
+            "recipient_id": {ID of the user who is meant to receive this}
+            "type": "send_notification"
+        }
+        """
+        return JSONRenderer().render({
+            "notification": NotificationSerializer(notif).data,
+            "recipient_id": notif.recipient_id,
+            "type": "send_notification"
+        }).decode('utf-8')
+
 
     @staticmethod
     def receive_message(msg: str) -> bool:
