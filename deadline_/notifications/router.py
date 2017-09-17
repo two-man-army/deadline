@@ -19,7 +19,7 @@ class MessageRouter(object):
         try:
             self.packet = json.loads(data)
         except Exception as e:
-            pass
+            print(f'Exception in MessageRouter while parsing JSON string - {e}')
 
     @asyncio.coroutine
     def __call__(self):
