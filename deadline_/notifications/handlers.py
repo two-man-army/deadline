@@ -3,8 +3,10 @@ import websockets
 
 from accounts.models import User
 from notifications.classes import UserConnection
+from notifications.errors import NotificationAlreadyRead
 from notifications.helpers import extract_connect_path
 from notifications.router import MessageRouter
+from social.models import Notification
 
 ws_connections: {int: UserConnection} = {}
 
@@ -13,6 +15,17 @@ class NotificationsHandler:
     """
     This class receives a Notification message from RabbitMQ and sends it out to the appropriate
     """
+
+    @staticmethod
+    def fetch_notification(notif_id: int) -> Notification:
+        """
+        Fetches a notification and checks if its read
+        """
+        notif: Notification = Notification.objects.get(id=notif_id)
+        if notif.is_read:
+            raise NotificationAlreadyRead(f'Notification with ID {notif.id} is already read!')
+
+        return notif
 
     @staticmethod
     def receive_message(msg: str) -> bool:
