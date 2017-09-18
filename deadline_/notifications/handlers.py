@@ -157,9 +157,8 @@ async def authenticate_user(stream):
             print(f'Somebody else tried to authenticate user_id {user_id}.')
             continue
 
-        user: User = User.objects.get(id=user_id) # TODO: Maybe store user in his connection?
-        user_connection: UserConnection = ws_connections[user.id]
-        if not user.notification_token_is_valid(token):
+        user_connection: UserConnection = ws_connections[user_id]
+        if not user_connection.user.notification_token_is_valid(token):
             asyncio.ensure_future(user_connection.send_message({
                 "type": "ERROR",
                 "message": "Notification token is invalid or expired!"
@@ -189,7 +188,7 @@ async def main_handler(websocket, path):
             return
         # logger.debug(f'Overwrote socket with ID {(owner.id, opponent.id)}')
 
-    ws_connections[user.id] = UserConnection(websocket, user.id)
+    ws_connections[user.id] = UserConnection(websocket, user)
 
     # TODO: Send confirmation message
     # await send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'})

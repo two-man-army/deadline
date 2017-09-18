@@ -22,11 +22,9 @@ class UserConnection(WebSocketConnection):
     It is responsible for keeping the state of the connection (authenticated or not)
         and for sending/receiving messages from it
     """
-    def notify_user(self, notification_id: int):
-        """
-        Sends a notification to the user
-        """
-        pass
+    def __init__(self, socket: WebSocketServerProtocol, user):
+        super().__init__(socket, user.id)
+        self.user = user
 
     async def receive_message(self):
         received_message = await self.web_socket.recv()
