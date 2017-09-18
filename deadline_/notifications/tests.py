@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+import asyncio
 from django.test import TestCase
-from rest_framework.renderers import JSONRenderer
 
 from challenges.tests.base import TestHelperMixin
 from notifications.errors import NotificationAlreadyRead, OfflineRecipientError
@@ -109,3 +109,50 @@ class NotificationsHandlerTests(TestCase, TestHelperMixin):
 
         self.assertFalse(is_processed)
         mock_send.assert_not_called()
+
+    @patch('notifications.handlers.asyncio.ensure_future')
+    def test_send_notification_send_message(self, mock_ensure):
+        @asyncio.coroutine
+        def _test():
+            send_message_mock = MagicMock()
+            send_message_mock.return_value = 1
+            expected_message = {
+                "type": "NOTIFICATION",
+                "notification": NotificationSerializer(self.notification).data
+            }
+            ws_conn_mock = MagicMock(send_message=send_message_mock, is_valid=True)
+            with patch('notifications.handlers.ws_connections', {self.notification.recipient_id: ws_conn_mock}):
+                yield from NotificationsHandler.send_notification(self.notification)
+
+            send_message_mock.assert_called_once_with(expected_message)
+            mock_ensure.assert_called_once_with(send_message_mock.return_value)
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+        self.loop.run_until_complete(_test())
+
+    @patch('notifications.handlers.asyncio.ensure_future')
+    def test_send_notification_doesnt_send_if_recipient_not_in_ws(self, mock_ensure):
+        @asyncio.coroutine
+        def _test():
+            with patch('notifications.handlers.ws_connections', {}):
+                NotificationsHandler.send_notification(self.notification)
+                mock_ensure.assert_not_called()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+        self.loop.run_until_complete(_test())
+
+    @patch('notifications.handlers.asyncio.ensure_future')
+    def test_send_notification_doesnt_send_if_recipient_not_validated(self, mock_ensure):
+        @asyncio.coroutine
+        def _test():
+            send_message_mock = MagicMock()
+            send_message_mock.return_value = 1
+
+            ws_conn_mock = MagicMock(send_message=send_message_mock, is_valid=False)
+            with patch('notifications.handlers.ws_connections', {self.notification.recipient_id: ws_conn_mock}):
+                yield from NotificationsHandler.send_notification(self.notification)
+            send_message_mock.assert_not_called()
+            mock_ensure.assert_not_called()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+        self.loop.run_until_complete(_test())
