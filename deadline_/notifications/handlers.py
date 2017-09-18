@@ -22,14 +22,15 @@ ws_connections: {int: UserConnection} = {}
 
 class NotificationsHandler:
     """
-    This class receives a Notification message from RabbitMQ and sends it out to the appropriate
+    This class receives a Notification message from RabbitMQ through the `receive_message()` method
+        and sends it out to the recipient if he is connected
     It expects the message to be a simple ID(integer), e.g "1"
     """
 
     @staticmethod
     def fetch_notification(notif_id: int) -> Notification:
         """
-        Fetches a notification and checks if its read
+        Fetches a notification and validates it
         """
         notif: Notification = Notification.objects.get(id=notif_id)
         try:
@@ -52,22 +53,6 @@ class NotificationsHandler:
             raise OfflineRecipientError(f'The notification recipient {notif.recipient_id} is not authorized!')
 
     @staticmethod
-    def build_notification_message(notif: Notification) -> str:
-        """
-        Given a Notification object, build the following JSON string (for the handler to receive):
-        {
-            "notification": {...},
-            "recipient_id": {ID of the user who is meant to receive this}
-            "type": "send_notification"
-        }
-        """
-        return JSONRenderer().render({
-            "notification": NotificationSerializer(notif).data,
-            "recipient_id": notif.recipient_id,
-            "type": "send_notification"
-        }).decode('utf-8')
-
-    @staticmethod
     def receive_message(msg: str) -> bool:
         """
         Processes the message and sends it to the handler
@@ -77,13 +62,7 @@ class NotificationsHandler:
             notif_id = int(msg)
             notification = NotificationsHandler.fetch_notification(notif_id)
 
-            notif_msg: str = NotificationsHandler.build_notification_message(notification)
-
-            # We've done the most we can and we can acknowledge the message being sent.
-            # If anything in the handler fails - fuck.
-            # Making him send some sort of callback for acknowledgement is possible but overly-complex at this time
-            print(f'DEBUG - Sending message {notif_msg} to router')
-            asyncio.ensure_future(MessageRouter(notif_msg)())
+            asyncio.ensure_future(NotificationsHandler.send_notification(notification))
         except (NotificationAlreadyRead, Notification.DoesNotExist) as e:
             print(f'DEBUG - Notification was either read or with an invalid ID - {e}')
         except OfflineRecipientError as e:
@@ -98,34 +77,23 @@ class NotificationsHandler:
         return True
 
     @staticmethod
-    async def send_notification(stream):
+    async def send_notification(notification: Notification):
         """
-        Expects a Notification JSON in the following form:
-        {
-            "notification": {notification_object},
-            "recipient_id": {ID of the user who is meant to receive this}
-        }
-
         Sends the following JSON to the recipient
         {
             "type": "NOTIFICATION",
             "notification": {...}
         }
         """
-        while True:
-            notification_obj: dict = await stream.get()
-            if notification_obj.get('type') != 'send_notification':
-                raise Exception(f'Unexpected type {notification_obj.get("type")} at send_notification handler!')
+        recipient_id = notification.recipient_id
+        if recipient_id not in ws_connections or not ws_connections[recipient_id].is_valid:
+            print(f'Notification recipient with ID {recipient_id} was either not connected or not authorized')
+            return
 
-            recipient_id = notification_obj.get('recipient_id')
-            if recipient_id not in ws_connections or not ws_connections[recipient_id].is_valid:
-                print(f'Notification recipient with ID {recipient_id} was either not connected or not authorized')
-                continue
-
-            asyncio.ensure_future(ws_connections[recipient_id].send_message({
-                "type": "NOTIFICATION",
-                "notification": notification_obj['notification']
-            }))
+        asyncio.ensure_future(ws_connections[recipient_id].send_message({
+            "type": "NOTIFICATION",
+            "notification": NotificationSerializer(notification).data
+        }))
 
 
 async def authenticate_user(stream):

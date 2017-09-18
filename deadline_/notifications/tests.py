@@ -47,77 +47,65 @@ class NotificationsHandlerTests(TestCase, TestHelperMixin):
             with self.assertRaises(OfflineRecipientError):
                 NotificationsHandler.validate_notification(self.notification)
 
-    def test_build_notification_message(self):
-        notif_json = JSONRenderer().render(data=NotificationSerializer(self.notification).data).decode('utf-8')
-        expected_json = f'{{"notification":{notif_json},"recipient_id":{self.notification.recipient_id},' \
-                        f'"type":"send_notification"}}'
-
-        received_json: str = NotificationsHandler.build_notification_message(self.notification)
-
-        self.assertEqual(received_json, expected_json)
-
-    @patch('notifications.handlers.NotificationSerializer')
-    def test_build_notification_message_calls_notif_serializer(self, mock_notif_serializer):
-        mock_notif_serializer.return_value = MagicMock(data='hello')
-        NotificationsHandler.build_notification_message(self.notification)
-
-        mock_notif_serializer.assert_called_once_with(self.notification)
-
-    @patch('notifications.handlers.MessageRouter')
-    @patch('notifications.handlers.NotificationsHandler.build_notification_message')
     @patch('notifications.handlers.NotificationsHandler.fetch_notification')
+    @patch('notifications.handlers.NotificationsHandler.send_notification')
     @patch('notifications.handlers.asyncio.ensure_future')
-    def test_receive_message_calls_expected_methods(self, mock_ensure, mock_fetch, mock_build_notif, mock_router):
-        router_ret_mock = MagicMock()
-        router_ret_mock.return_value = 'juice crew'
+    def test_receive_message_calls_expected_methods(self, mock_ensure_future, mock_send_notif, mock_fetch):
+        mock_send_notif.return_value = 'fixThis'
         mock_fetch.return_value = 'HipHop'
-        mock_build_notif.return_value = 'Instrumental'
-        mock_router.return_value = router_ret_mock
 
         is_processed = NotificationsHandler.receive_message('1')
 
         self.assertTrue(is_processed)
-
         mock_fetch.assert_called_once_with(1)
-        mock_build_notif.assert_called_once_with(mock_fetch.return_value)
-        mock_router.assert_called_once_with(mock_build_notif.return_value)
-        mock_ensure.assert_called_once_with(router_ret_mock.return_value)
+        mock_send_notif.assert_called_once_with(mock_fetch.return_value)
+        mock_ensure_future.assert_called_once_with(mock_send_notif.return_value)
 
     @patch('notifications.handlers.NotificationsHandler.fetch_notification')
-    def test_receive_message_returns_true_on_notif_already_read_error(self, mock_fetch):
+    @patch('notifications.handlers.NotificationsHandler.send_notification')
+    def test_receive_message_returns_true_on_notif_already_read_error(self, mock_send, mock_fetch):
         mock_fetch.side_effect = NotificationAlreadyRead()
 
         is_processed = NotificationsHandler.receive_message('1111')
 
         self.assertTrue(is_processed)
         mock_fetch.assert_called_once_with(1111)
+        mock_send.assert_not_called()
 
     @patch('notifications.handlers.NotificationsHandler.fetch_notification')
-    def test_receive_message_returns_true_on_notif_doesnt_exist_err(self, mock_fetch):
+    @patch('notifications.handlers.NotificationsHandler.send_notification')
+    def test_receive_message_returns_true_on_notif_doesnt_exist_err(self, mock_send, mock_fetch):
         mock_fetch.side_effect = Notification.DoesNotExist()
         is_processed = NotificationsHandler.receive_message('1111')
 
         self.assertTrue(is_processed)
         mock_fetch.assert_called_once_with(1111)
+        mock_send.assert_not_called()
 
     @patch('notifications.handlers.NotificationsHandler.fetch_notification')
-    def test_receive_message_returns_true_on_offlineRecipientError(self, mock_fetch):
+    @patch('notifications.handlers.NotificationsHandler.send_notification')
+    def test_receive_message_returns_true_on_offlineRecipientError(self, mock_send, mock_fetch):
         mock_fetch.side_effect = OfflineRecipientError()
         is_processed = NotificationsHandler.receive_message('1111')
 
         self.assertTrue(is_processed)
         mock_fetch.assert_called_once_with(1111)
+        mock_send.assert_not_called()
 
-    def test_receive_message_returns_false_on_invalid_message(self):
+    @patch('notifications.handlers.NotificationsHandler.send_notification')
+    def test_receive_message_returns_false_on_invalid_message(self, mock_send):
         """ This is unexpected, as most probably the message structure is not as expected
         (not a valid int for the parsing), as such, it should not bep rocessed """
         is_processed = NotificationsHandler.receive_message('{"notif_id": "1"}')
         self.assertFalse(is_processed)
+        mock_send.assert_not_called()
 
     @patch('notifications.handlers.NotificationsHandler.fetch_notification')
-    def test_receive_message_returns_false_on_other_error(self, mock_fetch):
+    @patch('notifications.handlers.NotificationsHandler.send_notification')
+    def test_receive_message_returns_false_on_other_error(self, mock_send, mock_fetch):
         """ This is an unexpected error and as such the message should be marked as non-processed"""
         mock_fetch.side_effect = Exception()
         is_processed = NotificationsHandler.receive_message('1111')
 
         self.assertFalse(is_processed)
+        mock_send.assert_not_called()
