@@ -258,6 +258,37 @@ div.login-html input:focus {
   .page-not-found p {
     margin-top: 20px; }
 
+html,
+body {
+  height: 100%; }
+
+video {
+  width: 100%;
+  position: absolute; }
+
+div.lang-choice-select,
+div.theme-select {
+  /* A wrapper for the Select choice for submission language */
+  display: inline-block;
+  width: 200px; }
+
+div.lang-choice-select {
+  margin-right: 5px; }
+
+.editor-options {
+  margin: 50px 0 10px 0; }
+
+.submit-solution-btn {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px; }
+  .submit-solution-btn button {
+    margin-right: 0 !important; }
+
+.leaderboard-search i.dropdown.icon {
+  /* Slight space for the triangle icon in the dropdown*/
+  margin-left: 10px !important; }
+
 .page-not-found {
   margin-top: -20px;
   padding: 20px;
@@ -925,5 +956,10 @@ div.login-html input:focus {
     font-size: 18px;
     font-family: "Poppins Light";
     color: #460a40; }
+
+.challenge-details .ant-progress-status-success .ant-progress-circle-path {
+  stroke: lightgreen; }
+.challenge-details .ant-progress-status-success .ant-progress-text {
+  color: lightgreen; }
 
 /*# sourceMappingURL=style.css.map */
