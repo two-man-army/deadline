@@ -3,7 +3,6 @@
  */
 import React from 'react'
 import PropTypes from 'prop-types'
-// import MonacoEditor from 'react-monaco-editor'
 import SweetAlert from 'sweetalert-react'
 import { EmptySolutionError } from './errors'
 import {getLanguageDetail, postChallengeSolution, getChallengeSolution, getSolutionTests} from './requests.js'
@@ -326,7 +325,9 @@ class ChallengeBoard extends React.Component {
               useWorker: false,
               tabSize: 2
             }} />
-          <Button fluid className='submit-solution-btn' color='orange' onClick={this.submitSolution}>Submit solution</Button>
+          <div className='submit-solution-btn'>
+            <Button color='orange' onClick={this.submitSolution}>Submit solution</Button>
+          </div>
           {this.state.solutionResultsJSX}
         </div>
       </Container>
