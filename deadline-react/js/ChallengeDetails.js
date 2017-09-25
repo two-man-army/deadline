@@ -7,6 +7,8 @@ import SubmissionsTable from './semantic_ui_components/SubmissionsTable.js'
 import LeaderboardTable from './semantic_ui_components/LeaderboardTable.js'
 import { Container } from 'semantic-ui-react'
 
+const TabPane = Tabs.TabPane
+
 class ChallengeDetails extends React.Component {
   constructor (props) {
     super(props)
@@ -85,8 +87,6 @@ class ChallengeDetails extends React.Component {
   }
 
   render () {
-    const TabPane = Tabs.TabPane
-
     return (
       <div className='main challenge-details'>
         <Container>
