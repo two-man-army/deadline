@@ -36,7 +36,6 @@ class ChallengeBoard extends React.Component {
     }
     this.buildDescription = this.buildDescription.bind(this)
     this.onChange = this.onChange.bind(this)
-    this.editorDidMount = this.editorDidMount.bind(this)
     this.submitSolution = this.submitSolution.bind(this)
     this.langChangeHandler = this.langChangeHandler.bind(this)
     this.themeChangeHandler = this.themeChangeHandler.bind(this)
@@ -179,11 +178,6 @@ class ChallengeBoard extends React.Component {
     })
   }
 
-  editorDidMount (editor, monaco) {
-    console.log('editorDidMount', editor)
-    editor.focus()
-  }
-
   onChange (newValue, e) {
     this.setState({code: newValue})
   }
@@ -258,7 +252,6 @@ class ChallengeBoard extends React.Component {
 
   submitSolution () {
     if (this.state.selectedLanguage) {
-      console.log(this.props.id)
       postChallengeSolution(this.props.id, this.state.code, this.state.selectedLanguage).then(submission => {
         this.setState({hasSubmitted: true, isGrading: true})
 
