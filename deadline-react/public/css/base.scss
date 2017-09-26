@@ -22,9 +22,14 @@ div.lang-choice-select {
     margin: 50px 0 10px 0;
 }
 
-button.fluid.submit-solution-btn {
-    margin: 10px 0;
-    opacity: .9;
+.submit-solution-btn {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+
+    button {
+        margin-right: 0 !important;
+    }
 }
 
 .leaderboard-search i.dropdown.icon {

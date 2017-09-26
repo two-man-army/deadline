@@ -1,0 +1,81 @@
+.challenge-details {
+    .challenge-name {
+        margin-bottom: 60px;
+        font-size: 24px;
+        font-family: "Poppins Light";
+    }
+
+    .ant-tabs-bar {
+        margin-bottom: 32px;
+    }
+
+    .ant-tabs-nav  {
+        font-size: 18px;
+        font-family: "Poppins Regular";
+        font-weight: normal;
+
+        .ant-tabs-tab {
+            padding-bottom: 15px;
+            color: #333333;
+
+            &:hover {
+                color: #333333;
+                opacity: .6;
+            }
+        }
+
+        .ant-tabs-tab-active {
+            color: #ff8e17;
+
+            &:hover {
+                color: #ff8e17;
+            }
+        }
+
+        .ant-tabs-ink-bar  {
+            background-color: #b7b7b7;
+        }
+    }
+
+    .challenge-description {
+        font-size: 14px;
+
+        & > div {
+            margin-bottom: 30px;
+        }
+
+        & > div > div {
+            margin-left: 20px;
+        }
+
+        .variable-descriptor {
+            font-family: "Times New Roman";
+            font-weight: bold;
+            font-size: 1.25rem;
+            font-style: italic;
+        }
+
+        .io-format > div {
+            padding: 10px;
+            width: 250px;
+            background: #f4f1fa;
+            font-family: "Poppins Regular";
+            font-size: 18px;
+            color: #555555;
+        }
+
+        .challenge-desc-constraints  {
+            font-family: "Poppins Regular";
+            font-size: 18px;
+            font-weight: normal;
+            color: #777777;
+        }
+
+        h3  {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-family: "Poppins Light";
+            color: #460a40;
+        }
+    }
+}

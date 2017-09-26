@@ -8,13 +8,12 @@
 @import 'page-not-found';
 
 // Base. Contains some obsolate styles which will be removed at some point.
+@import 'base.scss';
+
 @import 'page-not-found';
 
 // Header
 @import 'components/header';
-
-// Challenge
-@import 'components/challenge-page';
 
 // Profile
 @import 'components/profile';
@@ -45,3 +44,9 @@
 
 // Challenges
 @import 'components/challenges';
+
+// Challenge details
+@import 'components/challenge-details/challenge';
+
+// Test case status
+@import 'components/testcase';

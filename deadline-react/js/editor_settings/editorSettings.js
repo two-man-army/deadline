@@ -8,19 +8,19 @@ const options = {
 
 const themeOptions = [
   {
-    key: 'vs',
-    value: 'vs',
-    text: 'Visual Studio'
+    key: 'monokai',
+    value: 'monokai',
+    text: 'Monokai'
   },
   {
-    key: 'vs-dark',
-    value: 'vs-dark',
-    text: 'Visual Studio Dark'
+    key: 'terminal',
+    value: 'terminal',
+    text: 'Terminal'
   },
   {
-    key: 'hc-black',
-    value: 'hc-black',
-    text: 'High Contrast'
+    key: 'github',
+    value: 'github',
+    text: 'Github'
   }
 ]
 
