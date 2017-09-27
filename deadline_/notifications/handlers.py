@@ -1,10 +1,10 @@
 import asyncio
 import websockets
-from rest_framework.renderers import JSONRenderer
 
 from accounts.models import User
 from notifications.classes import UserConnection
-from notifications.errors import NotificationAlreadyRead, OfflineRecipientError
+from notifications.errors import NotificationAlreadyRead, OfflineRecipientError, InvalidNotificationToken, \
+    RecipientMismatchError
 from notifications.helpers import extract_connect_path
 from notifications.router import MessageRouter
 from social.models import Notification
@@ -109,7 +109,7 @@ async def authenticate_user(stream):
     Can either return
         an error message
         {
-            "type": "ERROR",
+            "type": "INVALID_NOTIFICATION_TOKEN",
             "message": "Notification token is invalid or expired!"
         }
         an OK acknowledgement
@@ -127,8 +127,9 @@ async def authenticate_user(stream):
 
         user_connection: UserConnection = ws_connections[user_id]
         if not user_connection.user.notification_token_is_valid(token):
+            # TODO: This means that User 2 can spam an invalid token posing as User 3 and User 3 will receive a series of ERROR messages
             asyncio.ensure_future(user_connection.send_message({
-                "type": "ERROR",
+                "type": "INVALID_NOTIFICATION_TOKEN",
                 "message": "Notification token is invalid or expired!"
             }))
             continue
@@ -139,6 +140,73 @@ async def authenticate_user(stream):
             "type": "OK",
             "message": "Successfully authenticated!"
         }))
+
+
+def _read_notification(notification_token, user_id, notification_id):
+    if user_id not in ws_connections:
+        print(f'Somebody else tried to authenticate user_id {user_id}.')
+        raise OfflineRecipientError(f'Somebody else tried to authenticate user_id {user_id}.')
+    if not ws_connections[user_id].is_valid:
+        raise OfflineRecipientError(f'User {user_id} is not authenticated!')
+
+    user_connection: UserConnection = ws_connections[user_id]
+    if not user_connection.user.notification_token_is_valid(notification_token):
+        # TODO: This means that User 2 can spam an invalid token posing as User 3 and User 3 will receive a series of ERROR messages
+        raise InvalidNotificationToken(f'User with ID {user_id} provided an invalid notification token {notification_token}!')
+
+    notif = Notification.objects.get(id=notification_id)
+    if not notif.is_recipient(user_connection.user):
+        raise RecipientMismatchError(f'User {user_id} is not the recipient for notification {notification_id}')
+
+    notif.is_read = True
+    notif.save()
+
+async def read_notification(stream):
+    """
+    Marks a notification as read by the user.
+
+    Expects the following JSON
+    {
+        "type": "read_notification",
+        "notification_id": {Notification ID}
+        "user_id": {User ID}
+        "token": {User Notification Token}
+    }
+    Can either send a
+        {
+            "type": "ERROR"
+            "message": "XXX"
+        }
+        or a
+        {
+            "type": "OK",
+            "message": ""
+        }
+    """
+
+    while True:
+        message = await stream.get()
+
+        token, user_id, notif_id = message.get('token'), message.get('user_id'), message.get('notification_id')
+
+        try:
+            _read_notification(token, user_id, notif_id)
+            asyncio.ensure_future(ws_connections[user_id].send_message({
+                "type": "OK",
+                "message": f"Notification with ID {notif_id} was read successfully"
+            }))
+        except InvalidNotificationToken:
+            asyncio.ensure_future(ws_connections[user_id].send_message({
+                "type": "INVALID_NOTIFICATION_TOKEN",
+                "message": "Notification token is invalid or expired!"
+            }))
+        except (RecipientMismatchError, Notification.DoesNotExist):
+            asyncio.ensure_future(ws_connections[user_id].send_message({
+                "type": "ERROR",
+                "message": "You are not the recipient of that notification!"
+            }))
+        except OfflineRecipientError:
+            pass
 
 
 async def main_handler(websocket, path):
@@ -176,17 +244,17 @@ async def main_handler(websocket, path):
 
             try:
                 print(f'Data is {data}')
-                # TODO: Define authentication message handler and notification read handler
                 await MessageRouter(data)()
             except Exception as e:
-                pass
                 # logger.error(f'Could not route message {e}')
+                pass
 
     except websockets.exceptions.InvalidState:  # User disconnected
+        # logger.debug(f'User {user_id} most likely disconnected!')
         pass
     finally:
         if not is_overwritten:
             del ws_connections[user.id]
         else:
-            pass
             # logger.debug(f'Deleted old overwritten socket with ID {(owner.id, opponent.id)}')
+            pass

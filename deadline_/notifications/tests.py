@@ -4,8 +4,9 @@ import asyncio
 from django.test import TestCase
 
 from challenges.tests.base import TestHelperMixin
-from notifications.errors import NotificationAlreadyRead, OfflineRecipientError
-from notifications.handlers import NotificationsHandler
+from notifications.errors import NotificationAlreadyRead, OfflineRecipientError, RecipientMismatchError, \
+    InvalidNotificationToken
+from notifications.handlers import NotificationsHandler, _read_notification
 from social.models import Notification
 from social.serializers import NotificationSerializer
 
@@ -135,7 +136,7 @@ class NotificationsHandlerTests(TestCase, TestHelperMixin):
         @asyncio.coroutine
         def _test():
             with patch('notifications.handlers.ws_connections', {}):
-                NotificationsHandler.send_notification(self.notification)
+                yield from NotificationsHandler.send_notification(self.notification)
                 mock_ensure.assert_not_called()
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
@@ -156,3 +157,50 @@ class NotificationsHandlerTests(TestCase, TestHelperMixin):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
         self.loop.run_until_complete(_test())
+
+
+class ReadNotificationHandlerTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.user_id = 1
+        self.user_obj_mock = MagicMock(id=self.user_id)
+        self.user_connection_mock = MagicMock(user=self.user_obj_mock, is_valid=True)
+        self.ws_connections_mock = {self.user_id: self.user_connection_mock}
+
+    def test_sets_notif_is_read(self):
+        self.base_set_up(create_user=True)
+        self.notification = Notification.objects.create_new_challenge_notification(recipient=self.auth_user,
+                                                                                   challenge=self.challenge)
+        self.user_obj_mock.id = self.auth_user.id
+        with patch('notifications.handlers.ws_connections', {self.auth_user.id: self.user_connection_mock}) as mock_conn:
+            _read_notification('notification_token', self.auth_user.id, self.notification.id)
+
+            self.user_connection_mock.user.notification_token_is_valid.assert_called_once_with('notification_token')
+
+            self.notification.refresh_from_db()
+            self.assertTrue(self.notification.is_read)
+
+    def test_raises_recipient_mismatch_error_if_user_is_not_recipient_of_notification(self):
+        self.base_set_up(create_user=True)
+        self.notification = Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=self.challenge)
+        self.user_obj_mock.id = 111
+        with patch('notifications.handlers.ws_connections', {111: self.user_connection_mock}) as mock_conn:
+            with self.assertRaises(RecipientMismatchError):
+                _read_notification('notification_token', 111, self.notification.id)
+                self.user_connection_mock.user.notification_token_is_valid.assert_called_once_with('notification_token')
+
+    def test_raises_offline_recipient_error_if_user_not_authenticated(self):
+        with patch('notifications.handlers.ws_connections', self.ws_connections_mock):
+            with self.assertRaises(OfflineRecipientError):
+                _read_notification('', self.user_id + 1, 1)
+
+    def test_raises_offline_recipient_error_if_user_not_connected(self):
+        self.user_connection_mock.is_valid = False
+        with patch('notifications.handlers.ws_connections', self.ws_connections_mock):
+            with self.assertRaises(OfflineRecipientError):
+                _read_notification('', self.user_id, 1)
+
+    def test_invalid_token_raises_invalid_notification_token(self):
+        self.user_obj_mock.notification_token_is_valid.return_value = False
+        with patch('notifications.handlers.ws_connections', self.ws_connections_mock):
+            with self.assertRaises(InvalidNotificationToken):
+                _read_notification('', self.user_id, 1)

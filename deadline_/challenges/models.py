@@ -288,7 +288,7 @@ class UserSubcategoryProficiency(models.Model):
             self.proficiency = next_prof
             # fetch next_proficiency awards and award the user
             prof_award = SubcategoryProficiencyAward.objects.filter(subcategory_id=self.subcategory.id, proficiency_id=next_prof.id).first()
-
+            
             self.user.score += prof_award.xp_reward
             self.user.save()
             self.save()
