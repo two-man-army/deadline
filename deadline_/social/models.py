@@ -349,6 +349,9 @@ class Notification(models.Model):
     def fetch_unread_notifications_for_user(user: User):
         return Notification.objects.filter(recipient=user, is_read=False).order_by('updated_at')
 
+    def is_recipient(self, user: User):
+        return self.recipient_id == user.id
+
 
 from deadline.celery import send_notification
 

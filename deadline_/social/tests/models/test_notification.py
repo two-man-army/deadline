@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from django.test import TestCase
 from radar import random_datetime
@@ -259,6 +259,14 @@ class NotificationTests(TestCase, TestHelperMixin):
 
         self.assertIsNone(notif)
         self.assertEqual(Notification.objects.count(), 0)
+
+    def test_is_recipient_returns_true(self):
+        notif = Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=ChallengeFactory())
+        self.assertTrue(notif.is_recipient(self.auth_user))
+
+    def test_is_recipient_returns_false_when_not_recipient(self):
+        notif = Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=ChallengeFactory())
+        self.assertFalse(notif.is_recipient(MagicMock(id=111)))
 
 
 class NotificationHelperMethodTests(TestCase, TestHelperMixin):
