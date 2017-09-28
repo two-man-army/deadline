@@ -17,7 +17,7 @@ class NotificationManageViewTests(unittest_TestCase):
     def test_defines_appropriate_views(self):
         self.assertEqual(len(NotificationManageView.VIEWS_BY_METHOD.keys()), 2)
         self.assertEqual(NotificationManageView.VIEWS_BY_METHOD['GET'], unseen_notifications)
-        self.assertEqual(NotificationManageView.VIEWS_BY_METHOD['PUT'], NotificationReadView.as_view())
+        self.assertEqual(NotificationManageView.VIEWS_BY_METHOD['PUT'], NotificationReadView.as_view)
 
 
 class UnseenNotificationsViewTests(APITestCase, TestHelperMixin):

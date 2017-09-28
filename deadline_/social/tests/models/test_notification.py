@@ -58,7 +58,8 @@ class NotificationTests(TestCase, TestHelperMixin):
         self.assertEqual(notif.recipient, self.auth_user)
         self.assertEqual(notif.content, {'follower_id': sec_user.id, 'follower_name': sec_user.username})
 
-    def test_post_save_notif_sends_create_message_to_rabbit_mq(self):
+    @patch('social.models.send_notification')
+    def test_post_save_notif_sends_create_message_to_rabbit_mq(self, mock_send_notif):
         sec_user = UserFactory()
         notif = Notification.objects.create_receive_follow_notification(recipient=self.auth_user, follower=sec_user)
 
@@ -66,7 +67,7 @@ class NotificationTests(TestCase, TestHelperMixin):
         notif.type = 'tank'
         notif.save()
 
-        RABBITMQ_CLIENT.send_notification_message.assert_called_once_with(notif.id)
+        mock_send_notif.assert_called_once_with(notif.id)
 
     def test_create_receive_follow_notification_raises_invalid_follow_if_same_follower(self):
         with self.assertRaises(InvalidFollowError):
