@@ -1,11 +1,16 @@
 """
 The RabbitMQ class which establishes the connection, creates exchanges/queues and delegates messages
 """
+from datetime import datetime
+import logging
+
 import pika
 from pika import adapters
 from pika.spec import BasicProperties, Basic
 from pika.channel import Channel
 from pika.frame import Method as FrameMethod
+
+LOGGER = logging.getLogger('notifications')
 
 
 class BaseRabbitMQConsumerConnection:
@@ -66,9 +71,7 @@ class BaseRabbitMQConsumerConnection:
         It sends it to the consumer's receive_message method and expects a boolean value returned, indicating
             if the message was processed
         """
-        # LOGGER.info('Received message # %s from %s: %s',
-        #             basic_deliver.delivery_tag, properties.app_id, body)
-        print(f'Received message {body}')
+        LOGGER.info(f'Received message #{basic_deliver.delivery_tag}: {body}')
         was_processed = self.handler.receive_message(body)
 
         if was_processed:
@@ -82,10 +85,9 @@ class BaseRabbitMQConsumerConnection:
         been established. It passes the handle to the connection object in
         case we need it, but in this case, we'll just mark it unused.
         """
-        # LOGGER.info('Connection opened')
-        print('Conneced to rabbitmq')
         self._connection.add_on_close_callback(self.on_connection_closed)
         self._connection.channel(on_open_callback=self.on_channel_open)
+        LOGGER.info(f'{datetime.now()} Connected  to RabbitMQ')
 
     def on_channel_open(self, channel: Channel):
         self._channel = channel
@@ -94,8 +96,7 @@ class BaseRabbitMQConsumerConnection:
         self.setup_exchange(self.EXCHANGE)
 
     def setup_exchange(self, exchange_name: str):
-        # LOGGER.info('Declaring exchange %s', exchange_name)
-        print(f'Declaring exchange {exchange_name}')
+        LOGGER.info(f'Declaring exchange {exchange_name}')
         self._channel.exchange_declare(self.on_successful_exchange_declaration,
                                        exchange_name,
                                        self.EXCHANGE_TYPE)
@@ -108,8 +109,7 @@ class BaseRabbitMQConsumerConnection:
         """
         Binds the queue to the exchange
         """
-        # LOGGER.info('Binding %s to %s with %s',
-        #             self.EXCHANGE, self.QUEUE, self.ROUTING_KEY)
+        LOGGER.info(f'Binding {self.EXCHANGE} to queue {self.QUEUE} with key {self.ROUTING_KEY}')
         self._channel.queue_bind(self.on_bindok, self.QUEUE,
                                  self.EXCHANGE, self.ROUTING_KEY)
 
@@ -117,7 +117,6 @@ class BaseRabbitMQConsumerConnection:
         """
         Invoked when a queue is successfully binded. Starts consumation of messages
         """
-        # LOGGER.info('Queue bound')
         # Start consuming messages
         self._channel.add_on_cancel_callback(self.on_consumer_cancelled)
         self._consumer_tag = self._channel.basic_consume(self.on_message,
@@ -126,9 +125,9 @@ class BaseRabbitMQConsumerConnection:
     # Close connection methods/handlers
 
     def close_connection(self):
-            """This method closes the connection to RabbitMQ."""
-            # LOGGER.info('Closing connection')
-            self._connection.close()
+        """This method closes the connection to RabbitMQ."""
+        LOGGER.info('Closing connection to RabbitMQ')
+        self._connection.close()
 
     def on_connection_closed(self, _: adapters.AsyncioConnection, reply_code: int, reply_text: str):
         """
@@ -137,8 +136,7 @@ class BaseRabbitMQConsumerConnection:
         """
         self._channel = None
         if not self._closing:
-            # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
-            #                reply_code, reply_text)
+            LOGGER.warning(f'Connection closed, reopening in 5 seconds: ({reply_code}) {reply_text}')
             # Attempt to reconnect
             self._connection.add_timeout(5, self.reconnect)
 
@@ -150,13 +148,11 @@ class BaseRabbitMQConsumerConnection:
         to shutdown the object.
         This also gets called when we cleanly shutdown the connection from the code
         """
-        # LOGGER.warning('Channel %i was closed: (%s) %s',
-        #                channel, reply_code, reply_text)
+        LOGGER.warning(f'Channel {channel} was closed: ({reply_code}) {reply_text}')
         self._connection.close()
 
     def on_consumer_cancelled(self, _: FrameMethod):
-        # LOGGER.info('Consumer was cancelled remotely, shutting down: %r',
-        #             method_frame)
+        LOGGER.info(f'Consumer was cancelled remotely, shutting down: {method_frame}')
         if self._channel:
             self._channel.close()
 
@@ -167,21 +163,21 @@ class BaseRabbitMQConsumerConnection:
         This will invoke the on_channel_closed method once the channel has been
             closed, which will in-turn close the connection.
         """
-        # LOGGER.info('RabbitMQ acknowledged the cancellation of the consumer; Closing the channel')
+        LOGGER.info('RabbitMQ acknowledged the cancellation of the consumer; Closing the channel')
         self._channel.close()
 
     def stop(self):
         """
         Cleanly shuts down the connection
         """
-        # LOGGER.info('Stopping')
+        LOGGER.info('Stopping')
         print('Stopping RabbitMQ')
         self._closing = True
         if self._channel:
-            # LOGGER.info('Sending a Basic.Cancel RPC command to RabbitMQ')
+            LOGGER.info('Sending a Basic.Cancel RPC command to RabbitMQ')
             self._channel.basic_cancel(self.on_cancelok, self._consumer_tag)
         print('Stopped RabbitMQ')
-        # LOGGER.info('Stopped')
+        LOGGER.info('Stopped')
 
     def reconnect(self):
         """

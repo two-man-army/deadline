@@ -1,5 +1,6 @@
 import asyncio
 
+import logging
 import uvloop
 import websockets
 
@@ -11,6 +12,8 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # needs to be set befor
 from notifications import channels, handlers
 from notifications.notifications_consumer import NotificationsConsumerConnection
 from deadline.settings import RABBITMQ_CONNECTION_URL
+
+logger = logging.getLogger('notifications')
 
 
 class Command(BaseCommand):
@@ -30,6 +33,5 @@ class Command(BaseCommand):
         loop = asyncio.get_event_loop()
 
         NotificationsConsumerConnection(RABBITMQ_CONNECTION_URL, handlers.NotificationsHandler).run()
-
-        print(f'Running WS server on {settings.NOTIFICATIONS_WS_SERVER_HOST}:{settings.NOTIFICATIONS_WS_SERVER_PORT}')
+        logger.info(f'Running WS server on {settings.NOTIFICATIONS_WS_SERVER_HOST}:{settings.NOTIFICATIONS_WS_SERVER_PORT}')
         loop.run_forever()

@@ -1,7 +1,10 @@
 import asyncio
 import json
+import logging
 
-from .channels import user_authentication
+from .channels import user_authentication, read_notification
+
+logger = logging.getLogger('notifications')
 
 
 class MessageRouter(object):
@@ -20,11 +23,11 @@ class MessageRouter(object):
         try:
             self.packet = json.loads(data)
         except Exception as e:
-            print(f'Exception in MessageRouter while parsing JSON string - {e}')
+            logger.error(f'Exception in MessageRouter while parsing JSON string - {e}')
 
     @asyncio.coroutine
     def __call__(self):
-        # logger.debug('routing message: {}'.format(self.packet))
+        logger.debug('routing message: {}'.format(self.packet))
         send_queue = self.get_send_queue()
         yield from send_queue.put(self.packet)
 

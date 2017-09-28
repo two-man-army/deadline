@@ -50,6 +50,23 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+        }
+    },
+    'loggers': {
+        'notifications': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

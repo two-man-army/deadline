@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import logging
 
 from accounts.models import User
 from notifications.classes import UserConnection
@@ -17,6 +18,7 @@ IDEA:    Maybe it could get shared via some message broker (e.g connection estab
             or store it in something like Redis or a DB?
 IDEA:    Maybe we could rewrite it to something which allows parallelism with shared memory
 """
+logger = logging.getLogger('notifications')
 ws_connections: {int: UserConnection} = {}
 
 
@@ -218,11 +220,11 @@ async def main_handler(websocket, path):
         return
 
     if user.id in ws_connections:
-        # This websocket is already connected, overwrite it only if it is not authenticate
+        # This websocket is already connected, overwrite it only if it is not authenticated
         if ws_connections[user.id].is_valid:
-            # logger.debug(f'Tried to overwrite socket with ID {(owner.id, opponent.id)} but did not since it was valid!')
+            logger.debug(f'Tried to overwrite socket with ID {user.id} but did not since it was valid!')
             return
-        # logger.debug(f'Overwrote socket with ID {(owner.id, opponent.id)}')
+        logger.debug(f'Overwrote socket with ID {user.id}')
 
     ws_connections[user.id] = UserConnection(websocket, user)
 
@@ -248,15 +250,12 @@ async def main_handler(websocket, path):
                 print(f'Data is {data}')
                 await MessageRouter(data)()
             except Exception as e:
-                # logger.error(f'Could not route message {e}')
-                pass
+                logger.error(f'Could not route message {e}')
 
     except websockets.exceptions.InvalidState:  # User disconnected
-        # logger.debug(f'User {user_id} most likely disconnected!')
-        pass
+        logger.debug(f'User {user_id} most likely disconnected!')
     finally:
         if not is_overwritten:
             del ws_connections[user.id]
         else:
-            # logger.debug(f'Deleted old overwritten socket with ID {(owner.id, opponent.id)}')
-            pass
+            logger.debug(f'Deleted old overwritten socket with ID {user_id}')
