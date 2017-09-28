@@ -98,7 +98,7 @@ class NotificationReadView(APIView):
 
 class NotificationManageView(BaseManageView):
     VIEWS_BY_METHOD = {
-        'GET': unseen_notifications,
+        'GET': lambda *args: unseen_notifications,
         'PUT': NotificationReadView.as_view
     }
 

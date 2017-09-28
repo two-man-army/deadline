@@ -16,7 +16,7 @@ from social.views import NotificationManageView, unseen_notifications, Notificat
 class NotificationManageViewTests(unittest_TestCase):
     def test_defines_appropriate_views(self):
         self.assertEqual(len(NotificationManageView.VIEWS_BY_METHOD.keys()), 2)
-        self.assertEqual(NotificationManageView.VIEWS_BY_METHOD['GET'], unseen_notifications)
+        self.assertEqual(NotificationManageView.VIEWS_BY_METHOD['GET'](), unseen_notifications)
         self.assertEqual(NotificationManageView.VIEWS_BY_METHOD['PUT'], NotificationReadView.as_view)
 
 
@@ -32,7 +32,7 @@ class UnseenNotificationsViewTests(APITestCase, TestHelperMixin):
 
     @patch('social.views.NotificationSerializer')
     @patch('social.views.Notification.fetch_unread_notifications_for_user')
-    def test_callsserializer_and_fetch_method(self, mock_fetch, mock_serializer):
+    def test_calls_serializer_and_fetch_method(self, mock_fetch, mock_serializer):
         mock_serializer.data = 'hello'
         mock_serializer.return_value = mock_serializer
         mock_fetch.return_value = 'fetched'

@@ -264,9 +264,12 @@ class SubmissionCommentCreateView(APIView):
             # User has not fully solved this and as such does not have access to the solution
             return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
 
-        submission.add_comment(author=request.user, content=request.data['content'], to_notify=True)
+        self.add_comment(submission=submission, author=request.user, content=request.data['content'])
 
         return Response(status=201)
+
+    def add_comment(self, submission, author, content):
+        submission.add_comment(author=author, content=content, to_notify=True)
 
 
 # POST /challenges/{challenge_id}/submissions/{submission_id}/comments/{comment_id}

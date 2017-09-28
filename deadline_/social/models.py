@@ -379,6 +379,6 @@ def notification_type_validation(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=Notification)
-def notification_type_validation(sender, instance, created, *args, **kwargs):
+def notif_post_save_send(sender, instance, created, *args, **kwargs):
     if created:
         send_notification(instance.id)

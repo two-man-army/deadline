@@ -64,7 +64,7 @@ class NotificationTests(TestCase, TestHelperMixin):
         notif = Notification.objects.create_receive_follow_notification(recipient=self.auth_user, follower=sec_user)
 
         # Assert it is called only on creation
-        notif.type = 'tank'
+        notif.follower = self.auth_user
         notif.save()
 
         mock_send_notif.assert_called_once_with(notif.id)
