@@ -226,8 +226,10 @@ async def main_handler(websocket, path):
 
     ws_connections[user.id] = UserConnection(websocket, user)
 
-    # TODO: Send confirmation message
-    # await send_message(websocket, {'tank': 'YOU ARE CONNECTED :)'})
+    asyncio.ensure_future(ws_connections[user_id].send_message({
+        "type": "OK",
+        "message": "Connected!"
+    }))
 
     # While the websocket is open, listen for incoming messages/events
     is_overwritten = False
