@@ -12,7 +12,8 @@ class MessageRouter(object):
         send the message to the appropriate queue (which is connected to a handler)
     """
     MESSAGE_QUEUES = {
-        'authentication': user_authentication
+        'authentication': user_authentication,
+        'read_notification': read_notification
     }
 
     def __init__(self, data):
