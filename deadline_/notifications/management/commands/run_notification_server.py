@@ -26,7 +26,6 @@ class Command(BaseCommand):
         )
 
         asyncio.async(handlers.authenticate_user(channels.user_authentication))
-        asyncio.async(handlers.NotificationsHandler.send_notification(channels.send_notification))
         loop = asyncio.get_event_loop()
 
         NotificationsConsumerConnection(RABBITMQ_CONNECTION_URL, handlers.NotificationsHandler).run()
