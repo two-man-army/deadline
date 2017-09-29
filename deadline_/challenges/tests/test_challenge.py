@@ -74,6 +74,21 @@ class ChallengesModelTest(TestCase):
 
         self.assertEqual(expected_latest_five, latest_five)
 
+    def test_fetch_five_latest_challenges_works_with_string_number_passed(self):
+        # create 10 challenges
+        expected_latest_five = []
+        for i in range(10):
+            c = Challenge.objects.create(name=f'Hello{i}', difficulty=5, score=10, test_case_count=5,
+                                         category=self.sub_cat,
+                                         description=ChallengeDescFactory())
+            if i >= 5:  # last five should be the latest
+                expected_latest_five.append(c)
+        expected_latest_five = list(reversed(expected_latest_five))  # first challenge must be first
+
+        latest_five = Challenge.objects.fetch_five_latest_challenges_by_page(page='1')
+
+        self.assertEqual(expected_latest_five, latest_five)
+
     def test_fetch_five_latest_challenges_second_page(self):
         # create 8 challenges
         expected_oldest_three = []
