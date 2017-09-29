@@ -31,6 +31,8 @@ class User(AbstractBaseUser):
     notification_token = models.CharField(max_length=200, null=True)
     users_followed = models.ManyToManyField(to='accounts.User', related_name='followers')
     role = models.ForeignKey(Role)
+
+    submission_count = models.IntegerField(default=0)
     last_submit_at = models.DateTimeField(auto_now_add=True)
 
     def __init__(self, *args, **kwargs):
