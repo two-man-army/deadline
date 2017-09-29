@@ -96,6 +96,19 @@ class LatestAttemptedChallengesListView(ListAPIView):
         return Response(data=LimitedChallengeSerializer(latest_challenges, many=True, context={'request': request}).data)
 
 
+# /challenges/latest?page={1|2|3...}
+class LatestChallengesListView(ListAPIView):
+    """
+    This view returns the latest 5 challenges published on the site, with the newest coming first
+    """
+    serializer_class = LimitedChallengeSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        latest_challenges = Challenge.objects.fetch_five_latest_challenges_by_page(page=request.GET['page'])
+        return Response(data=LimitedChallengeSerializer(latest_challenges, many=True, context={'request': request}).data)
+
+
 # /challenges/categories/all
 class MainCategoryListView(ListAPIView):
     """ Returns information about all Categories """

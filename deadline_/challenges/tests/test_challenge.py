@@ -1,5 +1,6 @@
 """ Tests associated with the Challenge model and views """
 from unittest import skip
+from unittest.mock import patch, MagicMock, ANY
 
 from django.db import IntegrityError
 from django.test import TestCase
@@ -146,3 +147,22 @@ class ChallengesViewsTest(APITestCase, TestHelperMixin):
     def test_view_challenge_unauthorized_should_return_401(self):
         response = self.client.get(f'/challenges/{self.challenge.id}')
         self.assertEqual(response.status_code, 401)
+
+    @patch('challenges.views.Challenge.objects.fetch_five_latest_challenges_by_page')
+    @patch('challenges.views.LimitedChallengeSerializer')
+    def test_view_latest_challenges(self, mock_serializer, mock_fetch):
+        """
+        Should returns the latest 5 challenges
+        """
+        mock_fetch.return_value = 'chals'
+        mock_serializer.return_value = MagicMock(data='tank')
+        resp = self.client.get('/challenges/latest?page=1', HTTP_AUTHORIZATION=self.auth_token)
+
+        mock_fetch.assert_called_once_with(page='1')
+        mock_serializer.assert_called_once_with(mock_fetch.return_value, many=True, context={'request': ANY})
+        self.assertEqual(resp.data, mock_serializer().data)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_view_latest_challenges_requires_auth(self):
+        resp = self.client.get('/challenges/latest?page=1')
+        self.assertEqual(resp.status_code, 401)
