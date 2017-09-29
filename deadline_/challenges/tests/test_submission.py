@@ -362,6 +362,7 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
 
     @patch('challenges.views.run_grader_task.delay')
     def test_create_submission(self, mock_delay):
+        old_sumb_count = self.auth_user.submission_count
         mock_delay.return_value = 1
         response = self.client.post(f'/challenges/{self.challenge.id}/submissions/new',
                                     data={'code': 'print("Hello World")', 'language': self.python_language.name},
@@ -371,6 +372,8 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
         submission = Submission.objects.last()
         # assert that the task_id has been populated
         self.assertEqual(submission.task_id, '1')
+        self.auth_user.refresh_from_db()
+        self.assertEqual(old_sumb_count + 1, self.auth_user.submission_count)
         # assert that the test cases have been created
         self.assertEqual(submission.testcase_set.count(), submission.challenge.test_case_count)
 

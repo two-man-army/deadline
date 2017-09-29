@@ -135,6 +135,7 @@ class SubmissionCreateView(CreateAPIView):
                                             test_folder_name=challenge.test_file_name,
                                             code=code_given, lang=language.name, submission_id=submission.id)
 
+        request.user.submission_count += 1
         request.user.last_submit_at = timezone.now()
         request.user.save()
 
