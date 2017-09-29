@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.paginator import Paginator, Page, PageNotAnInteger, EmptyPage
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -19,6 +20,14 @@ class Language(models.Model):
         return self.name
 
 
+class ChallengeManager(models.Manager):
+    def fetch_five_latest_challenges_by_page(self, page: int) -> ['Challenge']:
+        try:
+            return list(Paginator(self.order_by('-created_at').all(), per_page=5).page(page))
+        except (PageNotAnInteger, EmptyPage):
+            return []
+
+
 class Challenge(models.Model):
     name = models.CharField(unique=True, max_length=30)
     description = models.OneToOneField('ChallengeDescription')
@@ -29,6 +38,8 @@ class Challenge(models.Model):
     category = models.ForeignKey(to='SubCategory', related_name='challenges')
     supported_languages = models.ManyToManyField(Language)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = ChallengeManager()
 
     def get_absolute_url(self):
         return '/challenges/{}'.format(self.id)

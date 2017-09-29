@@ -60,6 +60,44 @@ class ChallengesModelTest(TestCase):
         with self.assertRaises(Exception):
             c.full_clean()
 
+    def test_fetch_five_latest_challenges(self):
+        # create 10 challenges
+        expected_latest_five = []
+        for i in range(10):
+            c = Challenge.objects.create(name=f'Hello{i}', difficulty=5, score=10, test_case_count=5, category=self.sub_cat,
+                                         description=ChallengeDescFactory())
+            if i >= 5:  # last five should be the latest
+                expected_latest_five.append(c)
+        expected_latest_five = list(reversed(expected_latest_five))  # first challenge must be first
+
+        latest_five = Challenge.objects.fetch_five_latest_challenges_by_page(page=1)
+
+        self.assertEqual(expected_latest_five, latest_five)
+
+    def test_fetch_five_latest_challenges_second_page(self):
+        # create 8 challenges
+        expected_oldest_three = []
+        for i in range(8):
+            c = Challenge.objects.create(name=f'Hello{i}', difficulty=5, score=10, test_case_count=5,
+                                         category=self.sub_cat,
+                                         description=ChallengeDescFactory())
+            if i < 3:  # first three should be in the oldest page
+                expected_oldest_three.append(c)
+        expected_oldest_three = list(reversed(expected_oldest_three))  # latest challenge must be first
+
+        received_three = Challenge.objects.fetch_five_latest_challenges_by_page(page=2)
+
+        self.assertEqual(len(received_three), 3)
+        self.assertEqual(expected_oldest_three, received_three)
+
+    def test_fetch_five_latest_challenges_invalid_page(self):
+        for i in range(8):
+            Challenge.objects.create(name=f'Hello{i}', difficulty=5, score=10,
+                                     test_case_count=5, category=self.sub_cat, description=ChallengeDescFactory())
+        self.assertEqual(Challenge.objects.fetch_five_latest_challenges_by_page(page=3), [])
+        self.assertEqual(Challenge.objects.fetch_five_latest_challenges_by_page(page=-1), [])
+        self.assertEqual(Challenge.objects.fetch_five_latest_challenges_by_page(page=None), [])
+
 
 class ChallengesDescriptionModelTest(TestCase):
     def setUp(self):
