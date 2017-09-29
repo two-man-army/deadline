@@ -28,6 +28,7 @@ class Challenge(models.Model):
     test_case_count = models.IntegerField(blank=False)
     category = models.ForeignKey(to='SubCategory', related_name='challenges')
     supported_languages = models.ManyToManyField(Language)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def get_absolute_url(self):
         return '/challenges/{}'.format(self.id)
