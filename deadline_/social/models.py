@@ -4,7 +4,7 @@ from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
 from accounts.models import User
-from challenges.models import SubCategory, UserSubcategoryProficiency, SubmissionComment, ChallengeComment
+from challenges.models import SubCategory, UserSubcategoryProficiency, SubmissionComment, ChallengeComment, SubmissionVote
 from errors import ForbiddenMethodError
 from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_ITEM_TYPES, \
     NW_ITEM_SUBCATEGORY_BADGE_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, \
@@ -344,6 +344,10 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ('updated_at', )  # order by updated_at, as we might update notifications to simulate squashing
+
+    @staticmethod
+    def is_valid_submission_upvote_notification(submission_vote: SubmissionVote):
+        return submission_vote.is_upvote and submission_vote.author != submission_vote.submission.author
 
     @staticmethod
     def fetch_unread_notifications_for_user(user: User):

@@ -271,8 +271,35 @@ class NotificationTests(TestCase, TestHelperMixin):
 
 
 class NotificationHelperMethodTests(TestCase, TestHelperMixin):
+    """
+    Tests the methods on the Notification class
+    """
     def setUp(self):
         self.create_user_and_auth_token()
+
+    def test_is_valid_submission_upvote_notification(self):
+        """
+        A SubmissionUpvote notification should be done when the vote is a upvote and the author is not the submission's author!
+        """
+        submission_vote_mock = MagicMock(is_upvote=True, author=1, submission=MagicMock(author=2))
+
+        self.assertTrue(Notification.is_valid_submission_upvote_notification(submission_vote_mock))
+
+    def test_is_valid_submission_upvote_notification_isnt_valid_if_not_upvote(self):
+        """
+        A SubmissionUpvote notification should be done when the vote is a upvote and the author is not the submission's author!
+        """
+        submission_vote_mock = MagicMock(is_upvote=False, author=1, submission=MagicMock(author=2))
+
+        self.assertFalse(Notification.is_valid_submission_upvote_notification(submission_vote_mock))
+
+    def test_is_valid_submission_upvote_notification_isnt_valid_if_voter_is_submission_author(self):
+        """
+        A SubmissionUpvote notification should be done when the vote is a upvote and the author is not the submission's author!
+        """
+        submission_vote_mock = MagicMock(is_upvote=True, author=1, submission=MagicMock(author=1))
+
+        self.assertFalse(Notification.is_valid_submission_upvote_notification(submission_vote_mock))
 
     def test_fetch_unread_notifications_for_user(self):
         sec_user = UserFactory()
