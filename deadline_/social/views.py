@@ -21,6 +21,13 @@ from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM
     MAX_CHALLENGE_COMPLETION_SUBMISSION_EXPIRY_MINUTES
 from views import BaseManageView
 
+"""
+Huge TODO: (Pre-Release)
+    We will need some kind of anti-spam for Comments and Post creation,
+        otherwise our site will quickly get overrun by bots,
+        malicious users or just spammer kids
+"""
+
 
 def follow_decorator(view_func, *args, **kwargs):
     def _follow(request, *args, **kwargs):
