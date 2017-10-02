@@ -576,21 +576,26 @@ class SubmissionVoteModelTest(TestCase, TestHelperMixin):
     def setUp(self):
         self.base_set_up()
 
-    def test_upvote_save_creates_notification(self):
+    def test_upvote_creation_creates_notification(self):
         other_user = UserFactory()
-        SubmissionVote.objects.create(author=other_user, submission=self.submission, is_upvote=True)
+        SubmissionVote.objects.create(author=other_user, submission=self.submission, is_upvote=True, to_notify=True)
         self.assertEqual(Notification.objects.count(), 1)
         notif = Notification.objects.first()
         self.assertEqual(notif.recipient, self.submission.author)
         self.assertEqual(notif.type, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION)
 
-    def test_upvote_save_doesnt_create_notification_if_submission_author_upvotes(self):
-        SubmissionVote.objects.create(author=self.auth_user, submission=self.submission, is_upvote=True)
+    def test_upvote_creation_doesnt_create_notification_by_default(self):
+        other_user = UserFactory()
+        SubmissionVote.objects.create(author=other_user, submission=self.submission, is_upvote=True, to_notify=False)
         self.assertEqual(Notification.objects.count(), 0)
 
-    def test_downvote_save_doesnt_create_notification(self):
+    def test_upvote_creation_doesnt_create_notification_if_submission_author_upvotes(self):
+        SubmissionVote.objects.create(author=self.auth_user, submission=self.submission, is_upvote=True, to_notify=True)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_downvote_creation_doesnt_create_notification(self):
         other_user = UserFactory()
-        SubmissionVote.objects.create(author=other_user, submission=self.submission, is_upvote=False)
+        SubmissionVote.objects.create(author=other_user, submission=self.submission, is_upvote=False, to_notify=True)
         self.assertEqual(Notification.objects.count(), 0)
 
     def test_cannot_save_blank(self):

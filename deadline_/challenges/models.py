@@ -165,28 +165,30 @@ class SubmissionComment(models.Model):
         return reply
 
 
+class SubmissionVoteManager(models.Manager):
+    def create(self, to_notify=False, **kwargs):
+        """
+            Extends the create() function with the ability to create a Notification
+        """
+        from social.models import Notification
+
+        instance = super().create(**kwargs)
+        if to_notify and Notification.is_valid_submission_upvote_notification(instance):
+            Notification.objects.create_receive_submission_upvote_notification(
+                submission=instance.submission,
+                liker=instance.author)
+        return instance
+
+
 class SubmissionVote(models.Model):
     is_upvote = models.BooleanField()
     submission = models.ForeignKey(to=Submission, related_name='votes')
     author = models.ForeignKey(User)
 
+    objects = SubmissionVoteManager()
+
     class Meta:
         unique_together = ('submission', 'author')
-
-
-@receiver(post_save, sender=SubmissionVote)
-def submission_vote_create_notification(sender, instance, created, *args, **kwargs):
-    """
-    Creates a Notification when somebody has upvoted a user's submission
-    """
-    from social.models import Notification
-    # TODO: Move this to a function which is called in the VIEW which casts the like,
-    # TODO:     As the user might want to disable notifications from submission likes somewhere in his settings
-    # TODO:     and having it in a function separated will be clearer
-    if created and instance.is_upvote and instance.author != instance.submission.author:
-        Notification.objects.create_receive_submission_upvote_notification(
-            submission=instance.submission,
-            liker=instance.author)
 
 
 class TestCase(models.Model):
