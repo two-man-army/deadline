@@ -103,6 +103,47 @@ class ChallengeCommentViewTest(APITestCase, TestHelperMixin):
         # Comment Create Tests
 
 
+@patch('challenges.models.Challenge.add_comment')
+class ChallengeCommentCreateViewTest(APITestCase, TestHelperMixin):
+    def setUp(self):
+        self.base_set_up()
+
+    def test_creates_comment(self, mock_add_comment):
+        # the add_comment method creates a comment
+        resp = self.client.post(f'/challenges/{self.challenge.id}/comments',
+                                HTTP_AUTHORIZATION=self.auth_token,
+                                data={'content': 'White rapper not rocking a buzz cut'})
+        mock_add_comment.assert_called_once_with(author=self.auth_user, content='White rapper not rocking a buzz cut')
+        self.assertEqual(resp.status_code, 201)
+
+    def test_returns_400_if_comment_is_not_str(self, mock_add_comment):
+        resp = self.client.post(f'/challenges/{self.challenge.id}/comments',
+                                HTTP_AUTHORIZATION=self.auth_token,
+                                data={'content': 1})
+        mock_add_comment.assert_not_called()
+        self.assertEqual(resp.status_code, 400)
+
+    def test_returns_400_if_comment_too_long(self, mock_add_comment):
+        resp = self.client.post(f'/challenges/{self.challenge.id}/comments',
+                                HTTP_AUTHORIZATION=self.auth_token,
+                                data={'content': 'ab' * 300})
+        mock_add_comment.assert_not_called()
+        self.assertEqual(resp.status_code, 400)
+
+    def test_returns_400_if_comment_too_sort(self, mock_add_comment):
+        resp = self.client.post(f'/challenges/{self.challenge.id}/comments',
+                                HTTP_AUTHORIZATION=self.auth_token,
+                                data={'content': 'ab'})
+        mock_add_comment.assert_not_called()
+        self.assertEqual(resp.status_code, 400)
+
+    def test_requires_auth(self, mock_add_comment):
+        resp = self.client.post(f'/challenges/{self.challenge.id}/comments',
+                                data={'content': 'e-dubble, happy friday'})
+        mock_add_comment.assert_not_called()
+        self.assertEqual(resp.status_code, 401)
+
+
 @patch('challenges.models.ChallengeComment.add_reply')
 class ChallengeCommentReplyCreateViewTest(APITestCase, TestHelperMixin):
     def setUp(self):

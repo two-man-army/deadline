@@ -32,7 +32,6 @@ class ChallengeDetailView(RetrieveAPIView):
 
 # POST /challenges/{challenge_id}/comments
 class ChallengeCommentCreateView(APIView):
-    # TODO: Test!
     permission_classes = (IsAuthenticated, )
     model_classes = (Challenge, )
 
