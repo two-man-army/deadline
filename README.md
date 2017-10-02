@@ -34,6 +34,8 @@ Authors
 
 ### How to get the backend working
 
+First, you need to have **Python 3.6** installed, as that is what we use in this project.
+
 Install all the requirements
 `pip install -r requirements.txt`
 
