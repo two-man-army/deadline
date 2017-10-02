@@ -7,7 +7,7 @@ from .channels import user_authentication, read_notification
 logger = logging.getLogger('notifications')
 
 
-class MessageRouter(object):
+class MessageRouter:
     """
     The purpose of this class is to
         receive messages,

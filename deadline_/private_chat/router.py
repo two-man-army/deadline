@@ -7,7 +7,7 @@ from .channels import new_messages, is_typing, fetch_dialog_token
 logger = logging.getLogger('django-private-dialog')
 
 
-class MessageRouter(object):
+class MessageRouter:
     MESSAGE_QUEUES = {
         'new-message': new_messages,
         'fetch-token': fetch_dialog_token,
