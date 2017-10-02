@@ -336,7 +336,8 @@ class CastSubmissionVoteView(APIView):
         submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=request.user, submission=submission).first()
         if submission_vote is None:
             # user has not voted before
-            SubmissionVote.objects.create(author_id=request.user.id, submission_id=submission.id, is_upvote=is_upvote)
+            SubmissionVote.objects.create(author_id=request.user.id, submission_id=submission.id,
+                                          is_upvote=is_upvote, to_notify=True)
         elif submission_vote.is_upvote != is_upvote:
             # user has voted with another value, update the vote
             submission_vote.is_upvote = is_upvote
