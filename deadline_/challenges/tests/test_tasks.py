@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, patch
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from challenges.tests.helpers import get_mock_function_arguments
-from challenges.tasks import run_grader_task, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY
+from challenges.tasks import run_grader_task, GRADER_COMPILE_FAILURE, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY, notify_users_for_new_challenge
 from challenges.tests.factories import SubmissionFactory, UserFactory
 from challenges.models import Proficiency
 
@@ -62,3 +62,15 @@ class TasksTests(TestCase):
         self.assertFalse(submission.compiled)
         self.assertFalse(submission.pending)
         self.assertEqual(submission.compile_error_message, "FAILED MISERABLY")
+
+    @patch('challenges.tasks.Notification.objects.create_new_challenge_notification')
+    def test_creates_a_notification_for_every_user(self, mock_create_notif):
+        # create 11 users
+        users = []
+        for i in range(11):
+            users.append(UserFactory())
+
+        notify_users_for_new_challenge('sample_challenge')
+
+        for i in range(11):
+            self.assertEqual(mock_create_notif.mock_calls[i], mock.call(recipient=users[i], challenge='sample_challenge'))
