@@ -12,7 +12,7 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, \
-    RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED
+    RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, RECEIVE_FOLLOW_NOTIFICATION_SQUASHED
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -125,6 +125,8 @@ class ReceiveFollowNotificationTests(TestCase, TestHelperMixin):
             expected_content = {'follower_id': user.id, 'follower_name': user.username}
 
             notif = Notification.objects.create_receive_follow_notification(recipient=self.auth_user, follower=user)
+            notif.is_read = True
+            notif.save()
 
             self.assertEqual(notif.type, RECEIVE_FOLLOW_NOTIFICATION)
             self.assertEqual(notif.content, expected_content)

@@ -12,7 +12,8 @@ from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_I
     RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_NW_ITEM_LIKE_NOTIFICATION, \
     NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, \
-    RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION
+    RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, \
+    RECEIVE_FOLLOW_NOTIFICATION_SQUASHED
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -216,13 +217,7 @@ class NotificationManager(hstore.HStoreManager):
         Creates a Notification that a User has been followed
         ex: Stanislav has followed you!
         """
-        if follower == recipient:
-            raise InvalidFollowError('You cannot follow yourself!')
-        return self._create(recipient=recipient, type=RECEIVE_FOLLOW_NOTIFICATION,
-                            content={
-                                'follower_id': follower.id,
-                                'follower_name': follower.username
-                            })
+        return ReceiveFollowNotificationManager(self, recipient=recipient, follower=follower).create()
 
     def create_receive_submission_upvote_notification(self, submission: 'Submission', liker: User):
         """
@@ -324,6 +319,85 @@ class NotificationManager(hstore.HStoreManager):
                                 'commenter_id': reply.author.id,
                                 'commenter_name': reply.author.username
                             })
+
+
+class ReceiveFollowNotificationManager():
+    """
+    Raises InvalidFollowError
+    """
+    TYPE = RECEIVE_FOLLOW_NOTIFICATION
+    SQUASHED_TYPE = RECEIVE_FOLLOW_NOTIFICATION_SQUASHED
+
+    def __init__(self, notification_manager: NotificationManager, recipient: User, follower: User):
+        self.notification_manager: NotificationManager= notification_manager
+        self.recipient = recipient
+        self.follower = follower
+
+    def create(self):
+        """
+        Creates a Notification that a User has been followed
+        ex: Stanislav has followed you!
+        """
+        if self.follower == self.recipient:
+            raise InvalidFollowError('You cannot follow yourself!')
+
+        if self.should_squash():
+            return self.squash()
+        else:
+            return self.notification_manager._create(recipient=self.recipient, type=RECEIVE_FOLLOW_NOTIFICATION,
+                                                     content={
+                                                         'follower_id': self.follower.id,
+                                                         'follower_name': self.follower.username
+                                                     })
+
+    def find_last_squashable_notification(self) -> 'Notification':
+        """
+        This method should get the last Notification that is not read and is the same as our type
+        """
+        last_notification = self.notification_manager.filter(
+            type__in=[self.TYPE, self.SQUASHED_TYPE],
+            is_read=False,
+            recipient=self.recipient).last()
+
+        return last_notification
+
+    def should_squash(self) -> bool:
+        self.last_notification = self.find_last_squashable_notification()
+        return self.last_notification is not None
+
+    def squash(self) -> 'Notification':
+        """ Squashes the notification we're about to create with another one """
+        if self.last_notification.type == self.TYPE:
+            notification = self.convert_to_squashed_type()
+        else:
+            notification = self.add_to_squashed_type()
+
+        return notification
+
+    def convert_to_squashed_type(self) -> 'Notification':
+        """
+        Converts the latest squashable notification into a SQUASHED type
+            and combines it with the one being created
+        """
+        self.last_notification.type = self.SQUASHED_TYPE
+        new_content = {
+            'followers': [
+                self.last_notification.content,
+                {'follower_id': self.follower.id, 'follower_name': self.follower.username}
+            ]
+        }
+        self.last_notification.content = new_content
+        self.last_notification.save()
+        return self.last_notification
+
+    def add_to_squashed_type(self) -> 'Notification':
+        """
+        Adds to the latest notification (which should be a SQUASHED type)
+        """
+        new_entry = {'follower_id': self.follower.id, 'follower_name': self.follower.username}
+        self.last_notification.content['followers'].append(new_entry)
+        self.last_notification.save()
+        return self.last_notification
 
 
 class Notification(models.Model):
