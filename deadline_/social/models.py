@@ -14,7 +14,7 @@ from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_I
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, \
     RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED, \
-    RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED
+    RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -242,6 +242,7 @@ class NotificationManager(hstore.HStoreManager):
         """ A notification which notifies the user that somebody has commented on his NewsfeedItem """
         return ReceiveNWItemCommentNotificationManager(self, nw_item=nw_item, commenter=commenter).create()
 
+
     def create_nw_item_comment_reply_notification(self, nw_comment: NewsfeedItemComment, reply: NewsfeedItemComment):
         if nw_comment.author == reply.author:
             return
@@ -285,18 +286,7 @@ class NotificationManager(hstore.HStoreManager):
                            })
 
     def create_challenge_comment_reply_notification(self, reply: ChallengeComment):
-        if reply.parent.author == reply.author:
-            return
-
-        return self._create(recipient=reply.parent.author, type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION,
-                            content={
-                                'challenge_id': reply.challenge.id,
-                                'challenge_name': reply.challenge.name,
-                                'comment_id': reply.id,
-                                'comment_content': reply.content,
-                                'commenter_id': reply.author.id,
-                                'commenter_name': reply.author.username
-                            })
+        return ReceiveChallengeCommentReplyNotificationManager(self, reply=reply).create()
 
 
 class ReceiveFollowNotificationManager():
@@ -619,6 +609,91 @@ class ReceiveNWItemCommentNotificationManager:
             recipient=self.nw_item.author
         ).last()
 
+
+class ReceiveChallengeCommentReplyNotificationManager:
+    """
+    A notification that a user has liked your NewsfeedItem
+    """
+    TYPE = RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION
+    SQUASHED_TYPE = RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED
+
+    def __init__(self, notification_manager: NotificationManager, reply: ChallengeComment):
+        self.notification_manager: NotificationManager = notification_manager
+        self.reply = reply
+        self.comment = reply.parent
+        self.challenge = reply.challenge
+
+    def create(self):
+        if self.comment.author == self.reply.author:
+            return
+
+        if self.should_squash():
+            return self.squash()
+        else:
+            return self.notification_manager._create(recipient=self.comment.author, type=self.TYPE,
+                                                     content={
+                                                         'challenge_id': self.challenge.id,
+                                                         'challenge_name': self.challenge.name,
+                                                         'comment_id': self.comment.id,
+                                                         'reply_id': self.reply.id,
+                                                         'reply_content': self.reply.content,
+                                                         'replier_id': self.reply.author.id,
+                                                         'replier_name': self.reply.author.username
+                                                     })
+
+    def should_squash(self) -> bool:
+        self.last_notification = self.find_last_squashable_notification()
+        return self.last_notification is not None
+
+    def squash(self) -> 'Notification':
+        """ Squashes the notification we're about to create with another one """
+        if self.last_notification.type == self.TYPE:
+            notification = self.convert_to_squashed_type()
+        else:
+            notification = self.add_to_squashed_type()
+
+        return notification
+
+    def convert_to_squashed_type(self) -> 'Notification':
+        """
+        Converts the latest squashable notification into a SQUASHED type
+            and combines it with the one being created
+        """
+        self.last_notification.type = self.SQUASHED_TYPE
+
+        new_content = {
+            'challenge_id': self.challenge.id,
+            'challenge_name': self.challenge.name,
+            'comment_id': self.comment.id,
+            'repliers': [
+                {'replier_id': self.last_notification.content['replier_id'], 'replier_name': self.last_notification.content['replier_name']},
+                {'replier_id': self.reply.author.id, 'replier_name': self.reply.author.username}
+            ]
+        }
+        self.last_notification.content = new_content
+        self.last_notification.save()
+        return self.last_notification
+
+    def add_to_squashed_type(self):
+        """
+        Adds to the latest notification (which should be a SQUASHED type)
+        """
+        self.last_notification.content['repliers'].append({'replier_id': self.reply.author.id,
+                                                           'replier_name': self.reply.author.username})
+        self.last_notification.save()
+        return self.last_notification
+
+    def find_last_squashable_notification(self) -> 'Notification':
+        """
+        This method should get the last Notification that is not read and is the same as our type
+            (e.g same submission was upvoted)
+        """
+        return self.notification_manager.filter(
+            type__in=[self.TYPE, self.SQUASHED_TYPE],
+            is_read=False,
+            content__contains={'challenge_id': self.challenge.id, 'comment_id': self.comment.id},
+            recipient=self.comment.author
+        ).last()
 
 class Notification(models.Model):
     """

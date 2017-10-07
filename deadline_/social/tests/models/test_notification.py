@@ -13,7 +13,8 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, \
-    RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED, \
+    RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -471,22 +472,24 @@ class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
         return {
             'challenge_id': reply.challenge.id,
             'challenge_name': reply.challenge.name,
-            'comment_id': reply.id,
-            'comment_content': reply.content,
-            'commenter_id': reply.author.id,
-            'commenter_name': reply.author.username
+            'comment_id': reply.parent.id,
+            'reply_id': reply.id,
+            'reply_content': reply.content,
+            'replier_id': reply.author.id,
+            'replier_name': reply.author.username
         }
 
     def build_squashed_content(self, replies):
         return {
             'challenge_id': replies[0].challenge.id,
             'challenge_name': replies[0].challenge.name,
-            'commenters': [
-                {'commenter_id': reply.author.id, 'commenter_name': reply.author.username} for reply in replies
+            'comment_id': replies[0].parent.id,
+            'repliers': [
+                {'replier_id': reply.author.id, 'replier_name': reply.author.username} for reply in replies
             ]
         }
 
-    def test_create_notification_comment_reply_notif(self):
+    def test_create_notification_commenti_reply_notif(self):
         chal_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment)
         expected_content = self.build_content(chal_reply)
 
@@ -558,7 +561,7 @@ class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
         self.second_chal_comment = ChallengeCommentFactory(challenge=self.chal, author=self.auth_user)
         replies = []
         for us, comment_to_reply_on in [(sec_user, self.chal_comment), (third_user, self.second_chal_comment),
-                                        (fourth_user, self.chal_comment), (fourth_user, self.second_chal_comment)]:
+                                        (fourth_user, self.chal_comment), (fifth_user, self.second_chal_comment)]:
             reply = ChallengeCommentFactory(challenge=self.chal, parent=comment_to_reply_on, author=us)
             replies.append(reply)
             notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
