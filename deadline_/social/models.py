@@ -118,7 +118,7 @@ class NewsfeedItem(models.Model):
     """
     author = models.ForeignKey(User)
     type = models.CharField(max_length=30)  # no other table for now
-    content = hstore.DictionaryField()  # varies depending on the type
+    content = hstore.SerializedDictionaryField()  # varies depending on the type
     is_private = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
