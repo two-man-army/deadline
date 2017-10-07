@@ -12,7 +12,8 @@ from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_I
     NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, \
-    RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED
+    RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED, \
+    RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -238,14 +239,7 @@ class NotificationManager(hstore.HStoreManager):
 
     def create_nw_item_comment_notification(self, nw_item: NewsfeedItem, commenter: User):
         """ A notification which notifies the user that somebody has commented on his NewsfeedItem """
-        if commenter == nw_item.author:
-            return
-
-        return self._create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION,
-                            content={'nw_item_content': nw_item.content, 'nw_item_id': nw_item.id,
-                                     'nw_item_type': nw_item.type,
-                                     'commenter_name': commenter.username,
-                                     'commenter_id': commenter.id})
+        return ReceiveNWItemCommentNotificationManager(self, nw_item=nw_item, commenter=commenter).create()
 
     def create_nw_item_comment_reply_notification(self, nw_comment: NewsfeedItemComment, reply: NewsfeedItemComment):
         if nw_comment.author == reply.author:
@@ -488,6 +482,7 @@ class ReceiveNWItemLikeNotificationManager:
         if self.should_squash():
             return self.squash()
         else:
+            # TODO: Change nw_item_content, nw_item_type to nw_content, nw_type or vice-versa. but be consistent!
             return self.notification_manager._create(recipient=self.nw_item.author, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
                                                      content={'nw_content': self.nw_item.content,
                                                               'liker_id': self.liker.id, 'liker_name': self.liker.username,
@@ -531,6 +526,83 @@ class ReceiveNWItemLikeNotificationManager:
         Adds to the latest notification (which should be a SQUASHED type)
         """
         self.last_notification.content['likers'].append({'liker_id': self.liker.id, 'liker_name': self.liker.username})
+        self.last_notification.save()
+        return self.last_notification
+
+    def find_last_squashable_notification(self) -> 'Notification':
+        """
+        This method should get the last Notification that is not read and is the same as our type
+            (e.g same submission was upvoted)
+        """
+        return self.notification_manager.filter(
+            type__in=[self.TYPE, self.SQUASHED_TYPE],
+            is_read=False,
+            content__contains={'nw_item_id': self.nw_item.id},
+            recipient=self.nw_item.author
+        ).last()
+
+
+class ReceiveNWItemCommentNotificationManager:
+    """
+    A notification that a user has liked your NewsfeedItem
+    """
+    TYPE = RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
+    SQUASHED_TYPE = RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED
+
+    def __init__(self, notification_manager: NotificationManager, nw_item: NewsfeedItem, commenter: User):
+        self.notification_manager: NotificationManager = notification_manager
+        self.commenter = commenter
+        self.nw_item = nw_item
+
+    def create(self):
+        if self.commenter == self.nw_item.author:
+            return
+        if self.should_squash():
+            return self.squash()
+        else:
+            return self.notification_manager._create(recipient=self.nw_item.author, type=self.TYPE,
+                                                     content={'nw_item_content': self.nw_item.content,
+                                                              'commenter_id': self.commenter.id, 'commenter_name': self.commenter.username,
+                                                              'nw_item_type': self.nw_item.type, 'nw_item_id': self.nw_item.id})
+
+    def should_squash(self) -> bool:
+        self.last_notification = self.find_last_squashable_notification()
+        return self.last_notification is not None
+
+    def squash(self) -> 'Notification':
+        """ Squashes the notification we're about to create with another one """
+        if self.last_notification.type == self.TYPE:
+            notification = self.convert_to_squashed_type()
+        else:
+            notification = self.add_to_squashed_type()
+
+        return notification
+
+    def convert_to_squashed_type(self) -> 'Notification':
+        """
+        Converts the latest squashable notification into a SQUASHED type
+            and combines it with the one being created
+        """
+        self.last_notification.type = self.SQUASHED_TYPE
+
+        new_content = {
+            'nw_item_content': self.nw_item.content,
+            'nw_item_type': self.nw_item.type,
+            'nw_item_id': self.nw_item.id,
+            'commenters': [
+                {'commenter_id': self.last_notification.content['commenter_id'], 'commenter_name': self.last_notification.content['commenter_name']},
+                {'commenter_id': self.commenter.id, 'commenter_name': self.commenter.username}
+            ]
+        }
+        self.last_notification.content = new_content
+        self.last_notification.save()
+        return self.last_notification
+
+    def add_to_squashed_type(self):
+        """
+        Adds to the latest notification (which should be a SQUASHED type)
+        """
+        self.last_notification.content['commenters'].append({'commenter_id': self.commenter.id, 'commenter_name': self.commenter.username})
         self.last_notification.save()
         return self.last_notification
 

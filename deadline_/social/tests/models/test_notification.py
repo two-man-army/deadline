@@ -13,7 +13,7 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, \
-    RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -364,9 +364,9 @@ class ReceiveNWItemCommentNotificationTests(TestCase, TestHelperMixin):
     def build_squashed_content(self, nw_item, commenters):
         return {
             'nw_item_content': nw_item.content,
-            'nw_item_id': str(nw_item.id), 'nw_item_type': nw_item.type,
+            'nw_item_id': nw_item.id, 'nw_item_type': nw_item.type,
             'commenters': [
-                {'commenter_name': us.username, 'commenter_id': str(us.id)}
+                {'commenter_name': us.username, 'commenter_id': us.id}
                 for us in commenters
             ]
         }
