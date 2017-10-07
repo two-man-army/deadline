@@ -1,3 +1,5 @@
+import json
+
 from accounts.models import User, Role
 from challenges.models import Language, MainCategory, SubCategory, Challenge, Submission, Proficiency, UserSubcategoryProficiency
 from challenges.tests.factories import ChallengeDescFactory
@@ -7,6 +9,29 @@ class TestHelperMixin:
     """
     A Mixin class providing some commonly used helper functions
     """
+
+    def assertEqualHStore(self, a, b, dict_fields: [str]=[]):
+        """
+            Asserts that two DB HStore fields are equal.
+            Accepts all the inner dictionary fields in the HStore and parses them into a dictionary
+            This is needed because if we have an HStore with a dictionary field.
+                e.g hstore = { "notif_content": {"yo": "yo"} }
+                The inner dictionary field gets converted to a string in the DB
+                    and when queried back is received as a string.
+                This screws up the assertEqual, as you're comparing a string to a dict.
+            Same thing with Integer fields
+        """
+        for field in [a, b]:
+            for key, val in field.items():
+                if key in dict_fields and not isinstance(val, dict):
+                    field[key] = json.loads(field[key].replace("'", '"'))
+                elif isinstance(val, str):  # try to parse into an integer
+                    try:
+                        field[key] = int(field[key])
+                    except ValueError:
+                        pass
+        self.assertEqual(a, b)
+
     def create_user_and_auth_token(self):
         """
         Creates a user model and token, attaching them to self
