@@ -224,17 +224,7 @@ class NotificationManager(hstore.HStoreManager):
         Creates a Notification that a User has liked your submission
         ex: Stanislav has liked your Submission for Challenge Robert's Pass
         """
-        if liker == submission.author:
-            return
-
-        return self._create(recipient=submission.author, type=RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION,
-                            content={
-                                'submission_id': submission.id,
-                                'challenge_id': submission.challenge.id,
-                                'challenge_name': submission.challenge.name,
-                                'liker_id': liker.id,
-                                'liker_name': liker.username
-                            })
+        return ReceiveSubmissionUpvoteNotificationManager(self, submission=submission, liker=liker).create()
 
     def create_receive_nw_item_like_notification(self, nw_item: NewsfeedItem, liker: User):
         if liker == nw_item.author:
@@ -398,6 +388,93 @@ class ReceiveFollowNotificationManager():
         self.last_notification.content['followers'].append(new_entry)
         self.last_notification.save()
         return self.last_notification
+
+
+class ReceiveSubmissionUpvoteNotificationManager():
+    TYPE = RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION
+    SQUASHED_TYPE = RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED
+
+    def __init__(self, notification_manager: NotificationManager, submission: 'Submission', liker: User):
+        self.notification_manager: NotificationManager = notification_manager
+        self.submission = submission
+        self.liker = liker
+
+    def create(self):
+        """
+        Creates a Notification that a User has liked your submission
+        ex: Stanislav has liked your Submission for Challenge Robert's Pass
+        """
+        if self.liker == self.submission.author:
+            return
+
+        if self.should_squash():
+            return self.squash()
+        else:
+            return self.notification_manager._create(recipient=self.submission.author, type=self.TYPE,
+                                                     content={
+                                                         'submission_id': self.submission.id,
+                                                         'challenge_id': self.submission.challenge.id,
+                                                         'challenge_name': self.submission.challenge.name,
+                                                         'liker_id': self.liker.id,
+                                                         'liker_name': self.liker.username
+                                                     })
+
+    def should_squash(self) -> bool:
+        """ Returns a boolean, indicating if we should squash this notification with another one """
+        self.last_notification = self.find_last_squashable_notification()
+        return self.last_notification is not None
+
+    def squash(self) -> 'Notification':
+        """ Squashes the notification we're about to create with another one """
+        if self.last_notification.type == self.TYPE:
+            notification = self.convert_to_squashed_type()
+        else:
+            notification = self.add_to_squashed_type()
+
+        return notification
+
+    def convert_to_squashed_type(self) -> 'Notification':
+        """
+        Converts the latest squashable notification into a SQUASHED type
+            and combines it with the one being created
+        """
+        self.last_notification.type = self.SQUASHED_TYPE
+        new_content = {
+            'submission_id': self.submission.id,
+            'challenge_id': self.submission.challenge.id,
+            'challenge_name': self.submission.challenge.name,
+            'likers': [
+                {
+                    'liker_id': self.last_notification.content['liker_id'],
+                    'liker_name': self.last_notification.content['liker_name']
+                },
+                {'liker_id': self.liker.id, 'liker_name': self.liker.username}
+            ]
+        }
+        self.last_notification.content = new_content
+        self.last_notification.save()
+        return self.last_notification
+
+    def add_to_squashed_type(self) -> 'Notification':
+        """
+        Adds to the latest notification (which should be a SQUASHED type)
+        """
+        new_entry = {'liker_id': self.liker.id, 'liker_name': self.liker.username}
+        self.last_notification.content['likers'].append(new_entry)
+        self.last_notification.save()
+        return self.last_notification
+
+    def find_last_squashable_notification(self) -> 'Notification':
+        """
+        This method should get the last Notification that is not read and is the same as our type
+            (e.g same submission was upvoted)
+        """
+        return self.notification_manager.filter(
+            type__in=[self.TYPE, self.SQUASHED_TYPE],
+            is_read=False,
+            content__contains={'submission_id': self.submission.id},
+            recipient=self.submission.author
+        ).last()
 
 
 class Notification(models.Model):
