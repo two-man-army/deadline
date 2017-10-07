@@ -2,7 +2,6 @@ from django.db import models
 from django_hstore import hstore
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-
 from accounts.models import User
 from challenges.models import SubCategory, UserSubcategoryProficiency, SubmissionComment, ChallengeComment, SubmissionVote
 from errors import ForbiddenMethodError
@@ -13,7 +12,7 @@ from social.constants import NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, VALID_NEWSFEED_I
     NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, \
-    RECEIVE_FOLLOW_NOTIFICATION_SQUASHED
+    RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED
 from social.errors import InvalidNewsfeedItemType, MissingNewsfeedItemContentField, InvalidNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError, InvalidNotificationType, MissingNotificationContentField, \
     InvalidNotificationContentField, InvalidFollowError
@@ -227,17 +226,11 @@ class NotificationManager(hstore.HStoreManager):
         return ReceiveSubmissionUpvoteNotificationManager(self, submission=submission, liker=liker).create()
 
     def create_receive_nw_item_like_notification(self, nw_item: NewsfeedItem, liker: User):
-        if liker == nw_item.author:
-            return
-
-        return self._create(recipient=nw_item.author, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
-                            content={'nw_content': nw_item.content,
-                                     'liker_id': liker.id, 'liker_name': liker.username, 'nw_type': nw_item.type})
+        return ReceiveNWItemLikeNotificationManager(self, nw_item=nw_item, liker=liker).create()
 
     def create_new_challenge_notification(self, recipient: User, challenge: 'Challenge'):
         """ A notification which notifies the user that a new challenge has appeared on the site"""
-        # TODO: Figure out a way to add new challenges and create notifications. Maybe add a created_on
-        # TODO:     - denoting when the challenge was created (not in the DB but in general) and only show recent ones?
+        # TODO: Figure out a way to add new challenges and create notifications.
 
         return self._create(recipient=recipient, type=NEW_CHALLENGE_NOTIFICATION,
                             content={'challenge_name': challenge.name, 'challenge_id': challenge.id,
@@ -477,6 +470,83 @@ class ReceiveSubmissionUpvoteNotificationManager():
         ).last()
 
 
+class ReceiveNWItemLikeNotificationManager:
+    """
+    A notification that a user has liked your NewsfeedItem
+    """
+    TYPE = RECEIVE_NW_ITEM_LIKE_NOTIFICATION
+    SQUASHED_TYPE = RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED
+
+    def __init__(self, notification_manager: NotificationManager, nw_item: NewsfeedItem, liker: User):
+        self.notification_manager: NotificationManager = notification_manager
+        self.liker = liker
+        self.nw_item = nw_item
+
+    def create(self):
+        if self.liker == self.nw_item.author:
+            return
+        if self.should_squash():
+            return self.squash()
+        else:
+            return self.notification_manager._create(recipient=self.nw_item.author, type=RECEIVE_NW_ITEM_LIKE_NOTIFICATION,
+                                                     content={'nw_content': self.nw_item.content,
+                                                              'liker_id': self.liker.id, 'liker_name': self.liker.username,
+                                                              'nw_type': self.nw_item.type, 'nw_item_id': self.nw_item.id})
+
+    def should_squash(self) -> bool:
+        self.last_notification = self.find_last_squashable_notification()
+        return self.last_notification is not None
+
+    def squash(self) -> 'Notification':
+        """ Squashes the notification we're about to create with another one """
+        if self.last_notification.type == self.TYPE:
+            notification = self.convert_to_squashed_type()
+        else:
+            notification = self.add_to_squashed_type()
+
+        return notification
+
+    def convert_to_squashed_type(self) -> 'Notification':
+        """
+        Converts the latest squashable notification into a SQUASHED type
+            and combines it with the one being created
+        """
+        self.last_notification.type = self.SQUASHED_TYPE
+
+        new_content = {
+            'nw_content': self.nw_item.content,
+            'nw_type': self.nw_item.type,
+            'nw_item_id': self.nw_item.id,
+            'likers': [
+                {'liker_id': self.last_notification.content['liker_id'], 'liker_name': self.last_notification.content['liker_name']},
+                {'liker_id': self.liker.id, 'liker_name': self.liker.username}
+            ]
+        }
+        self.last_notification.content = new_content
+        self.last_notification.save()
+        return self.last_notification
+
+    def add_to_squashed_type(self):
+        """
+        Adds to the latest notification (which should be a SQUASHED type)
+        """
+        self.last_notification.content['likers'].append({'liker_id': self.liker.id, 'liker_name': self.liker.username})
+        self.last_notification.save()
+        return self.last_notification
+
+    def find_last_squashable_notification(self) -> 'Notification':
+        """
+        This method should get the last Notification that is not read and is the same as our type
+            (e.g same submission was upvoted)
+        """
+        return self.notification_manager.filter(
+            type__in=[self.TYPE, self.SQUASHED_TYPE],
+            is_read=False,
+            content__contains={'nw_item_id': self.nw_item.id},
+            recipient=self.nw_item.author
+        ).last()
+
+
 class Notification(models.Model):
     """
     A Notification is a simple notification that a user receives, again facebook-esque
@@ -534,6 +604,7 @@ def notification_type_validation(sender, instance, *args, **kwargs):
             if field not in required_fields:
                 raise InvalidNotificationContentField(
                     f'The field {field} is not part of the expected content for {instance.type} and is unnecessary!')
+    # TODO: Raise Squashable exception
 
 
 @receiver(post_save, sender=Notification)

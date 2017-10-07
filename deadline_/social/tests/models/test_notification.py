@@ -12,7 +12,8 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION, NEW_CHALLENGE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, \
-    RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, RECEIVE_FOLLOW_NOTIFICATION_SQUASHED
+    RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, \
+    RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -246,6 +247,7 @@ class ReceiveNWItemLikeNotificationTests(TestCase, TestHelperMixin):
         return {
             'nw_content': nw_item.content,
             'nw_type': nw_item.type,
+            'nw_item_id': nw_item.id,
             'liker_id': liker.id,
             'liker_name': liker.username
         }
@@ -254,6 +256,7 @@ class ReceiveNWItemLikeNotificationTests(TestCase, TestHelperMixin):
         return {
             'nw_content': nw_item.content,
             'nw_type': nw_item.type,
+            'nw_item_id': nw_item.id,
             'likers': [
                 {'liker_id': us.id, 'liker_name': us.username}
                 for us in likers
