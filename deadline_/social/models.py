@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django_hstore import hstore
 from django.db.models.signals import pre_save, post_save
@@ -118,7 +119,7 @@ class NewsfeedItem(models.Model):
     """
     author = models.ForeignKey(User)
     type = models.CharField(max_length=30)  # no other table for now
-    content = hstore.SerializedDictionaryField()  # varies depending on the type
+    content = JSONField()  # varies depending on the type
     is_private = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -627,7 +628,7 @@ class Notification(models.Model):
     """
     recipient = models.ForeignKey(User)
     type = models.CharField(max_length=60)  # no other table for now
-    content = hstore.SerializedDictionaryField()  # varies depending on the type
+    content = JSONField()  # varies depending on the type
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

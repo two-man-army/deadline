@@ -75,7 +75,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_celery_results',
-    "django_hstore",
+    'django.contrib.postgres',
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
