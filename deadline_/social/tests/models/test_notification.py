@@ -14,7 +14,7 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
     RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, \
     RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, \
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED, \
-    RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED
+    RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION_SQUASHED
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -587,14 +587,14 @@ class ReceiveNWItemCommentReplyNotificationTests(TestCase, TestHelperMixin):
 
     def build_content(self, reply):
         return {
-            'nw_comment_id': reply.parent.id, 'commenter_id': reply.author.id,
-            'commenter_name': reply.author.username, 'comment_content': reply.content
+            'nw_comment_id': reply.parent.id, 'replier_id': reply.author.id,
+            'replier_name': reply.author.username, 'reply_content': reply.content
         }
 
     def build_squashed_content(self, replies):
         return {
             'nw_comment_id': replies[0].parent.id,
-            'commenters': [{'commenter_id': reply.author.id, 'commenter_name': reply.author.username}
+            'repliers': [{'replier_id': reply.author.id, 'replier_name': reply.author.username}
                            for reply in replies]
         }
 
@@ -683,7 +683,6 @@ class ReceiveNWItemCommentReplyNotificationTests(TestCase, TestHelperMixin):
                                                        author=us, content='dominos')
             replies.append(reply)
             notif = Notification.objects.create_nw_item_comment_reply_notification(nw_comment=comment_to_reply, reply=reply)
-
             if us in [sec_user, third_user]:
                 # first repliers, nothing to get squashed with
                 self.assertEqual(notif.content, self.build_content(reply))
