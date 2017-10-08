@@ -36,6 +36,7 @@ RECEIVE_SUBMISSION_COMMENT_NOTIFICATION = 'RECEIVE_SUBMISSION_COMMENT_NOTIFICATI
 RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED = 'RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED'
 
 RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION = 'RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION'
+RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION_SQUASHED = 'RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION_SQUASHED'
 
 RECEIVE_NW_ITEM_LIKE_NOTIFICATION = 'RECEIVE_NW_LIKE_NOTIFICATION'
 RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED = 'RECEIVE_NW_LIKE_NOTIFICATION_SQUASHED'
@@ -54,7 +55,7 @@ VALID_NOTIFICATION_TYPES = [RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_FOLLOW_NOTIFICA
                             RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED,
                             RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION_SQUASHED,
                             RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED,
-                            RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION,
+                            RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION_SQUASHED,
                             RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED]
 # Holds the fields that must be populated on a notification type's content HStore field
 NOTIFICATION_TYPE_CONTENT_FIELDS = {
@@ -74,8 +75,10 @@ NOTIFICATION_TYPE_CONTENT_FIELDS = {
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION: ['submission_id', 'challenge_id', 'challenge_name', 'commenter_name',
                                               'comment_content', 'commenter_id', 'comment_id'],
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED: ['submission_id', 'challenge_id', 'challenge_name', 'commenters'],
-    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION: ['submission_id', 'challenge_id', 'challenge_name', 'commenter_name',
-                                                    'comment_content', 'commenter_id', 'comment_id'],
+    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION: ['submission_id', 'challenge_id', 'challenge_name', 'comment_id',
+                                                    'replier_name', 'reply_content', 'replier_id', 'reply_id'],
+    RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION_SQUASHED: ['submission_id', 'challenge_id', 'challenge_name',
+                                                             'comment_id', 'repliers'],
     RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION: ['challenge_id', 'challenge_name', 'replier_name',
                                                    'comment_id',
                                                    'reply_content', 'replier_id', 'reply_id'],

@@ -15,7 +15,7 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
     RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION_SQUASHED, RECEIVE_FOLLOW_NOTIFICATION_SQUASHED, \
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED, \
     RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION_SQUASHED, \
-    RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED
+    RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION_SQUASHED
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
 from social.models import Notification, NewsfeedItem, NewsfeedItemComment
@@ -844,19 +844,21 @@ class ReceiveSubmissionCommentReplyNotificationTests(TestCase, TestHelperMixin):
     def build_content(self, reply):
         return {
             'submission_id': reply.submission.id, 'challenge_id': reply.submission.challenge.id,
-            'challenge_name': reply.submission.challenge.name, 'comment_id': reply.id,
-            'comment_content': reply.content, 'commenter_id': reply.author.id,
-            'commenter_name': reply.author.username
+            'challenge_name': reply.submission.challenge.name, 'reply_id': reply.id,
+            'comment_id': reply.parent.id,
+            'reply_content': reply.content, 'replier_id': reply.author.id,
+            'replier_name': reply.author.username
         }
 
     def build_squashed_content(self, replies):
         return {
             'submission_id': replies[0].submission.id, 'challenge_id': replies[0].submission.challenge.id,
             'challenge_name': replies[0].submission.challenge.name,
-            'commenters': [
+            'comment_id': replies[0].parent.id,
+            'repliers': [
                 {
-                    'commenter_id': reply.author.id,
-                    'commenter_name': reply.author.username
+                    'replier_id': reply.author.id,
+                    'replier_name': reply.author.username
                 } for reply in replies
             ]
         }
@@ -867,7 +869,7 @@ class ReceiveSubmissionCommentReplyNotificationTests(TestCase, TestHelperMixin):
         expected_content = self.build_content(subm_reply)
 
         notif = Notification.objects.create_submission_comment_reply_notification(comment=subm_reply)
-
+        self.maxDiff = None
         self.assertEqual(Notification.objects.count(), 1)
         self.assertEqual(notif, Notification.objects.first())
         self.assertEqual(notif.type, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION)
@@ -904,6 +906,8 @@ class ReceiveSubmissionCommentReplyNotificationTests(TestCase, TestHelperMixin):
 
         for reply in replies:
             notif = Notification.objects.create_submission_comment_reply_notification(comment=reply)
+            notif.is_read = True
+            notif.save()
             expected_content = self.build_content(reply)
 
             self.assertEqual(notif.type, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION)
