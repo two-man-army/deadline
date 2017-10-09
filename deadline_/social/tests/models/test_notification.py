@@ -462,126 +462,6 @@ class ReceiveNWItemCommentNotificationTests(TestCase, TestHelperMixin):
         self.assertEqual(Notification.objects.filter(type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION_SQUASHED).count(), 2)
 
 
-class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
-    def setUp(self):
-        self.create_user_and_auth_token()
-        self.setup_proficiencies()
-        self.chal = ChallengeFactory()
-        self.chal_comment = ChallengeCommentFactory(challenge=self.chal, author=self.auth_user)
-
-    def build_content(self, reply):
-        return {
-            'challenge_id': reply.challenge.id,
-            'challenge_name': reply.challenge.name,
-            'comment_id': reply.parent.id,
-            'reply_id': reply.id,
-            'reply_content': reply.content,
-            'replier_id': reply.author.id,
-            'replier_name': reply.author.username
-        }
-
-    def build_squashed_content(self, replies):
-        return {
-            'challenge_id': replies[0].challenge.id,
-            'challenge_name': replies[0].challenge.name,
-            'comment_id': replies[0].parent.id,
-            'repliers': [
-                {'replier_id': reply.author.id, 'replier_name': reply.author.username} for reply in replies
-            ]
-        }
-
-    def test_create_notification_commenti_reply_notif(self):
-        chal_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment)
-        expected_content = self.build_content(chal_reply)
-
-        notif = Notification.objects.create_challenge_comment_reply_notification(reply=chal_reply)
-
-        self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
-        self.assertEqual(notif.recipient, self.chal_comment.author)
-        self.assertEqual(notif.content, expected_content)
-
-    def test_create_notification_comment_reply_notif_not_created_if_commenter_replies_to_himself(self):
-        chal_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=self.auth_user)
-
-        notif = Notification.objects.create_challenge_comment_reply_notification(reply=chal_reply)
-
-        self.assertIsNone(notif)
-        self.assertEqual(Notification.objects.count(), 0)
-
-    def test_create_multiple_notifications_should_get_squashed_into_one(self):
-        sec_user, third_user, fourth_user = UserFactory(), UserFactory(), UserFactory()
-        replies = [ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=us)
-                   for us in [sec_user, third_user, fourth_user]]
-        expected_content = self.build_squashed_content(replies)
-
-        for reply in replies:
-            notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
-            if reply != replies[0]:
-                self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED)
-
-        self.assertEqual(Notification.objects.count(), 1)
-        notif = Notification.objects.first()
-        self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED)
-        self.assertEqual(notif.recipient, self.chal_comment.author)
-        self.assertEqual(notif.content, expected_content)
-
-    def test_create_multiple_notifications_should_not_get_squashed_if_read_consecutively(self):
-        sec_user, third_user, fourth_user = UserFactory(), UserFactory(), UserFactory()
-        replies = [ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=us)
-                   for us in [sec_user, third_user, fourth_user]]
-
-        for reply in replies:
-            expected_content = self.build_content(reply)
-            notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
-            notif.is_read = True
-            notif.save()
-
-            self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
-            self.assertEqual(notif.recipient, self.chal_comment.author)
-            self.assertEqual(notif.content, expected_content)
-
-        self.assertEqual(Notification.objects.count(), 3)
-
-    def test_two_notifications_different_comment_reply_should_not_get_squashed(self):
-        sec_user, third_user = UserFactory(), UserFactory()
-        self.second_chal_comment = ChallengeCommentFactory(challenge=self.chal, author=self.auth_user)
-        first_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=sec_user)
-        second_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.second_chal_comment, author=third_user)
-
-        first_notif = Notification.objects.create_challenge_comment_reply_notification(reply=first_reply)
-        second_notif = Notification.objects.create_challenge_comment_reply_notification(reply=second_reply)
-
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION).count(), 2)
-        first_notif.refresh_from_db()
-        self.assertEqualHStore(first_notif.content, self.build_content(first_reply))
-        self.assertEqual(second_notif.content, self.build_content(second_reply))
-
-    def test_multiple_notifications_different_comment_reply_should_get_squashed_separately(self):
-        sec_user, third_user, fourth_user, fifth_user = UserFactory(), UserFactory(), UserFactory(), UserFactory()
-        self.second_chal_comment = ChallengeCommentFactory(challenge=self.chal, author=self.auth_user)
-        replies = []
-        for us, comment_to_reply_on in [(sec_user, self.chal_comment), (third_user, self.second_chal_comment),
-                                        (fourth_user, self.chal_comment), (fifth_user, self.second_chal_comment)]:
-            reply = ChallengeCommentFactory(challenge=self.chal, parent=comment_to_reply_on, author=us)
-            replies.append(reply)
-            notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
-            if us in [sec_user, third_user]:  # first repliers, nothing should be squashed
-                self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
-                self.assertEqualHStore(notif.content, self.build_content(reply))
-            else:
-                if us == fourth_user:
-                    _replies = [replies[0], replies[2]]
-                elif us == fifth_user:
-                    _replies = [replies[1], replies[3]]
-
-                self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED)
-                self.assertEqualHStore(notif.content, self.build_squashed_content(_replies))
-
-        self.assertEqual(Notification.objects.count(), 2)
-        self.assertEqual(Notification.objects.filter(type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED).count(), 2)
-
-
 class ReceiveNWItemCommentReplyNotificationTests(TestCase, TestHelperMixin):
     def setUp(self):
         self.create_user_and_auth_token()
@@ -832,6 +712,126 @@ class ReceiveSubmissionCommentNotification(TestCase, TestHelperMixin):
 
         self.assertEqual(Notification.objects.count(), 2)
         self.assertEqual(Notification.objects.filter(type=RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED).count(), 2)
+
+
+class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
+    def setUp(self):
+        self.create_user_and_auth_token()
+        self.setup_proficiencies()
+        self.chal = ChallengeFactory()
+        self.chal_comment = ChallengeCommentFactory(challenge=self.chal, author=self.auth_user)
+
+    def build_content(self, reply):
+        return {
+            'challenge_id': reply.challenge.id,
+            'challenge_name': reply.challenge.name,
+            'comment_id': reply.parent.id,
+            'reply_id': reply.id,
+            'reply_content': reply.content,
+            'replier_id': reply.author.id,
+            'replier_name': reply.author.username
+        }
+
+    def build_squashed_content(self, replies):
+        return {
+            'challenge_id': replies[0].challenge.id,
+            'challenge_name': replies[0].challenge.name,
+            'comment_id': replies[0].parent.id,
+            'repliers': [
+                {'replier_id': reply.author.id, 'replier_name': reply.author.username} for reply in replies
+            ]
+        }
+
+    def test_create_notification_commenti_reply_notif(self):
+        chal_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment)
+        expected_content = self.build_content(chal_reply)
+
+        notif = Notification.objects.create_challenge_comment_reply_notification(reply=chal_reply)
+
+        self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
+        self.assertEqual(notif.recipient, self.chal_comment.author)
+        self.assertEqual(notif.content, expected_content)
+
+    def test_create_notification_comment_reply_notif_not_created_if_commenter_replies_to_himself(self):
+        chal_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=self.auth_user)
+
+        notif = Notification.objects.create_challenge_comment_reply_notification(reply=chal_reply)
+
+        self.assertIsNone(notif)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_create_multiple_notifications_should_get_squashed_into_one(self):
+        sec_user, third_user, fourth_user = UserFactory(), UserFactory(), UserFactory()
+        replies = [ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=us)
+                   for us in [sec_user, third_user, fourth_user]]
+        expected_content = self.build_squashed_content(replies)
+
+        for reply in replies:
+            notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
+            if reply != replies[0]:
+                self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED)
+
+        self.assertEqual(Notification.objects.count(), 1)
+        notif = Notification.objects.first()
+        self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED)
+        self.assertEqual(notif.recipient, self.chal_comment.author)
+        self.assertEqual(notif.content, expected_content)
+
+    def test_create_multiple_notifications_should_not_get_squashed_if_read_consecutively(self):
+        sec_user, third_user, fourth_user = UserFactory(), UserFactory(), UserFactory()
+        replies = [ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=us)
+                   for us in [sec_user, third_user, fourth_user]]
+
+        for reply in replies:
+            expected_content = self.build_content(reply)
+            notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
+            notif.is_read = True
+            notif.save()
+
+            self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
+            self.assertEqual(notif.recipient, self.chal_comment.author)
+            self.assertEqual(notif.content, expected_content)
+
+        self.assertEqual(Notification.objects.count(), 3)
+
+    def test_two_notifications_different_comment_reply_should_not_get_squashed(self):
+        sec_user, third_user = UserFactory(), UserFactory()
+        self.second_chal_comment = ChallengeCommentFactory(challenge=self.chal, author=self.auth_user)
+        first_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.chal_comment, author=sec_user)
+        second_reply = ChallengeCommentFactory(challenge=self.chal, parent=self.second_chal_comment, author=third_user)
+
+        first_notif = Notification.objects.create_challenge_comment_reply_notification(reply=first_reply)
+        second_notif = Notification.objects.create_challenge_comment_reply_notification(reply=second_reply)
+
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION).count(), 2)
+        first_notif.refresh_from_db()
+        self.assertEqualHStore(first_notif.content, self.build_content(first_reply))
+        self.assertEqual(second_notif.content, self.build_content(second_reply))
+
+    def test_multiple_notifications_different_comment_reply_should_get_squashed_separately(self):
+        sec_user, third_user, fourth_user, fifth_user = UserFactory(), UserFactory(), UserFactory(), UserFactory()
+        self.second_chal_comment = ChallengeCommentFactory(challenge=self.chal, author=self.auth_user)
+        replies = []
+        for us, comment_to_reply_on in [(sec_user, self.chal_comment), (third_user, self.second_chal_comment),
+                                        (fourth_user, self.chal_comment), (fifth_user, self.second_chal_comment)]:
+            reply = ChallengeCommentFactory(challenge=self.chal, parent=comment_to_reply_on, author=us)
+            replies.append(reply)
+            notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
+            if us in [sec_user, third_user]:  # first repliers, nothing should be squashed
+                self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
+                self.assertEqualHStore(notif.content, self.build_content(reply))
+            else:
+                if us == fourth_user:
+                    _replies = [replies[0], replies[2]]
+                elif us == fifth_user:
+                    _replies = [replies[1], replies[3]]
+
+                self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED)
+                self.assertEqualHStore(notif.content, self.build_squashed_content(_replies))
+
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(Notification.objects.filter(type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED).count(), 2)
 
 
 class ReceiveSubmissionCommentReplyNotificationTests(TestCase, TestHelperMixin):
