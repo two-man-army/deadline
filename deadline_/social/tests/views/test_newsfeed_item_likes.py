@@ -3,7 +3,8 @@ from rest_framework.test import APITestCase
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
 from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_LIKE_NOTIFICATION
-from social.models import NewsfeedItem, NewsfeedItemLike, Notification
+from social.models.newsfeed_item import NewsfeedItem, NewsfeedItemLike
+from social.models.notification import Notification
 from social.views import NewsfeedItemLikeManageView, NewsfeedItemLikeCreateView, NewsfeedItemLikeDeleteView
 
 

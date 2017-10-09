@@ -19,7 +19,7 @@ from accounts.models import User
 from challenges.views import SubmissionCommentCreateView
 from social.constants import RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION, \
     RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION
-from social.models import Notification
+from social.models.notification import Notification
 
 
 class SubmissionModelTest(TestCase, TestHelperMixin):

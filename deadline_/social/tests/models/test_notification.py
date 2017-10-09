@@ -18,7 +18,8 @@ from social.constants import RECEIVE_FOLLOW_NOTIFICATION, RECEIVE_SUBMISSION_UPV
     RECEIVE_SUBMISSION_COMMENT_NOTIFICATION_SQUASHED, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION_SQUASHED
 from social.errors import InvalidNotificationType, MissingNotificationContentField, InvalidNotificationContentField, \
     InvalidFollowError
-from social.models import Notification, NewsfeedItem, NewsfeedItemComment
+from social.models.notification import Notification
+from social.models.newsfeed_item import NewsfeedItem, NewsfeedItemComment
 from social.serializers import NotificationSerializer
 
 
@@ -37,16 +38,16 @@ class NotificationTests(TestCase, TestHelperMixin):
             Notification.objects._create(recipient=self.auth_user, type='TANK',
                                          content={'content': 'Hello I like turtles'})
 
-    @patch('social.models.VALID_NOTIFICATION_TYPES', ['test_type'])
-    @patch('social.models.NOTIFICATION_TYPE_CONTENT_FIELDS', {'test_type': ['1', '2']})
+    @patch('social.models.notification.VALID_NOTIFICATION_TYPES', ['test_type'])
+    @patch('social.models.notification.NOTIFICATION_TYPE_CONTENT_FIELDS', {'test_type': ['1', '2']})
     def test_model_save_raises_if_missing_newsfeed_content_field(self):
         """ Given a valid Newsfeed Type, an error should be raised if a required field is missing """
         with self.assertRaises(MissingNotificationContentField):
             Notification.objects._create(recipient=self.auth_user, type='test_type',
                                          content={})
 
-    @patch('social.models.VALID_NOTIFICATION_TYPES', ['test_type'])
-    @patch('social.models.NOTIFICATION_TYPE_CONTENT_FIELDS', {'test_type': ['1', '2']})
+    @patch('social.models.notification.VALID_NOTIFICATION_TYPES', ['test_type'])
+    @patch('social.models.notification.NOTIFICATION_TYPE_CONTENT_FIELDS', {'test_type': ['1', '2']})
     def test_model_save_raises_if_invalid_newsfeed_content_field(self):
         """ Given a valid Newsfeed Type, an error should be raised if an invalid field is added,
                 regardless if all the right ones are supplied (memory is expensive) """
@@ -54,7 +55,7 @@ class NotificationTests(TestCase, TestHelperMixin):
             Notification.objects._create(recipient=self.auth_user, type='test_type',
                                          content={'1': 'Hello I like turtles', '2': 'pf', 'tank': 'yo'})
 
-    @patch('social.models.send_notification')
+    @patch('social.models.notification.send_notification')
     def test_post_save_notif_sends_create_message_to_rabbit_mq(self, mock_send_notif):
         sec_user = UserFactory()
         notif = Notification.objects.create_receive_follow_notification(recipient=self.auth_user, follower=sec_user)

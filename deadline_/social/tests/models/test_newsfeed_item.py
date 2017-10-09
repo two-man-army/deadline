@@ -9,7 +9,8 @@ from challenges.tests.factories import UserFactory, ChallengeDescFactory
 from social.constants import NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, NW_ITEM_SUBMISSION_LINK_POST, \
     NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, NEWSFEED_ITEM_TYPE_CONTENT_FIELDS, \
     RECEIVE_NW_ITEM_LIKE_NOTIFICATION, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
-from social.models import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike, Notification
+from social.models.newsfeed_item import NewsfeedItem, NewsfeedItemComment, NewsfeedItemLike
+from social.models.notification import Notification
 from social.errors import InvalidNewsfeedItemContentField, InvalidNewsfeedItemType, MissingNewsfeedItemContentField, \
     LikeAlreadyExistsError, NonExistentLikeError
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer

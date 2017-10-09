@@ -3,13 +3,12 @@ from unittest import TestCase as unittest_TestCase
 from unittest.mock import patch
 
 import jwt
-from rest_framework.response import Response
 from rest_framework.test import APITestCase
 
 from accounts.constants import NOTIFICATION_TOKEN_EXPIRY_MINUTES, NOTIFICATION_SECRET_KEY
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import ChallengeFactory, UserFactory
-from social.models import Notification
+from social.models.notification import Notification
 from social.views import NotificationManageView, unseen_notifications, NotificationReadView
 
 
