@@ -437,7 +437,7 @@ class ReceiveNWItemCommentNotificationTests(TestCase, TestHelperMixin):
         self.assertEqual(Notification.objects.filter(type=RECEIVE_NW_ITEM_COMMENT_NOTIFICATION).count(), 2)
         first_notif.refresh_from_db()
         self.assertEqual(first_notif.type, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION)
-        self.assertEqualHStore(first_notif.content, self.build_content(first_nw_item, sec_user), ['nw_item_content'])
+        self.assertEqual(first_notif.content, self.build_content(first_nw_item, sec_user))
         self.assertEqual(second_notif.type, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION)
         self.assertEqual(second_notif.content, self.build_content(second_nw_item, third_user))
 
@@ -600,7 +600,7 @@ class ReceiveNWItemCommentReplyNotificationTests(TestCase, TestHelperMixin):
         first_notif.refresh_from_db()
         self.assertEqual(Notification.objects.count(), 2)
         self.assertEqual(Notification.objects.filter(type=RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION).count(), 2)
-        self.assertEqualHStore(first_notif.content, self.build_content(first_reply))
+        self.assertEqual(first_notif.content, self.build_content(first_reply))
         self.assertEqual(second_notif.content, self.build_content(second_reply))
 
 
@@ -687,7 +687,7 @@ class ReceiveSubmissionCommentNotification(TestCase, TestHelperMixin):
         self.assertEqual(Notification.objects.count(), 2)
         self.assertEqual(Notification.objects.filter(type=RECEIVE_SUBMISSION_COMMENT_NOTIFICATION).count(), 2)
         first_notif.refresh_from_db()
-        self.assertEqualHStore(first_notif.content, self.build_content(first_comment))
+        self.assertEqual(first_notif.content, self.build_content(first_comment))
         self.assertEqual(second_notif.content, self.build_content(second_comment))
 
     def test_multiple_notifications_two_different_submissions_should_get_squashed_separately(self):
@@ -807,7 +807,7 @@ class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
         self.assertEqual(Notification.objects.count(), 2)
         self.assertEqual(Notification.objects.filter(type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION).count(), 2)
         first_notif.refresh_from_db()
-        self.assertEqualHStore(first_notif.content, self.build_content(first_reply))
+        self.assertEqual(first_notif.content, self.build_content(first_reply))
         self.assertEqual(second_notif.content, self.build_content(second_reply))
 
     def test_multiple_notifications_different_comment_reply_should_get_squashed_separately(self):
@@ -821,7 +821,7 @@ class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
             notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
             if us in [sec_user, third_user]:  # first repliers, nothing should be squashed
                 self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
-                self.assertEqualHStore(notif.content, self.build_content(reply))
+                self.assertEqual(notif.content, self.build_content(reply))
             else:
                 if us == fourth_user:
                     _replies = [replies[0], replies[2]]
@@ -829,7 +829,7 @@ class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
                     _replies = [replies[1], replies[3]]
 
                 self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED)
-                self.assertEqualHStore(notif.content, self.build_squashed_content(_replies))
+                self.assertEqual(notif.content, self.build_squashed_content(_replies))
 
         self.assertEqual(Notification.objects.count(), 2)
         self.assertEqual(Notification.objects.filter(type=RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION_SQUASHED).count(), 2)
@@ -928,7 +928,7 @@ class ReceiveSubmissionCommentReplyNotificationTests(TestCase, TestHelperMixin):
         self.assertEqual(Notification.objects.count(), 2)
         self.assertEqual(Notification.objects.filter(type=RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION).count(), 2)
         first_notif.refresh_from_db()
-        self.assertEqualHStore(first_notif.content, self.build_content(first_reply))
+        self.assertEqual(first_notif.content, self.build_content(first_reply))
         self.assertEqual(second_notif.content, self.build_content(second_reply))
 
     def test_multiple_notifications_two_different_comments_should_get_squashed_separately(self):
