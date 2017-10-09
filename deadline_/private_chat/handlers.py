@@ -250,6 +250,10 @@ async def main_handler(websocket, path):
     Expected path for initial connection is
     /user_id/user_token/user_to_speak_to_id
     """
+    # TODO: All these tokens being sent are useless, as once we authenticate a user we have this websocket saved
+    # TODO:     These were made before we added checks for malicious `user_id` checks and as now we simply overwrite
+    # TODO:     the field, we know that each message from a `user_id` is from him,
+    # TODO:         so no need to authenticate on each message
     owner_id, opponent_id = extract_connect_path(path)
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
@@ -283,7 +287,7 @@ async def main_handler(websocket, path):
 
             try:
                 print(f'Data is {data}')
-                await MessageRouter(data)()
+                await MessageRouter(data, user_id=owner_id)()
             except Exception as e:
                 logger.error(f'Could not route message {e}')
 

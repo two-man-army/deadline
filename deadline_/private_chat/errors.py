@@ -12,3 +12,8 @@ class ChatPairingError(Error):
 
 class UserTokenMatchError(Error):
     pass
+
+
+class MaliciousUserException(Error):
+    """ Used when a User is detected to have tried something malicious """
+    pass

@@ -19,3 +19,8 @@ class InvalidNotificationToken(Error):
 class RecipientMismatchError(Error):
     """ Used when a user tries to read a notification that is not his """
     pass
+
+
+class MaliciousUserException(Error):
+    """ Used when a User is detected to have tried something malicious """
+    pass

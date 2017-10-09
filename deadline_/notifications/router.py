@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 
+from notifications.errors import MaliciousUserException
 from .channels import user_authentication, read_notification
 
 logger = logging.getLogger('notifications')
@@ -19,9 +20,16 @@ class MessageRouter:
         'read_notification': read_notification
     }
 
-    def __init__(self, data):
+    def __init__(self, data, user_id):
         try:
             self.packet = json.loads(data)
+
+            if 'user_id' in self.packet and self.packet['user_id'] != user_id:
+                raise MaliciousUserException(f'User with ID {user_id} tried to mask himself as {self.packet["user_id"]}')
+
+            self.packet['user_id'] = user_id
+        except MaliciousUserException as e:
+            logger.warn(str(e))
         except Exception as e:
             logger.error(f'Exception in MessageRouter while parsing JSON string - {e}')
 

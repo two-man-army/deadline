@@ -129,7 +129,6 @@ async def authenticate_user(stream):
 
         user_connection: UserConnection = ws_connections[user_id]
         if not user_connection.user.notification_token_is_valid(token):
-            # TODO: This means that User 2 can spam an invalid token posing as User 3 and User 3 will receive a series of ERROR messages
             asyncio.ensure_future(user_connection.send_message({
                 "type": "INVALID_NOTIFICATION_TOKEN",
                 "message": "Notification token is invalid or expired!"
@@ -153,7 +152,6 @@ def _read_notification(notification_token, user_id, notification_id):
 
     user_connection: UserConnection = ws_connections[user_id]
     if not user_connection.user.notification_token_is_valid(notification_token):
-        # TODO: This means that User 2 can spam an invalid token posing as User 3 and User 3 will receive a series of ERROR messages
         raise InvalidNotificationToken(f'User with ID {user_id} provided an invalid notification token {notification_token}!')
 
     notif = Notification.objects.get(id=notification_id)
@@ -212,6 +210,10 @@ async def read_notification(stream):
 
 
 async def main_handler(websocket, path):
+    # TODO: All these notification_tokens being sent are useless, as once we authenticate a user we have this websocket saved
+    # TODO:     These were made before we added checks for malicious `user_id` checks and as now we simply overwrite
+    # TODO:     the field, we know that each message from a `user_id` is from him,
+    # TODO:         so no need to authenticate on each message
     user_id = extract_connect_path(path)
     try:
         user = User.objects.get(id=user_id)
@@ -248,7 +250,7 @@ async def main_handler(websocket, path):
 
             try:
                 print(f'Data is {data}')
-                await MessageRouter(data)()
+                await MessageRouter(data, user_id=user.id)()
             except Exception as e:
                 logger.error(f'Could not route message {e}')
 
