@@ -247,8 +247,8 @@ class ReceiveNWItemLikeNotificationTests(TestCase, TestHelperMixin):
 
     def build_content(self, nw_item, liker):
         return {
-            'nw_content': nw_item.content,
-            'nw_type': nw_item.type,
+            'nw_item_content': nw_item.content,
+            'nw_item_type': nw_item.type,
             'nw_item_id': nw_item.id,
             'liker_id': liker.id,
             'liker_name': liker.username
@@ -256,8 +256,8 @@ class ReceiveNWItemLikeNotificationTests(TestCase, TestHelperMixin):
 
     def build_squashed_content(self, nw_item, likers):
         return {
-            'nw_content': nw_item.content,
-            'nw_type': nw_item.type,
+            'nw_item_content': nw_item.content,
+            'nw_item_type': nw_item.type,
             'nw_item_id': nw_item.id,
             'likers': [
                 {'liker_id': us.id, 'liker_name': us.username}

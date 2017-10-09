@@ -472,15 +472,14 @@ class ReceiveNWItemLikeNotificationManager(SquashableNotificationManagerBase):
         self.nw_item = nw_item
 
     def get_normal_content(self):
-        # TODO: Change nw_item_content, nw_item_type to nw_content, nw_type or vice-versa. but be consistent!
-        return {'nw_content': self.nw_item.content, 'nw_type': self.nw_item.type,
+        return {'nw_item_content': self.nw_item.content, 'nw_item_type': self.nw_item.type,
                 'nw_item_id': self.nw_item.id,
                 'liker_id': self.liker.id, 'liker_name': self.liker.username}
 
     def create_new_squashed_content(self):
         return {
-            'nw_content': self.nw_item.content,
-            'nw_type': self.nw_item.type,
+            'nw_item_content': self.nw_item.content,
+            'nw_item_type': self.nw_item.type,
             'nw_item_id': self.nw_item.id,
             'likers': [
                 {'liker_id': self.last_notification.content['liker_id'], 'liker_name': self.last_notification.content['liker_name']},
