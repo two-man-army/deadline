@@ -47,7 +47,7 @@ class User(AbstractBaseUser):
     def notification_token_is_expired(self) -> bool:
         """ Checks whether the current token is expired """
         if self.notification_token is None:
-            return False
+            return True
         try:
             jwt.decode(self.notification_token, NOTIFICATION_SECRET_KEY)
             return False
