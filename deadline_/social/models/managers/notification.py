@@ -2,7 +2,10 @@
 Defines the NotificationManager for the Notification model
 and all the helper managers, which manage specific Notification creation and squashing
 """
+from abc import ABC, abstractmethod
+
 from django_hstore.hstore import HStoreManager
+
 from accounts.models import User
 from challenges.models import SubmissionComment, ChallengeComment, Submission, Challenge
 from errors import ForbiddenMethodError
@@ -80,7 +83,7 @@ class NotificationManager(HStoreManager):
         return ReceiveChallengeCommentReplyNotificationManager(self, reply=reply).create()
 
 
-class SquashableNotificationManagerBase:
+class SquashableNotificationManagerBase(ABC):
     """
     This is a wrapper to a NotificationManager for creating a notification of a specific type.
     Needed variable definitions:
@@ -160,22 +163,25 @@ class SquashableNotificationManagerBase:
         """
         return bool(self.create_check())
 
+    @abstractmethod
     def add_to_squashed_type(self):
         """ Defines Notification-specific logic for adding the current notification's data into the squashed one """
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_normal_content(self) -> dict:
         """
         Returns the content of the single non-squashed notification.
         This is meant to be overriden for each specific Notification
         """
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def create_new_squashed_content(self) -> dict:
         """
         Combines the old notification's content with the new one being created
         """
-        raise NotImplementedError()
+        pass
 
     def get_last_notification_content_filter(self) -> dict:
         """ Returns the `content` we want our last squashable notification to have. """
