@@ -17,7 +17,8 @@ from challenges.tests.factories import UserFactory, ChallengeDescFactory
 from challenges.models import (Challenge, Submission, Language, SubmissionVote, Proficiency,
                                UserSubcategoryProficiency, SubCategory, MainCategory)
 from social.constants import NW_ITEM_TEXT_POST
-from social.models import NewsfeedItem, Notification
+from social.models.newsfeed_item import NewsfeedItem
+from social.models.notification import Notification
 
 
 class UserModelNewsfeedTest(TestCase):

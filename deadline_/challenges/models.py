@@ -55,7 +55,7 @@ class ChallengeComment(models.Model):
         return f'/challenges/{self.challenge_id}/comments/{self.id}'
 
     def add_reply(self, author: User, content: str, to_notify=True):
-        from social.models import Notification
+        from social.models.notification import Notification
 
         reply = ChallengeComment.objects.create(author=author, content=content,
                                                 challenge_id=self.challenge_id, parent=self)
@@ -134,7 +134,7 @@ class Submission(models.Model):
 
     def add_comment(self, author, content, to_notify=True):
         # TODO: Some sort of SubmissionServiceMixin adding this functionality
-        from social.models import Notification
+        from social.models.notification import Notification
 
         subm_comment = SubmissionComment.objects.create(submission=self, author=author, content=content)
 
@@ -155,7 +155,7 @@ class SubmissionComment(models.Model):
         ordering = ('-created_at', )
 
     def add_reply(self, author, content, to_notify=True):
-        from social.models import Notification
+        from social.models.notification import Notification
 
         reply = SubmissionComment.objects.create(submission=self.submission, parent=self, author=author, content=content)
 
@@ -170,7 +170,7 @@ class SubmissionVoteManager(models.Manager):
         """
             Extends the create() function with the ability to create a Notification
         """
-        from social.models import Notification
+        from social.models.notification import Notification
 
         instance = super().create(**kwargs)
         if to_notify and Notification.is_valid_submission_upvote_notification(instance):
@@ -281,7 +281,7 @@ class UserSubcategoryProficiency(models.Model):
         Updates the user's proficiency if he has reached a new one and creates a newsfeed post about it
         :return: a boolean indicating if we have updated it
         """
-        from social.models import NewsfeedItem
+        from social.models.newsfeed_item import NewsfeedItem
 
         to_update = self.to_update_proficiency()
 

@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 
 from accounts.models import User, Role
-from social.models import Notification
+from social.models.notification import Notification
 
 
 class UserFollowViewTest(APITestCase):

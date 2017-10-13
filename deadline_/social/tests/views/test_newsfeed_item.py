@@ -10,7 +10,7 @@ from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SUBMISSION_LINK_POST, \
     NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST
-from social.models import NewsfeedItem
+from social.models.newsfeed_item import NewsfeedItem
 from social.serializers import NewsfeedItemSerializer
 from social.views import NewsfeedItemDetailView, NewsfeedItemDetailManageView, SharePostCreateView, PostCreateView, \
     TextPostCreateView, SubmissionLinkPostCreateView, ChallengeLinkPostCreateView, ChallengeCompletionPostCreateView
@@ -29,7 +29,7 @@ class SharePostCreateViewTests(APITestCase, TestHelperMixin):
         self.user2 = User.objects.create(username='user2', password='123', email='user2@abv.bg', score=123, role=self.base_role)
         self.nw_item_us2_1 = NewsfeedItem.objects.create(author=self.user2, type=NW_ITEM_TEXT_POST, content={'content': 'Hi'})
 
-    @patch('social.models.NewsfeedItemManager.create_share_post')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_share_post')
     def test_create_share_post(self, mock_create_share_post):
         response = self.client.post(f'/social/feed/items/{self.nw_item_us2_1.id}', HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 201)
@@ -38,18 +38,18 @@ class SharePostCreateViewTests(APITestCase, TestHelperMixin):
     def test_cannot_create_a_share_pointing_to_a_share(self):
         share_item = NewsfeedItem.objects.create_share_post(author=self.auth_user, shared_item=self.nw_item_us2_1)
 
-        with patch('social.models.NewsfeedItemManager.create_share_post') as mock_create_share_post:
+        with patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_share_post') as mock_create_share_post:
             response = self.client.post(f'/social/feed/items/{share_item.id}', HTTP_AUTHORIZATION=self.auth_token)
             self.assertEqual(response.status_code, 400)
             mock_create_share_post.assert_not_called()
 
-    @patch('social.models.NewsfeedItemManager.create_share_post')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_share_post')
     def test_requires_authentication(self, mock_create_share_post):
         response = self.client.post(f'/social/feed/items/{self.nw_item_us2_1.id}')
         self.assertEqual(response.status_code, 401)
         mock_create_share_post.assert_not_called()
 
-    @patch('social.models.NewsfeedItemManager.create_share_post')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_share_post')
     def test_invalid_newsfeed_item_id_returns_404(self, mock_create_share_post):
         response = self.client.post('/social/feed/items/111', HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)
@@ -60,7 +60,7 @@ class SubmissionLinkPostCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.base_set_up()
 
-    @patch('social.models.NewsfeedItemManager.create_submission_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_submission_link')
     def test_creation(self, mock_create_subm):
         response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                                     data={'post_type': NW_ITEM_SUBMISSION_LINK_POST,
@@ -68,7 +68,7 @@ class SubmissionLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 201)
         mock_create_subm.assert_called_once_with(author=self.auth_user, submission=self.submission)
 
-    @patch('social.models.NewsfeedItemManager.create_submission_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_submission_link')
     def test_requires_auth(self, mock_create_subm):
         response = self.client.post('/social/posts',
                                     data={'post_type': NW_ITEM_SUBMISSION_LINK_POST,
@@ -76,7 +76,7 @@ class SubmissionLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 401)
         mock_create_subm.assert_not_called()
 
-    @patch('social.models.NewsfeedItemManager.create_submission_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_submission_link')
     def test_can_share_own_submission_even_if_not_fully_solved(self, mock_create_subm):
         subm = Submission.objects.create(language=self.python_language, challenge=self.challenge,
                                                     author=self.auth_user, code="", result_score=self.challenge.score-1)
@@ -86,7 +86,7 @@ class SubmissionLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 201)
         mock_create_subm.assert_called_once_with(author=self.auth_user, submission=subm)
 
-    @patch('social.models.NewsfeedItemManager.create_submission_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_submission_link')
     def test_can_share_other_users_submission_if_challenge_solved(self, mock_create_subm):
         new_user = User.objects.create(username='Somebody', password='123', email='Somebody@abv.bg',
                                              score=123, role=self.base_role)
@@ -101,7 +101,7 @@ class SubmissionLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 201)
         mock_create_subm.assert_called_once_with(author=self.auth_user, submission=subm)
 
-    @patch('social.models.NewsfeedItemManager.create_submission_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_submission_link')
     def test_cannot_share_other_user_submission_if_not_solved(self, mock_create_subm):
         new_user = User.objects.create(username='Somebody', password='123', email='Somebody@abv.bg',
                                              score=123, role=self.base_role)
@@ -115,7 +115,7 @@ class SubmissionLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 400)
         mock_create_subm.assert_not_called()
 
-    @patch('social.models.NewsfeedItemManager.create_submission_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_submission_link')
     def test_invalid_submission_id_returns_404(self, mock_create_subm):
         response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                                     data={'post_type': NW_ITEM_SUBMISSION_LINK_POST,
@@ -128,7 +128,7 @@ class ChallengeLinkPostCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.base_set_up()
 
-    @patch('social.models.NewsfeedItemManager.create_challenge_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_challenge_link')
     def test_creation(self, mock_create_challenge_link):
         response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                                     data={'post_type': NW_ITEM_CHALLENGE_LINK_POST,
@@ -136,7 +136,7 @@ class ChallengeLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 201)
         mock_create_challenge_link.assert_called_once_with(author=self.auth_user, challenge=self.challenge)
 
-    @patch('social.models.NewsfeedItemManager.create_challenge_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_challenge_link')
     def test_requires_auth(self, mock_create_challenge_link):
         response = self.client.post('/social/posts',
                                     data={'post_type': NW_ITEM_CHALLENGE_LINK_POST,
@@ -144,7 +144,7 @@ class ChallengeLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 401)
         mock_create_challenge_link.assert_not_called()
 
-    @patch('social.models.NewsfeedItemManager.create_challenge_link')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_challenge_link')
     def test_invalid_challenge_id_returns_404(self, mock_create_challenge_link):
         response = self.client.post('/social/posts', HTTP_AUTHORIZATION=self.auth_token,
                                     data={'post_type': NW_ITEM_CHALLENGE_LINK_POST,
@@ -153,7 +153,7 @@ class ChallengeLinkPostCreateViewTests(APITestCase, TestHelperMixin):
         mock_create_challenge_link.assert_not_called()
 
 
-@patch('social.models.NewsfeedItemManager.create_challenge_completion_post')
+@patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_challenge_completion_post')
 class ChallengeCompletionPostCreateViewTests(APITestCase, TestHelperMixin):
     def setUp(self):
         self.base_set_up()

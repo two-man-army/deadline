@@ -69,14 +69,14 @@ class User(AbstractBaseUser):
         They are a collection of all the NewsfeedItems
             of which the authors are people he has followed
         """
-        from social.models import NewsfeedItem
+        from social.models.newsfeed_item import NewsfeedItem
 
         return NewsfeedItem.objects\
             .filter(author_id__in=[us.id for us in self.users_followed.all()] + [self.id])\
             .order_by('-created_at')[start_offset:end_limit]
 
     def follow(self, user):
-        from social.models import Notification
+        from social.models.notification import Notification
 
         if user in self.users_followed.all():
             raise UserAlreadyFollowedError(f'{self.username} has already followed {user.username}!')

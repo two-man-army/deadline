@@ -88,7 +88,7 @@ class UserSubcategoryProficiencyModelTest(TestCase):
         subcat_proficiency.save()
         self.assertFalse(subcat_proficiency.to_update_proficiency())
 
-    @patch('social.models.NewsfeedItemManager.create_subcategory_badge_post')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_subcategory_badge_post')
     def test_try_update_proficiency_updates_when_needed(self, mock_create_post):
         subcat_proficiency: UserSubcategoryProficiency = self.user.fetch_subcategory_proficiency(self.sub1.id)
         subcat_proficiency.user_score = 202 # this places the user right at the 51% mark
@@ -109,7 +109,7 @@ class UserSubcategoryProficiencyModelTest(TestCase):
         # should automatically create a NewsfeedItem about the achievement
         mock_create_post.assert_called_once_with(user_subcat_prof=subcat_proficiency)
 
-    @patch('social.models.NewsfeedItemManager.create_subcategory_badge_post')
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_subcategory_badge_post')
     def test_try_update_proficiency_does_not_update_when_needed(self, mock_create_post):
         subcat_proficiency: UserSubcategoryProficiency = self.user.fetch_subcategory_proficiency(self.sub1.id)
         subcat_proficiency.proficiency = self.starter_prof

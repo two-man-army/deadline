@@ -8,7 +8,7 @@ from notifications.errors import NotificationAlreadyRead, OfflineRecipientError,
     RecipientMismatchError
 from notifications.helpers import extract_connect_path
 from notifications.router import MessageRouter
-from social.models import Notification
+from social.models.notification import Notification
 from social.serializers import NotificationSerializer
 
 """

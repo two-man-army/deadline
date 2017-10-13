@@ -6,7 +6,7 @@ from rest_framework.test import APITestCase
 from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory
 from social.constants import RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION
-from social.models import Notification
+from social.models.notification import Notification
 
 
 class ChallengeCommentModelTests(TestCase, TestHelperMixin):

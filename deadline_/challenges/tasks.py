@@ -16,7 +16,7 @@ from deadline.celery import app
 from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader, KotlinGrader, RubyGrader
 from challenges.models import Submission
 from challenges.helper import delete_file, grade_result, update_user_score, update_test_cases
-from social.models import Notification
+from social.models.notification import Notification
 
 LANGUAGE_GRADERS = {
     PYTHONLANG_NAME: PythonGrader,

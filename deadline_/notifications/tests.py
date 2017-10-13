@@ -7,7 +7,7 @@ from challenges.tests.base import TestHelperMixin
 from notifications.errors import NotificationAlreadyRead, OfflineRecipientError, RecipientMismatchError, \
     InvalidNotificationToken
 from notifications.handlers import NotificationsHandler, _read_notification
-from social.models import Notification
+from social.models.notification import Notification
 from social.serializers import NotificationSerializer
 
 

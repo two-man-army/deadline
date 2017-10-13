@@ -14,7 +14,8 @@ from challenges.models import Submission, Challenge
 from decorators import fetch_models
 from helpers import get_date_difference
 from social.errors import LikeAlreadyExistsError, NonExistentLikeError
-from social.models import NewsfeedItem, NewsfeedItemComment, Notification
+from social.models.newsfeed_item import NewsfeedItem, NewsfeedItemComment
+from social.models.notification import Notification
 from social.serializers import NewsfeedItemSerializer, NewsfeedItemCommentSerializer, NotificationSerializer
 from social.constants import NEWSFEED_ITEMS_PER_PAGE, NW_ITEM_TEXT_POST, NW_ITEM_SHARE_POST, \
     NW_ITEM_SUBMISSION_LINK_POST, NW_ITEM_CHALLENGE_LINK_POST, NW_ITEM_CHALLENGE_COMPLETION_POST, \

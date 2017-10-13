@@ -7,7 +7,8 @@ from challenges.tests.base import TestHelperMixin
 from challenges.tests.factories import UserFactory
 from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
     RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION
-from social.models import NewsfeedItem, NewsfeedItemComment, Notification
+from social.models.newsfeed_item import NewsfeedItem, NewsfeedItemComment
+from social.models.notification import Notification
 from social.serializers import NewsfeedItemCommentSerializer
 
 

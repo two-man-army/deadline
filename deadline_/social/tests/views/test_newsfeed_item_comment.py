@@ -4,10 +4,9 @@ from rest_framework.test import APITestCase
 
 from accounts.models import User
 from challenges.tests.base import TestHelperMixin
-from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION, \
-    RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION
-from social.models import NewsfeedItem, NewsfeedItemComment, Notification
-from social.views import NewsfeedItemCommentReplyCreateView
+from social.constants import NW_ITEM_TEXT_POST, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION
+from social.models.newsfeed_item import NewsfeedItem, NewsfeedItemComment
+from social.models.notification import Notification
 
 
 class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
@@ -64,7 +63,7 @@ class NewsfeedCommentCreateViewTests(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 401)
 
 
-@patch('social.models.NewsfeedItemComment.add_reply')
+@patch('social.models.newsfeed_item.NewsfeedItemComment.add_reply')
 class NewsfeedCommentReplyCreateViewTests(APITestCase, TestHelperMixin):
     """
     Should create a Reply to a NewsfeedItemComment

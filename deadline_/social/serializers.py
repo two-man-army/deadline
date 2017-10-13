@@ -7,7 +7,8 @@ from rest_framework_hstore.fields import HStoreField
 from serializers import RecursiveField
 from accounts.serializers import UserSerializer
 from social.constants import NW_ITEM_SHARE_POST
-from social.models import NewsfeedItemComment, NewsfeedItem, NewsfeedItemLike, Notification
+from social.models.newsfeed_item import NewsfeedItemComment, NewsfeedItem, NewsfeedItemLike
+from social.models.notification import Notification
 
 
 class NotificationSerializer(serializers.ModelSerializer):

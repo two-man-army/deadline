@@ -1,3 +1,5 @@
+import json
+
 from accounts.models import User, Role
 from challenges.models import Language, MainCategory, SubCategory, Challenge, Submission, Proficiency, UserSubcategoryProficiency
 from challenges.tests.factories import ChallengeDescFactory
