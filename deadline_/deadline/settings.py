@@ -87,6 +87,10 @@ INSTALLED_APPS = [
     'django_extensions',
 ]
 
+if 'test' in sys.argv:
+    # Add Test-Specific code
+    INSTALLED_APPS += ['test_setup.TestSetupConfig']
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',  # Need to use HTTPS otherwise not secure
