@@ -28,7 +28,7 @@ class TestCaseViewTest(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(serializer.data, response.data)
 
-    def test_load_all_test_cases_invalid_challenge_should_400(self):
+    def test_load_all_test_cases_invalid_challenge_returns_400(self):
         response = self.client.get('/challenges/11/submissions/{}/tests'.format(self.submission.id),
                                    HTTP_AUTHORIZATION=self.auth_token)
 
@@ -50,7 +50,7 @@ class TestCaseViewTest(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(serializer.data, response.data)
 
-    def test_load_invalid_test_case_should_return_404(self):
+    def test_load_non_existent_test_case_should_return_404(self):
         response = self.client.get('/challenges/{}/submissions/{}/test/44'.format(self.challenge.id, self.submission.id),
                                    HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)

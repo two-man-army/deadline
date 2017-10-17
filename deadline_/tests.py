@@ -168,13 +168,12 @@ class BaseManageViewTests(unittest_TestCase):
         inner_function_mock.assert_called_once_with(request_mock)
         self.assertEqual(result, 14)
 
-    def test_returns_404_exception_if_method_not_defined(self):
+    def test_returns_405_exception_if_method_not_defined(self):
         BaseManageView.VIEWS_BY_METHOD = {
             'GET': None
         }
         request_mock = MagicMock(method='PUT')
         response = BaseManageView().dispatch(request_mock)
 
-        self.assertTrue(isinstance(response, Response))
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 405)
 

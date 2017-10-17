@@ -222,7 +222,7 @@ class SubmissionViewsTest(APITestCase, TestHelperMixin):
         for submission in response.data:
             self.assertNotIn('code', submission.keys())
 
-    def test_view_submission_doesnt_exist(self):
+    def test_view_non_existent_submission_returns_404(self):
         response = self.client.get('challenges/{}/submissions/15'.format(self.submission.challenge_id)
                                , HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)
@@ -482,7 +482,7 @@ class SubmissionVoteViewTest(APITestCase, TestHelperMixin):
         self.assertEqual(len(SubmissionVote.objects.all()), 1)
         self.assertTrue(SubmissionVote.objects.all().first().is_upvote)  # should have been modified
 
-    def test_cast_submission_vote_invalid_submission_id_returns_404(self):
+    def test_cast_submission_vote_non_existent_submission_id_returns_404(self):
         response = self.client.post(f'/challenges/submissions/111/vote', HTTP_AUTHORIZATION=self.auth_token,
                                     data={'is_upvote': True})
         self.assertEqual(response.status_code, 404)
@@ -509,7 +509,7 @@ class SubmissionVoteViewTest(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['error'], 'You cannot vote on your own submission!')
 
-    def test_remove_submission_vote_invalid_submission_id_returns_404(self):
+    def test_remove_submission_vote_non_existent_submission_id_returns_404(self):
         response = self.client.delete(f'/challenges/submissions/111/removeVote', HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.data['error'], 'A submission with ID 111 does not exist!')

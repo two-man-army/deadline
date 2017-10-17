@@ -31,9 +31,9 @@ class LessonManagerViewTests(TestCase):
         get_view.assert_called_once()
         LessonManageView.VIEWS_BY_METHOD = _old_views
 
-    def returns_404_unsupported_method(self):
-        resp = self.client.trace(f'/education/course/1/lesson/')
-        self.assertEqual(resp.status_code, 404)
+    def test_returns_405_for_unsupported_method(self):
+        resp = self.client.trace(f'/education/course/1/lesson/1')
+        self.assertEqual(resp.status_code, 405)
 
 
 class LessonCreateViewTests(TestCase, TestHelperMixin):
@@ -195,7 +195,7 @@ class LessonDetailViewTests(TestCase, TestHelperMixin):
                                    HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 403)
 
-    def test_returns_404_for_user_enrolled_on_other_course(self):
+    def test_returns_400_for_user_enrolled_on_other_course(self):
         """
         An edge case, assure we follow consistency of course_id - lesson_id.
         Even if the user is enrolled to both courses, assure that we cannot get the lesson through another course id

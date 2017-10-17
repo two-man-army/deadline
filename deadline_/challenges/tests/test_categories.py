@@ -129,7 +129,7 @@ class SubCategoryViewTest(TestCase, TestHelperMixin):
         response = self.client.get('/challenges/subcategories/{}'.format(self.sub1.name))
         self.assertEqual(response.status_code, 401)
 
-    def test_view_invalid_subcategory_should_404(self):
+    def test_view_invalid_subcategory_returns_404(self):
         response = self.client.get('/challenges/subcategories/{}'.format('" OR 1=1;'),
                                    HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)

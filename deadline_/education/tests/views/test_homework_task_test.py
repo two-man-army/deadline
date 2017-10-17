@@ -75,19 +75,19 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
 
         self.assertEqual(resp.status_code, 403)
 
-    def test_create_test_fails_for_non_existent_course(self, _):
+    def test_create_test_fails_with_404_for_non_existent_course(self, _):
         resp = self.client.post(f'/education/course/12/lesson/{self.lesson.id}/homework_task/{self.task.id}/test',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
                                 data={"input": self.input, "output": self.output})
         self.assertEqual(resp.status_code, 404)
 
-    def test_create_test_fails_for_non_existent_lesson(self, _):
+    def test_create_test_fails_with_404_for_non_existent_lesson(self, _):
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/15/homework_task/{self.task.id}/test',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
                                 data={"input": self.input, "output": self.output})
         self.assertEqual(resp.status_code, 404)
 
-    def test_create_test_fails_for_non_existent_task(self, _):
+    def test_create_test_fails_with_404_for_non_existent_task(self, _):
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/15/test',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
                                 data={"input": self.input, "output": self.output})
@@ -194,19 +194,19 @@ class LessonHomeworkTaskDeleteViewTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 403)
         self.assertEqual(self.task.homework, self.hw)
 
-    def test_invalid_task_returns_404(self):
+    def test_non_existent_task_returns_404(self):
         resp = self.client.delete(
             f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/111',
             HTTP_AUTHORIZATION=self.teacher_auth_token)
         self.assertEqual(resp.status_code, 404)
 
-    def test_invalid_lesson_returns_404(self):
+    def test_non_existent_lesson_returns_404(self):
         resp = self.client.delete(
             f'/education/course/{self.course.id}/lesson/111/homework_task/{self.task.id}',
             HTTP_AUTHORIZATION=self.teacher_auth_token)
         self.assertEqual(resp.status_code, 404)
 
-    def test_invalid_course_returns_404(self):
+    def test_non_existent_course_returns_404(self):
         resp = self.client.delete(
             f'/education/course/111/lesson/{self.lesson.id}/homework_task/{self.task.id}',
             HTTP_AUTHORIZATION=self.teacher_auth_token)

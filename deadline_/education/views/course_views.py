@@ -121,9 +121,9 @@ class CourseLanguageAddView(APIView):
     @fetch_models
     def post(self, request, course: Course, *args, **kwargs):
         try:
-            language, *_ = fetch_models_by_pks({Language: request.data.get('language', -1)})
-        except FetchError as e:
-            return Response(status=404, data={'error': str(e)})
+            language = Language.objects.get(id=request.data.get('language', -1))
+        except Language.DoesNotExist as e:
+            return Response(status=400, data={'error': str(e)})
 
         if not course.is_under_construction:
             return Response(status=400, data={'error': f'Cannot add a Language to a Course when the Course is locked!'})
