@@ -16,8 +16,6 @@ from accounts.helpers import hash_password, generate_notification_token
 from django.db import models
 from django.dispatch import receiver
 
-from sql_queries import USER_SELECT_COUNT_OF_SOLVED_CHALLENGES_FOR_SUB_CATEGORY
-
 
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -51,21 +49,12 @@ class User(AbstractBaseUser):
         Given a SubCategory object,
             find the number of challenges the user has fully solved from that SubCategory
         """
-        from django.db import connection
-        from challenges.models import Submission
-        challenge_ids_for_category = [c.id for c in sub_category.challenges.all()]
-        # TODO: Implement a table to store this logic as calculating it is expensive!
-
-        # temporary hacky solution
-        cursor = connection.cursor()
-        challenge_id_string = ', '.join(str(p) for p in challenge_ids_for_category)
-        if not challenge_id_string:  # EXTREME HACK
-            challenge_id_string = '-1'
-        cursor.execute(USER_SELECT_COUNT_OF_SOLVED_CHALLENGES_FOR_SUB_CATEGORY.format(challenge_ids=challenge_id_string),
-                       (self.id, ))
-        solved_challenges_count = cursor.fetchone()[0]
-
-        return solved_challenges_count
+        from challenges.models import UserSolvedChallenges
+        return (UserSolvedChallenges.objects.prefetch_related('challenges')
+                                            .filter(user_id=self.id,
+                                                    challenge__category_id=sub_category.id)
+                                            .count()
+                )
 
     def notification_token_is_expired(self) -> bool:
         """ Checks whether the current token is expired """
