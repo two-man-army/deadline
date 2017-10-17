@@ -1,11 +1,10 @@
-from django.shortcuts import render
-from django.http import HttpRequest
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
-from rest_framework.parsers import JSONParser
+import re
+
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveAPIView, ListAPIView, CreateAPIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework import status
 
@@ -20,6 +19,11 @@ class UserDetailView(RetrieveAPIView):
     serializer_class = UserSerializer
     queryset = User.objects.all()
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serialized_data = self.get_serializer(instance).data
+        serialized_data['follower_count'] = instance.users_followed.count()
+        return Response(serialized_data)
 
 @api_view(['POST'])
 @permission_classes([])

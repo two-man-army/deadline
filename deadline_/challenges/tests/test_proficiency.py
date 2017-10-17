@@ -1,6 +1,8 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from challenges.models import Proficiency, MainCategory, SubCategory, UserSubcategoryProficiency, User, Challenge, SubcategoryProficiencyAward
-from challenges.tests.factories import UserFactory, ChallengeFactory, ChallengeDescFactory
+from challenges.tests.factories import UserFactory, ChallengeDescFactory
 
 
 class ProficiencyModelTests(TestCase):
@@ -86,7 +88,8 @@ class UserSubcategoryProficiencyModelTest(TestCase):
         subcat_proficiency.save()
         self.assertFalse(subcat_proficiency.to_update_proficiency())
 
-    def test_try_update_proficiency_updates_when_needed(self):
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_subcategory_badge_post')
+    def test_try_update_proficiency_updates_when_needed(self, mock_create_post):
         subcat_proficiency: UserSubcategoryProficiency = self.user.fetch_subcategory_proficiency(self.sub1.id)
         subcat_proficiency.user_score = 202 # this places the user right at the 51% mark
         subcat_proficiency.proficiency = self.starter_prof
@@ -103,8 +106,11 @@ class UserSubcategoryProficiencyModelTest(TestCase):
         # should update the user's score and proficiency
         self.assertEqual(self.user.score, expected_score)
         self.assertEqual(subcat_proficiency.proficiency, expected_proficiency)
+        # should automatically create a NewsfeedItem about the achievement
+        mock_create_post.assert_called_once_with(user_subcat_prof=subcat_proficiency)
 
-    def test_try_update_proficiency_does_not_update_when_needed(self):
+    @patch('social.models.managers.newsfeed_item.NewsfeedItemManager.create_subcategory_badge_post')
+    def test_try_update_proficiency_does_not_update_when_needed(self, mock_create_post):
         subcat_proficiency: UserSubcategoryProficiency = self.user.fetch_subcategory_proficiency(self.sub1.id)
         subcat_proficiency.proficiency = self.starter_prof
         subcat_proficiency.user_score = 199  # this places the user right at the 49% mark
@@ -119,6 +125,7 @@ class UserSubcategoryProficiencyModelTest(TestCase):
         # should update the user's score and proficiency
         self.assertEqual(self.user.score, 199)
         self.assertEqual(subcat_proficiency.proficiency, self.starter_prof)
+        mock_create_post.assert_not_called()
 
     def test_proficiency_user_score_is_updated_onsubmission_creation(self):
         raise NotImplementedError()

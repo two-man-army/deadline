@@ -4,6 +4,7 @@ import os
 import json
 import time
 
+from accounts.models import User
 from challenges.models import Challenge, Submission
 from challenges.helper import convert_to_normal_text
 from constants import (MAX_TEST_RUN_SECONDS, PYTHONLANG_NAME, RUSTLANG_NAME, CPPLANG_NAME, DOCKER_CLIENT,
@@ -15,6 +16,7 @@ from deadline.celery import app
 from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader, KotlinGrader, RubyGrader
 from challenges.models import Submission
 from challenges.helper import delete_file, grade_result, update_user_score, update_test_cases
+from social.models.notification import Notification
 
 LANGUAGE_GRADERS = {
     PYTHONLANG_NAME: PythonGrader,
@@ -123,3 +125,13 @@ def run_grader_task(test_case_count: int, test_folder_name: str, code: str, lang
         grade_result(submission, timed_out_percentage, submission_grade_result[GRADER_TEST_RESULT_TIME_KEY])
 
         update_user_score(user=submission.author, submission=submission)
+
+
+@app.task
+def notify_users_for_new_challenge(new_challenge):
+    """
+    When a new Challenge is created, all the users on the website must be notified
+    """
+
+    for user in User.objects.all():
+        Notification.objects.create_new_challenge_notification(recipient=user, challenge=new_challenge)

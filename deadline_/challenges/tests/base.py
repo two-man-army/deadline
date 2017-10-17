@@ -1,3 +1,5 @@
+import json
+
 from accounts.models import User, Role
 from challenges.models import Language, MainCategory, SubCategory, Challenge, Submission, Proficiency, UserSubcategoryProficiency
 from challenges.tests.factories import ChallengeDescFactory
@@ -19,7 +21,7 @@ class TestHelperMixin:
         self.auth_user = User.objects.create(username='123', password='123', email='123@abv.bg', score=123, role=self.base_role)
         self.auth_token = 'Token {}'.format(self.auth_user.auth_token.key)
 
-    def base_set_up(self):
+    def base_set_up(self, create_user=True):
         """
         Since a lot of tests use the same setUp code, namely creating:
             - A user
@@ -38,9 +40,38 @@ class TestHelperMixin:
         self.challenge.supported_languages.add(self.python_language)
         self.challenge.save()
         self.challenge_name = self.challenge.name
-
-        self.create_user_and_auth_token()
+        if create_user:
+            self.create_user_and_auth_token()
         self.subcategory_progress = UserSubcategoryProficiency.objects.filter(subcategory=self.sub_cat,
                                                                               user=self.auth_user).first()
         self.submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
                                                     author=self.auth_user, code="")
+
+    def create_challenge(self) -> Challenge:
+        """
+        Creates a Challenge object and returns it
+        """
+        from random import randint
+        if not SubCategory.objects.exists():
+            # create a subcategory
+            if not MainCategory.objects.exists():
+                main_cat = MainCategory.objects.create(name=f'Tests{randint(1, 100)}')
+            else:
+                main_cat = MainCategory.objects.first()
+            sub_cat = SubCategory.objects.create(name='tests', meta_category=main_cat)
+        else:
+            sub_cat = SubCategory.objects.first()
+
+        return Challenge.objects.create(name=f'Sample Challenge{randint(1, 100)}', difficulty=randint(1, 10),
+                                        score=randint(1, 100), description=ChallengeDescFactory(),
+                                        test_case_count=randint(1, 20), category=sub_cat)
+
+    def setup_proficiencies(self):
+        """
+        Creates a couple of Proficiency models
+        """
+        Proficiency.objects.create(name='starter', needed_percentage=0)
+        Proficiency.objects.create(name='newb', needed_percentage=25)
+        Proficiency.objects.create(name='med', needed_percentage=50)
+        Proficiency.objects.create(name='advanced', needed_percentage=75)
+        Proficiency.objects.create(name='master', needed_percentage=100)

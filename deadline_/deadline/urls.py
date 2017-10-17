@@ -19,5 +19,7 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^accounts/', include('accounts.urls')),
-    url(r'^challenges/', include('challenges.urls'))
+    url(r'^challenges/', include('challenges.urls')),
+    url(r'^social/', include('social.urls')),
+    url(r'^chat/', include('private_chat.urls'))
 ]

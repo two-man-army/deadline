@@ -77,9 +77,8 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
                          'max_score': self.sub1.max_score,
                          'proficiency': {'name': self.subcategory_progress.proficiency.name,
                                          'user_score': self.subcategory_progress.user_score},
-                         'next_proficiency': None
+                         'next_proficiency': {}
                          }
-
         received_data = SubCategorySerializer(self.sub1, context={'request': req_mock}).data
         self.assertEqual(received_data, expected_data)
 

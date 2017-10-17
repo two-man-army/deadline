@@ -10,11 +10,15 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import User
 from constants import MIN_SUBMISSION_INTERVAL_SECONDS
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote
+
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, Language, SubmissionVote, \
+    SubmissionComment, ChallengeComment
 from challenges.serializers import ChallengeSerializer, SubmissionSerializer, TestCaseSerializer, \
     MainCategorySerializer, SubCategorySerializer, LimitedChallengeSerializer, LanguageSerializer, \
-    LimitedSubmissionSerializer, LimitedSubCategorySerializer
+    LimitedSubmissionSerializer, SubmissionCommentSerializer, ChallengeCommentSerializer, LimitedSubCategorySerializer
 from challenges.tasks import run_grader_task
+from decorators import fetch_models
+from views import BaseManageView
 
 # TODO: Fix URLs to be more RESTful
 
@@ -25,6 +29,54 @@ class ChallengeDetailView(RetrieveAPIView):
     queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
     permission_classes = (IsAuthenticated, )
+
+
+# POST /challenges/{challenge_id}/comments
+class ChallengeCommentCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    model_classes = (Challenge, )
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, *args, **kwargs):
+        comment_content = request.data.get('content', None)
+        if not isinstance(comment_content, str):
+            return Response(status=400, data={'error': 'Invalid comment content!'})
+        if len(comment_content) < 5 or len(comment_content) > 500:
+            return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
+
+        challenge.add_comment(author=request.user, content=comment_content)
+        return Response(status=201)
+
+
+# POST /challenges/{challenge_id}/comments/{comment_id}
+class ChallengeCommentReplyCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    model_classes = (Challenge, ChallengeComment)
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, challenge_comment: ChallengeComment, *args, **kwargs):
+        if challenge.id != challenge_comment.challenge_id:
+            return Response(
+                status=400, data={'error': f'Comment {challenge_comment.id} does not belong to Challenge {challenge.id}'}
+            )
+        comment_content = request.data.get('content', None)
+        if not isinstance(comment_content, str):
+            return Response(status=400, data={'error': 'Invalid comment content!'})
+        if len(comment_content) < 5 or len(comment_content) > 500:
+            return Response(status=400, data={'error': 'Comment must be between 5 and 500 characters!'})
+
+        challenge_comment.add_reply(author=request.user, content=comment_content, to_notify=True)
+        return Response(status=201)
+
+
+# /challenges/{challenge_id}/comments
+class ChallengeCommentManageView(BaseManageView):
+    """
+        Manages different request methods for the given URL, sending them to the appropriate view class
+    """
+    VIEWS_BY_METHOD = {
+        'POST': ChallengeCommentCreateView.as_view
+    }
 
 
 # /challenges/latest_attempted
@@ -198,10 +250,9 @@ class SubmissionDetailView(RetrieveAPIView):
                             status=400)
 
         # validate that the current User is either the author or has solved it perfectly
-        if submission.author_id != self.request.user.id:
-            if not challenge.is_solved_by_user(self.request.user):
-                # User has not fully solved this and as such does not have access to the solution
-                return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+        if submission.author_id != self.request.user.id and not challenge.is_solved_by_user(self.request.user):
+            # User has not fully solved this and as such does not have access to the solution
+            return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
 
         return challenge, submission
 
@@ -220,6 +271,75 @@ class SubmissionListView(ListAPIView):
                                                          .all(), many=True).data)
 
 
+# POST /challenges/{challenge_id}/submissions/{submission_id}/comments
+class SubmissionCommentCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    model_classes = (Challenge, Submission)
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, submission: Submission, *args, **kwargs):
+        ser = SubmissionCommentSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(status=400, data={'error': 'Invalid comment content!'})
+        if submission.challenge_id != challenge.id:
+            return Response(
+                status=400,
+                data={'error':
+                      f'Submission with ID {submission.id} does not belong to Challenge with ID {challenge.id}'})
+        # validate that the current User is either the author or has solved it perfectly
+        if submission.author_id != request.user.id and not challenge.is_solved_by_user(request.user):
+            # User has not fully solved this and as such does not have access to the solution
+            return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+
+        self.add_comment(submission=submission, author=request.user, content=request.data['content'])
+
+        return Response(status=201)
+
+    def add_comment(self, submission, author, content):
+        submission.add_comment(author=author, content=content, to_notify=True)
+
+
+# POST /challenges/{challenge_id}/submissions/{submission_id}/comments/{comment_id}
+class SubmissionCommentReplyCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = SubmissionCommentSerializer
+    model_classes = (Challenge, Submission, SubmissionComment)
+
+    @fetch_models
+    def post(self, request, challenge: Challenge, submission: Submission, submission_comment: SubmissionComment,
+             *args, **kwargs):
+        if challenge.id != submission.challenge_id:
+            return Response(
+                status=400, data={'error': f'Submission {submission.id} does not belong to Challenge {challenge.id}'}
+            )
+        if submission_comment.submission_id != submission.id:
+            return Response(
+                status=400, data={'error': f'Comment {submission_comment.id} does not belong to Submission {submission.id}'}
+            )
+        # validate that the current User is either the author or has solved it perfectly
+        if submission.author_id != request.user.id and not challenge.is_solved_by_user(request.user):
+            # User has not fully solved this and as such does not have access to the solution
+            return Response(data={'error': 'You have not fully solved the challenge'}, status=401)
+
+        ser = SubmissionCommentSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(data={'error': ser.errors}, status=400)
+
+        submission_comment.add_reply(author=request.user, content=request.data['content'], to_notify=True)
+
+        return Response(status=201)
+
+
+# /challenges/{challenge_id}/submissions/{submission_id}/comments
+class SubmissionCommentManageView(BaseManageView):
+    """
+        Manages different request methods for the given URL, sending them to the appropriate view class
+    """
+    VIEWS_BY_METHOD = {
+        'POST': SubmissionCommentCreateView.as_view
+    }
+
+
 # /challenges/submissions/{submission_id}/vote
 class CastSubmissionVoteView(APIView):
     permission_classes = (IsAuthenticated, )
@@ -236,14 +356,15 @@ class CastSubmissionVoteView(APIView):
         except Submission.DoesNotExist:
             return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
 
-        if submission.author_id == self.request.user.id:
+        if submission.author_id == request.user.id:
             return Response(status=400, data={'error': 'You cannot vote on your own submission!'})
 
         # try to find such a SubmissionVote first
-        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user, submission=submission).first()
+        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=request.user, submission=submission).first()
         if submission_vote is None:
             # user has not voted before
-            SubmissionVote.objects.create(author_id=request.user.id, submission_id=submission.id, is_upvote=is_upvote)
+            SubmissionVote.objects.create(author_id=request.user.id, submission_id=submission.id,
+                                          is_upvote=is_upvote, to_notify=True)
         elif submission_vote.is_upvote != is_upvote:
             # user has voted with another value, update the vote
             submission_vote.is_upvote = is_upvote
@@ -265,11 +386,11 @@ class RemoveSubmissionVoteView(APIView):
         except Submission.DoesNotExist:
             return Response(status=404, data={'error': f'A submission with ID {submission_id} does not exist!'})
 
-        if submission.author_id == self.request.user.id:   # ...wtf?
+        if submission.author_id == request.user.id:
             return Response(status=400, data={'error': 'You cannot vote on your own submission!'})
 
         # see if such a Submission exists
-        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=self.request.user,
+        submission_vote: SubmissionVote = SubmissionVote.objects.filter(author=request.user,
                                                                         submission=submission).first()
         if submission_vote is None:
             return Response(status=404, data={'error': f'The user has not voted for submission with ID {submission.id}'})

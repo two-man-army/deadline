@@ -11,11 +11,26 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
+
 from os.path import join, dirname
 from dotenv import load_dotenv
+import pika
+
+from external_services import RabbitMQClient
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
+
+if 'test' in sys.argv:
+    from unittest.mock import MagicMock
+    RABBITMQ_CLIENT = MagicMock()
+else:
+    RABBITMQ_CREDENTIALS = pika.PlainCredentials(os.environ.get('RABBITMQ_USERNAME'),
+                                                 os.environ.get('RABBITMQ_PASSWORD'))
+    RABBITMQ_PARAMETERS = pika.ConnectionParameters(host=os.environ.get('RABBITMQ_HOST'), credentials=RABBITMQ_CREDENTIALS)
+    RABBITMQ_CLIENT = RabbitMQClient(RABBITMQ_PARAMETERS)
+RABBITMQ_CONNECTION_URL = f"amqp://{os.environ.get('RABBITMQ_USERNAME')}:{os.environ.get('RABBITMQ_PASSWORD')}@{os.environ.get('RABBITMQ_HOST')}:5672/%2F"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -35,6 +50,23 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+        }
+    },
+    'loggers': {
+        'notifications': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,11 +75,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_celery_results',
+    'django.contrib.postgres',
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'accounts',
     'challenges',
+    'social',
+    'private_chat',
+    'notifications',
     'django_extensions',
 ]
 
@@ -62,7 +98,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
     }
 }
-import sys
+
 if 'test' in sys.argv:
     CACHES['default'] = {'BACKEND': 'django.core.cache.backends.dummy.DummyCache',}
 
@@ -83,6 +119,11 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = 5
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
+CHAT_WS_SERVER_HOST = 'localhost'
+CHAT_WS_SERVER_PORT = 5002
+
+NOTIFICATIONS_WS_SERVER_HOST = 'localhost'
+NOTIFICATIONS_WS_SERVER_PORT = 6002
 
 ROOT_URLCONF = 'deadline.urls'
 

@@ -1,8 +1,12 @@
 from collections import OrderedDict
 
 from rest_framework import serializers
-from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, Language, UserSubcategoryProficiency
+
+from accounts.serializers import UserSerializer
+from challenges.models import Challenge, Submission, TestCase, MainCategory, SubCategory, ChallengeDescription, \
+    Language, UserSubcategoryProficiency, SubmissionComment, ChallengeComment
 from challenges.models import User
+from serializers import RecursiveField
 
 
 class ChallengeDescriptionSerializer(serializers.ModelSerializer):
@@ -11,15 +15,26 @@ class ChallengeDescriptionSerializer(serializers.ModelSerializer):
         exclude = ('id', )
 
 
+class ChallengeCommentSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    replies = RecursiveField(many=True, read_only=True)
+
+    class Meta:
+        model = ChallengeComment
+        fields = ('id', 'content', 'author', 'replies')
+        read_only_fields = ('id', 'author', 'replies')
+
+
 class ChallengeSerializer(serializers.ModelSerializer):
     description = ChallengeDescriptionSerializer()
     category = serializers.StringRelatedField()
     supported_languages = serializers.StringRelatedField(many=True)
+    comments = ChallengeCommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Challenge
-        fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count', 'category',
-                  'supported_languages')
+        fields = ('id', 'name', 'difficulty', 'score', 'description', 'test_case_count',
+                  'category', 'supported_languages', 'comments')
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -50,6 +65,17 @@ class LimitedChallengeSerializer(serializers.ModelSerializer):
             return user.fetch_max_score_for_challenge(challenge_id=obj.id)
 
 
+class SubmissionCommentSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    replies = RecursiveField(many=True, read_only=True)
+    content = serializers.CharField(max_length=500, min_length=2, allow_blank=False)
+
+    class Meta:
+        model = SubmissionComment
+        fields = ('id', 'content', 'author', 'replies')
+        read_only_fields = ('id', 'author', 'replies')
+
+
 class SubmissionSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     challenge = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -59,10 +85,11 @@ class SubmissionSerializer(serializers.ModelSerializer):
     language = serializers.SerializerMethodField()
     upvote_count = serializers.SerializerMethodField()
     downvote_count = serializers.SerializerMethodField()
+    comments = SubmissionCommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Submission
-        fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at',
+        fields = ('id', 'challenge', 'author', 'code', 'result_score', 'pending', 'created_at', 'comments',
                   'compiled', 'compile_error_message', 'language', 'timed_out', 'upvote_count', 'downvote_count')
 
     def get_language(self, obj):

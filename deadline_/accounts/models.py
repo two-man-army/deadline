@@ -1,6 +1,6 @@
 import hashlib, uuid
 
-
+import jwt
 from django.conf import settings
 from django.db import models
 from django.db.models import Count
@@ -10,7 +10,9 @@ from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
 
-from accounts.helpers import hash_password
+from accounts.constants import NOTIFICATION_SECRET_KEY
+from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
+from accounts.helpers import hash_password, generate_notification_token
 from django.db import models
 from django.dispatch import receiver
 
@@ -28,6 +30,8 @@ class User(AbstractBaseUser):
     password = models.CharField(max_length=256)
     score = models.IntegerField(default=0)
     salt = models.CharField(max_length=40)
+    notification_token = models.CharField(max_length=200, null=True)
+    users_followed = models.ManyToManyField(to='accounts.User', related_name='followers')
     role = models.ForeignKey(Role)
     last_submit_at = models.DateTimeField(auto_now_add=True)
 
@@ -62,6 +66,60 @@ class User(AbstractBaseUser):
         solved_challenges_count = cursor.fetchone()[0]
 
         return solved_challenges_count
+
+    def notification_token_is_expired(self) -> bool:
+        """ Checks whether the current token is expired """
+        if self.notification_token is None:
+            return True
+        try:
+            jwt.decode(self.notification_token, NOTIFICATION_SECRET_KEY)
+            return False
+        except jwt.ExpiredSignatureError:
+            return True
+
+    def refresh_notification_token(self, force=False):
+        if not force and not self.notification_token_is_expired():
+            raise Exception("Will not reset the notification token when it is not expired without being forced!")
+        self.notification_token = generate_notification_token(self)
+        self.save()
+
+    def notification_token_is_valid(self, token):
+        return token == self.notification_token and not self.notification_token_is_expired()
+
+    def fetch_newsfeed(self, start_offset=0, end_limit=None):
+        """
+        Returns all the NewsfeedItems this user should see
+        They are a collection of all the NewsfeedItems
+            of which the authors are people he has followed
+        """
+        from social.models.newsfeed_item import NewsfeedItem
+
+        return NewsfeedItem.objects\
+            .filter(author_id__in=[us.id for us in self.users_followed.all()] + [self.id])\
+            .order_by('-created_at')[start_offset:end_limit]
+
+    def follow(self, user):
+        from social.models.notification import Notification
+
+        if user in self.users_followed.all():
+            raise UserAlreadyFollowedError(f'{self.username} has already followed {user.username}!')
+        Notification.objects.create_receive_follow_notification(recipient=user, follower=self)
+        self.users_followed.add(user)
+
+    def unfollow(self, user):
+        if user not in self.users_followed.all():
+            raise UserNotFollowedError(f'{self.username} has not followed {user.username}!')
+        self.users_followed.remove(user)
+
+    def fetch_unsuccessful_challenge_attempts_count(self, challenge: 'Challenge'):
+        """
+        Returns the count of unsuccessful submissions this user has made for a given challenge
+        """
+        from challenges.models import Submission
+        return (Submission.objects.filter(author_id=self.id, pending=False, challenge_id=challenge.id)
+                                  .exclude(result_score=challenge.score)
+                                  .count()
+                )
 
     def fetch_max_score_for_challenge(self, challenge_id):
         """
@@ -121,10 +179,13 @@ def user_post_save(sender, instance, created, *args, **kwargs):
     if not created:
         return
 
+    instance.notification_token = generate_notification_token(instance)
     Token.objects.create(user=instance)
     starter_proficiency = Proficiency.objects.filter(needed_percentage=0).first()
 
     # create a UserSubcategoryProgress for each subcategory and a UserSubcategoryProficiency
     for subcat in SubCategory.objects.all():
-        # UserSubcategoryProgress.objects.create(user=instance, subcategory=subcat, user_score=0)
-        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency, user_score=0)
+        UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency,
+                                                  user_score=0)
+
+    instance.save()

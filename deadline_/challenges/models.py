@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from challenges.validators import MaxFloatDigitValidator, PossibleFloatDigitValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from challenges.validators import PossibleFloatDigitValidator
 from accounts.models import User
 from sql_queries import (
     SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE,
@@ -35,12 +38,41 @@ class Challenge(models.Model):
         top_user_submission = Submission.fetch_top_submission_for_challenge_and_user(self.id, user.id)
         return top_user_submission is not None and top_user_submission.result_score == self.score
 
+    def add_comment(self, author: User, content: str):
+        return ChallengeComment.objects.create(author=author, content=content, challenge=self)
+
+class ChallengeComment(models.Model):
+    challenge = models.ForeignKey(Challenge, related_name='comments')
+    author = models.ForeignKey(User)
+    content = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
+
+    class Meta:
+        ordering = ('-created_at', )
+
+    def get_absolute_url(self):
+        return f'/challenges/{self.challenge_id}/comments/{self.id}'
+
+    def add_reply(self, author: User, content: str, to_notify=True):
+        from social.models.notification import Notification
+
+        reply = ChallengeComment.objects.create(author=author, content=content,
+                                                challenge_id=self.challenge_id, parent=self)
+
+        if to_notify and author != self.author:
+            Notification.objects.create_challenge_comment_reply_notification(reply=reply)
+
+        return reply
+
 
 class Submission(models.Model):
+    # TODO: Hold lines of code field
     # TODO: Figure out how to increment SubCategoryProficiency's user score
+
     challenge = models.ForeignKey(Challenge)
     author = models.ForeignKey(User)
-    code = models.CharField(max_length=4000, blank=False)
+    code = models.CharField(max_length=4000, blank=False)  # this max_length is barely cutting it
     task_id = models.CharField(max_length=100, blank=False)
     result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
     pending = models.BooleanField(default=True)
@@ -70,11 +102,18 @@ class Submission(models.Model):
 
         return upvote_count, downvote_count
 
+    def has_solved_challenge(self) -> bool:
+        """ Returns a boolean, indicating if this Submission has completely solved the Challenge it was made for """
+        if self.pending:
+            return False
+        return self.result_score == self.challenge.score
+
     @staticmethod
     def fetch_top_submissions_for_challenge(challenge_id):
         """
         Returns the top-rated Submissions for a specific Challenge, one for each User
         """
+        # TODO: Move to manager class
         return Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE, params=[challenge_id])
 
     @staticmethod
@@ -82,6 +121,7 @@ class Submission(models.Model):
         """
         Returns the top-rated Submission for a specific Challenge from a specific User
         """
+        # TODO: Move to manager class
         submissions = list(Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSION_FOR_CHALLENGE_BY_USER, params=[challenge_id, user_id]))
         if len(submissions) == 0 or submissions[0].id is None:
             return None
@@ -91,14 +131,64 @@ class Submission(models.Model):
     @staticmethod
     def fetch_last_10_submissions_for_unique_challenges_by_user(user_id):
         """ Queries the DB for the last 10 submissions issued by the given user, grouped by the challenge """
+        # TODO: Move to manager class
         return Submission.objects.raw(SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR,
                                       params=[user_id])
+
+    def add_comment(self, author, content, to_notify=True):
+        # TODO: Some sort of SubmissionServiceMixin adding this functionality
+        from social.models.notification import Notification
+
+        subm_comment = SubmissionComment.objects.create(submission=self, author=author, content=content)
+
+        if to_notify:
+            Notification.objects.create_submission_comment_notification(comment=subm_comment)
+
+        return subm_comment
+
+
+class SubmissionComment(models.Model):
+    submission = models.ForeignKey(Submission, related_name='comments')
+    author = models.ForeignKey(User)
+    content = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
+
+    class Meta:
+        ordering = ('-created_at', )
+
+    def add_reply(self, author, content, to_notify=True):
+        from social.models.notification import Notification
+
+        reply = SubmissionComment.objects.create(submission=self.submission, parent=self, author=author, content=content)
+
+        if to_notify and author != self.author:
+            Notification.objects.create_submission_comment_reply_notification(comment=reply)
+
+        return reply
+
+
+class SubmissionVoteManager(models.Manager):
+    def create(self, to_notify=False, **kwargs):
+        """
+            Extends the create() function with the ability to create a Notification
+        """
+        from social.models.notification import Notification
+
+        instance = super().create(**kwargs)
+        if to_notify and Notification.is_valid_submission_upvote_notification(instance):
+            Notification.objects.create_receive_submission_upvote_notification(
+                submission=instance.submission,
+                liker=instance.author)
+        return instance
 
 
 class SubmissionVote(models.Model):
     is_upvote = models.BooleanField()
     submission = models.ForeignKey(to=Submission, related_name='votes')
     author = models.ForeignKey(User)
+
+    objects = SubmissionVoteManager()
 
     class Meta:
         unique_together = ('submission', 'author')
@@ -171,7 +261,8 @@ class UserSubcategoryProficiency(models.Model):
     user = models.ForeignKey(User)
     subcategory = models.ForeignKey(SubCategory)
     proficiency = models.ForeignKey(Proficiency)
-    user_score = models.IntegerField(default=0, verbose_name="The score that the user has accumulated for this subcategory")
+    user_score = models.IntegerField(default=0,
+                                     verbose_name='The score that the user has accumulated for this subcategory')
 
     class Meta:
         unique_together = ('user', 'subcategory')
@@ -190,9 +281,11 @@ class UserSubcategoryProficiency(models.Model):
 
     def try_update_proficiency(self) -> bool:
         """
-        Updates the user's proficiency if he has reached a new one
+        Updates the user's proficiency if he has reached a new one and creates a newsfeed post about it
         :return: a boolean indicating if we have updated it
         """
+        from social.models.newsfeed_item import NewsfeedItem
+
         to_update = self.to_update_proficiency()
 
         if to_update:
@@ -200,9 +293,13 @@ class UserSubcategoryProficiency(models.Model):
             self.proficiency = next_prof
             # fetch next_proficiency awards and award the user
             prof_award = SubcategoryProficiencyAward.objects.filter(subcategory_id=self.subcategory.id, proficiency_id=next_prof.id).first()
+            
             self.user.score += prof_award.xp_reward
             self.user.save()
             self.save()
+
+            # create a newsfeed post about the user's achievement
+            NewsfeedItem.objects.create_subcategory_badge_post(user_subcat_prof=self)
 
         return to_update
 

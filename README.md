@@ -39,6 +39,8 @@ First, you need to have **Python 3.6** installed, as that is what we use in this
 Install all the requirements
 `pip install -r requirements.txt`
 
+You will also need to install and run a RabbitMQ server which we use for notifications. Here are some [instructions](https://www.rabbitmq.com/download.html)
+
 For Django to connect with the database you need to have a running PostgreSQL server. Start one and either hardcode the username, password, database name and host in settings.py or be a proper gentleman and create a .env file.
 Said `.env` file should be in `/deadline/deadline_/deadline/.env` _(what the fuck?)_, right beside the `settings.py` folder.
 Enter the following in it, replacing the values with your local ones.
@@ -47,6 +49,9 @@ DB_USER=root
 DB_NAME=deadline
 DB_HOST=localhost
 DB_PASS=iliketurtles
+RABBITMQ_HOST=localhost
+RABBITMQ_USERNAME=guest
+RABBITMQ_PASSWORD=guest
 ```
 
 Then run the migrations

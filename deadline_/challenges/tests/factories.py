@@ -1,7 +1,8 @@
 import factory
 
 from accounts.models import Role
-from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User
+from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User, \
+    SubmissionComment, Proficiency, ChallengeComment
 
 
 class RoleFactory(factory.DjangoModelFactory):
@@ -25,6 +26,14 @@ class MainCategoryFactory(factory.DjangoModelFactory):
         model = MainCategory
 
     name = factory.Faker('name')
+
+
+class ProficiencyFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Proficiency
+
+    name = factory.Faker('name')
+    needed_percentage = factory.Faker('random_digit')
 
 
 class SubCategoryFactory(factory.DjangoModelFactory):
@@ -61,6 +70,15 @@ class ChallengeFactory(factory.DjangoModelFactory):
     category = factory.SubFactory(SubCategoryFactory)
 
 
+class ChallengeCommentFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = ChallengeComment
+
+    challenge = factory.SubFactory(ChallengeFactory)
+    author = factory.SubFactory(UserFactory)
+    content = factory.Faker('text')
+
+
 class SubmissionFactory(factory.DjangoModelFactory):
     class Meta:
         model = Submission
@@ -70,3 +88,12 @@ class SubmissionFactory(factory.DjangoModelFactory):
     code = factory.Faker('text')
     task_id = factory.Faker('random_digit')
     result_score = factory.Faker('random_digit')
+
+
+class SubmissionCommentFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = SubmissionComment
+
+    content = factory.Faker('text')
+    submission = factory.SubFactory(SubmissionFactory)
+    author = factory.SubFactory(UserFactory)
