@@ -4,7 +4,7 @@ and all the helper managers, which manage specific Notification creation and squ
 """
 from abc import ABC, abstractmethod
 
-from django_hstore.hstore import HStoreManager
+from django.db.models import Manager
 
 from accounts.models import User
 from challenges.models import SubmissionComment, ChallengeComment, Submission, Challenge
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from social.models.newsfeed_item import NewsfeedItem, NewsfeedItemComment
 
 
-class NotificationManager(HStoreManager):
+class NotificationManager(Manager):
     """
     Use a custom Notification manager for specific type of Notification creation
     """
