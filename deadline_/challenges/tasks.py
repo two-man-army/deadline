@@ -15,7 +15,7 @@ from deadline.celery import app
 
 from challenges.grader import RustGrader, PythonGrader, CppGrader, BaseGrader, GoGrader, KotlinGrader, RubyGrader
 from challenges.models import Submission
-from challenges.helper import delete_file, grade_result, update_user_score, update_test_cases
+from challenges.helper import delete_file, grade_result, update_user_info, update_test_cases
 from social.models.notification import Notification
 
 LANGUAGE_GRADERS = {
@@ -124,7 +124,7 @@ def run_grader_task(test_case_count: int, test_folder_name: str, code: str, lang
         # update the submission
         grade_result(submission, timed_out_percentage, submission_grade_result[GRADER_TEST_RESULT_TIME_KEY])
 
-        update_user_score(user=submission.author, submission=submission)
+        update_user_info(submission=submission)
 
 
 @app.task

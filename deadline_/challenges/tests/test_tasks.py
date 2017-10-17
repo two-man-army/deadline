@@ -10,9 +10,9 @@ from challenges.models import Proficiency
 class TasksTests(TestCase):
     @patch('challenges.tasks.update_test_cases')
     @patch('challenges.tasks.grade_result')
-    @patch('challenges.tasks.update_user_score')
+    @patch('challenges.tasks.update_user_info')
     @patch('challenges.tasks.run_grader')
-    def test_run_grader_task_updates_successful_solution(self, mock_run_grader, mock_update_user_score, mock_grade_result, mock_update_test_cases):
+    def test_run_grader_task_updates_successful_solution(self, mock_run_grader, mock_update_user_info, mock_grade_result, mock_update_test_cases):
         """
         The run_grader_task should run the function that opens docker and runs the tests
         and update the submission with the given result
@@ -37,9 +37,8 @@ class TasksTests(TestCase):
         mock_update_test_cases.assert_called()
         self.assertIn('batman', get_mock_function_arguments(mock_update_test_cases)) # grade results in the update_test_cases
         mock_grade_result.assert_called_once_with(submission, mock_update_test_cases.return_value, 155)
-        mock_update_user_score.assert_called_once()
-        update_us_arguments = get_mock_function_arguments(mock_update_user_score)
-        self.assertIn(submission.author, update_us_arguments)
+        mock_update_user_info.assert_called_once()
+        update_us_arguments = get_mock_function_arguments(mock_update_user_info)
         self.assertIn(submission, update_us_arguments)
 
     @patch('challenges.tasks.run_grader')

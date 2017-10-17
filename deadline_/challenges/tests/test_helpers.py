@@ -1,11 +1,14 @@
 import random
+from unittest.mock import patch
+
 from django.test import TestCase
+
 from challenges.models import (
     Challenge, Submission, TestCase as TestCaseModel, MainCategory, SubCategory, ChallengeDescription,
-    Language, UserSubcategoryProficiency, Proficiency, SubcategoryProficiencyAward)
+    Language, UserSubcategoryProficiency, Proficiency, SubcategoryProficiencyAward, UserSolvedChallenges)
 
 from accounts.models import User
-from challenges.helper import grade_result, update_user_score
+from challenges.helper import grade_result, update_user_score, update_user_info
 from challenges.tests.factories import ChallengeDescFactory
 from challenges.tests.base import TestHelperMixin
 
@@ -40,6 +43,45 @@ class GradeResultTests(TestCase, TestHelperMixin):
         grade_result(submission=self.submission, timed_out_percentage=SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE, elapsed_seconds=1.1)
         self.assertTrue(self.submission.timed_out)
         self.assertEqual(self.submission.elapsed_seconds, 1.1)
+
+
+@patch('challenges.helper.update_user_score')
+class UpdateUserInfoTests(TestCase, TestHelperMixin):
+    """
+    The update_user_info function should create a UserSolvedChallenges object if such doesnt exist
+        and call update_user_score
+    """
+    def setUp(self):
+        self.base_set_up()
+        self.submission = Submission.objects.create(language=self.python_language, challenge=self.challenge,
+                                                    author=self.auth_user, code="", result_score=self.challenge.score)
+
+    def test_creates_solved_challenges_record_when_challenge_fully_solved(self, mock_update_user_score):
+        update_user_info(submission=self.submission)
+
+        self.assertEqual(UserSolvedChallenges.objects.count(), 1)
+        usc = UserSolvedChallenges.objects.first()
+        self.assertEqual(usc.user, self.submission.author)
+        self.assertEqual(usc.challenge, self.submission.challenge)
+        mock_update_user_score.assert_called_once()
+
+    def test_doesnt_create_solved_challenges_record_when_challenge_not_fully_solved(self, mock_update_user_score):
+        self.submission.result_score -= 1
+        self.submission.save()
+
+        update_user_info(submission=self.submission)
+
+        self.assertEqual(UserSolvedChallenges.objects.count(), 0)
+        mock_update_user_score.assert_called_once()
+
+    def test_doesnt_create_solved_challenges_record_when_record_exists(self, mock_update_user_score):
+        UserSolvedChallenges.objects.create(user=self.submission.author, challenge=self.submission.challenge)
+        self.assertEqual(UserSolvedChallenges.objects.count(), 1)
+
+        update_user_info(submission=self.submission)
+
+        self.assertEqual(UserSolvedChallenges.objects.count(), 1)
+        mock_update_user_score.assert_called_once()
 
 
 class UpdateUserScoreTests(TestCase, TestHelperMixin):

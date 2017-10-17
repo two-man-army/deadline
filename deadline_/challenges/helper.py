@@ -6,7 +6,7 @@ from constants import (
     GRADER_TEST_RESULT_TRACEBACK_KEY, GRADER_TEST_RESULTS_RESULTS_KEY, GRADER_TEST_RESULT_TIME_KEY,
     GRADER_TEST_RESULT_SUCCESS_KEY, GRADER_TEST_RESULT_ERROR_MESSAGE_KEY, GRADER_TEST_RESULT_DESCRIPTION_KEY,
     GRADER_TEST_RESULT_TIMED_OUT_KEY, SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE)
-from challenges.models import Challenge, Submission, TestCase, UserSubcategoryProficiency
+from challenges.models import Challenge, Submission, TestCase, UserSubcategoryProficiency, UserSolvedChallenges
 from accounts.models import User
 
 
@@ -28,6 +28,17 @@ def grade_result(submission: Submission, timed_out_percentage: int, elapsed_seco
     if timed_out_percentage >= SUBMISSION_MINIMUM_TIMED_OUT_PERCENTAGE:
         submission.timed_out = True
     submission.save()
+
+
+def update_user_info(submission: Submission):
+    """
+    Updates information related to the Submission's author
+    """
+    if (submission.result_score == submission.challenge.score
+            and not UserSolvedChallenges.objects.filter(user=submission.author, challenge=submission.challenge).exists()):
+        # Create a UserSolvedChallenge record
+        UserSolvedChallenges.objects.create(user=submission.author, challenge=submission.challenge)
+    update_user_score(user=submission.author, submission=submission)
 
 
 def update_user_score(user: User, submission: Submission) -> bool:
