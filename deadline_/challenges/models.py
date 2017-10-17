@@ -256,6 +256,12 @@ class Proficiency(models.Model):
         return next_prof
 
 
+class UserSolvedChallenges(models.Model):
+    """ Holds challenges that a given user has fully solved """
+    user = models.ForeignKey(User)
+    challenge = models.ForeignKey(Challenge)
+
+
 class UserSubcategoryProficiency(models.Model):
     """ Holds each user's proficiency in a given subcategory """
     user = models.ForeignKey(User)
