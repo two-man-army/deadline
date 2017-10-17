@@ -362,22 +362,22 @@ class CourseLanguageAddViewTests(APITestCase, TestHelperMixin):
                                     data={'language': self.coconut_lang.id})
         self.assertEqual(response.status_code, 401)
 
-    def test_invalid_course_returns_404(self):
+    def test_non_existent_course_returns_404(self):
         response = self.client.post(f'/education/course/11/language/',
                                     HTTP_AUTHORIZATION=self.teacher_auth_token,
                                     data={'language': self.coconut_lang.id})
         self.assertEqual(response.status_code, 404)
 
-    def test_invalid_lang_returns_404(self):
+    def test_non_existent_lang_returns_400(self):
         response = self.client.post(f'/education/course/{self.course.id}/language/',
                                     HTTP_AUTHORIZATION=self.teacher_auth_token,
                                     data={'language': 444})
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
     def test_no_lang_provided_returns_400(self):
         response = self.client.post(f'/education/course/{self.course.id}/language/',
                                     HTTP_AUTHORIZATION=self.teacher_auth_token)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
     def test_teacher_on_other_course_cannot_add(self):
         self.create_teacher_user_and_auth_token()
@@ -430,12 +430,12 @@ class CourseLessonDeleteViewTests(APITestCase, TestHelperMixin):
                                   HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(resp.status_code, 403)
 
-    def test_invalid_course_returns_404(self):
+    def test_non_existent_course_returns_404(self):
         resp = self.client.delete(f'/education/course/111/lesson/{self.lesson.id}',
                                   HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(resp.status_code, 404)
 
-    def test_invalid_lesson_returns_404(self):
+    def test_non_existent_lesson_returns_404(self):
         resp = self.client.delete(f'/education/course/{self.course.id}/lesson/111',
                                   HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(resp.status_code, 404)

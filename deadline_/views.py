@@ -1,5 +1,5 @@
+from django.http import HttpResponse
 from rest_framework.views import APIView
-from rest_framework.response import Response
 
 
 class BaseManageView(APIView):
@@ -14,4 +14,4 @@ class BaseManageView(APIView):
         if request.method in self.VIEWS_BY_METHOD:
             return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
 
-        return Response(status=404)
+        return HttpResponse(status=405)

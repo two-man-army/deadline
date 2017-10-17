@@ -172,7 +172,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
-    def test_invalid_language_doesnt_work(self, _):
+    def test_non_existent_language_returns_404(self, _):
         self.course.enroll_student(self.auth_user)
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/{self.hw_task.id}/submission',
                                 HTTP_AUTHORIZATION=self.auth_token,
@@ -183,7 +183,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
-    def test_invalid_course_doesnt_work(self, _):
+    def test_non_existent_course_returns_404(self, _):
         self.course.enroll_student(self.auth_user)
         resp = self.client.post(f'/education/course/105/lesson/{self.lesson.id}/homework_task/{self.hw_task.id}/submission',
                                 HTTP_AUTHORIZATION=self.auth_token,
@@ -195,7 +195,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
-    def test_invalid_lesson_doesnt_work(self, _):
+    def test_non_existent_lesson_returns_404(self, _):
         self.course.enroll_student(self.auth_user)
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/105/homework_task/{self.hw_task.id}/submission',
                                 HTTP_AUTHORIZATION=self.auth_token,
@@ -207,7 +207,7 @@ class TaskSubmissionTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(TaskSubmission.objects.count(), 0)
 
-    def test_invalid_task_doesnt_work(self, _):
+    def test_non_existent_task_returns_404(self, _):
         self.course.enroll_student(self.auth_user)
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/105/submission',
                                 HTTP_AUTHORIZATION=self.auth_token,

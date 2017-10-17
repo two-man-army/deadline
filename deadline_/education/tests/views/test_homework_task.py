@@ -111,7 +111,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(resp.data['error'], 'Lesson with ID 2 does not belong to Course with ID 1')
 
-    def test_create_task_fails_for_non_existent_course(self):
+    def test_create_task_fails_with_404_for_non_existent_course(self):
         resp = self.client.post(f'/education/course/151/lesson/{self.lesson.id}/homework_task/',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
                                 data=json.dumps({'description': {'content': 'fix this'},
@@ -124,7 +124,7 @@ class HomeworkTaskCreateViewTests(TestCase, TestHelperMixin):
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.data['error'], 'Course with ID 151 does not exist.')
 
-    def test_create_task_fails_for_non_existent_lesson(self):
+    def test_create_task_fails_with_404_for_non_existent_lesson(self):
         resp = self.client.post(f'/education/course/{self.course.id}/lesson/151/homework_task/',
                                 HTTP_AUTHORIZATION=self.teacher_auth_token,
                                 data=json.dumps({'description': {'content': 'fix this'},
@@ -300,8 +300,7 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
             }, format='json')
         self.assertEqual(resp.status_code, 401)
 
-    def test_invalid_course_mashups(self):
-        # Mash up URLs with different courses
+    def test_invalid_course_matchings(self):
         self.create_teacher_user_and_auth_token()
         new_course = Course.objects.create(name='teste fundamentals ||', difficulty=1,
                                             is_under_construction=True, main_teacher=self.second_teacher_auth_user)
@@ -332,7 +331,7 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
                 }, format='json')
             self.assertIn(resp.status_code, expected_status_codes)
 
-    def test_invalid_task_404(self):
+    def test_non_existent_task_returns_404(self):
         resp = self.client.patch(
             f'/education/course/{self.course.id}/lesson/{self.lesson.id}/homework_task/111',
             HTTP_AUTHORIZATION=self.teacher_auth_token,
@@ -344,7 +343,7 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
             }, format='json')
         self.assertEqual(resp.status_code, 404)
 
-    def test_invalid_lesson_404(self):
+    def test_non_existent_lesson_returns_404(self):
         resp = self.client.patch(
             f'/education/course/{self.course.id}/lesson/111/homework_task/{self.task.id}',
             HTTP_AUTHORIZATION=self.teacher_auth_token,
@@ -356,7 +355,7 @@ class HomeworkTaskEditViewTests(APITestCase, TestHelperMixin):
             }, format='json')
         self.assertEqual(resp.status_code, 404)
 
-    def test_invalid_course_404(self):
+    def test_non_existent_course_returns_404(self):
         resp = self.client.patch(
             f'/education/course/111/lesson/{self.lesson.id}/homework_task/{self.task.id}',
             HTTP_AUTHORIZATION=self.teacher_auth_token,

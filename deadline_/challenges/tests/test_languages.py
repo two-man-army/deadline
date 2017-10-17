@@ -25,6 +25,6 @@ class LanguageViewTest(APITestCase, TestHelperMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, expected_data)
 
-    def test_retrieve_non_existing_lang_should_404(self):
+    def test_retrieve_non_existing_lang_returns_404(self):
         response = self.client.get(path='/challenges/languages/elixir', HTTP_AUTHORIZATION=self.auth_token)
         self.assertEqual(response.status_code, 404)
