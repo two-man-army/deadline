@@ -320,7 +320,7 @@ class UserModelTest(TestCase):
         sub_cat = SubCategory.objects.create(name='tests', meta_category=challenge_cat)
         challenge = Challenge.objects.create(name='Hello', difficulty=5, score=10, description=ChallengeDescFactory(),
                                              test_case_count=3, category=sub_cat)
-        Submission.objects.create(language=python_language, challenge=challenge,
+        Submission.objects.create(language=python_language, challenge=challenge, pending=False,
                                   author=us, result_score=challenge.score, code="")
 
         expected_count = 1
@@ -371,19 +371,19 @@ class UserModelTest(TestCase):
                                                  description=ChallengeDescFactory(), test_case_count=3, category=sub_cat)
             if i < 3:
                 # Create one passing submission and some failing
-                Submission.objects.create(language=python_language, challenge=challenge,
+                Submission.objects.create(language=python_language, challenge=challenge, pending=False,
                                           author=us, result_score=challenge.score-1, code="")
-                Submission.objects.create(language=python_language, challenge=challenge,
+                Submission.objects.create(language=python_language, challenge=challenge, pending=False,
                                           author=us, result_score=challenge.score, code="")
-                Submission.objects.create(language=python_language, challenge=challenge,
+                Submission.objects.create(language=python_language, challenge=challenge, pending=True,
                                           author=us, result_score=challenge.score, code="")
             else:
                 # Create multiple non passing
-                Submission.objects.create(language=python_language, challenge=challenge,
+                Submission.objects.create(language=python_language, challenge=challenge, pending=False,
                                           author=us, result_score=challenge.score-1, code="")
-                Submission.objects.create(language=python_language, challenge=challenge,
+                Submission.objects.create(language=python_language, challenge=challenge, pending=False,
                                           author=us, result_score=0, code="")
-                Submission.objects.create(language=python_language, challenge=challenge,
+                Submission.objects.create(language=python_language, challenge=challenge, pending=False,
                                           author=us, result_score=2, code="")
 
         expected_count = 3
