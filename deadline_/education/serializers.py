@@ -19,19 +19,13 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_lessons(self, obj):
         return [{'consecutive_number': lesson.lesson_number, 'short_description': lesson.intro} for lesson in obj.lessons.all()]
 
-    @property
-    def data(self):
-        """
-            Attach the Language's name in the deserialization
-             This is SQL-expensive and I will probably curse myself later on for adding this.
-             You can always speed it up by builsupported_ding the language IDs and doing one SQL query
-        """
-        loaded_data = super().data
+    def to_representation(self, instance):
+        repr = super().to_representation(instance)
 
-        loaded_data['languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['languages']]
-        loaded_data['main_teacher'] = {'name': self.instance.main_teacher.username, 'id': self.instance.main_teacher.id}
+        repr['main_teacher'] = {'name': self.instance.main_teacher.username, 'id': self.instance.main_teacher.id}
+        repr['languages'] = [lang.name for lang in self.instance.languages.all()]
 
-        return loaded_data
+        return repr
 
 
 class HomeworkTaskDescriptionSerializer(serializers.ModelSerializer):

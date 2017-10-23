@@ -8,6 +8,7 @@ from challenges.tests.base import TestHelperMixin
 from education.models import Course, Lesson
 from challenges.models import Language
 from accounts.models import User, Role
+from education.serializers import CourseSerializer
 from education.views.course_views import CourseManageView, CourseEditView, CourseDetailsView
 
 
@@ -83,7 +84,7 @@ class CourseDetailsViewTests(TestCase, TestHelperMixin):
     def test_teacher_can_view(self):
         resp = self.client.get(f'/education/course/{self.course.id}', HTTP_AUTHORIZATION=self.teacher_auth_token)
         self.assertNotEqual(resp.status_code, 403)
-        self.assertEqual(resp.data['name'], 'Python Fundamentals')
+        self.assertEqual(resp.data, CourseSerializer(instance=self.course).data)
 
     def test_view_returns_data_as_expected(self):
         expected_data = {'name': 'Python Fundamentals', 'difficulty': 1.0, 'languages': ['Python'],

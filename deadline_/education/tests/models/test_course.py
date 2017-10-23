@@ -16,7 +16,7 @@ class CourseModelTests(TestCase):
     def setUp(self):
         base_role = Role.objects.create(name='User')
         self.teacher_role = Role.objects.create(name='Teacher')
-        self.main_teacher = User.objects.create(email='theteach@abv.bg', password='0123', role=self.teacher_role)
+        self.main_teacher = User.objects.create(username='teachman', email='theteach@abv.bg', password='0123', role=self.teacher_role)
         self.c = Course.objects.create(name='Algo', difficulty=1, is_under_construction=True,
                                        main_teacher=self.main_teacher)
 
@@ -68,6 +68,19 @@ class CourseModelTests(TestCase):
         with self.assertRaises(ValidationError):
             self.c.teachers.add(us)
             self.c.full_clean()
+
+    def test_serialization(self):
+        Lesson.objects.create(course=self.c, is_under_construction=False, lesson_number=1)  # add a lesson
+        self.c.refresh_from_db()
+        expected_data = {
+            'name': self.c.name, 'difficulty': self.c.difficulty,
+            'languages': [lang.name for lang in self.c.languages.all()],
+            'main_teacher': {'name': self.c.main_teacher.username, 'id': self.c.main_teacher.id},
+            'teachers': [{'name': tch.username, 'id': tch.id} for tch in self.c.teachers.all()],
+            'lessons': [{'consecutive_number': lesson.lesson_number, 'short_description': lesson.intro}
+                        for lesson in self.c.lessons.all()]}
+
+        self.assertEqual(expected_data, CourseSerializer(instance=self.c).data)
 
     def test_deserialization(self):
         takn_lang = Language.objects.create(name="takn")
