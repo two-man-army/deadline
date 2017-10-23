@@ -54,11 +54,10 @@ class UserModelTest(TestCase):
 
     def test_serialization(self):
         """ Should convert a user object to a json """
-        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123)
-        # password should be hashed
-        expected_json = '{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"%s","score":123,"role":"User"}' % (us.password)
-        content = JSONRenderer().render(UserSerializer(us).data)
-        self.assertEqual(content.decode('utf-8'), expected_json)
+        us = User.objects.create(username='SomeGuy', email='me@abv.bg', password='123', score=123, role_id=self.base_role.id)
+        expected_data = {'id': us.id, 'username': us.username, 'email': us.email,
+                         'score': us.score, 'role': {'id': us.role.id, 'name': us.role.name}}
+        self.assertEqual(UserSerializer(us).data, expected_data)
 
     def test_deserialization(self):
         expected_json = b'{"id":1,"username":"SomeGuy","email":"me@abv.bg","password":"123","score":123}'
@@ -200,9 +199,11 @@ class UserModelTest(TestCase):
 
 
 class RegisterViewTest(APITestCase):
+    def setUp(self):
+        self.base_role = Role.objects.create(name='User')
+
     def test_register(self):
         # need to create the default role before
-        Role.objects.create(name='User')
         # The user posts his username, email and password to the /accounts/register URL
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'Meredith',
                                                                                'password': 'mer19222',
@@ -212,7 +213,7 @@ class RegisterViewTest(APITestCase):
         self.assertTrue('user_token' in response.data)
 
     def test_register_existing_user_should_return_400(self):
-        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart')
+        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart', role=self.base_role)
 
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'Meredith',
                                                                                'password': 'mer19222',
@@ -222,7 +223,7 @@ class RegisterViewTest(APITestCase):
         self.assertIn('email already exists', ''.join(response.data['email']))
 
     def test_register_existing_username_should_return_400(self):
-        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart')
+        User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart', role=self.base_role)
         # User.objects.create(email='smthh_aa@abv.bg', password='123', username='ThatPart')
 
         response: HttpResponse = self.client.post('/accounts/register/', data={'username': 'ThatPart',
@@ -234,10 +235,10 @@ class RegisterViewTest(APITestCase):
 
 
 class LoginViewTest(APITestCase):
-    def test_logging_in_valid(self):
-        # Need to create a base role
-        Role.objects.create(name='User')
+    def setUp(self):
+        self.base_role = Role.objects.create(name='User')
 
+    def test_logging_in_valid(self):
         # There is a user account
         User.objects.create(email='that_part@abv.bg', password='123')
         # And we try logging in to it
