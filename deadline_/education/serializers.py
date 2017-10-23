@@ -93,34 +93,21 @@ class HomeworkTaskSerializer(serializers.ModelSerializer):
     def get_test_case_count(self, obj):
         return obj.test_case_count
 
-    @property
-    def data(self):
-        """
-            Attach the Language's name in the deserialization
-             This is SQL-expensive and I will probably curse myself later on for adding this.
-             You can always speed it up by building the language IDs and doing one SQL query
-            Also attach the test_case_count
-        """
-        loaded_data = super().data
-        loaded_data['supported_languages'] = [Language.objects.get(id=lang_id).name for lang_id in loaded_data['supported_languages']]
-
-        return loaded_data
+    def to_representation(self, instance):
+        repr = super().to_representation(instance)
+        repr['supported_languages'] = [lang.name for lang in instance.supported_languages.all()]
+        return repr
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
+    tasks = serializers.SerializerMethodField()
+
     class Meta:
         model = Homework
-        fields = ('is_mandatory',)
+        fields = ('is_mandatory', 'tasks')
 
-    @property
-    def data(self):
-        """
-            Attach the HomeworkTasks
-        """
-        loaded_data = super().data
-        loaded_data['tasks'] = [HomeworkTaskSerializer(hw).data for hw in self.instance.homeworktask_set.all()]
-
-        return loaded_data
+    def get_tasks(self, obj):
+        return [HomeworkTaskSerializer(hw).data for hw in self.instance.homeworktask_set.all()]
 
 
 class TaskSubmissionSerializer(serializers.ModelSerializer):
