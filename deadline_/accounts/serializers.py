@@ -1,5 +1,8 @@
+from collections import OrderedDict
+
 from rest_framework import serializers
-from accounts.models import User, Role
+
+from accounts.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -7,11 +10,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'password', 'score', 'role')
 
-    @property
-    def data(self):
-        """
-        Attach the Role's name
-        """
-        loaded_data = super().data
-        loaded_data['role'] = Role.objects.get(id=loaded_data['role']).name
-        return loaded_data
+    def to_representation(self, instance):
+        repr = dict(super().to_representation(instance))
+
+        del repr['password']
+        repr['role'] = {'id': self.instance.role.id, 'name': self.instance.role.name}
+
+        return OrderedDict(repr)
