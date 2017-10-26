@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import Count
 from django.db.models.signals import post_save
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.postgres.fields import ArrayField
 from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
@@ -155,6 +156,29 @@ class User(AbstractBaseUser):
             return SubmissionVote.objects.get(submission=submission_id, author=self.id)
         except SubmissionVote.DoesNotExist:
             return None
+
+
+class UserPersonalDetails(models.Model):
+    """
+    Holds additional personal information about a User
+    """
+    user = models.ForeignKey(User)
+    about = models.CharField(max_length=1000)
+    country = models.CharField(max_length=35)
+    city = models.CharField(max_length=25)
+    school = models.CharField(max_length=100)  # TODO: School validation?
+    school_major = models.CharField(max_length=50)
+    job_title = models.CharField(max_length=50)
+    job_company = models.CharField(max_length=30)
+    personal_website = models.CharField(max_length=100)
+    interests = ArrayField(
+        models.CharField(max_length=15, blank=True),
+        size=5,
+    )
+    facebook_link = models.CharField(max_length=100)
+    twitter_link = models.CharField(max_length=100)
+    github_link = models.CharField(max_length=100)
+    linkedin_link = models.CharField(max_length=100)
 
 
 # This code is triggered whenever a new user has been created and saved to the database
