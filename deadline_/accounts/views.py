@@ -9,7 +9,7 @@ from rest_framework.request import Request
 from rest_framework import status
 
 from accounts.serializers import UserSerializer
-from accounts.models import User, Role
+from accounts.models import User, Role, UserPersonalDetails
 from accounts.helpers import hash_password
 from constants import BASE_USER_ROLE_NAME
 
@@ -35,6 +35,7 @@ def register(request: Request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
+        UserPersonalDetails.objects.create(user=user, interests=[])
 
         # attach the unique user token
         response_data = {'user_token': user.auth_token.key}

@@ -11,7 +11,7 @@ from rest_framework.parsers import JSONParser
 from accounts.constants import NOTIFICATION_SECRET_KEY
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.helpers import generate_notification_token
-from accounts.models import User, Role
+from accounts.models import User, Role, UserPersonalDetails
 from accounts.serializers import UserSerializer
 from challenges.tests.factories import UserFactory, ChallengeDescFactory
 from challenges.models import (Challenge, Submission, Language, SubmissionVote, Proficiency,
@@ -561,6 +561,8 @@ class RegisterViewTest(APITestCase):
         # Should have successfully register the user and gave him a user token
         self.assertEqual(response.status_code, 201)
         self.assertTrue('user_token' in response.data)
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(UserPersonalDetails.objects.count(), 1)
 
     def test_register_existing_user_should_return_400(self):
         User.objects.create(email='that_part@abv.bg', password='123', username='ThatPart', role=self.base_role)
