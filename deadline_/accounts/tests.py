@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta, datetime
 from unittest.mock import patch, MagicMock
 
@@ -8,7 +9,7 @@ from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
 from rest_framework.parsers import JSONParser
 
-from accounts.constants import NOTIFICATION_SECRET_KEY
+from accounts.constants import NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.helpers import generate_notification_token
 from accounts.models import User, Role, UserPersonalDetails
@@ -20,6 +21,7 @@ from social.constants import NW_ITEM_TEXT_POST
 from social.models.newsfeed_item import NewsfeedItem
 from social.models.notification import Notification
 
+# TODO: Separate tests in a /tests/ directory
 
 class UserModelNewsfeedTest(TestCase):
     def setUp(self):
@@ -687,7 +689,6 @@ class UserDetailsViewTest(APITestCase):
 
 
 class HelpersTest(TestCase):
-
     @patch('accounts.helpers.NOTIFICATION_TOKEN_EXPIRY_MINUTES', 20)
     @patch('accounts.helpers.jwt.encode')
     @patch('accounts.helpers.get_utc_time')
@@ -701,3 +702,35 @@ class HelpersTest(TestCase):
 
         mock_jwt_encode.assert_called_once_with({'exp': expected_expiry_date, 'username': 'yo'}, NOTIFICATION_SECRET_KEY)
         self.assertEqual('chrissy', notif_token)
+
+    def test_facebook_profile_regex_matches_positives(self):
+        valid_links = [
+            'http://www.facebook.com/mypageusername?ref=hl',
+            'facebook.com/mypageusername',
+            'https://www.facebook.com/yourworldwithin/?hc_ref=ARTWAkSewGoStjGHFn1spDJc7YNtPHH570Ep9i5-FiVsGwcOH-Vqoz3tE8xZpEnXXlE&fref=nf'
+        ]
+        for valid_link in valid_links:
+            self.assertIsNotNone(re.match(FACEBOOK_PROFILE_REGEX, valid_link))
+
+    def test_facebook_profile_regex_matches_page_name(self):
+        profile_name_by_link = {
+            'http://www.facebook.com/mypageusername?ref=hl': 'mypageusername',
+            'facebook.com/mypageusername': 'mypageusername',
+            'https://www.facebook.com/yourworldwithin/?hc_ref=ARTWAkSewGoStjGHFn1spDJc7YNtPHH570Ep9i5-FiVsGwcOH-Vqoz3tE8xZpEnXXlE&fref=nf': 'yourworldwithin'
+        }
+        for link, profile_name in profile_name_by_link.items():
+            extracted_page_name = re.match(FACEBOOK_PROFILE_REGEX, link).group('page_name')
+            self.assertEqual(extracted_page_name, profile_name)
+
+    def test_facebook_profile_regex_doesnt_match_invalid_urls(self):
+        invalid_links = [
+            'http://www.fасеbook.com/mypageusername',  # cyrillic characters in URL
+            'https://www.facebook.co/mypageusername?ref=hl',
+            'http://www.facebook.org/pages/Vanity-Url/12345678?ref=hl',
+            'https://www.fb-page.com/pages/Vanity-Url/12345678?ref=hl',
+            'https://www.facebook.com/heymelikey/photos/a.760078844002883.1073741828.759042127439888/1742633762414048/?type=3',
+            'https://www.facebook.com/hnbot/posts/1514015915320351'
+        ]
+        for invalid_link in invalid_links:
+            self.assertIsNone(re.match(FACEBOOK_PROFILE_REGEX, invalid_link),
+                              msg=f'{invalid_link} matched but it should not have!')
