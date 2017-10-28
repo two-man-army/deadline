@@ -76,7 +76,8 @@ class RegexesTest(TestCase):
             'http://www.facebook.org/pages/Vanity-Url/12345678?ref=hl',
             'https://www.fb-page.com/pages/Vanity-Url/12345678?ref=hl',
             'https://www.facebook.com/heymelikey/photos/a.760078844002883.1073741828.759042127439888/1742633762414048/?type=3',
-            'https://www.facebook.com/hnbot/posts/1514015915320351'
+            'https://www.facebook.com/hnbot/posts/1514015915320351',
+            'facebook.com/mypageusernamemypageusernamemypageusernamemypageusernamemypageusernamemypageusername'
         ]
         for invalid_link in invalid_links:
             self.assertDoesNotMatchURL(FACEBOOK_PROFILE_REGEX, invalid_link)
@@ -104,8 +105,9 @@ class RegexesTest(TestCase):
         invalid_links = [
             'https://twittеr.соm/EdubHipHop',  # cyrillic
             'twitter.co/EdubHipHop?lang=bg'
-            'https://twtr.com/EdubHipHop?lang=bg'
-            'https://twitter.com/EdubHipHop/status/761547917882695681'
+            'https://twtr.com/EdubHipHop?lang=bg',
+            'https://twitter.com/EdubHipHop/status/761547917882695681',
+            'https://twitter.com/EdubHipHopEdubHipHopEdubHipHopEdubHipHopEdubHipHopEdubHipHop',
         ]
         for invalid_link in invalid_links:
             self.assertDoesNotMatchURL(TWITTER_PROFILE_REGEX, invalid_link)
@@ -130,6 +132,7 @@ class RegexesTest(TestCase):
     def test_github_profile_regex_doesnt_match_invalid_urls(self):
         invalid_links = [
             'www.github.соm/Enether',  # cyrillic
+            'www.github.com/EnetherEnetherEnetherEnetherEnetherEnetherEnetherEnetherEnetherEnether',
             'www.github.co/vgramov?te=334'
             'www.github.com/vgramov/java_game'
         ]
@@ -159,7 +162,8 @@ class RegexesTest(TestCase):
         invalid_links = [
             'https://www.linkedin.com/company/deadline/',
             'www.linkedin.com/in//'
-            'www.linkedin.com/tank-mihailov-a52a1498/'
+            'www.linkedin.com/tank-mihailov-a52a1498/',
+            'https://www.linkedin.com/in/williamhgateswilliamhgateswilliamhgateswilliamhgateswilliamhgateswilliamhgates/'
         ]
         for invalid_link in invalid_links:
             self.assertDoesNotMatchURL(LINKEDIN_PROFILE_REGEX, invalid_link)
