@@ -9,7 +9,10 @@ from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
 from rest_framework.parsers import JSONParser
 
-from accounts.constants import NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX, TWITTER_PROFILE_REGEX, GITHUB_PROFILE_REGEX
+from accounts.constants import (
+    NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX, TWITTER_PROFILE_REGEX,
+    GITHUB_PROFILE_REGEX, LINKEDIN_PROFILE_REGEX
+)
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.helpers import generate_notification_token
 from accounts.models import User, Role, UserPersonalDetails
@@ -704,6 +707,8 @@ class HelpersTest(TestCase):
         mock_jwt_encode.assert_called_once_with({'exp': expected_expiry_date, 'username': 'yo'}, NOTIFICATION_SECRET_KEY)
         self.assertEqual('chrissy', notif_token)
 
+
+class RegexesTest(TestCase):
     def assertMatchesURL(self, match_regex, url):
         self.assertIsNotNone(re.match(match_regex, url),
                              msg=f'{url} did not match regex {match_regex}!')
@@ -752,7 +757,7 @@ class HelpersTest(TestCase):
         for valid_link in valid_links:
             self.assertMatchesURL(TWITTER_PROFILE_REGEX, valid_link)
 
-    def test_twitter_profile_regex_matches_page_name(self):
+    def test_twitter_profile_regex_matches_profile_name(self):
         profile_name_by_link = {
             'https://twitter.com/barackobama?lang=bgdDdas214913r_#qrfcDJAMBOXs\\\\\\\d': 'barackobama',
             'https://twitter.com/EdubHipHop': 'EdubHipHop',
@@ -780,7 +785,7 @@ class HelpersTest(TestCase):
         for valid_link in valid_links:
             self.assertMatchesURL(GITHUB_PROFILE_REGEX, valid_link)
 
-    def test_github_profile_regex_matches_page_name(self):
+    def test_github_profile_regex_matches_profile_name(self):
         usernames_by_links = {
             'www.github.com/Enether': 'Enether',
             'www.github.com/vgramov?te=334': 'vgramov'
@@ -797,3 +802,31 @@ class HelpersTest(TestCase):
         ]
         for invalid_link in invalid_links:
             self.assertDoesNotMatchURL(GITHUB_PROFILE_REGEX, invalid_link)
+
+    def test_linkedin_profile_regex_matches_positives(self):
+        valid_links = [
+            'https://www.linkedin.com/in/williamhgates/',
+            'www.linkedin.com/in/stanislavkozlovski?lang=bg',
+            'www.linkedin.com/in/tank-mihailov-a52a1498/'
+        ]
+        for valid_link in valid_links:
+            self.assertMatchesURL(LINKEDIN_PROFILE_REGEX, valid_link)
+
+    def test_linkedin_profile_regex_matches_profile_name(self):
+        usernames_by_links = {
+            'https://www.linkedin.com/in/williamhgates/': 'williamhgates',
+            'www.linkedin.com/in/stanislavkozlovski?lang=bg': 'stanislavkozlovski',
+            'www.linkedin.com/in/tank-mihailov-a52a1498/': 'tank-mihailov-a52a1498'
+        }
+        for link, username in usernames_by_links.items():
+            extracted_page_name = re.match(LINKEDIN_PROFILE_REGEX, link).group('profile_name')
+            self.assertEqual(extracted_page_name, username)
+
+    def test_linkedin_profile_regex_doesnt_match_invalid_urls(self):
+        invalid_links = [
+            'https://www.linkedin.com/company/deadline/',
+            'www.linkedin.com/in//'
+            'www.linkedin.com/tank-mihailov-a52a1498/'
+        ]
+        for invalid_link in invalid_links:
+            self.assertDoesNotMatchURL(LINKEDIN_PROFILE_REGEX, invalid_link)
