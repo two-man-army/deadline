@@ -8,7 +8,7 @@ from django.db.models.signals import post_save
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.postgres.fields import ArrayField
 from django.dispatch import receiver
-
+from django.core.validators import URLValidator
 from rest_framework.authtoken.models import Token
 
 from accounts.constants import NOTIFICATION_SECRET_KEY
@@ -170,15 +170,15 @@ class UserPersonalDetails(models.Model):
     school_major = models.CharField(max_length=50)
     job_title = models.CharField(max_length=50)
     job_company = models.CharField(max_length=30)
-    personal_website = models.CharField(max_length=100)
+    personal_website = models.CharField(max_length=100, validators=[URLValidator()])
     interests = ArrayField(
         models.CharField(max_length=15, blank=True),
         size=5,
     )
-    facebook_link = models.CharField(max_length=100)
-    twitter_link = models.CharField(max_length=100)
-    github_link = models.CharField(max_length=100)
-    linkedin_link = models.CharField(max_length=100)
+    facebook_profile = models.CharField(max_length=50)
+    twitter_profile = models.CharField(max_length=50)
+    github_profile = models.CharField(max_length=50)
+    linkedin_profile = models.CharField(max_length=50)
 
 
 # This code is triggered whenever a new user has been created and saved to the database
