@@ -9,7 +9,7 @@ from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
 from rest_framework.parsers import JSONParser
 
-from accounts.constants import NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX, TWITTER_PROFILE_REGEX
+from accounts.constants import NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX, TWITTER_PROFILE_REGEX, GITHUB_PROFILE_REGEX
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.helpers import generate_notification_token
 from accounts.models import User, Role, UserPersonalDetails
@@ -22,6 +22,7 @@ from social.models.newsfeed_item import NewsfeedItem
 from social.models.notification import Notification
 
 # TODO: Separate tests in a /tests/ directory
+
 
 class UserModelNewsfeedTest(TestCase):
     def setUp(self):
@@ -751,7 +752,7 @@ class HelpersTest(TestCase):
             'twitter.com/EdubHipHop?lang=bg': 'EdubHipHop'
         }
         for link, profile_name in profile_name_by_link.items():
-            extracted_page_name = re.match(TWITTER_PROFILE_REGEX, link).group('page_name')
+            extracted_page_name = re.match(TWITTER_PROFILE_REGEX, link).group('profile_name')
             self.assertEqual(extracted_page_name, profile_name)
 
     def test_twitter_profile_regex_doesnt_match_invalid_urls(self):
@@ -763,3 +764,29 @@ class HelpersTest(TestCase):
         ]
         for invalid_link in invalid_links:
             self.assertIsNone(re.match(TWITTER_PROFILE_REGEX, invalid_link))
+
+    def test_github_profile_regex_matches_positives(self):
+        valid_links = [
+            'www.github.com/Enether',
+            'www.github.com/vgramov?te=334'
+        ]
+        for valid_link in valid_links:
+            self.assertIsNotNone(re.match(GITHUB_PROFILE_REGEX, valid_link))
+
+    def test_github_profile_regex_matches_page_name(self):
+        usernames_by_links = {
+            'www.github.com/Enether': 'Enether',
+            'www.github.com/vgramov?te=334': 'vgramov'
+        }
+        for link, username in usernames_by_links.items():
+            extracted_page_name = re.match(GITHUB_PROFILE_REGEX, link).group('profile_name')
+            self.assertEqual(extracted_page_name, username)
+
+    def test_github_profile_regex_doesnt_match_invalid_urls(self):
+        invalid_links = [
+            'www.github.соm/Enether',  # cyrillic
+            'www.github.co/vgramov?te=334'
+            'www.github.com/vgramov/java_game'
+        ]
+        for invalid_link in invalid_links:
+            self.assertIsNone(re.match(GITHUB_PROFILE_REGEX, invalid_link))
