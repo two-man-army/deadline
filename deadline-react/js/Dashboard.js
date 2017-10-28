@@ -14,6 +14,7 @@ import ChallengeDetails from './ChallengeDetails'
 import OverallLeaderboard from './semantic_ui_components/OverallLeaderboardTable'
 import RouteNotFound from './RouteNotFound'
 import Profile from './Profile'
+import Chat from './components/chat/Chat'
 
 class Dashboard extends React.Component {
   constructor (props) {
@@ -69,6 +70,7 @@ class Dashboard extends React.Component {
               <Route exact path='/challenges/:challengeId' component={ChallengeDetails} />
               <Route exact path='/accounts/password/change' component={Profile} />
               <Route exact path='/accounts/edit' component={Profile} />
+              <Route exact path='/chat' component={Chat} />
               <Route path='*' component={RouteNotFound} />
             </Switch>
             <aside className='right-sidebar'>
