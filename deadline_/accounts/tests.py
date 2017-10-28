@@ -9,7 +9,7 @@ from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
 from rest_framework.parsers import JSONParser
 
-from accounts.constants import NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX
+from accounts.constants import NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX, TWITTER_PROFILE_REGEX
 from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
 from accounts.helpers import generate_notification_token
 from accounts.models import User, Role, UserPersonalDetails
@@ -734,3 +734,32 @@ class HelpersTest(TestCase):
         for invalid_link in invalid_links:
             self.assertIsNone(re.match(FACEBOOK_PROFILE_REGEX, invalid_link),
                               msg=f'{invalid_link} matched but it should not have!')
+
+    def test_twitter_profile_regex_matches_positives(self):
+        valid_links = [
+            'https://twitter.com/barackobama?lang=bgdDdas214913r_#qrfcDJAMBOXs\\\\\\\d',
+            'https://twitter.com/EdubHipHop',
+            'twitter.com/EdubHipHop?lang=bg'
+        ]
+        for valid_link in valid_links:
+            self.assertIsNotNone(re.match(TWITTER_PROFILE_REGEX, valid_link), msg=f'{valid_link} did not match but should have!')
+
+    def test_twitter_profile_regex_matches_page_name(self):
+        profile_name_by_link = {
+            'https://twitter.com/barackobama?lang=bgdDdas214913r_#qrfcDJAMBOXs\\\\\\\d': 'barackobama',
+            'https://twitter.com/EdubHipHop': 'EdubHipHop',
+            'twitter.com/EdubHipHop?lang=bg': 'EdubHipHop'
+        }
+        for link, profile_name in profile_name_by_link.items():
+            extracted_page_name = re.match(TWITTER_PROFILE_REGEX, link).group('page_name')
+            self.assertEqual(extracted_page_name, profile_name)
+
+    def test_twitter_profile_regex_doesnt_match_invalid_urls(self):
+        invalid_links = [
+            'https://twittеr.соm/EdubHipHop',  # cyrillic
+            'twitter.co/EdubHipHop?lang=bg'
+            'https://twtr.com/EdubHipHop?lang=bg'
+            'https://twitter.com/EdubHipHop/status/761547917882695681'
+        ]
+        for invalid_link in invalid_links:
+            self.assertIsNone(re.match(TWITTER_PROFILE_REGEX, invalid_link))
