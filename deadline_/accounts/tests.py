@@ -704,6 +704,14 @@ class HelpersTest(TestCase):
         mock_jwt_encode.assert_called_once_with({'exp': expected_expiry_date, 'username': 'yo'}, NOTIFICATION_SECRET_KEY)
         self.assertEqual('chrissy', notif_token)
 
+    def assertMatchesURL(self, match_regex, url):
+        self.assertIsNotNone(re.match(match_regex, url),
+                             msg=f'{url} did not match regex {match_regex}!')
+
+    def assertDoesNotMatchURL(self, match_regex, url):
+        self.assertIsNone(re.match(match_regex, url),
+                          msg=f'{url} matched {match_regex}!')
+
     def test_facebook_profile_regex_matches_positives(self):
         valid_links = [
             'http://www.facebook.com/mypageusername?ref=hl',
@@ -711,7 +719,7 @@ class HelpersTest(TestCase):
             'https://www.facebook.com/yourworldwithin/?hc_ref=ARTWAkSewGoStjGHFn1spDJc7YNtPHH570Ep9i5-FiVsGwcOH-Vqoz3tE8xZpEnXXlE&fref=nf'
         ]
         for valid_link in valid_links:
-            self.assertIsNotNone(re.match(FACEBOOK_PROFILE_REGEX, valid_link))
+            self.assertMatchesURL(FACEBOOK_PROFILE_REGEX, valid_link)
 
     def test_facebook_profile_regex_matches_page_name(self):
         profile_name_by_link = {
@@ -733,8 +741,7 @@ class HelpersTest(TestCase):
             'https://www.facebook.com/hnbot/posts/1514015915320351'
         ]
         for invalid_link in invalid_links:
-            self.assertIsNone(re.match(FACEBOOK_PROFILE_REGEX, invalid_link),
-                              msg=f'{invalid_link} matched but it should not have!')
+            self.assertDoesNotMatchURL(FACEBOOK_PROFILE_REGEX, invalid_link)
 
     def test_twitter_profile_regex_matches_positives(self):
         valid_links = [
@@ -743,7 +750,7 @@ class HelpersTest(TestCase):
             'twitter.com/EdubHipHop?lang=bg'
         ]
         for valid_link in valid_links:
-            self.assertIsNotNone(re.match(TWITTER_PROFILE_REGEX, valid_link), msg=f'{valid_link} did not match but should have!')
+            self.assertMatchesURL(TWITTER_PROFILE_REGEX, valid_link)
 
     def test_twitter_profile_regex_matches_page_name(self):
         profile_name_by_link = {
@@ -763,7 +770,7 @@ class HelpersTest(TestCase):
             'https://twitter.com/EdubHipHop/status/761547917882695681'
         ]
         for invalid_link in invalid_links:
-            self.assertIsNone(re.match(TWITTER_PROFILE_REGEX, invalid_link))
+            self.assertDoesNotMatchURL(TWITTER_PROFILE_REGEX, invalid_link)
 
     def test_github_profile_regex_matches_positives(self):
         valid_links = [
@@ -771,7 +778,7 @@ class HelpersTest(TestCase):
             'www.github.com/vgramov?te=334'
         ]
         for valid_link in valid_links:
-            self.assertIsNotNone(re.match(GITHUB_PROFILE_REGEX, valid_link))
+            self.assertMatchesURL(GITHUB_PROFILE_REGEX, valid_link)
 
     def test_github_profile_regex_matches_page_name(self):
         usernames_by_links = {
@@ -789,4 +796,4 @@ class HelpersTest(TestCase):
             'www.github.com/vgramov/java_game'
         ]
         for invalid_link in invalid_links:
-            self.assertIsNone(re.match(GITHUB_PROFILE_REGEX, invalid_link))
+            self.assertDoesNotMatchURL(GITHUB_PROFILE_REGEX, invalid_link)
