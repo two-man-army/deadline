@@ -1,0 +1,29 @@
+.search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    input {
+        border: none;
+        border: 1px solid #b7a7bb;
+        border-radius: 18px;
+        width: 200px;
+        height: 25px;
+        padding: 8px 0 10px 17px;
+    }
+
+    button {
+        position: relative;
+        right: 26px;
+        background: #30043d;
+        border-radius: 18px;
+        width: 25px;
+        height: 25px;
+        border: none;
+
+        img {
+            width: 10px;
+        }
+    }
+}
