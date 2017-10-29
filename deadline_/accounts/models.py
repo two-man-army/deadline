@@ -172,7 +172,7 @@ class UserPersonalDetails(models.Model):
     job_company = models.CharField(max_length=30)
     personal_website = models.CharField(max_length=100, validators=[URLValidator()])
     interests = ArrayField(
-        models.CharField(max_length=15, blank=True),
+        models.CharField(max_length=35, blank=True),
         size=5,
     )
     facebook_profile = models.CharField(max_length=50)

@@ -35,7 +35,7 @@ class UserPersonalDetailsSerializerTest(TestCase):
     def assertSerializerContainsErrorForField(self, serializer, field):
         self.assertIn(field, serializer.errors)
 
-    def test_parses_input_as_expected(self):
+    def test_parses_input_and_saves_as_expected(self):
         user_data = {
             'about': 'Become the best you can possibly be',
             'country': 'Spain',
@@ -43,7 +43,7 @@ class UserPersonalDetailsSerializerTest(TestCase):
             'job_title': 'DevOps',
             'job_company': 'Facebook',
             'personal_website': 'https://www.me.com',
-            'interests': ['Skiing', 'Hiking', 'Coffee'],
+            'interests': ['Skiing', 'Hiking', 'Coffee', 'Mountain Climbing'],
             'facebook_profile': 'facebook.com/mypageusername',
             'twitter_profile': 'https://twitter.com/EdubHipHop',
             'github_profile': 'www.github.com/vgramov?te=334'
@@ -51,16 +51,15 @@ class UserPersonalDetailsSerializerTest(TestCase):
 
         serializer = UserPersonalDetailsSerializer(self.personal_details, data=user_data, partial=True)
         is_valid = serializer.is_valid()
-        print(serializer.validated_data)
+        self.assertTrue(is_valid, msg=f'Invalid Data: {serializer.errors}')
         serializer.save()
         self.personal_details.refresh_from_db()
 
-        self.assertTrue(is_valid)
         self.assertEqual(self.personal_details.linkedin_profile, '')
         self.assertEqual(self.personal_details.github_profile, 'vgramov')
         self.assertEqual(self.personal_details.twitter_profile, 'EdubHipHop')
         self.assertEqual(self.personal_details.facebook_profile, 'mypageusername')
-        self.assertEqual(self.personal_details.interests, ['Skiing', 'Hiking', 'Coffee'])
+        self.assertEqual(self.personal_details.interests, ['Skiing', 'Hiking', 'Coffee', 'Mountain Climbing'])
         self.assertEqual(self.personal_details.personal_website, 'https://www.me.com')
         self.assertEqual(self.personal_details.job_title, 'DevOps')
         self.assertEqual(self.personal_details.job_company, 'Facebook')
