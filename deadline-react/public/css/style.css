@@ -298,6 +298,29 @@ div.lang-choice-select {
   .page-not-found p {
     margin-top: 20px; }
 
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%; }
+  .search input {
+    border: none;
+    border: 1px solid #b7a7bb;
+    border-radius: 18px;
+    width: 200px;
+    height: 25px;
+    padding: 8px 0 10px 17px; }
+  .search button {
+    position: relative;
+    right: 26px;
+    background: #30043d;
+    border-radius: 18px;
+    width: 25px;
+    height: 25px;
+    border: none; }
+    .search button img {
+      width: 10px; }
+
 .page-header {
   display: flex;
   height: 60px; }
@@ -322,29 +345,6 @@ div.lang-choice-select {
     margin: 0 auto; }
   .logo-container .logo {
     width: 150px; }
-
-.search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: 100%; }
-  .search input {
-    border: none;
-    border: 1px solid #b7a7bb;
-    border-radius: 18px;
-    width: 200px;
-    height: 25px;
-    padding: 8px 0 10px 17px; }
-  .search button {
-    position: absolute;
-    right: 1px;
-    background: #30043d;
-    border-radius: 18px;
-    width: 25px;
-    height: 25px;
-    border: none; }
-    .search button img {
-      width: 10px; }
 
 .nav-icons {
   display: flex;
@@ -812,9 +812,6 @@ div.lang-choice-select {
   background-size: 30px;
   background-position: 9px 12px; }
 
-.breadcrumb-container {
-  background: pink; }
-
 .subcategory section .category-overlay {
   visibility: hidden;
   display: flex;
@@ -983,7 +980,9 @@ div.lang-choice-select {
     align-self: baseline;
     height: auto;
     padding: 12px 20px;
-    max-width: 190px; }
+    border-bottom: 1px solid #b7b7b7; }
+    .chat-list .search input {
+      max-width: 190px; }
   .chat-list .chat-member-list {
     padding: 10px 20px;
     overflow: hidden;
