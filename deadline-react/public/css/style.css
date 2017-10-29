@@ -812,6 +812,9 @@ div.lang-choice-select {
   background-size: 30px;
   background-position: 9px 12px; }
 
+.breadcrumb-container {
+  background: pink; }
+
 .subcategory section .category-overlay {
   visibility: hidden;
   display: flex;
@@ -961,5 +964,40 @@ div.lang-choice-select {
   stroke: lightgreen; }
 .challenge-details .ant-progress-status-success .ant-progress-text {
   color: lightgreen; }
+
+.main.chat {
+  flex-direction: row;
+  padding: 0;
+  border: 1px solid #b7b7b7;
+  -webkit-box-shadow: 0px 0px 10px 2px #b7b7b7;
+  -moz-box-shadow: 0px 0px 10px 2px #b7b7b7;
+  box-shadow: 0px 0px 10px 2px #b7b7b7; }
+
+.chat-window {
+  flex: 1; }
+
+.chat-list {
+  flex-basis: 300px;
+  border-right: 1px solid #b7b7b7; }
+  .chat-list .search {
+    align-self: baseline;
+    height: auto;
+    padding: 12px 20px;
+    max-width: 190px; }
+  .chat-list .chat-member-list {
+    padding: 10px 20px;
+    overflow: hidden;
+    max-width: 300px;
+    white-space: nowrap; }
+    .chat-list .chat-member-list img {
+      width: 40px;
+      height: auto; }
+    .chat-list .chat-member-list .chat-member-wrapper {
+      display: inline-block;
+      margin-left: 4%; }
+
+.chat-header {
+  padding: 20px;
+  border-bottom: 1px solid #b7b7b7; }
 
 /*# sourceMappingURL=style.css.map */
