@@ -1,0 +1,25 @@
+.chat-list {
+    flex-basis: 300px;
+    border-right: 1px solid #b7b7b7;
+
+    .search {
+      align-self: baseline;
+      height: auto;
+      padding: 12px 20px;
+      max-width: 190px;
+    }
+    .chat-member-list {
+      padding: 10px 20px;
+      overflow: hidden;
+      max-width: 300px;
+      white-space: nowrap;
+      img {
+        width: 40px;
+        height: auto;
+      }
+      .chat-member-wrapper {
+        display: inline-block;
+        margin-left: 4%;
+      }
+    }
+}
