@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Progress } from 'semantic-ui-react'
 
 // TODO: Add different colors in regards to percentage
@@ -15,9 +16,9 @@ const ProgressBar = ({value, maxValue, style}) => {
 }
 
 ProgressBar.propTypes = {
-  value: React.PropTypes.number.isRequired,
-  maxValue: React.PropTypes.number.isRequired,
-  style: React.PropTypes.string.isRequired
+  value: PropTypes.number.isRequired,
+  maxValue: PropTypes.number.isRequired,
+  style: PropTypes.string.isRequired
 }
 
 export default ProgressBar
