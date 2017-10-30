@@ -175,6 +175,25 @@ class UserModelTest(TestCase):
         self.assertEqual(user_who_gets_followed.followers.count(), 1)
         self.assertEqual(user_who_gets_followed.users_followed.count(), 0)
 
+    def test_is_following_returns_true_when_following_user(self):
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)
+
+        follower.follow(user_who_gets_followed)
+        follower.refresh_from_db()
+
+        self.assertTrue(follower.is_following(user_who_gets_followed))
+
+    def test_is_following_returns_false_when_not_following_user(self):
+        user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
+        follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)
+
+        follower.follow(user_who_gets_followed)
+        follower.unfollow(user_who_gets_followed)
+        follower.refresh_from_db()
+
+        self.assertFalse(follower.is_following(user_who_gets_followed))
+
     def test_follow_creates_notification(self):
         user_who_gets_followed = User.objects.create(username='SomeFollowee', email='me@abv.bg', password='123', score=123, role=self.base_role)
         follower = User.objects.create(username='SomeGuy', email='follower@abv.bg', password='123', score=123, role=self.base_role)

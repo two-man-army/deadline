@@ -93,7 +93,7 @@ class User(AbstractBaseUser):
     def follow(self, user):
         from social.models.notification import Notification
 
-        if user in self.users_followed.all():
+        if self.is_following(user):
             raise UserAlreadyFollowedError(f'{self.username} has already followed {user.username}!')
         Notification.objects.create_receive_follow_notification(recipient=user, follower=self)
         self.users_followed.add(user)
@@ -102,6 +102,9 @@ class User(AbstractBaseUser):
         if user not in self.users_followed.all():
             raise UserNotFollowedError(f'{self.username} has not followed {user.username}!')
         self.users_followed.remove(user)
+
+    def is_following(self, user):
+        return user in self.users_followed.all()
 
     def fetch_unsuccessful_challenge_attempts_count(self, challenge: 'Challenge'):
         """
