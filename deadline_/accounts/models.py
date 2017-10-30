@@ -33,6 +33,8 @@ class User(AbstractBaseUser):
     users_followed = models.ManyToManyField(to='accounts.User', related_name='followers')
     role = models.ForeignKey(Role)
     last_submit_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
