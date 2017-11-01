@@ -71,3 +71,26 @@ class UserPersonalDetailsSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid LinekdIn profile URL')
 
         return match_data.group('profile_name')
+
+
+class UserProfileSerializer(serializers.Serializer):
+    user_details = serializers.SerializerMethodField()
+    following = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+    registered_on = serializers.SerializerMethodField()
+
+    def get_user_details(self, obj):
+        return UserPersonalDetailsSerializer(instance=obj.personal_details).data
+
+    def get_following(self, obj):
+        return obj.is_following(user=self.context['caller'])
+
+    def get_following_count(self, obj):
+        return obj.users_followed.count()
+
+    def get_followers_count(self, obj):
+        return obj.followers.count()
+
+    def get_registered_on(self, obj):
+        return obj.created_at.isoformat()
