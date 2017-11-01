@@ -32,7 +32,7 @@ class UserDetailsViewTest(APITestCase):
         self.auth_token = 'Token {}'.format(self.user.auth_token.key)
 
     def test_returns_expected_data(self):
-        response = self.client.get(f'/accounts/user/{self.user.id}', HTTP_AUTHORIZATION=self.auth_token)
+        response = self.client.get(f'/accounts/user/{self.user.id}/', HTTP_AUTHORIZATION=self.auth_token)
         expected_data = {'id': self.user.id, 'username': self.user.username, 'email': self.user.email,
                  'score': self.user.score,
                  'follower_count': self.user.followers.count(),
@@ -42,5 +42,5 @@ class UserDetailsViewTest(APITestCase):
         self.assertEqual(response.data, expected_data)
 
     def test_requires_authentication(self):
-        response = self.client.get(f'/accounts/user/{self.user.id}')
+        response = self.client.get(f'/accounts/user/{self.user.id}/')
         self.assertEqual(response.status_code, 401)
