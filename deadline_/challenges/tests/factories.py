@@ -1,7 +1,7 @@
 import factory
 from random import choice, randint
 
-from accounts.models import Role
+from accounts.models import Role, UserPersonalDetails
 from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User, \
     SubmissionComment, Proficiency, ChallengeComment
 
@@ -64,6 +64,26 @@ class UserFactory(factory.DjangoModelFactory):
     email = factory.Sequence(lambda n: 'user{0}@somewhere.com'.format(n))
     password = factory.Faker('password')
     role = factory.SubFactory(RoleFactory)
+
+
+class UserPersonalDetailsFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = UserPersonalDetails
+
+    user = factory.SubFactory(UserFactory)
+    about = factory.Faker('text')
+    country = CustomFaker.country()
+    city = factory.Faker('city')
+    school = factory.LazyFunction(CustomFaker.school)
+    school_major = factory.LazyFunction(CustomFaker.school_major)
+    job_company = factory.Faker('company')
+    job_title = factory.Faker('job')
+    personal_website = factory.Faker('uri')
+    interests = factory.LazyFunction(CustomFaker.interests)
+    facebook_profile = factory.LazyFunction(CustomFaker.facebook_profile_link)
+    github_profile = factory.LazyFunction(CustomFaker.github_profile_link)
+    twitter_profile = factory.LazyFunction(CustomFaker.twitter_profile_link)
+    linkedin_profile = factory.LazyFunction(CustomFaker.linkedin_profile_link)
 
 
 class MainCategoryFactory(factory.DjangoModelFactory):
