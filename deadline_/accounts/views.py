@@ -8,7 +8,7 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework import status
 
-from accounts.serializers import UserSerializer
+from accounts.serializers import UserSerializer, UserProfileSerializer
 from accounts.models import User, Role, UserPersonalDetails
 from accounts.helpers import hash_password
 from constants import BASE_USER_ROLE_NAME
@@ -24,6 +24,17 @@ class UserDetailView(RetrieveAPIView):
         serialized_data = self.get_serializer(instance).data
         serialized_data['follower_count'] = instance.users_followed.count()
         return Response(serialized_data)
+
+
+# /accounts/{user_id}/profile
+class ProfilePageView(RetrieveAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = UserProfileSerializer
+    queryset = User.objects.all()
+
+    def get_serializer_context(self):
+        return {'caller': self.request.user}
+
 
 @api_view(['POST'])
 @permission_classes([])
