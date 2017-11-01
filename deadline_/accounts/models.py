@@ -167,7 +167,7 @@ class UserPersonalDetails(models.Model):
     """
     Holds additional personal information about a User
     """
-    user = models.ForeignKey(User)
+    user = models.OneToOneField(User, related_name='personal_details')
     about = models.CharField(max_length=1000)
     country = models.CharField(max_length=35)
     city = models.CharField(max_length=25)
