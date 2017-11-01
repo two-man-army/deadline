@@ -1,8 +1,53 @@
 import factory
+from random import choice, randint
 
 from accounts.models import Role
 from challenges.models import ChallengeDescription, Language, Challenge, SubCategory, MainCategory, Submission, User, \
     SubmissionComment, Proficiency, ChallengeComment
+
+
+class CustomFaker:
+    @staticmethod
+    def school():
+        return choice(['Harvard', 'Berkeley', 'Stanford'])
+
+    @staticmethod
+    def school_major():
+        return 'Computer Science'
+
+    @staticmethod
+    def facebook_profile_link():
+        return f'www.facebook.com/{factory.Faker("user_name").generate({})}'[:50]
+
+    @staticmethod
+    def github_profile_link():
+        return f'www.github.com/{factory.Faker("user_name").generate({})}'[:50]
+
+    @staticmethod
+    def twitter_profile_link():
+        return f'www.twitter.com/{factory.Faker("user_name").generate({})}'[:50]
+
+    @staticmethod
+    def linkedin_profile_link():
+        return f'www.linkedin.com/in/{factory.Faker("user_name").generate({})}'[:50]
+
+    @staticmethod
+    def interests():
+        random_interests = [
+            'mountain climbing', 'mountaing biking',
+            'professional gaming', 'gambling', 'working out',
+            'football', 'soccer', 'baseball', 'coding', 'drawing',
+            'working'
+        ]
+        interests = []
+        for i in range(randint(0, 5)):
+            interests.append(choice(random_interests))
+
+        return interests
+
+    @staticmethod
+    def country():
+        return factory.Faker('country').generate({})[:35]
 
 
 class RoleFactory(factory.DjangoModelFactory):
