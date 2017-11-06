@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.db.models import Count
 
 from challenges.validators import PossibleFloatDigitValidator
 from accounts.models import User
@@ -39,6 +38,7 @@ class Challenge(models.Model):
 
     def add_comment(self, author: User, content: str):
         return ChallengeComment.objects.create(author=author, content=content, challenge=self)
+
 
 class ChallengeComment(models.Model):
     challenge = models.ForeignKey(Challenge, related_name='comments')
@@ -137,6 +137,11 @@ class Submission(models.Model):
     @staticmethod
     def fetch_submissions_from_user_since(user, since_date):
         return Submission.objects.filter(pending=False, author=user, created_at__gte=since_date)
+
+    @staticmethod
+    def fetch_submissions_count_from_user_since(user, since_date):
+        return Submission.fetch_submissions_from_user_since(user, since_date)\
+                         .values('created_at').annotate(count=Count('created_at'))
 
     def add_comment(self, author, content, to_notify=True):
         # TODO: Some sort of SubmissionServiceMixin adding this functionality

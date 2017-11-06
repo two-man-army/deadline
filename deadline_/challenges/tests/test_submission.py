@@ -197,6 +197,35 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
 
         self.assertEqual(len(received_subs), 0)
 
+    def test_fetch_submissions_count_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
+        start_date = datetime.datetime(2017, 10, 12)
+        second_date = start_date + datetime.timedelta(days=1)
+        # four submissions since that date and 6 before
+        for i in range(10):
+            if i > 3:
+                s = SubmissionFactory(author=self.auth_user, pending=False)
+                self.update_model(s, created_at=start_date - datetime.timedelta(days=1))
+            elif i % 2 == 0:
+                s = SubmissionFactory(author=self.auth_user, pending=False)
+                self.update_model(s, created_at=start_date)
+            else:
+                s = SubmissionFactory(author=self.auth_user, pending=False)
+                self.update_model(s, created_at=second_date)
+        expected_data = [{'created_at': start_date, 'count': 2}, {'created_at': second_date, 'count': 2}]
+
+        received_data = Submission.fetch_submissions_count_from_user_since(self.auth_user, start_date)
+        self.assertEqual(expected_data, received_data)
+
+    def test_fetch_submissions_count_from_user_since_returns_only_non_pending_submissions_count(self):
+        start_date = datetime.datetime(2017, 10, 12)
+        s = SubmissionFactory(author=self.auth_user, pending=True)
+        self.update_model(s, created_at=start_date + datetime.timedelta(days=randint(0, 1)))
+        expected_data = []
+
+        received_data = list(Submission.fetch_submissions_count_from_user_since(self.auth_user, start_date))
+
+        self.assertEqual(expected_data, received_data)
+
 
 class SubmissionCommentModelViewTest(TestCase, TestHelperMixin):
     def setUp(self):
