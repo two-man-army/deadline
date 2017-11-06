@@ -1,28 +1,6 @@
-import re
-from datetime import timedelta, datetime
-from unittest.mock import patch, MagicMock
-
-import jwt
-from django.http import HttpResponse
-from django.test import TestCase
-from django.utils.six import BytesIO
 from rest_framework.test import APITestCase
-from rest_framework.parsers import JSONParser
 
-from accounts.constants import (
-    NOTIFICATION_SECRET_KEY, FACEBOOK_PROFILE_REGEX, TWITTER_PROFILE_REGEX,
-    GITHUB_PROFILE_REGEX, LINKEDIN_PROFILE_REGEX
-)
-from accounts.errors import UserAlreadyFollowedError, UserNotFollowedError
-from accounts.helpers import generate_notification_token
-from accounts.models import User, Role, UserPersonalDetails
-from accounts.serializers import UserSerializer
-from challenges.tests.factories import UserFactory, ChallengeDescFactory
-from challenges.models import (Challenge, Submission, Language, SubmissionVote, Proficiency,
-                               UserSubcategoryProficiency, SubCategory, MainCategory)
-from social.constants import NW_ITEM_TEXT_POST
-from social.models.newsfeed_item import NewsfeedItem
-from social.models.notification import Notification
+from accounts.models import User, Role
 
 
 class LeaderboardViewTest(APITestCase):

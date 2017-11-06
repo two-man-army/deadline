@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 
-from accounts.models import User, Role, UserPersonalDetails
+from accounts.models import User, Role
 from accounts.serializers import UserPersonalDetailsSerializer
 from challenges.tests.factories import UserFactory, UserPersonalDetailsFactory
 
