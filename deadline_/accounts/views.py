@@ -1,4 +1,4 @@
-import re
+from datetime import datetime, timedelta
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.decorators import api_view, permission_classes
@@ -7,11 +7,15 @@ from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework import status
+from rest_framework.views import APIView
 
 from accounts.serializers import UserSerializer, UserProfileSerializer
 from accounts.models import User, Role, UserPersonalDetails
 from accounts.helpers import hash_password
+from helpers import datetime_now
+from challenges.services.submissions import submissions_count_by_date_from_user_since
 from constants import BASE_USER_ROLE_NAME
+from decorators import fetch_models
 
 
 class UserDetailView(RetrieveAPIView):
@@ -34,6 +38,50 @@ class ProfilePageView(RetrieveAPIView):
 
     def get_serializer_context(self):
         return {'caller': self.request.user}
+
+
+class InvalidDateModeException(Exception):
+    pass
+
+
+# /accounts/{user_id}/recent_submissions?date_mode={date_mode}
+class UserRecentSubmissionCount(APIView):
+    """
+    Returns the number of user submissions by dates for X days ago, depending on the date_mode
+    Accepts three date modes - weekly, monthly, early
+
+    Sample response:
+    {
+        "2016-09-28": 3,
+        "2016-09-29": 17,
+        "2016-09-30": 2,
+        "2016-10-01": 9
+    }
+    """
+    permission_classes = (IsAuthenticated, )
+    model_classes = (User, )
+
+    @fetch_models
+    def get(self, request, user, *args, **kwargs):
+        date_mode = request.GET.get('date_mode', None)
+        try:
+            since_date = self.evaluate_since_date(date_mode)
+        except InvalidDateModeException:
+            return Response(status=400, data={'error': f'Date mode {date_mode} is not supported!'})
+
+        return Response(status=200, data=submissions_count_by_date_from_user_since(user, since_date))
+
+    def evaluate_since_date(self, date_mode):
+        if date_mode == 'weekly':
+            subtract_delta = timedelta(days=7)
+        elif date_mode == 'monthly':
+            subtract_delta = timedelta(days=30)
+        elif date_mode == 'yearly':
+            subtract_delta = timedelta(days=365)
+        else:
+            raise InvalidDateModeException()
+
+        return datetime_now() - subtract_delta
 
 
 @api_view(['POST'])
