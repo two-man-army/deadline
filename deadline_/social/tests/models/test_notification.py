@@ -129,8 +129,7 @@ class ReceiveFollowNotificationTests(TestCase, TestHelperMixin):
             expected_content = {'follower_id': user.id, 'follower_name': user.username}
 
             notif = Notification.objects.create_receive_follow_notification(recipient=self.auth_user, follower=user)
-            notif.is_read = True
-            notif.save()
+            self.update_model(notif, is_read=True)
 
             self.assertEqual(notif.type, RECEIVE_FOLLOW_NOTIFICATION)
             self.assertEqual(notif.content, expected_content)
@@ -233,8 +232,7 @@ class ReceiveSubmissionUpvoteNotificationTests(TestCase, TestHelperMixin):
             expected_content = self.build_content(submission, user)
             notif = Notification.objects.create_receive_submission_upvote_notification(submission=submission,
                                                                                        liker=user)
-            notif.is_read = True
-            notif.save()
+            self.update_model(notif, is_read=True)
 
             self.assertEqual(notif.type, RECEIVE_SUBMISSION_UPVOTE_NOTIFICATION)
             self.assertEqual(notif.recipient, self.auth_user)
@@ -343,8 +341,7 @@ class ReceiveNWItemLikeNotificationTests(TestCase, TestHelperMixin):
             expected_content = self.build_content(sample_nw_item, user)
 
             notif = Notification.objects.create_receive_nw_item_like_notification(nw_item=sample_nw_item, liker=user)
-            notif.is_read = True
-            notif.save()
+            self.update_model(notif, is_read=True)
 
             self.assertEqual(notif.type, RECEIVE_NW_ITEM_LIKE_NOTIFICATION)
             self.assertEqual(notif.recipient, self.auth_user)
@@ -415,8 +412,7 @@ class ReceiveNWItemCommentNotificationTests(TestCase, TestHelperMixin):
             expected_content = self.build_content(nw_item, user)
 
             notif = Notification.objects.create_nw_item_comment_notification(nw_item=nw_item, commenter=user)
-            notif.is_read = True
-            notif.save()
+            self.update_model(notif, is_read=True)
 
             self.assertEqual(notif.type, RECEIVE_NW_ITEM_COMMENT_NOTIFICATION)
             self.assertEqual(notif.content, expected_content)
@@ -542,8 +538,8 @@ class ReceiveNWItemCommentReplyNotificationTests(TestCase, TestHelperMixin):
         for reply in replies:
             notif = Notification.objects.create_nw_item_comment_reply_notification(nw_comment=nw_comment, reply=reply)
             expected_content = self.build_content(reply)
-            notif.is_read = True
-            notif.save()
+            self.update_model(notif, is_read=True)
+
             self.assertEqual(notif.type, RECEIVE_NW_ITEM_COMMENT_REPLY_NOTIFICATION)
             self.assertEqual(notif.content, expected_content)
             self.assertEqual(notif.recipient, self.auth_user)
@@ -666,8 +662,7 @@ class ReceiveSubmissionCommentNotification(TestCase, TestHelperMixin):
         for comment in comments:
             expected_content = self.build_content(comment)
             notif = Notification.objects.create_submission_comment_notification(comment=comment)
-            notif.is_read = True
-            notif.save()
+            self.update_model(notif, is_read=True)
 
             self.assertEqual(notif.type, RECEIVE_SUBMISSION_COMMENT_NOTIFICATION)
             self.assertEqual(notif.recipient, self.auth_user)
@@ -786,8 +781,7 @@ class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
         for reply in replies:
             expected_content = self.build_content(reply)
             notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
-            notif.is_read = True
-            notif.save()
+            self.update_model(is_read=True)
 
             self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
             self.assertEqual(notif.recipient, self.chal_comment.author)
@@ -907,8 +901,7 @@ class ReceiveSubmissionCommentReplyNotificationTests(TestCase, TestHelperMixin):
 
         for reply in replies:
             notif = Notification.objects.create_submission_comment_reply_notification(comment=reply)
-            notif.is_read = True
-            notif.save()
+            self.update_model(notif, is_read=True)
             expected_content = self.build_content(reply)
 
             self.assertEqual(notif.type, RECEIVE_SUBMISSION_COMMENT_REPLY_NOTIFICATION)
@@ -994,9 +987,8 @@ class NotificationHelperMethodTests(TestCase, TestHelperMixin):
         notifs = [Notification.objects.create_new_challenge_notification(recipient=(self.auth_user if i % 2 == 0 else sec_user),
                                                                          challenge=chal) for i in range(20)]
         for i, notif in enumerate(notifs):
-            notif.updated_at = random_datetime()
-            notif.is_read = True if i % 2 == 0 else False
-            notif.save()
+            self.update_model(notif, updated_at=random_datetime(),
+                              is_read=True if i % 2 == 0 else False)
 
         # notifs should be ordered by updated_at
         expected_notifs = list(sorted([notif for notif in notifs if notif.recipient == self.auth_user and not notif.is_read],
@@ -1031,8 +1023,7 @@ class NotificationSerializerTests(TestCase, TestHelperMixin):
         chal = ChallengeFactory()
         notifs = [Notification.objects.create_new_challenge_notification(recipient=self.auth_user, challenge=chal) for _ in range(15)]
         for notif in notifs:
-            notif.updated_at = random_datetime()
-            notif.save()
+            self.update_model(notif, updated_at=random_datetime())
 
         expected_data = NotificationSerializer(list(sorted(notifs, key=lambda x: x.updated_at)), many=True).data
         self.assertEqual(expected_data, NotificationSerializer(notifs, many=True).data)
