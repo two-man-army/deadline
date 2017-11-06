@@ -1,6 +1,7 @@
 """ Tests associated with the Submission model and views """
 import time
 import datetime
+from random import randint
 from collections import OrderedDict
 from unittest.mock import patch, MagicMock
 
@@ -171,6 +172,30 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         self.assertEqual((0, 1), s.get_votes_count())
         sv1.delete()
         self.assertEqual((0, 0), s.get_votes_count())
+
+    def test_fetch_submissions_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
+        start_date = datetime.datetime(2017, 10, 12)
+        # four submissions since that date, and three before
+        for i in range(7):
+            if i % 2 == 0:
+                s = SubmissionFactory(author=self.auth_user, pending=False)
+                self.update_model(s, created_at=start_date + datetime.timedelta(days=randint(0, 1)))
+            else:
+                s = SubmissionFactory(author=self.auth_user, pending=False)
+                self.update_model(s, created_at=start_date - datetime.timedelta(days=randint(1, 10)))
+
+        received_subs = Submission.fetch_submissions_from_user_since(user=self.auth_user, since_date=start_date)
+
+        self.assertEqual(len(received_subs), 4)
+
+    def test_fetch_submissions_from_user_since_returns_only_non_pending_submissions(self):
+        start_date = datetime.datetime(2017, 10, 12)
+        s = SubmissionFactory(author=self.auth_user, pending=True)
+        self.update_model(s, created_at=start_date + datetime.timedelta(days=randint(0, 1)))
+
+        received_subs = Submission.fetch_submissions_from_user_since(user=self.auth_user, since_date=start_date)
+
+        self.assertEqual(len(received_subs), 0)
 
 
 class SubmissionCommentModelViewTest(TestCase, TestHelperMixin):

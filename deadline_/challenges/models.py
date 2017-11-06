@@ -112,7 +112,7 @@ class Submission(models.Model):
         """
         Returns the top-rated Submissions for a specific Challenge, one for each User
         """
-        # TODO: Move to manager class
+        # TODO: Maybe move to manager class
         return Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSIONS_FOR_CHALLENGE, params=[challenge_id])
 
     @staticmethod
@@ -120,7 +120,7 @@ class Submission(models.Model):
         """
         Returns the top-rated Submission for a specific Challenge from a specific User
         """
-        # TODO: Move to manager class
+        # TODO: Maybe move to manager class
         submissions = list(Submission.objects.raw(SUBMISSION_SELECT_TOP_SUBMISSION_FOR_CHALLENGE_BY_USER, params=[challenge_id, user_id]))
         if len(submissions) == 0 or submissions[0].id is None:
             return None
@@ -130,9 +130,13 @@ class Submission(models.Model):
     @staticmethod
     def fetch_last_10_submissions_for_unique_challenges_by_user(user_id):
         """ Queries the DB for the last 10 submissions issued by the given user, grouped by the challenge """
-        # TODO: Move to manager class
+        # TODO: Maybe move to manager class
         return Submission.objects.raw(SUBMISSION_SELECT_LAST_10_SUBMISSIONS_GROUPED_BY_CHALLENGE_BY_AUTHOR,
                                       params=[user_id])
+
+    @staticmethod
+    def fetch_submissions_from_user_since(user, since_date):
+        return Submission.objects.filter(pending=False, author=user, created_at__gte=since_date)
 
     def add_comment(self, author, content, to_notify=True):
         # TODO: Some sort of SubmissionServiceMixin adding this functionality
