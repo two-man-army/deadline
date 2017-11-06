@@ -33,3 +33,7 @@ def get_date_difference(end_date: datetime, start_date: datetime) -> timedelta:
     This function is mainly made to ease testing
     """
     return end_date - start_date
+
+
+def datetime_now():
+    return datetime.now()
