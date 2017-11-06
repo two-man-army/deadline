@@ -75,3 +75,11 @@ class TestHelperMixin:
         Proficiency.objects.create(name='med', needed_percentage=50)
         Proficiency.objects.create(name='advanced', needed_percentage=75)
         Proficiency.objects.create(name='master', needed_percentage=100)
+
+    def update_model(self, model, **kwargs):
+        """
+        Given an object, update the given parameter and save
+        """
+        for attr, new_value in kwargs.items():
+            setattr(model, attr, new_value)
+        model.save()
