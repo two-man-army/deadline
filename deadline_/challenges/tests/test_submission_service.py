@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 
-from challenges.services.submissions import submissions_count_by_date_for_user_since
+from challenges.services.submissions import submissions_count_by_date_from_user_since
 
 
 class SubmissionServiceTests(TestCase):
@@ -20,7 +20,7 @@ class SubmissionServiceTests(TestCase):
         }
         user_mock = MagicMock('user')
 
-        received_data = submissions_count_by_date_for_user_since(user_mock, date_one)
+        received_data = submissions_count_by_date_from_user_since(user_mock, date_one)
 
         fetch_mock.assert_called_once_with(user_mock, date_one)
         self.assertEqual(expected_data, received_data)

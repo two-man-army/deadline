@@ -2,7 +2,7 @@
 from challenges.models import Submission
 
 
-def submissions_count_by_date_for_user_since(user, since_date) -> dict:
+def submissions_count_by_date_from_user_since(user, since_date) -> dict:
     """
     :return: A dict, counting the number of submissions the user has made for that date
      {
