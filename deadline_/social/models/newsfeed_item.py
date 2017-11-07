@@ -71,6 +71,15 @@ class NewsfeedItem(models.Model):
             Notification.objects.create_nw_item_comment_notification(commenter=author, nw_item=self)
         return NewsfeedItemComment.objects.create(author=author, content=content, newsfeed_item=self)
 
+    @staticmethod
+    def fetch_items_from_user(user, start_offset=0, end_limit=None):
+        """
+        Returns the NewsfeedItems a user has produced
+        """
+        return NewsfeedItem.objects \
+                           .filter(author_id=user.id) \
+                           .order_by('-created_at')[start_offset:end_limit]
+
 
 @receiver(pre_save, sender=NewsfeedItem)
 def nw_item_validation(sender, instance, *args, **kwargs):

@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -333,3 +334,40 @@ class NewsfeedItemTests(TestCase, TestHelperMixin):
                                                    content={'content': 'Hello I like turtles'})
         self.nw_item.add_comment(author=self.auth_user, content='HelloHello', to_notify=True)
         self.assertEqual(Notification.objects.count(), 0)
+
+    def create_newsfeed_items_for_user(self, user):
+        nw_item = NewsfeedItem.objects.create(author=self.auth_user, type=NW_ITEM_TEXT_POST,
+                                                   content={'content': 'Hello I like turtles'})
+        share_item = NewsfeedItem.objects.create_share_post(shared_item=nw_item, author=self.auth_user)
+        return [nw_item, share_item]
+
+    def test_fetch_items_from_user_without_offset_arguments_returns_all_items(self):
+        items = self.create_newsfeed_items_for_user(self.auth_user)
+
+        received_items = list(NewsfeedItem.fetch_items_from_user(user=self.auth_user))
+
+        self.assertCountEqual(items, received_items)
+
+    def test_fetch_items_from_user_returns_items_in_offset_and_limit(self):
+        items = self.create_newsfeed_items_for_user(self.auth_user)
+
+        # essentially fetching the oldest nw_item
+        received_items = list(NewsfeedItem.fetch_items_from_user(user=self.auth_user, start_offset=1, end_limit=2))
+
+        self.assertEqual(items[0:1], received_items)
+
+    def test_fetch_items_from_user_returns_items_ordered_by_date(self):
+        items = self.create_newsfeed_items_for_user(self.auth_user)
+        self.update_model(items[1], created_at=datetime(1970, 1, 1))
+
+        received_items = list(NewsfeedItem.fetch_items_from_user(user=self.auth_user))
+
+        # must be sorted item[0], item[1] by date
+        self.assertEqual(items, received_items)
+
+    def test_fetch_items_from_user_high_offset_returns_zero_items(self):
+        self.create_newsfeed_items_for_user(self.auth_user)
+
+        received_items = list(NewsfeedItem.fetch_items_from_user(user=self.auth_user, start_offset=3))
+
+        self.assertEqual(received_items, [])
