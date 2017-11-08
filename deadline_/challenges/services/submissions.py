@@ -10,7 +10,7 @@ def submissions_count_by_date_from_user_since(user, since_date) -> dict:
         datetime(2017, 9, 10): 12,
      }
     """
-    submission_data = Submission.fetch_submissions_count_from_user_since(user, since_date)
+    submission_data = Submission.fetch_submissions_count_by_day_from_user_since(user, since_date)
     count_data = {}
     for subm_data in submission_data:
         if subm_data['count'] > 0:

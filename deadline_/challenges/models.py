@@ -136,10 +136,10 @@ class Submission(models.Model):
 
     @staticmethod
     def fetch_submissions_from_user_since(user, since_date):
-        return Submission.objects.filter(pending=False, author=user, created_at__gte=since_date)
+        return Submission.objects.filter(pending=False, author=user, created_at__gte=since_date).extra({'created_at': 'CAST(created_at AS DATE)'})
 
     @staticmethod
-    def fetch_submissions_count_from_user_since(user, since_date):
+    def fetch_submissions_count_by_day_from_user_since(user, since_date):
         return Submission.fetch_submissions_from_user_since(user, since_date)\
                          .values('created_at').annotate(count=Count('created_at'))
 

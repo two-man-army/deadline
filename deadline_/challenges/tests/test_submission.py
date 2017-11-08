@@ -174,7 +174,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         self.assertEqual((0, 0), s.get_votes_count())
 
     def test_fetch_submissions_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
-        start_date = datetime.datetime(2017, 10, 12)
+        start_date = datetime.date(2017, 10, 12)
         # four submissions since that date, and three before
         for i in range(7):
             if i % 2 == 0:
@@ -189,7 +189,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         self.assertEqual(len(received_subs), 4)
 
     def test_fetch_submissions_from_user_since_returns_only_non_pending_submissions(self):
-        start_date = datetime.datetime(2017, 10, 12)
+        start_date = datetime.date(2017, 10, 12)
         s = SubmissionFactory(author=self.auth_user, pending=True)
         self.update_model(s, created_at=start_date + datetime.timedelta(days=randint(0, 1)))
 
@@ -198,7 +198,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         self.assertEqual(len(received_subs), 0)
 
     def test_fetch_submissions_count_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
-        start_date = datetime.datetime(2017, 10, 12)
+        start_date = datetime.date(2017, 10, 12)
         second_date = start_date + datetime.timedelta(days=1)
         # four submissions since that date and 6 before
         for i in range(10):
@@ -213,16 +213,29 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
                 self.update_model(s, created_at=second_date)
         expected_data = [{'created_at': start_date, 'count': 2}, {'created_at': second_date, 'count': 2}]
 
-        received_data = Submission.fetch_submissions_count_from_user_since(self.auth_user, start_date)
+        received_data = list(Submission.fetch_submissions_count_by_day_from_user_since(self.auth_user, start_date))
+
+        self.assertEqual(expected_data, received_data)
+
+    def fetch_submissions_count_by_day_from_user_since_groups_by_day(self):
+        start_date = datetime.date(2017, 10, 12)
+        # Create 4 different submissions in different hours/minutes
+        for i in range(4):
+            s = SubmissionFactory(author=self.auth_user, pending=False)
+            self.update_model(s, created_at=start_date + datetime.timedelta(hours=i))
+        expected_data = [{'created_at': start_date, 'count': 4}]
+
+        received_data = list(Submission.fetch_submissions_count_by_day_from_user_since(self.auth_user, start_date))
+
         self.assertEqual(expected_data, received_data)
 
     def test_fetch_submissions_count_from_user_since_returns_only_non_pending_submissions_count(self):
-        start_date = datetime.datetime(2017, 10, 12)
+        start_date = datetime.date(2017, 10, 12)
         s = SubmissionFactory(author=self.auth_user, pending=True)
         self.update_model(s, created_at=start_date + datetime.timedelta(days=randint(0, 1)))
         expected_data = []
 
-        received_data = list(Submission.fetch_submissions_count_from_user_since(self.auth_user, start_date))
+        received_data = list(Submission.fetch_submissions_count_by_day_from_user_since(self.auth_user, start_date))
 
         self.assertEqual(expected_data, received_data)
 
