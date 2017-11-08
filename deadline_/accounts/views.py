@@ -13,7 +13,7 @@ from accounts.serializers import UserSerializer, UserProfileSerializer
 from accounts.models import User, Role, UserPersonalDetails
 from accounts.helpers import hash_password
 from helpers import datetime_now
-from challenges.services.submissions import submissions_count_by_date_from_user_since
+from challenges.services.submissions import submissions_count_by_date_from_user_since, submissions_count_by_month_from_user_since
 from constants import BASE_USER_ROLE_NAME
 from decorators import fetch_models
 
@@ -69,7 +69,7 @@ class UserRecentSubmissionCount(APIView):
         except InvalidDateModeException:
             return Response(status=400, data={'error': f'Date mode {date_mode} is not supported!'})
 
-        return Response(status=200, data=submissions_count_by_date_from_user_since(user, since_date))
+        return Response(status=200, data=self.get_submissions_count(user, date_mode, since_date))
 
     def evaluate_since_date(self, date_mode):
         if date_mode == 'weekly':
@@ -82,6 +82,12 @@ class UserRecentSubmissionCount(APIView):
             raise InvalidDateModeException()
 
         return datetime_now() - subtract_delta
+
+    def get_submissions_count(self, user, date_mode, since_date):
+        if date_mode == 'weekly' or date_mode == 'monthly':
+            return submissions_count_by_date_from_user_since(user, since_date)
+        elif date_mode == 'yearly':
+            return submissions_count_by_month_from_user_since(user, since_date)
 
 
 @api_view(['POST'])
