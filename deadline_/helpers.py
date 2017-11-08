@@ -27,6 +27,13 @@ def fetch_models_by_pks(ids_by_models: {django.db.models.Model: int}) -> []:
     return fetched_objects
 
 
+def get_date_day_difference(end_date: datetime, start_date: datetime) -> int:
+    """
+    Returns the day difference between two dates
+    """
+    return get_date_difference(end_date, start_date).days
+
+
 def get_date_difference(end_date: datetime, start_date: datetime) -> timedelta:
     """
     Returns the difference between two dates
