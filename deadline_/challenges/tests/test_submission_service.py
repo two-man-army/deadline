@@ -2,7 +2,8 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 from datetime import datetime, date
 
-from challenges.services.submissions import submissions_count_by_date_from_user_since
+from challenges.services.submissions import submissions_count_by_date_from_user_since, \
+    submissions_count_by_month_from_user_since
 
 
 class SubmissionServiceTests(TestCase):
@@ -33,3 +34,29 @@ class SubmissionServiceTests(TestCase):
         with self.assertRaises(ValueError):
             submissions_count_by_date_from_user_since(MagicMock(), MagicMock())
 
+    @patch('challenges.services.submissions.Submission.fetch_submissions_count_by_month_from_user_since')
+    def test_submissions_count_by_month_for_user_since_maps_as_expected_and_ignores_empty_count(self, fetch_mock):
+        date_one, date_two, date_three = date(2017, 10, 1), date(2017, 11, 1), date(2012, 10, 1)
+        fetch_mock.return_value = [
+            {'month': date_one, 'count': 15},
+            {'month': date_two, 'count': 0},
+            {'month': date_three, 'count': 3}
+        ]
+        expected_data = {
+            date_one: 15,
+            date_three: 3
+        }
+        user_mock = MagicMock('user')
+
+        received_data = submissions_count_by_month_from_user_since(user_mock, date_one)
+
+        fetch_mock.assert_called_once_with(user_mock, date_one)
+        self.assertEqual(expected_data, received_data)
+
+    def test_submissions_count_by_month_for_user_since_raises_value_error_if_date_is_not_start_of_month(self):
+        """
+        The reason for this is to avoid ambiguity what happens if you pass a date like November 15
+        (Do you count all the month's submissions or half?)
+        """
+        with self.assertRaises(ValueError):
+            submissions_count_by_month_from_user_since(MagicMock(), date(2012, 10, 15))
