@@ -197,7 +197,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
 
         self.assertEqual(len(received_subs), 0)
 
-    def test_fetch_submissions_count_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
+    def test_fetch_submissions_count_by_day_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
         start_date = datetime.date(2017, 10, 12)
         second_date = start_date + datetime.timedelta(days=1)
         # four submissions since that date and 6 before
@@ -217,7 +217,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
 
         self.assertEqual(expected_data, received_data)
 
-    def fetch_submissions_count_by_day_from_user_since_groups_by_day(self):
+    def test_fetch_submissions_count_by_day_from_user_since_groups_by_day(self):
         start_date = datetime.date(2017, 10, 12)
         # Create 4 different submissions in different hours/minutes
         for i in range(4):
@@ -229,7 +229,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
 
         self.assertEqual(expected_data, received_data)
 
-    def test_fetch_submissions_count_from_user_since_returns_only_non_pending_submissions_count(self):
+    def test_fetch_submissions_count_by_day_from_user_since_returns_only_non_pending_submissions_count(self):
         start_date = datetime.date(2017, 10, 12)
         s = SubmissionFactory(author=self.auth_user, pending=True)
         self.update_model(s, created_at=start_date + datetime.timedelta(days=randint(0, 1)))
@@ -238,6 +238,36 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         received_data = list(Submission.fetch_submissions_count_by_day_from_user_since(self.auth_user, start_date))
 
         self.assertEqual(expected_data, received_data)
+
+    def fetch_submissions_count_by_month_from_user_since_groups_by_month_since_or_after_that_month(self):
+        start_date = datetime.date(2017, 11, 1)
+        dates = [datetime.date(2017, 10, 1), datetime.date(2017, 11, 1), datetime.date(2017, 12, 1), datetime.date(2018, 1, 1)]
+        # 5 submissions per month
+        for date in dates:
+            for i in range(5):
+                s = SubmissionFactory(author=self.auth_user, pending=False)
+                self.update_model(s, created_at=date)
+        expected_data = [{'month': date, 'count': 5} for date in dates[1:]]  # all except 10th month
+
+        received_data = list(Submission.fetch_submissions_count_by_month_from_user_since(self.auth_user, start_date))
+
+        self.assertEqual(received_data, expected_data)
+
+    def test_fetch_submission_count_by_month_from_user_since_returns_only_non_pending_submissions_count(self):
+        start_date = datetime.date(2017, 11, 1)
+        november_date = datetime.date(2017, 11, 1)
+        dates = [datetime.date(2017, 10, 1), november_date, datetime.date(2017, 12, 1), datetime.date(2018, 1, 1)]
+        # 5 valid submissions for November only
+        for date in dates:
+            is_pending = date != november_date
+            for i in range(5):
+                s = SubmissionFactory(author=self.auth_user, pending=is_pending)
+                self.update_model(s, created_at=date)
+        expected_data = [{'month': november_date, 'count': 5}]
+
+        received_data = list(Submission.fetch_submissions_count_by_month_from_user_since(self.auth_user, start_date))
+
+        self.assertEqual(received_data, expected_data)
 
 
 class SubmissionCommentModelViewTest(TestCase, TestHelperMixin):

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db.models import Count
+from django.db.models import Count, DateField
+from django.db.models.functions import TruncMonth
 
 from challenges.validators import PossibleFloatDigitValidator
 from accounts.models import User
@@ -142,6 +143,13 @@ class Submission(models.Model):
     def fetch_submissions_count_by_day_from_user_since(user, since_date):
         return Submission.fetch_submissions_from_user_since(user, since_date)\
                          .values('created_at').annotate(count=Count('created_at'))
+
+    @staticmethod
+    def fetch_submissions_count_by_month_from_user_since(user, since_date):
+        return Submission.fetch_submissions_from_user_since(user, since_date) \
+                         .annotate(month=TruncMonth('created_at', output_field=DateField())) \
+                         .values('month') \
+                         .annotate(count=Count('id'))
 
     def add_comment(self, author, content, to_notify=True):
         # TODO: Some sort of SubmissionServiceMixin adding this functionality
