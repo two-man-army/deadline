@@ -13,7 +13,7 @@
         }
     }
 
-    .chat-member-list {
+    .chat-threadlist {
         padding: 10px 20px;
         overflow: hidden;
         max-width: 300px;
@@ -27,6 +27,17 @@
       .chat-member-wrapper {
           display: inline-block;
           margin-left: 4%;
+
+          .chat-member-title {
+            h3 {
+              width: 90%;
+              display: inline-block;;
+            }
+            p {
+              width: 10%;
+              display: inline-block;
+            }
+          }
       }
     }
 }
