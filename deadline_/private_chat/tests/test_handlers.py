@@ -4,46 +4,35 @@ from django.test import TestCase
 
 from challenges.tests.factories import UserFactory
 from private_chat.constants import EXPIRED_TOKEN_ERR_TYPE, AUTHORIZATION_ERR_TYPE, VALIDATION_ERR_TYPE
-from private_chat.handlers import _fetch_dialog_token, _new_messages_handler, _is_typing
+from private_chat.handlers import _authenticate, _new_messages_handler, _is_typing
 from private_chat.models import Dialog, Message
 
 
-class FetchDialogTokenTests(TestCase):
+class AuthenticateTests(TestCase):
     def setUp(self):
         self.first_user = UserFactory()
         self.second_user = UserFactory()
 
     def test_returns_token_and_validates_websocket(self):
-        websocket_mock = MagicMock(is_valid=False)
-        ws_connections = {(self.first_user.id, self.second_user.id): websocket_mock}
-        with patch('private_chat.handlers.ws_connections', ws_connections):
-            to_send_message, payload = _fetch_dialog_token({'auth_token': self.first_user.auth_token.key},
-                                                           self.first_user.id, self.second_user.id)
-
-            expected_token = Dialog.objects.get_or_create_dialog_with_users(self.first_user, self.second_user).owner_token
-            self.assertTrue(to_send_message)
-            self.assertEqual(payload, {'conversation_token': expected_token})
-            self.assertEqual(websocket_mock.is_valid, True)
-
-    def test_returns_false_if_ids_not_in_ws_connections(self):
         """
-        We do not have the users' connection, therefore its pointless to process it
+        On a successful authentication, the user's websocket must be marked as valid
         :return:
         """
         websocket_mock = MagicMock(is_valid=False)
-        ws_connections = {(22, 22): websocket_mock}
+        ws_connections = {(self.first_user.id, self.second_user.id): websocket_mock}
         with patch('private_chat.handlers.ws_connections', ws_connections):
-            to_send_message, payload = _fetch_dialog_token({'auth_token': self.first_user.auth_token.key},
+            to_send_message, payload = _authenticate({'auth_token': self.first_user.auth_token.key},
                                                            self.first_user.id, self.second_user.id)
-            self.assertFalse(to_send_message)
-            self.assertEqual(payload, {})
-            self.assertEqual(websocket_mock.is_valid, False)
+
+            self.assertTrue(to_send_message)
+            self.assertEqual(payload['type'], 'OK')
+            self.assertEqual(websocket_mock.is_valid, True)
 
     def test_returns_error_if_invalid_token(self):
         websocket_mock = MagicMock(is_valid=False)
         ws_connections = {(self.first_user.id, self.second_user.id): websocket_mock}
         with patch('private_chat.handlers.ws_connections', {(self.first_user.id, self.second_user.id): ws_connections}):
-            to_send_message, payload = _fetch_dialog_token({'auth_token': 'sELEMENT'},
+            to_send_message, payload = _authenticate({'auth_token': 'sELEMENT'},
                                                            self.first_user.id, self.second_user.id)
 
             self.assertTrue(to_send_message)
@@ -114,19 +103,6 @@ class NewsMessageTests(TestCase):
             self.assertEqual('error', payload['type'])
             self.assertEqual(AUTHORIZATION_ERR_TYPE, payload['error_type'])
 
-    def test_sends_error_if_dialog_invalid(self):
-        packet = {
-            'conversation_token': 'tank',
-            'message': ' TANK'
-        }
-        with patch('private_chat.handlers.ws_connections',
-                   {(self.first_user.id, self.second_user.id): MagicMock(is_valid=True)}):
-            to_send_msg, is_err, payload = _new_messages_handler(packet, self.first_user.id, self.second_user.id)
-            self.assertTrue(to_send_msg)
-            self.assertTrue(is_err)
-            self.assertEqual('error', payload['type'])
-            self.assertEqual(EXPIRED_TOKEN_ERR_TYPE, payload['error_type'])
-
 
 class IsTypingTests(TestCase):
     def setUp(self):
@@ -144,14 +120,6 @@ class IsTypingTests(TestCase):
             self.assertTrue(to_send_msg)
             self.assertTrue(payload['type'], 'error')
             self.assertEqual(AUTHORIZATION_ERR_TYPE, payload['error_type'])
-
-    def test_sends_error_if_dialog_invalid(self):
-        with patch('private_chat.handlers.ws_connections',
-                   {(self.first_user.id, self.second_user.id): MagicMock(is_valid=True)}):
-            to_send_msg, payload = _is_typing(self.first_user.id, self.second_user.id, 'tank')
-            self.assertTrue(to_send_msg)
-            self.assertTrue(payload['type'], 'error')
-            self.assertEqual(EXPIRED_TOKEN_ERR_TYPE, payload['error_type'])
 
     def test_doesnt_send_message_if_all_ok(self):
         dialog = Dialog.objects.get_or_create_dialog_with_users(self.first_user, self.second_user)

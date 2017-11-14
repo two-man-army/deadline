@@ -3,7 +3,7 @@ import json
 import logging
 
 from private_chat.errors import MaliciousUserException
-from .channels import new_messages, is_typing, fetch_dialog_token
+from .channels import new_messages, is_typing, authenticate
 
 logger = logging.getLogger('django-private-dialog')
 
@@ -11,16 +11,17 @@ logger = logging.getLogger('django-private-dialog')
 class MessageRouter:
     MESSAGE_QUEUES = {
         'new-message': new_messages,
-        'fetch-token': fetch_dialog_token,
+        'authenticate': authenticate,
         'is-typing': is_typing,
     }
 
-    def __init__(self, data, user_id):
+    def __init__(self, data, user_id, opponent_id):
         try:
             self.packet = json.loads(data)
 
             if 'user_id' in self.packet and self.packet['user_id'] != user_id:
                 raise MaliciousUserException(f'User with ID {user_id} tried to mask himself as {self.packet["user_id"]}')
+            self.packet['opponent_id'] = opponent_id
 
             self.packet['user_id'] = user_id
         except MaliciousUserException as e:

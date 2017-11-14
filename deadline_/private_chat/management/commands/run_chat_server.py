@@ -22,7 +22,7 @@ class Command(BaseCommand):
         )
 
         asyncio.async(handlers.new_messages_handler(channels.new_messages))
-        asyncio.async(handlers.fetch_dialog_token(channels.fetch_dialog_token))
+        asyncio.async(handlers.authenticate(channels.authenticate))
         asyncio.async(handlers.is_typing_handler(channels.is_typing))
         loop = asyncio.get_event_loop()
         loop.run_forever()

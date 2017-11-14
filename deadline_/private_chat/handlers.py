@@ -51,13 +51,13 @@ async def fan_out_message(connections, payload):
             logger.error(f'Could not send message to multiple websockets due to {e}')
 
 
-async def fetch_dialog_token(stream):
+async def authenticate(stream):
     """
-    Returns the Dialog token for a specific conversation and for the specific participant
+    Authenticates the user and marks his websocket as valid
 
     Needs to be sent the following JSON
     {
-    "type": "fetch-token",
+    "type": "authenticate",
     "user_id": YOUR_USER_ID_HERE,
     "auth_token": YOUR_AUTH_TOKEN_HERE,
     "opponent_id": HIS_ID_HERE
@@ -65,9 +65,9 @@ async def fetch_dialog_token(stream):
     """
     while True:
         packet = await stream.get()
-        owner_id, opponent_id = int(packet.get('user_id', '-1')), int(packet.get('opponent_id', '-1'))
+        owner_id, opponent_id = int(packet.get('user_id')), int(packet.get('opponent_id'))
 
-        to_send_message, payload = _fetch_dialog_token(packet, owner_id, opponent_id)
+        to_send_message, payload = _authenticate(packet, owner_id, opponent_id)
         if to_send_message:
             asyncio.ensure_future(send_message(ws_connections[(owner_id, opponent_id)].web_socket, payload))
 
@@ -81,14 +81,12 @@ async def fetch_dialog_token(stream):
                                                    {'type': 'online-check', 'is_online': True}))
 
 
-def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
+def _authenticate(packet: dict, owner_id, opponent_id) -> (bool, dict):
     """
     :return:
         - boolean indicating if we want to send a message
         - the payload we would send
     """
-    if (owner_id, opponent_id) not in ws_connections:
-        return False, {}  # we do not have such a connection. Either malicious or a mistake, but we cant respond back
 
     try:
         owner, opponent = fetch_and_validate_participants(owner_id, opponent_id)
@@ -99,9 +97,8 @@ def _fetch_dialog_token(packet: dict, owner_id, opponent_id) -> (bool, dict):
         logger.debug(f'Raised {e.__class__} in fetch-token handler. Error message was {str(e)}')
         return True, {'type': 'error', 'error_type': err_type, 'message': str(e)}
 
-    token = get_or_create_dialog_token(owner, opponent)
     ws_connections[(owner_id, opponent_id)].is_valid = True
-    return True, {'conversation_token': token}
+    return True, {'type': 'OK', 'message': 'AUTHENTICATED'}
 
 
 async def new_messages_handler(stream):
@@ -157,12 +154,7 @@ def _new_messages_handler(packet: dict, owner_id, opponent_id):
         return True, True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE,
                             'message': 'You need to authorize yourself by fetching a token!'}
 
-    conversation_token = packet.get('conversation_token')
-
     dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
-    if not dialog.token_is_valid(conversation_token):
-        return True, True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE,
-                            'message': 'Invalid conversation_token. Fetch a new one!'}
 
     msg = Message.objects.create(
         dialog=dialog,
@@ -231,11 +223,6 @@ def _is_typing(owner_id: int, opponent_id: int, conversation_token: str) -> (boo
         return True, {'type': 'error', 'error_type': AUTHORIZATION_ERR_TYPE,
                       'message': 'You need to authorize yourself by fetching a token!'}
 
-    dialog: Dialog = Dialog.objects.get_or_create_dialog_with_users(owner, opponent)
-    if not dialog.token_is_valid(conversation_token):
-        return True, {'type': 'error', 'error_type': EXPIRED_TOKEN_ERR_TYPE,
-                      'message': 'Invalid conversation_token. Fetch a new one!'}
-
     return False, {}
 
 
@@ -287,7 +274,7 @@ async def main_handler(websocket, path):
 
             try:
                 print(f'Data is {data}')
-                await MessageRouter(data, user_id=owner_id)()
+                await MessageRouter(data, user_id=owner_id, opponent_id=opponent.id)()
             except Exception as e:
                 logger.error(f'Could not route message {e}')
 

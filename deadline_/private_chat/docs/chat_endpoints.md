@@ -15,34 +15,20 @@ ws://localhost:5002/chat/1/2
 ## Authenticating
 At this point, the server cannot trust that you are user with ID 1, as you have not proved it in any way.
 To prove this and have your websocket marked as valid, you need to send a special message of type
-'fetch-token'. This message must contain the following
+'authenticate'. This message must contain the following
 
 ```json
 {
-    "type": "fetch-token",
-    "user_id": 1,
+    "type": "authenticate",
     "auth_token": "YOUR_AUTH_TOKEN_HERE",
-    "opponent_id": 2
 }
 ```
-This will return 
-```json
-{
-"type": "conversation-token",
-"conversation_token": "YOUR_TOKEN"
-}
-```
-You should save this token, as you will always need to send it while sending a message, confirming to the server you are who you claim to be.
-Note: This token will expire from time to time and you will need to fetch another one.
 
 Sending a message is done in the following way:
 ```json
 {
     "type": "new-message",
     "message": "Hello Sam",
-    "user_id": 1,
-    "opponent_id": 2,
-    "conversation_token": "YOUR_TOKEN"
 }
 ```
 
@@ -71,23 +57,19 @@ When your client starts typing, you need to send a message indicating that to th
 ```json
 {
     "type": "is-typing",
-    "conversation_token": "YOUR_TOKEN",
-    "user_id": 1,
-    "opponent_id": 2
 }
 ```
 Vice versa, when your opponent starts typing you will receive the following message:
-```
+```json
 {"type": "opponent-typing"}
 ```
 
 ### Errors
 You can receive multiple kind of errors, regarding on the problem that has arisen with your request.
-The most common one would be that of an expired conversation_token, prompting you to fetch a new one
 ```json
 {
     "type": "error",
-    "error_type": "EXPIRED_CONVERSATION_TOKEN",
-    "message": "Invalid conversation_token. Fetch a new one!"
+    "error_type": "XXX",
+    "message": "XXX!"
 }
 ```
