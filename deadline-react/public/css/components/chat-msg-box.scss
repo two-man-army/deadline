@@ -6,7 +6,6 @@
 
   //chatbox__form
   &__form {
-//    display: inline-block;
     flex: 4;
     text-align: center;
   }
@@ -21,11 +20,10 @@
   }
 
   //chatbox__button-wrapper
-  &__button-wrapper {
-//    display: inline-block;
+  .button-wrapper {
     flex: 1;
 
-    &--button {
+    &__button {
       background: #600538;
       width: 100px;
       height: 32px;
