@@ -1046,4 +1046,29 @@ div.lang-choice-select {
     white-space: normal;
     color: #fff; }
 
+.chatbox {
+  width: 100%;
+  display: flex;
+  border-top: 1px solid #c2c2c2;
+  padding: 22px 0; }
+  .chatbox__form {
+    flex: 4;
+    text-align: center; }
+  .chatbox__area {
+    max-width: 625px;
+    width: 100%;
+    height: 32px;
+    border: 1px solid #c2c2c2;
+    border-radius: 16px;
+    padding: 7px 0 0 20px; }
+  .chatbox__button-wrapper {
+    flex: 1; }
+    .chatbox__button-wrapper--button {
+      background: #600538;
+      width: 100px;
+      height: 32px;
+      border-radius: 16px;
+      color: #fff;
+      border: 1px solid #c2c2c2; }
+
 /*# sourceMappingURL=style.css.map */
