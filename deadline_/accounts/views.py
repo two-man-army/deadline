@@ -31,8 +31,9 @@ def register(request: Request):
     """ Register a User"""
     # Set the base role for a user
     user_role = Role.objects.filter(name=BASE_USER_ROLE_NAME).first()
-    request.data['role'] = user_role.id
-    serializer = UserSerializer(data=request.data)
+    request_data = request.data.copy()
+    request_data['role'] = user_role.id
+    serializer = UserSerializer(data=request_data)
     if serializer.is_valid():
         user = serializer.save()
 
