@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from accounts.serializers import UserSerializer, UserProfileSerializer
 from accounts.models import User, Role, UserPersonalDetails
 from accounts.helpers import hash_password
+from accounts.api_exceptions import InvalidDateModeException
 from helpers import datetime_now
 from challenges.services.submissions import submissions_count_by_date_from_user_since
 from constants import BASE_USER_ROLE_NAME
@@ -40,10 +41,6 @@ class ProfilePageView(RetrieveAPIView):
         return {'caller': self.request.user}
 
 
-class InvalidDateModeException(Exception):
-    pass
-
-
 # /accounts/{user_id}/recent_submissions?date_mode={date_mode}
 class UserRecentSubmissionCount(APIView):
     """
@@ -64,10 +61,7 @@ class UserRecentSubmissionCount(APIView):
     @fetch_models
     def get(self, request, user, *args, **kwargs):
         date_mode = request.GET.get('date_mode', None)
-        try:
-            since_date = self.evaluate_since_date(date_mode)
-        except InvalidDateModeException:
-            return Response(status=400, data={'error': f'Date mode {date_mode} is not supported!'})
+        since_date = self.evaluate_since_date(date_mode)
 
         return Response(status=200, data=submissions_count_by_date_from_user_since(user, since_date))
 
@@ -79,7 +73,7 @@ class UserRecentSubmissionCount(APIView):
         elif date_mode == 'yearly':
             subtract_delta = timedelta(days=365)
         else:
-            raise InvalidDateModeException()
+            raise InvalidDateModeException(date_mode)
 
         return datetime_now() - subtract_delta
 
