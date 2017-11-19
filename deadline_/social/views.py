@@ -116,21 +116,34 @@ class TextPostCreateView(CreateAPIView):
     serializer_class = NewsfeedItemSerializer
 
     def create(self, request, *args, **kwargs):
-        """
-        We are always creating a TextPost NewsfeedItem,
-            and as such we always set the type, content dictionary structure
-        We also prevent the user to modify the created_at, updated_at and author variables
-        """
         self.author_id = request.user.id
-
-        request.data['type'] = NW_ITEM_TEXT_POST
-        request.data['content'] = {
-            'content': request.data['content']
-        }
-        request.data.pop('created_at', None)
-        request.data.pop('updated_at', None)
-
         return super().create(request, *args, **kwargs)
+
+    def get_serializer(self, *args, **kwargs):
+        """
+        Return the serializer instance that should be used for validating and
+        deserializing input, and for serializing output.
+        """
+        serializer_class = self.get_serializer_class()
+        kwargs['context'] = self.get_serializer_context()
+        kwargs['data'] = self.clean_data(kwargs['data'].copy())  # req_data is immutable
+        return serializer_class(*args, **kwargs)
+
+    def clean_data(self, request_data):
+        """
+        Given the request_data, modify it in such a way that it aligns to our requirements
+            We are always creating a TextPost NewsfeedItem,
+                and as such we always set the type, content dictionary structure
+            We also prevent the user to modify the created_at, updated_at and author variables
+        """
+        request_data['type'] = NW_ITEM_TEXT_POST
+        request_data['content'] = {
+            'content': request_data['content']
+        }
+        request_data.pop('created_at', None)
+        request_data.pop('updated_at', None)
+
+        return request_data
 
     def perform_create(self, serializer):
         serializer.save(author_id=self.author_id)
