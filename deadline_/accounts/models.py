@@ -30,7 +30,7 @@ class User(AbstractBaseUser):
     salt = models.CharField(max_length=40)
     notification_token = models.CharField(max_length=200, null=True)
     users_followed = models.ManyToManyField(to='accounts.User', related_name='followers')
-    role = models.ForeignKey(Role)
+    role = models.ForeignKey(Role, on_delete=models.PROTECT)
     last_submit_at = models.DateTimeField(auto_now_add=True)
 
     def __init__(self, *args, **kwargs):
@@ -174,6 +174,7 @@ def user_post_save(sender, instance, created, *args, **kwargs):
 
     # create a UserSubcategoryProgress for each subcategory and a UserSubcategoryProficiency
     for subcat in SubCategory.objects.all():
+        print('CREATING')
         UserSubcategoryProficiency.objects.create(user=instance, subcategory=subcat, proficiency=starter_proficiency,
                                                   user_score=0)
 

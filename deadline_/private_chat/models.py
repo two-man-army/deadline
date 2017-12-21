@@ -32,9 +32,9 @@ class Dialog(models.Model):
     Dialogs have two tokens, once for each participant.
     Said participant needs to prove its him with this token and said token should expire frequently
     """
-    owner = models.ForeignKey(User, verbose_name="Dialog owner", related_name="selfDialogs")
+    owner = models.ForeignKey(User, verbose_name="Dialog owner", related_name="selfDialogs", on_delete=models.SET_NULL, null=True)
     owner_token = models.CharField(max_length=200, null=True)
-    opponent = models.ForeignKey(User, verbose_name="Dialog opponent")
+    opponent = models.ForeignKey(User, verbose_name="Dialog opponent", on_delete=models.SET_NULL, null=True)
     opponent_token = models.CharField(max_length=200, null=True)
     secret_key = models.CharField(max_length=50, null=True)
     objects = DialogManager()
@@ -80,8 +80,8 @@ def populate_tokens(sender, instance, created, *args, **kwargs):
 
 
 class Message(TimeStampedModel, SoftDeletableModel):
-    dialog = models.ForeignKey(Dialog, verbose_name="Dialog", related_name="messages")
-    sender = models.ForeignKey(User, verbose_name="Author", related_name="messages")
+    dialog = models.ForeignKey(Dialog, verbose_name="Dialog", related_name="messages", on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, verbose_name="Author", related_name="messages", on_delete=models.SET_NULL, null=True)
     text = models.TextField(verbose_name="Message text")
 
     class Meta:
