@@ -22,12 +22,12 @@ class Language(models.Model):
 class Challenge(models.Model):
     # TODO: Figure out how to increment SubCategory's maxscore field, maybe a post-save here?
     name = models.CharField(unique=True, max_length=30)
-    description = models.OneToOneField('ChallengeDescription')
+    description = models.OneToOneField('ChallengeDescription', on_delete=models.SET_NULL, null=True)
     difficulty = models.FloatField(validators=[MinValueValidator(1), MaxValueValidator(10), PossibleFloatDigitValidator(['0', '5'])])
     score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)])
     test_file_name = models.CharField(max_length=50)
     test_case_count = models.IntegerField(blank=False)
-    category = models.ForeignKey(to='SubCategory', related_name='challenges')
+    category = models.ForeignKey(to='SubCategory', related_name='challenges', on_delete=models.SET_NULL, null=True)
     supported_languages = models.ManyToManyField(Language)
 
     def get_absolute_url(self):
@@ -40,12 +40,13 @@ class Challenge(models.Model):
     def add_comment(self, author: User, content: str):
         return ChallengeComment.objects.create(author=author, content=content, challenge=self)
 
+
 class ChallengeComment(models.Model):
-    challenge = models.ForeignKey(Challenge, related_name='comments')
-    author = models.ForeignKey(User)
+    challenge = models.ForeignKey(Challenge, related_name='comments', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     content = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('-created_at', )
@@ -69,15 +70,15 @@ class Submission(models.Model):
     # TODO: Hold lines of code field
     # TODO: Figure out how to increment SubCategoryProficiency's user score
 
-    challenge = models.ForeignKey(Challenge)
-    author = models.ForeignKey(User)
+    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     code = models.CharField(max_length=4000, blank=False)  # this max_length is barely cutting it
     task_id = models.CharField(max_length=100, blank=False)
     result_score = models.IntegerField(verbose_name="The points from the challenge", default=0)
     pending = models.BooleanField(default=True)
     compiled = models.BooleanField(default=True)
     compile_error_message = models.CharField(max_length=1000, blank=False)
-    language = models.ForeignKey(Language, blank=False)
+    language = models.ForeignKey(Language, blank=False, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     timed_out = models.BooleanField(default=False)  # showing if the majority of the tests have timed out
     elapsed_seconds = models.FloatField(default=0)
@@ -147,11 +148,11 @@ class Submission(models.Model):
 
 
 class SubmissionComment(models.Model):
-    submission = models.ForeignKey(Submission, related_name='comments')
-    author = models.ForeignKey(User)
+    submission = models.ForeignKey(Submission, related_name='comments', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     content = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ('-created_at', )
@@ -184,8 +185,8 @@ class SubmissionVoteManager(models.Manager):
 
 class SubmissionVote(models.Model):
     is_upvote = models.BooleanField()
-    submission = models.ForeignKey(to=Submission, related_name='votes')
-    author = models.ForeignKey(User)
+    submission = models.ForeignKey(to=Submission, related_name='votes', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     objects = SubmissionVoteManager()
 
@@ -194,7 +195,7 @@ class SubmissionVote(models.Model):
 
 
 class TestCase(models.Model):
-    submission = models.ForeignKey(Submission)
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     time = models.FloatField(default=0)
     success = models.BooleanField(default=False)
     pending = models.BooleanField(default=True)
@@ -219,7 +220,7 @@ class MainCategory(models.Model):
 class SubCategory(models.Model):
     """ A more specific Category for Challenges, ie: Graph Theory """
     name = models.CharField(max_length=100, unique=True)
-    meta_category = models.ForeignKey(to=MainCategory, related_name='sub_categories')
+    meta_category = models.ForeignKey(to=MainCategory, related_name='sub_categories', on_delete=models.SET_NULL, null=True)
     max_score = models.IntegerField(default=0, verbose_name="The maximum score from all the challenges in this subcategory")
 
     def __str__(self):
@@ -257,15 +258,15 @@ class Proficiency(models.Model):
 
 class UserSolvedChallenges(models.Model):
     """ Holds challenges that a given user has fully solved """
-    user = models.ForeignKey(User)
-    challenge = models.ForeignKey(Challenge)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE)
 
 
 class UserSubcategoryProficiency(models.Model):
     """ Holds each user's proficiency in a given subcategory """
-    user = models.ForeignKey(User)
-    subcategory = models.ForeignKey(SubCategory)
-    proficiency = models.ForeignKey(Proficiency)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True)
+    proficiency = models.ForeignKey(Proficiency, on_delete=models.SET_NULL, null=True)
     user_score = models.IntegerField(default=0,
                                      verbose_name='The score that the user has accumulated for this subcategory')
 
@@ -313,8 +314,8 @@ class SubcategoryProficiencyAward(models.Model):
     """
         Holds the awards that are given once a certain proficiency of a certain subcategory is achieved
     """
-    subcategory = models.ForeignKey(SubCategory)
-    proficiency = models.ForeignKey(Proficiency)
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True)
+    proficiency = models.ForeignKey(Proficiency, on_delete=models.SET_NULL, null=True)
     xp_reward = models.IntegerField()
 
     class Meta:

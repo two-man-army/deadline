@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='submission',
             name='language',
-            field=models.ForeignKey(to='challenges.Language'),
+            field=models.ForeignKey(to='challenges.Language', on_delete=models.CASCADE),
             preserve_default=False,
         ),
     ]
