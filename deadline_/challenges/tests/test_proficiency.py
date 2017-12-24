@@ -48,8 +48,9 @@ class UserSubcategoryProficiencyModelTest(TestCase):
     def test_user_id_and_subcat_are_unique_together(self):
         # NOTE: One UserSubcategoryProficiency is already created on user model creation
         with self.assertRaises(Exception):
-            sec_sub = UserSubcategoryProficiency(self.user.id, self.sub1.id, 0)
+            sec_sub = UserSubcategoryProficiency(user_id=self.user.id, subcategory_id=self.sub1.id, proficiency_id=self.starter_prof.id)
             sec_sub.save()
+            print(UserSubcategoryProficiency.objects.all())
 
     def test_to_update_proficiency_works_correctly(self):
         subcat_proficiency: UserSubcategoryProficiency = self.user.fetch_subcategory_proficiency(self.sub1.id)

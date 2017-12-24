@@ -36,7 +36,7 @@ class NewsfeedItem(models.Model):
         }
     }
     """
-    author = models.ForeignKey(User)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     type = models.CharField(max_length=30)  # no other table for now
     content = JSONField()  # varies depending on the type
     is_private = models.BooleanField(default=False)
@@ -95,12 +95,12 @@ def nw_item_validation(sender, instance, *args, **kwargs):
 
 
 class NewsfeedItemComment(models.Model):
-    newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='comments')
-    author = models.ForeignKey(User)
+    newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='comments', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     content = models.CharField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    parent = models.ForeignKey('self', null=True, related_name='replies', default=None)
+    parent = models.ForeignKey('self', null=True, related_name='replies', default=None, on_delete=models.CASCADE)
 
     def add_reply(self, author, content, to_notify=True):
         reply = NewsfeedItemComment.objects.create(newsfeed_item=self.newsfeed_item, parent=self, author=author, content=content)
@@ -110,6 +110,6 @@ class NewsfeedItemComment(models.Model):
 
 
 class NewsfeedItemLike(models.Model):
-    newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='likes')
-    author = models.ForeignKey(User)
+    newsfeed_item = models.ForeignKey(NewsfeedItem, related_name='likes', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     unique_together = ('newsfeed_item', 'author')

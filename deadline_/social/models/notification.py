@@ -20,7 +20,7 @@ class Notification(models.Model):
     Since the content here is dynamic (somebody liked your post, new challenge appears in the site, etc),
         we need an HStore field to store data related to the type of the notification.
     """
-    recipient = models.ForeignKey(User)
+    recipient = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     type = models.CharField(max_length=60)  # no other table for now
     content = JSONField()  # varies depending on the type
     is_read = models.BooleanField(default=False)
