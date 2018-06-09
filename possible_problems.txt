@@ -1,0 +1,2 @@
+With the current implementation of web sockets, it is possible to prevent two people from connecting and chatting if you were to have a script that CONSTANTLY queries ws:localhost/chat/1/2 as this essentially overwrites the web socket and does not let the legit person initiate and authenticate himself, as his web socket will always be rewritten.
+Test this and fix it
