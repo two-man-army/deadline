@@ -6,6 +6,7 @@ from collections import OrderedDict
 from unittest.mock import patch, MagicMock
 
 from django.test import TestCase
+from django.utils import timezone
 from django.db.utils import IntegrityError
 from rest_framework.test import APITestCase
 
@@ -197,8 +198,13 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
 
         self.assertEqual(len(received_subs), 0)
 
+<<<<<<< HEAD
     def test_fetch_submissions_count_by_day_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
         start_date = datetime.date(2017, 10, 12)
+=======
+    def test_fetch_submissions_count_from_user_since_returns_only_submissions_created_on_or_after_that_date(self):
+        start_date = datetime.datetime(2017, 10, 12, tzinfo=timezone.utc)
+>>>>>>> dcbe8e536505009cabc8a185744d1694a578e5dc
         second_date = start_date + datetime.timedelta(days=1)
         # four submissions since that date and 6 before
         for i in range(10):
@@ -213,6 +219,7 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
                 self.update_model(s, created_at=second_date)
         expected_data = [{'created_at': start_date, 'count': 2}, {'created_at': second_date, 'count': 2}]
 
+<<<<<<< HEAD
         received_data = list(Submission.fetch_submissions_count_by_day_from_user_since(self.auth_user, start_date))
 
         self.assertEqual(expected_data, received_data)
@@ -228,6 +235,11 @@ class SubmissionModelTest(TestCase, TestHelperMixin):
         received_data = list(Submission.fetch_submissions_count_by_day_from_user_since(self.auth_user, start_date))
 
         self.assertEqual(expected_data, received_data)
+=======
+        received_data = Submission.fetch_submissions_count_from_user_since(self.auth_user, start_date)
+        print(received_data[0]['created_at'])
+        self.assertEqual(expected_data, list(received_data))
+>>>>>>> dcbe8e536505009cabc8a185744d1694a578e5dc
 
     def test_fetch_submissions_count_by_day_from_user_since_returns_only_non_pending_submissions_count(self):
         start_date = datetime.date(2017, 10, 12)

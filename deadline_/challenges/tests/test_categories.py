@@ -95,7 +95,7 @@ class SubCategoryModelTest(TestCase, TestHelperMixin):
         """
         Test if the SubCategory's max score is updated on Challenge creation
         This is done to capture the fact that sometimes we'll have new challenges added or removed and
-        it needs to reflex the max score in a subcategory
+        it needs to reflect the max score in a subcategory
         """
         c1 = Challenge(name='Sub1', difficulty=5, score=200, description=ChallengeDescFactory(),
                        test_case_count=5, category=self.sub1)

@@ -781,7 +781,7 @@ class ReceiveChallengeCommentReplyNotificationTests(TestCase, TestHelperMixin):
         for reply in replies:
             expected_content = self.build_content(reply)
             notif = Notification.objects.create_challenge_comment_reply_notification(reply=reply)
-            self.update_model(is_read=True)
+            self.update_model(model=notif, is_read=True)
 
             self.assertEqual(notif.type, RECEIVE_CHALLENGE_COMMENT_REPLY_NOTIFICATION)
             self.assertEqual(notif.recipient, self.chal_comment.author)
