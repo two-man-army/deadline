@@ -253,6 +253,31 @@ class NewsfeedContentView(APIView):
         )
 
 
+class UserNewsfeedContentView(APIView):
+    """
+    This view returns all the content (NewsfeedItems) from a given User
+    """
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request, *args, **kwargs):
+        try:
+            page = int(request.GET.get('page', 1)) - 1
+        except ValueError:
+            page = 0
+
+        serializer = NewsfeedItemSerializer(many=True)
+
+        start_offset = page * NEWSFEED_ITEMS_PER_PAGE
+        # TODO: For NewsfeedItems which are SubmissionLinks, validate that the current user can see them otherwise dont show them :)
+        nw_items: [NewsfeedItem] = request.user.fetch_newsfeed(start_offset=start_offset,
+                                                               end_limit=start_offset + NEWSFEED_ITEMS_PER_PAGE)
+
+        return Response(
+            data={
+                'items': serializer.to_representation(nw_items, user=request.user)
+            }
+        )
+
 # GET /feed/items/{newsfeed_item_id}
 class NewsfeedItemDetailView(RetrieveAPIView):
     """
