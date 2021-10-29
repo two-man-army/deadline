@@ -4,7 +4,7 @@ Deadline is a web application for solving programming challenges
 # Currently going through a re-design. Here is a taste of things to come:
 ![Redesign Sample](http://i.imgur.com/vYst0CJ.jpg)
 
-Old design
+# Old design
 <img src="/sample.gif?raw=true" width="1000px">
 
 ### Still a work in progress
