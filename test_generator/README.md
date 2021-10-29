@@ -8,4 +8,5 @@ As most tests will be generated against the python's timeout (5 seconds), we wil
 
 
 The current class diagram:
+
 <img src="class_diagram.jpg">
